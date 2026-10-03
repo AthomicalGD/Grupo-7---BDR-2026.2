@@ -1,0 +1,113 @@
+P10.a) Taxa de reeleição por cargo
+Dos eleitos numa eleição, quantos disputam a reeleição (mesmo cargo, mesma UF/município,
+na eleição ordinária seguinte; senador: 8 anos depois) e qual porcentagem deles vence.
+
+Colunas: Eleitos = eleitos na eleição de origem; Tentaram = desses, os que foram candidatos
+à reeleição; Reeleitos = os que venceram; Taxa = Reeleitos / Tentaram.
+Para prefeito e vereador, "Taxa" soma todos os municípios da UF; "Média municípios" é a média
+simples das taxas de cada município (só os municípios em que alguém tentou a reeleição).
+
+Observações:
+- Excluídos: eleições suplementares, Presidente (disputa nacional) e vices/suplentes
+  (o TSE só os marca como eleitos a partir de 2012/2014).
+- "Tentou" = teve candidatura registrada; candidaturas indeferidas ou renunciadas também
+  contam, pois o banco não guarda a situação da candidatura.
+- Pessoas ligadas entre eleições pelo título eleitoral (ou CPF / nome + nascimento).
+
+==========================================================================================
+UF: PI
+==========================================================================================
+
+Governador
+  Eleitos em  Disputa  Eleitos  Tentaram  (% eleitos)  Reeleitos    Taxa
+  ------------------------------------------------------------------------
+        1994     1998        1         1       100.0%          0    0.0%
+        1998     2002        1         1       100.0%          0    0.0%
+        2002     2006        1         1       100.0%          1  100.0%
+        2006     2010        1         0         0.0%          0       -
+        2010     2014        1         0         0.0%          0       -
+        2014     2018        1         1       100.0%          1  100.0%
+        2018     2022        1         0         0.0%          0       -
+  ------------------------------------------------------------------------
+       Total                 7         4        57.1%          2   50.0%
+
+Senador
+  Eleitos em  Disputa  Eleitos  Tentaram  (% eleitos)  Reeleitos    Taxa
+  ------------------------------------------------------------------------
+        1994     2002        2         1        50.0%          0    0.0%
+        1998     2006        1         0         0.0%          0       -
+        2002     2010        2         2       100.0%          0    0.0%
+        2006     2014        1         0         0.0%          0       -
+        2010     2018        2         1        50.0%          1  100.0%
+        2014     2022        1         0         0.0%          0       -
+  ------------------------------------------------------------------------
+       Total                 9         4        44.4%          1   25.0%
+
+Deputado Federal
+  Eleitos em  Disputa  Eleitos  Tentaram  (% eleitos)  Reeleitos    Taxa
+  ------------------------------------------------------------------------
+        1994     1998       10         6        60.0%          6  100.0%
+        1998     2002       10         6        60.0%          5   83.3%
+        2002     2006       10         8        80.0%          6   75.0%
+        2006     2010       10         6        60.0%          5   83.3%
+        2010     2014       10         9        90.0%          6   66.7%
+        2014     2018       10         9        90.0%          6   66.7%
+        2018     2022       10         7        70.0%          4   57.1%
+  ------------------------------------------------------------------------
+       Total                70        51        72.9%         38   74.5%
+
+Deputado Estadual
+  Eleitos em  Disputa  Eleitos  Tentaram  (% eleitos)  Reeleitos    Taxa
+  ------------------------------------------------------------------------
+        1994     1998       30        21        70.0%         14   66.7%
+        1998     2002       30        24        80.0%         19   79.2%
+        2002     2006       30        26        86.7%         18   69.2%
+        2006     2010       30        25        83.3%         17   68.0%
+        2010     2014       30        20        66.7%         15   75.0%
+        2014     2018       30        25        83.3%         23   92.0%
+        2018     2022       30        23        76.7%         20   87.0%
+  ------------------------------------------------------------------------
+       Total               210       164        78.1%        126   76.8%
+
+Prefeito
+  Eleitos em  Disputa  Eleitos  Tentaram  (% eleitos)  Reeleitos    Taxa  Média municípios
+  ------------------------------------------------------------------------------------------
+        1996     2000      221       158        71.5%        113   71.5%             71.5%
+        2000     2004      222        91        41.0%         62   68.1%             68.1%
+        2004     2008      222       125        56.3%         86   68.8%             68.8%
+        2008     2012      223        87        39.0%         43   49.4%             49.4%
+        2012     2016      224       124        55.4%         72   58.1%             58.1%
+        2016     2020      224       121        54.0%         80   66.1%             66.1%
+        2020     2024      222       119        53.6%        106   89.1%             89.1%
+  ------------------------------------------------------------------------------------------
+       Total              1558       825        53.0%        562   68.1%             71.8%
+
+Vereador
+  Eleitos em  Disputa  Eleitos  Tentaram  (% eleitos)  Reeleitos    Taxa  Média municípios
+  ------------------------------------------------------------------------------------------
+        1996     2000     2105      1578        75.0%        989   62.7%             63.0%
+        2000     2004     2125      1572        74.0%        940   59.8%             60.7%
+        2004     2008     2024      1548        76.5%        951   61.4%             61.6%
+        2008     2012     2032      1388        68.3%        888   64.0%             63.2%
+        2012     2016     2136      1546        72.4%       1044   67.5%             67.6%
+        2016     2020     2143      1600        74.7%       1091   68.2%             68.9%
+        2020     2024     2144      1702        79.4%       1167   68.6%             69.3%
+  ------------------------------------------------------------------------------------------
+       Total             14709     10934        74.3%       7070   64.7%             64.8%
+
+Resumo PI (todas as eleições somadas)
+
+  Cargo               Eleitos em  Eleitos  Tentaram  Reeleitos  Taxa (UF)  Média municípios
+  -------------------------------------------------------------------------------------------
+  Governador           1994-2018        7         4          2      50.0%                  
+  Senador              1994-2014        9         4          1      25.0%                  
+  Deputado Federal     1994-2018       70        51         38      74.5%                  
+  Deputado Estadual    1994-2018      210       164        126      76.8%                  
+  Prefeito             1996-2020     1558       825        562      68.1%             71.8%
+  Vereador             1996-2020    14709     10934       7070      64.7%             64.8%
+
+  Cargos municipais (prefeito + vereador) em todo o estado: 7632 reeleitos de 11759 que tentaram = 64.9%
+
+  Fora do cálculo (eleição seguinte ainda sem dados): Governador 2022, Senador 2018, Senador 2022, Deputado Federal 2022, Deputado Estadual 2022, Prefeito 2024, Vereador 2024.
+
+  Tentativas identificadas pela ligação por nome/nascimento (eleito sem título): 617.

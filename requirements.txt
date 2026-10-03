@@ -1,0 +1,4 @@
+httpx>=0.27
+# loader (python -m loader)
+pandas>=2.0
+psycopg2-binary>=2.9

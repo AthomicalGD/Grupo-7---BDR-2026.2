@@ -1,0 +1,74 @@
+# PostgreSQL 17 + aplicação das migrações de banco/migracoes.
+#
+#   docker compose up -d             sobe o banco e aplica as migrações pendentes
+#   docker compose run --rm migracoes    reaplica só as pendentes (ex.: depois de criar uma nova)
+#
+# Credenciais e porta podem ser trocadas por variáveis de ambiente ou num .env
+# ao lado deste arquivo (POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_PORT).
+
+x-conexao: &conexao
+  POSTGRES_DB: ${POSTGRES_DB:-eleicoes}
+  POSTGRES_USER: ${POSTGRES_USER:-eleicoes}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-eleicoes}
+
+services:
+  db:
+    image: postgres:17
+    environment: *conexao
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    shm_size: 1g
+    # Ajustes para carga em massa (dezenas de milhões de linhas por UF grande).
+    command: >
+      postgres
+      -c shared_buffers=1GB
+      -c work_mem=128MB
+      -c maintenance_work_mem=1GB
+      -c temp_buffers=256MB
+      -c max_wal_size=8GB
+      -c checkpoint_timeout=15min
+      -c synchronous_commit=off
+    healthcheck:
+      # Por TCP: na primeira inicialização o servidor temporário do entrypoint só escuta no socket local.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  migracoes:
+    image: postgres:17
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      <<: *conexao
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER:-eleicoes}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-eleicoes}
+      PGDATABASE: ${POSTGRES_DB:-eleicoes}
+    volumes:
+      - ./banco/migracoes:/migracoes:ro
+    # Aplica, em ordem alfabética, cada arquivo ainda ausente de schema_migrations.
+    # Cada arquivo roda numa transação junto com o próprio registro.
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -eu
+        psql -v ON_ERROR_STOP=1 -q -c "CREATE TABLE IF NOT EXISTS schema_migrations (versao text PRIMARY KEY, aplicada_em timestamptz NOT NULL DEFAULT now())"
+        for f in /migracoes/*.sql; do
+          v=$$(basename "$$f")
+          if [ -n "$$(psql -tA -c "SELECT 1 FROM schema_migrations WHERE versao = '$$v'")" ]; then
+            echo "ja aplicada: $$v"
+          else
+            echo "aplicando:   $$v"
+            psql -v ON_ERROR_STOP=1 -q --single-transaction -f "$$f" -c "INSERT INTO schema_migrations (versao) VALUES ('$$v')"
+          fi
+        done
+        echo "migracoes em dia"
+    restart: "no"
+
+volumes:
+  pgdata:
