@@ -33,6 +33,8 @@ python -m crawler
 | `--manter-zips` | Guarda os zips do TSE em `dados/_zips` (ocupa +6 GB) |
 | `--limite-gb 200` | Não baixa se o total em disco for passar desse valor (padrão 200) |
 | `--dados PASTA` | Grava em outra pasta (padrão `./dados`) |
+| `--fotos` | Baixa as fotos dos candidatos em vez dos dados das perguntas (ver abaixo) |
+| `--ufs PI BA BR` | Com `--fotos`: só essas UFs; `BR` são os candidatos a Presidente |
 
 Como o crawler se comporta:
 
@@ -74,6 +76,53 @@ python -m loader SP RJ MG
 - O viés dos partidos (`partido.vies_politico`, de -100 a +100) vem da migração `006_vies_partidos.sql`;
   partidos sem viés informado ficam com 0.
 - Não são carregados: votos do exterior (`ZZ`), `VIES_MUNICIPIO` (métrica ainda por calcular), `MALHA_MUNICIPIO` e `idade_media_populacao` (o crawler não baixa esses dados).
+
+### Fotos dos candidatos
+
+O TSE publica a foto de registro de cada candidatura num zip por eleição e UF
+(`foto_cand<ano>_<UF>_div.zip`), de 2004 em diante; antes disso não há fotos. O Amapá não
+publicou as de 2008, e o DF só tem zip nas eleições gerais.
+
+```bash
+python -m crawler --fotos --simular
+```
+
+```bash
+python -m crawler --fotos --ufs AC BA GO PE PI PR BR
+```
+
+- Brasil inteiro, 2004 a 2024: 296 zips, **40,6 GB** (2020 e 2024 somam 30 GB). As 6 UFs carregadas + BR: 10,2 GB.
+- Os zips ficam inteiros em `dados/tse/fotos_candidatos/<ano>/`, sem extração: são cerca de 3 milhões de
+  imagens, e a API lê cada uma direto do zip pelo nome `F<UF><SQ_CANDIDATO>_div.<ext>`.
+- Cada zip tem o CRC de todas as imagens conferido; o manifesto guarda a contagem por formato e
+  `dados/tse/fotos_candidatos/RESUMO.md` mostra as fotos por eleição e UF.
+- Aceita `--anos`, `--atualizar`, `--simular`, `--limite-gb` e `--carreira-ate 2026`, e é retomável como o resto.
+- Checagem da lógica, sem rede: `python -m crawler.test_fotos`.
+
+## API (Voto Aberto)
+
+API em FastAPI sobre o banco carregado, consumida pelo front-end. Com o banco no ar:
+
+```bash
+python -m uvicorn api.app:app --port 8000
+```
+
+| Endpoint | Retorna |
+|---|---|
+| `GET /api/saude` | Se o banco responde e as UFs carregadas (503 com instruções se o banco estiver fora) |
+| `GET /api/ufs` | As 27 UFs, com nº de municípios, se estão carregadas e o viés por ano |
+| `GET /api/ufs/{sigla}` | Viés da UF, das regiões intermediárias e de cada município, eleitorado apto por ano |
+| `GET /api/municipios?q=&uf=&limite=8` | Busca de municípios por nome, sem acentos, em todo o Brasil |
+| `GET /api/municipios/{ibge}` | Viés, votos por partido, indicadores (PIB per capita, IDHM...), comparecimento e prefeitos |
+| `GET /api/politicos?q=&limite=8` | Busca de políticos por nome (trigramas, sem acentos; migração `010_busca_politicos.sql`) |
+| `GET /api/politicos/aleatorio` | Um político com 5+ candidaturas e 2+ vitórias |
+| `GET /api/politicos/{id}` | Candidaturas, resultados, votos e reeleições do político (sem CPF, título ou data de nascimento) |
+| `GET /api/fotos/{ano}/{uf}/{sq}` | Foto da candidatura, lida do zip do TSE (candidaturas, busca e prefeitos já trazem a URL em `foto`) |
+| `GET /api/geo/brasil`, `GET /api/geo/uf/{sigla}` | Malhas do IBGE em GeoJSON, com os anéis no sentido que o d3-geo espera |
+
+- O viés segue a mesma conta de `scripts/07_vies_politico_municipio.py`.
+- As respostas ficam em cache no processo: **reinicie a API depois de carregar UFs**.
+- Conferência contra o banco (precisa de PI carregado): `python -m api.test_api`.
 
 ## Organização de `dados/`
 
