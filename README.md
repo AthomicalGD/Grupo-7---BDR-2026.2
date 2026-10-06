@@ -71,8 +71,9 @@ python -m loader SP RJ MG
 - Cada UF é gravada numa única transação e registrada em `carga_uf`: se a carga falhar, a UF não fica
   pela metade e pode ser pedida de novo.
 - Na primeira carga entra também `BR`: as candidaturas a Presidente, necessárias à votação de toda UF.
-- Não são carregados: votos do exterior (`ZZ`), `vies_politico`/`VIES_MUNICIPIO` (métricas ainda por
-  calcular), `MALHA_MUNICIPIO` e `idade_media_populacao` (o crawler não baixa esses dados).
+- O viés dos partidos (`partido.vies_politico`, de -100 a +100) vem da migração `006_vies_partidos.sql`;
+  partidos sem viés informado ficam com 0.
+- Não são carregados: votos do exterior (`ZZ`), `VIES_MUNICIPIO` (métrica ainda por calcular), `MALHA_MUNICIPIO` e `idade_media_populacao` (o crawler não baixa esses dados).
 
 ## Organização de `dados/`
 

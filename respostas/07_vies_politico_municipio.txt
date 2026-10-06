@@ -1,0 +1,1816 @@
+P7) Viés político dos municípios e regiões na linha do tempo (2018, 2020, 2022, 2024)
+
+Escala: -100 = esquerda, +100 = direita (viés de cada partido em partido.vies_politico).
+Viés do município no ano = média do viés dos partidos ponderada pelos votos válidos
+(nominais + legenda) que cada partido obteve ali, somando todos os cargos do 1º turno
+(2018/2022: presidente, governador, senador, deputados; 2020/2024: prefeito e vereador).
+Regiões e estado: a mesma média ponderada sobre os votos de todos os seus municípios.
+
+Observações:
+- Partidos sem viés informado entram com viés 0 e puxam a média para o centro; a parcela
+  desses votos aparece logo abaixo do estado.
+- Em 2018 cada eleitor tinha 2 votos para senador, então o Senado pesa o dobro nesse ano.
+- Anos gerais e municipais têm cargos diferentes: compare 2018 com 2022 e 2020 com 2024.
+- Variância: variância populacional dos 4 valores anuais do município (pontos²); entram só
+  os municípios com viés nos 4 anos. Parte dela vem da troca entre anos gerais e municipais.
+
+======================================================================
+UF: AC
+======================================================================
+
+Estado
+          2018    2020    2022    2024
+  ------------------------------------
+  AC     -22.7   -29.2   -21.2   -11.3
+
+  Votos em partidos sem viés informado (contam como 0): 2018: 1.3%, 2020: 0.5%, 2022: 0.1%, 2024: 0.2%
+
+Regiões intermediárias (IBGE)
+  Região                              2018    2020    2022    2024
+  ----------------------------------------------------------------
+  Cruzeiro do Sul                    -29.3   -27.9   -23.1   -25.6
+  Rio Branco                         -20.5   -29.6   -20.6    -5.6
+
+Municípios mais à esquerda e mais à direita
+  Ano   Mais à esquerda                         Mais à direita                        
+  ----------------------------------------------------------------------------------
+  2018  Jordão (-40.7)                          Acrelândia (-9.7)                     
+  2020  Assis Brasil (-46.0)                    Epitaciolândia (-13.0)                
+  2022  Jordão (-35.1)                          Sena Madureira (-16.3)                
+  2024  Xapuri (-35.8)                          Rio Branco (+4.7)                     
+
+Top 5 municípios com maior variância (mais mudaram)
+  Município                           2018    2020    2022    2024  Variância
+  ---------------------------------------------------------------------------
+  Rio Branco                         -18.3   -30.5   -21.1    +4.7      168.1
+  Assis Brasil                       -33.5   -46.0   -25.9   -13.4      139.9
+  Epitaciolândia                     -25.2   -13.0   -19.1    +1.9      101.1
+  Mâncio Lima                        -30.7   -43.0   -19.2   -23.3       81.7
+  Brasiléia                          -27.3   -41.7   -19.6   -23.8       69.1
+
+Top 5 municípios com menor variância (mais constantes)
+  Município                           2018    2020    2022    2024  Variância
+  ---------------------------------------------------------------------------
+  Senador Guiomard                   -20.0   -15.6   -17.9   -19.4        2.8
+  Porto Acre                         -24.0   -21.0   -17.4   -20.0        5.6
+  Porto Walter                       -33.1   -26.8   -29.2   -32.2        6.1
+  Cruzeiro Do Sul                    -22.5   -16.9   -17.7   -24.8       10.9
+  Sena Madureira                     -24.0   -24.4   -16.3   -17.6       13.2
+
+Municípios (22)
+  Município                           2018    2020    2022    2024
+  ----------------------------------------------------------------
+  Acrelândia                          -9.7   -23.8   -16.7   -22.2
+  Assis Brasil                       -33.5   -46.0   -25.9   -13.4
+  Brasiléia                          -27.3   -41.7   -19.6   -23.8
+  Bujari                             -23.3   -33.6   -22.0   -33.4
+  Capixaba                           -21.7   -30.6   -20.4   -24.2
+  Cruzeiro Do Sul                    -22.5   -16.9   -17.7   -24.8
+  Epitaciolândia                     -25.2   -13.0   -19.1    +1.9
+  Feijó                              -33.5   -25.6   -32.2   -23.2
+  Jordão                             -40.7   -41.1   -35.1   -31.7
+  Manoel Urbano                      -31.0   -32.9   -21.1   -24.4
+  Marechal Thaumaturgo               -38.9   -38.7   -21.1   -24.1
+  Mâncio Lima                        -30.7   -43.0   -19.2   -23.3
+  Plácido De Castro                  -19.9   -32.0   -19.1   -21.9
+  Porto Acre                         -24.0   -21.0   -17.4   -20.0
+  Porto Walter                       -33.1   -26.8   -29.2   -32.2
+  Rio Branco                         -18.3   -30.5   -21.1    +4.7
+  Rodrigues Alves                    -28.3   -26.3   -16.6   -15.9
+  Santa Rosa Do Purus                -36.4   -26.1   -29.6   -21.3
+  Sena Madureira                     -24.0   -24.4   -16.3   -17.6
+  Senador Guiomard                   -20.0   -15.6   -17.9   -19.4
+  Tarauacá                           -35.4   -41.2   -30.4   -32.7
+  Xapuri                             -34.3   -44.0   -26.0   -35.8
+
+======================================================================
+UF: BA
+======================================================================
+
+Estado
+          2018    2020    2022    2024
+  ------------------------------------
+  BA     -39.1   -30.3   -32.4   -34.1
+
+  Votos em partidos sem viés informado (contam como 0): 2018: 1.2%, 2020: 2.1%, 2022: 0.3%, 2024: 2.4%
+
+Regiões intermediárias (IBGE)
+  Região                              2018    2020    2022    2024
+  ----------------------------------------------------------------
+  Barreiras                          -35.3   -22.1   -28.0   -31.0
+  Feira de Santana                   -41.1   -33.6   -33.6   -35.6
+  Guanambi                           -41.9   -32.1   -36.9   -42.2
+  Ilhéus ¿ Itabuna                   -33.4   -25.0   -23.0   -29.6
+  Irecê                              -39.7   -27.4   -37.1   -38.9
+  Juazeiro                           -41.1   -36.3   -36.0   -36.6
+  Paulo Afonso                       -44.1   -30.9   -36.4   -35.8
+  Salvador                           -38.4   -31.4   -32.9   -30.6
+  Santo Antônio de Jesus             -41.0   -29.8   -33.4   -33.0
+  Vitória da Conquista               -38.7   -29.5   -32.0   -38.1
+
+Municípios mais à esquerda e mais à direita
+  Ano   Mais à esquerda                         Mais à direita                        
+  ----------------------------------------------------------------------------------
+  2018  Caetanos (-53.9)                        Luís Eduardo Magalhães (-16.3)        
+  2020  Fátima (-63.9)                          Anguera (+25.6)                       
+  2022  Andorinha (-47.6)                       Luís Eduardo Magalhães (-8.2)         
+  2024  Igaporã (-64.1)                         Porto Seguro (-1.3)                   
+
+Top 5 municípios com maior variância (mais mudaram)
+  Município                           2018    2020    2022    2024  Variância
+  ---------------------------------------------------------------------------
+  Quijingue                          -44.6   +20.4   -33.8   -55.0      844.7
+  Anguera                            -43.3   +25.6   -34.5   -29.1      728.8
+  Dom Basílio                        -36.9   +25.0   -42.0   -30.1      723.8
+  Várzea Nova                        -46.3   +13.5   -37.6   -55.5      714.2
+  Presidente Jânio Quadros           -49.8   +10.2   -42.0   -50.8      637.3
+
+Top 5 municípios com menor variância (mais constantes)
+  Município                           2018    2020    2022    2024  Variância
+  ---------------------------------------------------------------------------
+  Gentio Do Ouro                     -39.8   -41.0   -39.0   -41.2        0.8
+  Irará                              -43.4   -40.9   -41.0   -41.7        1.0
+  Tapiramutá                         -41.3   -39.9   -37.5   -40.4        2.0
+  Aporá                              -44.1   -41.2   -40.4   -41.3        2.0
+  Jiquiriçá                          -48.8   -47.9   -44.9   -47.5        2.1
+
+Municípios (417)
+  Município                           2018    2020    2022    2024
+  ----------------------------------------------------------------
+  Abaré                              -45.0   -46.8   -42.4   -52.8
+  Abaíra                             -37.8   -42.7   -34.4   -35.9
+  Acajutiba                          -35.5   -29.4   -38.0   -23.6
+  Adustina                           -48.2   -39.5   -39.2   -37.7
+  Aiquara                            -42.3   -29.6   -37.4   -36.1
+  Alagoinhas                         -37.3   -30.4   -33.0   -30.0
+  Alcobaça                           -42.2   -25.7   -29.7   -44.8
+  Almadina                           -43.5   -18.4   -41.4   -34.1
+  Amargosa                           -40.7   -53.6   -31.0   -38.3
+  Amélia Rodrigues                   -41.1   -34.8   -36.4   -33.6
+  América Dourada                    -42.4    -0.8   -38.7   -32.1
+  Anagé                              -45.7   -26.7   -39.9   -40.8
+  Andaraí                            -49.7   -50.9   -43.8   -46.4
+  Andorinha                          -48.6   -36.2   -47.6   -33.5
+  Angical                            -45.2   -27.2   -34.9   -39.0
+  Anguera                            -43.3   +25.6   -34.5   -29.1
+  Antas                              -48.5   -54.3   -32.3   -29.0
+  Antônio Cardoso                    -51.4   -39.7   -45.9   -44.3
+  Antônio Gonçalves                  -40.9   -33.2   -36.7   -29.8
+  Aporá                              -44.1   -41.2   -40.4   -41.3
+  Apuarema                           -41.9   -34.6   -30.2   -40.0
+  Aracatu                            -42.2   -26.3   -33.2   -42.6
+  Araci                              -46.1   -36.7   -41.1   -40.7
+  Aramari                            -42.3   -33.7   -40.7   -37.4
+  Arataca                            -38.7   -18.6   -33.3   -36.4
+  Aratuípe                           -43.7   -48.3   -40.7   -49.2
+  Araçás                             -47.3   -43.0   -39.7   -34.9
+  Aurelino Leal                      -43.0   -36.6   -29.6   -29.6
+  Baianópolis                        -40.2    -8.1   -31.4   -31.4
+  Baixa Grande                       -42.5   -28.0   -34.2   -30.6
+  Banzaê                             -37.5   -21.5   -35.7   -42.8
+  Barra                              -39.3   -22.1   -37.6   -40.9
+  Barra Da Estiva                    -38.5   -25.0   -35.1   -35.1
+  Barra Do Choça                     -40.7   -30.1   -36.2   -35.0
+  Barra Do Mendes                    -45.4   -32.4   -40.5   -32.8
+  Barra Do Rocha                     -45.6   -50.7   -32.8   -43.3
+  Barreiras                          -31.2   -32.6   -23.2   -27.3
+  Barro Alto                         -43.1    -8.2   -36.0   -40.7
+  Barro Preto                        -42.1   -29.0   -33.7   -46.1
+  Barrocas                           -43.2   -38.6   -38.4   -54.0
+  Belmonte                           -37.0   -32.7   -27.8   -33.4
+  Belo Campo                         -39.7   -15.8   -35.8   -27.6
+  Biritinga                          -52.7   -52.7   -40.5   -53.4
+  Boa Nova                           -45.0   -31.1   -40.7   -39.2
+  Boa Vista Do Tupim                 -44.7   -35.8   -34.8   -33.1
+  Bom Jesus Da Lapa                  -41.8   -31.3   -35.6   -39.1
+  Bom Jesus Da Serra                 -45.8   -19.8   -41.0   -39.0
+  Boninal                            -46.4   -42.1   -41.6   -45.4
+  Bonito                             -41.1   -30.9   -37.6   -35.5
+  Boquira                            -44.9   -39.2   -43.0   -45.4
+  Botuporã                           -43.6   -35.3   -37.4   -48.6
+  Brejolândia                        -37.5    -7.0   -35.7   -39.5
+  Brejões                            -47.8   -25.1   -35.7   -36.7
+  Brotas De Macaúbas                 -43.1   -44.7   -39.3   -40.6
+  Brumado                            -32.5   -40.6   -32.2   -48.6
+  Buerarema                          -28.1   -30.5   -14.3   -27.3
+  Buritirama                         -39.5   -29.5   -37.2   -31.6
+  Caatiba                            -36.5   -26.9   -30.6   -28.9
+  Cabaceiras Do Paraguaçu            -41.3   -31.7   -35.4   -31.0
+  Cachoeira                          -45.2   -25.2   -39.7   -39.6
+  Caculé                             -41.3   -45.8   -37.9   -45.6
+  Caem                               -45.1   -40.6   -42.4   -42.2
+  Caetanos                           -53.9   -49.1   -46.9   -52.2
+  Caetité                            -43.4   -37.5   -38.6   -47.2
+  Cafarnaum                          -33.4   -25.9   -35.2   -37.9
+  Cairu                              -35.5   -22.0   -27.7   -34.8
+  Caldeirão Grande                   -44.6   -22.4   -36.7   -34.7
+  Camacan                            -36.9   -26.7   -28.6   -31.0
+  Camamu                             -37.6   -23.7   -31.3   -44.2
+  Camaçari                           -38.9   -36.4   -32.3   -38.8
+  Campo Alegre De Lourdes            -44.5   -48.1   -41.3   -52.2
+  Campo Formoso                      -38.5   -35.0   -34.0   -31.4
+  Canarana                           -42.4   -17.9   -33.8   -42.7
+  Canavieiras                        -36.0   -18.8   -28.7   -33.1
+  Candeal                            -45.4   -22.9   -35.9   -38.3
+  Candeias                           -45.7   -19.6   -37.8   -27.5
+  Candiba                            -38.6   -30.4   -36.2   -40.7
+  Cansanção                          -42.9   -36.2   -38.8   -39.7
+  Canudos                            -44.3   -31.6   -35.9   -28.9
+  Canápolis                          -38.9   -35.6   -38.1   -51.5
+  Capela Do Alto Alegre              -43.9   -26.7   -34.0   -19.8
+  Capim Grosso                       -37.2   -33.6   -30.0   -21.5
+  Caravelas                          -39.0   -18.6   -25.8   -38.6
+  Caraíbas                           -42.7   -44.5   -40.6   -30.5
+  Cardeal Da Silva                   -51.5   -25.6   -42.4   -23.5
+  Carinhanha                         -41.5   -41.8   -37.0   -48.3
+  Casa Nova                          -41.7   -38.3   -41.4   -44.2
+  Castro Alves                       -41.8   -38.8   -38.1   -36.3
+  Catolândia                         -38.8   -28.6   -35.5   -50.8
+  Catu                               -41.4   -21.4   -37.3   -43.6
+  Caturama                           -43.8    -6.7   -36.7   -34.5
+  Central                            -39.0   -38.9   -38.0   -48.0
+  Chorrochó                          -46.0   -32.2   -37.5   -49.1
+  Cipó                               -41.4   -38.7   -27.8   -35.9
+  Coaraci                            -38.6   -30.4   -30.3   -38.4
+  Cocos                              -33.7    +2.1   -34.3   -37.1
+  Conceição Da Feira                 -43.4   -38.4   -34.9   -27.7
+  Conceição Do Almeida               -45.9   -16.8   -38.4   -28.9
+  Conceição Do Coité                 -38.4   -44.7   -31.6   -36.1
+  Conceição Do Jacuípe               -38.0   -25.5   -30.8   -24.9
+  Conde                              -43.1   -32.5   -33.0   -34.8
+  Condeúba                           -44.5   -27.8   -38.6   -43.0
+  Contendas Do Sincorá               -44.1   -15.3   -34.2   -35.7
+  Coração De Maria                   -43.1   -29.4   -35.9   -39.4
+  Cordeiros                          -43.2   -15.8   -36.0   -39.6
+  Coribe                             -36.1    +4.6   -35.9   -31.7
+  Coronel João Sá                    -47.2   -34.3   -28.7   -32.3
+  Correntina                         -43.8   -19.7   -37.7   -37.3
+  Cotegipe                           -42.4   -28.2   -33.8   -52.8
+  Cravolândia                        -44.3   -38.2   -38.2   -51.0
+  Cristópolis                        -39.9   -26.9   -32.7   -43.9
+  Crisópolis                         -43.5   -40.9   -42.2   -50.7
+  Cruz Das Almas                     -37.9   -41.9   -28.9   -33.9
+  Curaçá                             -45.3   -33.7   -37.3   -40.5
+  Cândido Sales                      -38.6   -23.0   -28.1   -39.0
+  Cícero Dantas                      -38.3   -28.6   -36.9   -29.4
+  Dias D'Ávila                       -40.8   -28.1   -33.1   -20.4
+  Dom Basílio                        -36.9   +25.0   -42.0   -30.1
+  Dom Macedo Costa                   -45.3   -50.0   -38.7   -49.8
+  Dário Meira                        -44.5   -29.3   -32.7   -27.4
+  Elísio Medrado                     -41.4   -35.1   -33.1   -29.7
+  Encruzilhada                       -46.0   -44.2   -35.7   -43.1
+  Entre Rios                         -43.6   -26.0   -37.7   -22.0
+  Esplanada                          -43.3   -32.2   -35.2   -38.9
+  Euclides Da Cunha                  -45.4   -42.6   -37.0   -46.9
+  Eunápolis                          -24.3   -25.6   -16.4   -26.8
+  Feira Da Mata                      -35.5   -36.4   -32.6   -39.9
+  Feira De Santana                   -33.2   -31.6   -27.1   -32.5
+  Filadélfia                         -43.8   -28.8   -35.3   -18.6
+  Firmino Alves                      -44.5   -34.7   -33.0   -29.3
+  Floresta Azul                      -43.0   -35.2   -38.0   -47.8
+  Formosa Do Rio Preto               -38.1   -25.6   -26.0   -36.6
+  Fátima                             -50.0   -63.9   -40.6   -53.0
+  Gandu                              -36.1   -24.5   -27.4   -39.9
+  Gavião                             -42.6   -21.5   -35.9   -16.9
+  Gentio Do Ouro                     -39.8   -41.0   -39.0   -41.2
+  Glória                             -46.5   -26.6   -38.6   -23.3
+  Gongogi                            -45.2   -21.9   -35.9   -38.5
+  Governador Mangabeira              -44.8   -29.3   -39.2   -37.5
+  Guajeru                            -48.9   -25.2   -45.6   -27.3
+  Guanambi                           -35.8   -34.4   -29.2   -49.6
+  Guaratinga                         -40.1   -42.9   -32.8   -39.1
+  Heliópolis                         -46.9    +7.4   -40.5   -29.4
+  Iaçu                               -44.1   -28.2   -32.9   -39.9
+  Ibiassucê                          -40.7   -41.2   -37.9   -35.9
+  Ibicaraí                           -37.7   -33.7   -29.1   -33.1
+  Ibicoara                           -34.1   -14.2   -28.4   -41.2
+  Ibicuí                             -40.9   -40.4   -37.0   -31.4
+  Ibipeba                            -36.3   -22.8   -40.5   -39.4
+  Ibipitanga                         -42.0   -31.8   -34.0   -42.6
+  Ibiquera                           -43.8   -23.5   -37.8   -58.0
+  Ibirapitanga                       -41.9   -26.4   -31.7   -38.7
+  Ibirapuã                           -32.5   -12.5   -22.4   -35.7
+  Ibirataia                          -37.2   -23.1   -27.3   -31.7
+  Ibitiara                           -46.5   -45.5   -35.7   -39.9
+  Ibititá                            -37.5   -30.8   -36.8   -39.7
+  Ibotirama                          -40.0   -41.2   -34.1   -39.3
+  Ichu                               -45.1   -16.2   -36.1   -38.3
+  Igaporã                            -44.0   -48.8   -39.6   -64.1
+  Igrapiúna                          -46.4   -31.7   -35.1   -43.6
+  Iguaí                              -40.9   -27.6   -34.7   -37.8
+  Ilhéus                             -32.3   -25.9   -25.5   -35.9
+  Inhambupe                          -43.0   -27.6   -38.6   -28.5
+  Ipecaetá                           -44.1   -40.5   -37.2   -23.9
+  Ipiaú                              -36.0   -26.1   -26.4   -30.6
+  Ipirá                              -41.5   -32.5   -37.6   -34.2
+  Ipupiara                           -37.0   -23.5   -30.9   -25.4
+  Irajuba                            -44.7   -24.6   -38.8   -51.7
+  Iramaia                            -45.5   -28.1   -36.5   -35.9
+  Iraquara                           -48.1   -22.2   -39.8   -32.7
+  Irará                              -43.4   -40.9   -41.0   -41.7
+  Irecê                              -37.8   -35.0   -33.6   -45.6
+  Itabela                            -38.1   -30.5   -23.7   -33.1
+  Itaberaba                          -38.5    -3.6   -25.6   -33.5
+  Itabuna                            -31.5   -16.1   -20.6   -23.1
+  Itacaré                            -42.9   -42.1   -37.0   -48.0
+  Itaeté                             -45.0   -41.1   -36.3   -45.7
+  Itagi                              -43.8   -42.6   -36.6   -38.1
+  Itagibá                            -40.8   -37.6   -34.0   -42.7
+  Itagimirim                         -29.8    +1.9   -22.6   -28.6
+  Itaguaçu Da Bahia                  -38.7   -37.1   -32.8   -24.1
+  Itaju Do Colônia                   -33.5    -1.3   -30.7   -34.9
+  Itajuípe                           -41.5   -28.1   -29.9   -43.5
+  Itamaraju                          -32.7   -29.9   -18.2   -35.7
+  Itamari                            -40.3   -30.3   -32.2   -40.6
+  Itambé                             -39.0   -14.0   -29.3   -35.3
+  Itanagra                           -51.4   -38.3   -38.3   -46.4
+  Itanhém                            -34.9   -28.9   -26.8   -42.9
+  Itaparica                          -42.6   -30.6   -35.5   -28.6
+  Itapebi                            -37.0   -22.3   -28.5   -44.5
+  Itapetinga                         -27.4   -36.5   -21.1   -28.4
+  Itapicuru                          -45.6   -31.9   -38.5   -35.4
+  Itapitanga                         -42.6   -40.8   -29.9   -48.1
+  Itapé                              -36.1   -30.2   -30.2   -35.2
+  Itaquara                           -35.4   -43.0   -37.1   -49.0
+  Itarantim                          -35.1   -25.4   -28.4   -30.2
+  Itatim                             -41.7   -25.3   -28.0   -25.1
+  Itiruçu                            -42.2   -41.4   -37.7   -39.5
+  Itiúba                             -45.2   -41.0   -33.6   -34.4
+  Itororó                            -38.4   -30.2   -30.1   -51.9
+  Ituaçu                             -38.0   -21.7   -35.5   -17.3
+  Ituberá                            -40.6   -39.1   -28.5   -26.9
+  Iuiu                               -47.4   -29.2   -42.5   -45.6
+  Jaborandi                          -38.1    -0.8   -39.2   -29.9
+  Jacaraci                           -42.5   -37.5   -40.3   -37.8
+  Jacobina                           -42.8   -37.3   -35.0   -27.6
+  Jaguaquara                         -36.6   -18.8   -29.0   -53.1
+  Jaguarari                          -44.0   -49.7   -41.3   -55.2
+  Jaguaripe                          -42.5   -25.6   -37.4   -30.2
+  Jandaíra                           -49.5   -41.2   -39.0   -37.6
+  Jequié                             -35.6   -24.0   -27.4   -26.0
+  Jeremoabo                          -46.8   -25.0   -35.5   -34.5
+  Jiquiriçá                          -48.8   -47.9   -44.9   -47.5
+  Jitaúna                            -43.3   -19.8   -36.7   -57.5
+  João Dourado                       -34.2    -1.3   -29.5   -13.5
+  Juazeiro                           -36.7   -34.3   -31.1   -29.0
+  Jucuruçu                           -41.7   -28.3   -32.3   -30.6
+  Jussara                            -42.1   -25.2   -41.7   -29.8
+  Jussari                            -39.8   -36.5   -33.7   -31.9
+  Jussiape                           -33.3   -40.8   -35.7   -42.6
+  Lafaiete Coutinho                  -42.6   -25.1   -40.4   -28.3
+  Lagoa Real                         -42.4   -30.1   -38.9   -30.6
+  Laje                               -44.4   -19.3   -33.4   -29.0
+  Lajedinho                          -46.3   -42.7   -37.6   -38.0
+  Lajedo Do Tabocal                  -42.9   -34.6   -38.2   -30.7
+  Lajedão                            -31.5   -18.8   -23.7   -29.0
+  Lamarão                            -52.1   -50.0   -47.3   -44.8
+  Lapão                              -41.1   -31.5   -35.4   -35.8
+  Lauro De Freitas                   -35.3   -34.7   -28.9   -38.5
+  Lençóis                            -44.3   -30.8   -37.2   -33.6
+  Licínio De Almeida                 -47.6   -51.1   -39.0   -50.6
+  Livramento De Nossa Senhora        -41.6    -9.3   -33.6   -41.7
+  Luís Eduardo Magalhães             -16.3   -28.1    -8.2   -18.4
+  Macajuba                           -42.8   -33.3   -35.9   -30.5
+  Macarani                           -33.5   -15.0   -27.8   -21.0
+  Macaúbas                           -43.7   -45.5   -35.3   -44.6
+  Macururé                           -44.4   -55.3   -41.4   -47.2
+  Madre De Deus                      -43.9   -30.1   -36.8   -38.5
+  Maetinga                           -43.5    -3.7   -41.0   -44.6
+  Maiquinique                        -31.6   -19.1   -25.1   -29.6
+  Mairi                              -46.2   -46.7   -40.0   -39.2
+  Malhada                            -43.4   -21.9   -35.9   -26.7
+  Malhada De Pedras                  -41.5   -28.6   -37.0   -38.7
+  Manoel Vitorino                    -48.3   -31.9   -38.9   -27.4
+  Mansidão                           -41.5   -22.6   -35.0   -24.6
+  Maracás                            -43.1   -43.3   -38.2   -45.1
+  Maragogipe                         -41.9   -26.8   -35.8   -22.6
+  Maraú                              -39.1   -31.0   -33.9   -35.1
+  Marcionílio Souza                  -46.9   -22.7   -38.1   -45.2
+  Mascote                            -39.9   -13.6   -37.3   -48.2
+  Mata De São João                   -41.4   -34.8   -37.2   -36.6
+  Matina                             -40.1   +16.3   -41.1   -29.7
+  Medeiros Neto                      -34.3   -14.5   -23.7   -31.0
+  Miguel Calmon                      -40.9   -36.8   -31.9   -20.7
+  Milagres                           -40.4   -30.1   -29.7   -26.4
+  Mirangaba                          -43.9   -36.8   -34.6   -38.3
+  Mirante                            -49.4   -45.6   -43.7   -42.3
+  Monte Santo                        -45.2   -37.7   -38.2   -46.0
+  Morpará                            -43.5   -49.2   -42.0   -50.4
+  Morro Do Chapéu                    -40.3    +8.2   -38.4   -41.0
+  Mortugaba                          -32.7   -45.4   -33.7   -46.6
+  Mucugê                             -40.0   -33.6   -31.4   -50.9
+  Mucuri                             -33.7   -31.7   -17.8   -30.9
+  Mulungu Do Morro                   -47.7   -43.5   -40.6   -41.2
+  Mundo Novo                         -41.8   -41.2   -33.1   -38.7
+  Muniz Ferreira                     -42.3   -24.1   -35.1   -41.6
+  Muquém Do São Francisco            -41.3   -39.8   -38.1   -47.7
+  Muritiba                           -39.9   -37.1   -33.0   -26.2
+  Mutuípe                            -43.3   -35.0   -39.3   -39.1
+  Nazaré                             -39.0   -31.7   -34.3   -29.8
+  Nilo Peçanha                       -44.0   -32.6   -33.9   -40.4
+  Nordestina                         -45.2   -35.1   -32.2   -26.2
+  Nova Canaã                         -46.8   -20.3   -41.0   -39.4
+  Nova Fátima                        -42.1   -20.6   -36.4   -39.3
+  Nova Ibiá                          -38.0   -25.2   -31.9   -37.9
+  Nova Itarana                       -41.0   -28.1   -36.1   -37.2
+  Nova Redenção                      -50.6   -51.5   -45.5   -43.8
+  Nova Soure                         -48.4   -44.0   -40.4   -33.7
+  Nova Viçosa                        -29.0   -17.0   -19.2   -31.6
+  Novo Horizonte                     -43.8    -2.6   -32.7   -29.5
+  Novo Triunfo                       -48.9   -19.6   -36.0   -19.9
+  Olindina                           -44.3   -29.3   -39.5   -35.5
+  Oliveira Dos Brejinhos             -43.8   -16.8   -40.0   -47.4
+  Ouriçangas                         -47.2   -47.9   -40.8   -47.4
+  Ourolândia                         -40.0   -45.5   -18.3   -33.0
+  Palmas De Monte Alto               -45.7   -32.9   -41.5   -40.5
+  Palmeiras                          -48.9   -19.7   -39.9   -39.9
+  Paramirim                          -41.7   -44.4   -35.0   -44.1
+  Paratinga                          -38.7   -49.3   -41.3   -53.7
+  Paripiranga                        -48.6   -20.2   -33.4   -31.0
+  Pau Brasil                         -41.3   -34.8   -33.4   -55.7
+  Paulo Afonso                       -39.1   -24.3   -34.2   -24.5
+  Pedro Alexandre                    -46.0   -26.8   -37.6   -23.6
+  Pedrão                             -46.7   -21.8   -43.8   -34.6
+  Piatã                              -42.3   -37.6   -32.9   -46.2
+  Pilão Arcado                       -47.4   -25.0   -43.2   -46.7
+  Pindaí                             -43.8   -24.0   -35.9   -36.6
+  Pindobaçu                          -39.2   -28.1   -31.9   -24.5
+  Pintadas                           -43.8   -50.8   -40.2   -57.2
+  Piraí Do Norte                     -41.6   -19.6   -36.2   -41.7
+  Piripá                             -40.5   -26.1   -38.7   -41.1
+  Piritiba                           -40.6   -28.2   -32.7   -19.6
+  Planaltino                         -45.4   +12.4   -40.5   -50.1
+  Planalto                           -46.4   -42.9   -38.0   -40.7
+  Pojuca                             -41.0   -38.3   -36.3   -33.1
+  Ponto Novo                         -38.8   -36.2   -32.6   -26.3
+  Porto Seguro                       -28.7    -3.7   -13.5    -1.3
+  Potiraguá                          -35.8   -12.7   -25.6   -38.7
+  Poções                             -43.6   -28.7   -39.4   -34.5
+  Prado                              -35.7   -29.1   -22.7   -22.7
+  Presidente Dutra                   -43.8   -35.6   -44.7   -29.5
+  Presidente Jânio Quadros           -49.8   +10.2   -42.0   -50.8
+  Presidente Tancredo Neves          -40.4   -27.5   -31.7   -38.7
+  Pé De Serra                        -42.0   -36.3   -36.5   -36.8
+  Queimadas                          -44.6   -44.7   -36.0   -43.9
+  Quijingue                          -44.6   +20.4   -33.8   -55.0
+  Quixabeira                         -43.9   -36.8   -29.9   -41.4
+  Rafael Jambeiro                    -43.3   -45.6   -38.8   -44.5
+  Remanso                            -47.4   -44.5   -42.8   -41.9
+  Retirolândia                       -41.5   -33.3   -38.2   -52.6
+  Riacho De Santana                  -47.0   -11.5   -43.5   -29.5
+  Riachão Das Neves                  -41.8   -36.3   -33.7   -25.3
+  Riachão Do Jacuípe                 -42.2   -34.7   -39.6   -36.1
+  Ribeira Do Amparo                  -48.4   -53.6   -37.7   -45.6
+  Ribeira Do Pombal                  -39.4   -24.4   -33.4   -27.7
+  Ribeirão Do Largo                  -43.3   -22.7   -41.8   -46.9
+  Rio De Contas                      -42.5   -46.5   -35.1   -42.0
+  Rio Do Antônio                     -46.6   -29.1   -42.7   -56.4
+  Rio Do Pires                       -41.6   -24.3   -36.2   -43.1
+  Rio Real                           -40.3   -32.2   -30.4   -34.5
+  Rodelas                            -45.2   -39.1   -42.6   -43.4
+  Ruy Barbosa                        -43.2   -22.7   -33.9   -33.9
+  Salinas Da Margarida               -44.4   -31.5   -38.6   -31.6
+  Salvador                           -36.9   -31.7   -31.8   -28.1
+  Santa Brígida                      -51.7   -40.0   -42.9   -36.5
+  Santa Bárbara                      -47.1   -41.0   -38.1   -35.1
+  Santa Cruz Cabrália                -32.0   -29.1   -24.0   -41.7
+  Santa Cruz Da Vitória              -39.2   -45.4   -32.1   -39.3
+  Santa Inês                         -53.4   -61.9   -47.5   -46.3
+  Santa Luzia                        -39.0   -27.5   -28.1   -35.3
+  Santa Maria Da Vitória             -39.2    +2.5   -35.5   -29.3
+  Santa Rita De Cássia               -41.7   -26.5   -34.0   -26.9
+  Santa Terezinha                    -45.0   -32.0   -32.2   -43.0
+  Santaluz                           -41.0   -42.0   -34.6   -43.8
+  Santana                            -38.7   -13.5   -33.6   -27.4
+  Santanópolis                       -47.8   -31.7   -38.1   -30.4
+  Santo Amaro                        -41.3   -31.5   -39.4   -36.7
+  Santo Antônio De Jesus             -34.7   -25.6   -28.3   -30.2
+  Santo Estevão                      -46.4   -52.8   -40.6   -44.2
+  Sapeaçu                            -42.9   -29.8   -34.6   -35.8
+  Saubara                            -44.1   -38.8   -35.5   -42.1
+  Saúde                              -41.1   -35.0   -33.8   -29.4
+  Seabra                             -47.8   -35.5   -41.9   -40.1
+  Sebastião Laranjeiras              -35.8   +14.9   -35.4   -48.3
+  Senhor Do Bonfim                   -40.3   -32.4   -32.9   -33.6
+  Sento Sé                           -41.4   -33.4   -37.2   -52.4
+  Serra Do Ramalho                   -43.6   -27.1   -34.6   -31.4
+  Serra Dourada                      -39.4   -49.1   -39.1   -47.9
+  Serra Preta                        -44.2   -27.2   -32.3   -44.3
+  Serrinha                           -43.9   -33.1   -31.8   -25.9
+  Serrolândia                        -46.6   -45.5   -35.6   -46.9
+  Simões Filho                       -39.7   -25.5   -32.7   -23.4
+  Sobradinho                         -39.3   -39.6   -35.8   -37.2
+  Souto Soares                       -50.9   -45.3   -43.4   -54.3
+  Sátiro Dias                        -47.8   -47.9   -37.1   -35.7
+  São Desidério                      -39.1   -29.1   -28.4   -24.4
+  São Domingos                       -42.0   -32.1   -37.5   -30.1
+  São Felipe                         -43.4   -25.1   -35.4   -35.1
+  São Francisco Do Conde             -46.4   -35.2   -38.2   -34.8
+  São Félix                          -44.1   -24.9   -37.5   -23.2
+  São Félix Do Coribe                -36.3    -0.1   -28.1   -35.9
+  São Gabriel                        -37.6   -25.0   -39.4   -46.1
+  São Gonçalo Dos Campos             -41.6   -30.7   -36.5   -31.1
+  São José Da Vitória                -42.1   -39.0   -29.4   -19.9
+  São José Do Jacuípe                -46.2   -17.0   -35.0   -43.2
+  São Miguel Das Matas               -44.3   -45.7   -34.7   -45.9
+  São Sebastião Do Passé             -45.8   -19.3   -39.0   -31.3
+  Sítio Do Mato                      -38.6   -22.9   -36.6   -34.4
+  Sítio Do Quinto                    -43.0   -38.6   -36.4   -39.4
+  Tabocas Do Brejo Velho             -45.8    +7.0   -37.7   -35.2
+  Tanhaçu                            -40.9   -26.5   -35.7   -44.6
+  Tanque Novo                        -45.6   -24.8   -37.5   -28.6
+  Tanquinho                          -45.5   -37.9   -40.0   -41.3
+  Taperoá                            -42.4   -20.3   -31.9   -46.0
+  Tapiramutá                         -41.3   -39.9   -37.5   -40.4
+  Teixeira De Freitas                -28.1   -31.7   -13.1   -23.9
+  Teodoro Sampaio                    -41.8    +7.4   -42.5   -43.3
+  Teofilândia                        -47.0   -16.8   -37.3   -30.6
+  Teolândia                          -42.9   -38.0   -38.1   -51.1
+  Terra Nova                         -44.1    -4.7   -38.6   -30.7
+  Tremedal                           -42.1   -28.2   -36.7   -52.0
+  Tucano                             -43.3   -30.9   -34.9   -31.8
+  Uauá                               -44.9   -42.4   -39.0   -47.7
+  Ubaitaba                           -38.8   -38.0   -26.0   -40.4
+  Ubatã                              -38.7   -44.1   -32.8   -55.8
+  Ubaíra                             -39.6   -29.4   -34.7   -25.4
+  Uibaí                              -44.0   -46.3   -39.6   -44.8
+  Umburanas                          -39.6   -42.6   -34.9   -20.4
+  Una                                -37.6   -28.6   -25.8   -31.7
+  Urandi                             -43.4    -2.0   -35.0   -31.5
+  Uruçuca                            -38.0   -41.8   -30.5   -31.5
+  Utinga                             -47.1   -40.7   -32.8   -28.9
+  Valente                            -37.2   -29.9   -33.8   -38.5
+  Valença                            -37.2   -11.2   -30.4   -24.2
+  Varzedo                            -43.9   -33.4   -27.6   -26.3
+  Vera Cruz                          -42.9   -33.9   -35.2   -32.4
+  Vereda                             -33.8   -24.0   -32.8   -44.5
+  Vitória Da Conquista               -34.0   -40.5   -26.0   -37.5
+  Várzea Da Roça                     -46.2   -51.3   -39.7   -49.4
+  Várzea Do Poço                     -43.2   -49.4   -39.8   -43.2
+  Várzea Nova                        -46.3   +13.5   -37.6   -55.5
+  Wagner                             -45.9   -44.7   -37.2   -40.6
+  Wanderley                          -38.2   -26.8   -33.0   -46.0
+  Wenceslau Guimarães                -44.7   -31.7   -35.2   -40.1
+  Xique-Xique                        -35.4   -40.1   -38.9   -43.1
+  Água Fria                          -47.9    -9.0   -38.6   -35.1
+  Érico Cardoso                      -43.0   -28.0   -35.1   -40.7
+
+======================================================================
+UF: GO
+======================================================================
+
+Estado
+          2018    2020    2022    2024
+  ------------------------------------
+  GO     -16.3   -22.0   -12.8   -16.1
+
+  Votos em partidos sem viés informado (contam como 0): 2018: 3.0%, 2020: 4.7%, 2022: 4.0%, 2024: 4.1%
+
+Regiões intermediárias (IBGE)
+  Região                              2018    2020    2022    2024
+  ----------------------------------------------------------------
+  Goiânia                            -15.0   -23.8   -12.0   -15.4
+  Itumbiara                          -13.4   -18.4   -10.6   -20.6
+  Luziânia - Águas Lindas de Goiás   -18.8   -17.2   -15.5   -16.3
+  Porangatu - Uruaçu                 -19.1   -19.4   -14.8   -16.3
+  Rio Verde                          -18.6   -24.5   -11.2   -13.0
+  São Luís de Montes Belos - Iporá   -18.7   -25.2   -13.8   -21.3
+
+Municípios mais à esquerda e mais à direita
+  Ano   Mais à esquerda                         Mais à direita                        
+  ----------------------------------------------------------------------------------
+  2018  Cavalcante (-37.0)                      Caldas Novas (-5.4)                   
+  2020  Cumari (-43.5)                          Panamá (+24.8)                        
+  2022  Cavalcante (-36.5)                      Chapadão Do Céu (-0.3)                
+  2024  Santa Bárbara De Goiás (-46.6)          Turvelândia (+26.9)                   
+
+Top 5 municípios com maior variância (mais mudaram)
+  Município                           2018    2020    2022    2024  Variância
+  ---------------------------------------------------------------------------
+  Guarinos                           -30.2   +13.2   -26.8   -43.1      443.9
+  Portelândia                        -22.5   -28.9   -14.9   +21.6      382.5
+  Turvelândia                        -21.1   +14.9    -8.6   +26.9      357.8
+  Nova América                       -20.3   +19.9   -18.5   -20.2      293.6
+  Trombas                            -22.0   +11.2   -10.1   -34.4      283.1
+
+Top 5 municípios com menor variância (mais constantes)
+  Município                           2018    2020    2022    2024  Variância
+  ---------------------------------------------------------------------------
+  Catalão                            -17.1   -19.7   -17.4   -15.6        2.1
+  Senador Canedo                     -15.8   -17.9   -13.6   -17.3        2.8
+  Bela Vista De Goiás                -15.8   -17.3   -15.5   -12.3        3.3
+  São Miguel Do Passa Quatro         -19.5   -23.9   -19.4   -21.1        3.3
+  Americano Do Brasil                -17.3   -20.7   -19.2   -22.3        3.3
+
+  (1 município(s) sem viés em algum ano ficaram fora da variância.)
+
+Municípios (246)
+  Município                           2018    2020    2022    2024
+  ----------------------------------------------------------------
+  Abadia De Goiás                    -14.5   -19.0   -14.1   -22.1
+  Abadiânia                          -14.6   -30.4   -10.3    +4.6
+  Acreúna                            -18.5   -23.2   -10.9   -28.5
+  Adelândia                          -14.1   -27.2   -12.1   -31.4
+  Alexânia                           -16.1    -6.7    -4.9   -16.3
+  Aloândia                           -19.0   -25.8   -16.7   -17.4
+  Alto Horizonte                     -16.3   -19.7   -10.5   -16.3
+  Alto Paraíso De Goiás              -25.6    -3.0   -23.7   -29.7
+  Alvorada Do Norte                  -25.4   -36.6   -18.5   -31.3
+  Amaralina                          -25.4   -37.8   -23.9   -29.1
+  Americano Do Brasil                -17.3   -20.7   -19.2   -22.3
+  Amorinópolis                       -21.8   -30.6   -17.1   -22.9
+  Anhangüera                         -21.7   -28.2   -20.6   -27.3
+  Anicuns                            -14.1   -26.9   -14.9    -8.9
+  Anápolis                           -13.7   -29.0    -9.9   -11.5
+  Aparecida De Goiânia               -15.5   -25.2   -10.2    -5.2
+  Aparecida Do Rio Doce              -23.5   -30.8   -19.4   -28.0
+  Aporé                              -21.9   -15.4   -15.4   -16.6
+  Aragarças                          -20.8   -25.8   -13.4   -17.7
+  Aragoiânia                         -15.5   -28.7   -15.6   -18.2
+  Araguapaz                          -19.8   -13.9   -16.3   -27.1
+  Araçu                              -16.0   -24.8   -20.7   -34.5
+  Arenópolis                         -23.3   -22.7   -17.3   -22.7
+  Aruanã                             -18.8   -23.7   -17.2    -0.4
+  Aurilândia                         -22.8   -12.1   -22.1   -31.5
+  Avelinópolis                       -18.1   -33.3   -16.5    +1.6
+  Baliza                             -28.9   -24.5   -18.9   -35.2
+  Barro Alto                         -18.2   -27.9   -18.6   -22.8
+  Bela Vista De Goiás                -15.8   -17.3   -15.5   -12.3
+  Bom Jardim De Goiás                -24.6   -30.8   -17.6   -28.1
+  Bom Jesus                          -17.3   -28.0    -2.2   +16.2
+  Bonfinópolis                       -16.9   -18.2   -16.8    +0.7
+  Bonópolis                          -24.2   -18.4   -16.9    -1.9
+  Brazabrantes                       -16.7   -24.2   -16.8   -33.2
+  Britânia                           -19.5   -28.4   -12.8    -0.5
+  Buriti Alegre                      -16.9   -22.9   -12.6    +7.8
+  Buriti De Goiás                    -15.9   -32.4    -8.3   -31.0
+  Buritinópolis                      -28.7   -33.8   -19.6   -36.1
+  Cabeceiras                         -24.1   -39.0   -22.7   -10.7
+  Cachoeira Alta                     -19.8   -35.2   -16.9   -11.3
+  Cachoeira De Goiás                 -17.5   -27.3   -17.2   -38.4
+  Cachoeira Dourada                  -16.9   -16.5   -13.7   -31.9
+  Caiapônia                          -21.1   -29.1   -11.5   -13.8
+  Caldas Novas                        -5.4   -18.0    -5.3   -27.0
+  Caldazinha                         -16.2   -25.1   -16.0   -31.5
+  Campestre De Goiás                 -25.8   -30.8   -25.4   -39.5
+  Campinaçu                          -24.3    +2.2    -4.1    +1.6
+  Campinorte                         -13.8    -3.1   -12.0   -17.7
+  Campo Alegre De Goiás              -22.2   -21.6   -15.1    -2.2
+  Campo Limpo De Goiás               -18.8   -12.8   -15.8   -19.6
+  Campos Belos                       -23.2   -26.8   -22.5   -13.6
+  Campos Verdes                      -26.5   -18.7   -24.1   -28.5
+  Carmo Do Rio Verde                 -17.6    +4.1   -10.2    -2.7
+  Castelândia                        -24.2   -29.3    -9.3   -29.6
+  Catalão                            -17.1   -19.7   -17.4   -15.6
+  Caturaí                            -18.0    -1.2   -19.0   -19.4
+  Cavalcante                         -37.0   -30.8   -36.5   -29.8
+  Caçu                               -16.8   -17.3    -5.6    +0.7
+  Ceres                              -18.1   -16.5    -8.8   -24.1
+  Cezarina                           -17.3   -17.5   -14.8   -11.5
+  Chapadão Do Céu                    -20.4   -39.8    -0.3   -27.1
+  Cidade Ocidental                   -17.3   -24.1   -16.7   -21.3
+  Cocalzinho De Goiás                -11.9    -6.7   -12.2   -20.0
+  Colinas Do Sul                     -25.5   -15.8   -19.6    -1.3
+  Corumbaíba                         -16.8   -20.1   -14.6   -19.8
+  Corumbá De Goiás                   -14.0    +0.3    -9.7    +4.1
+  Cristalina                         -15.6   -22.1    -5.4    +2.2
+  Cristianópolis                     -19.1   -28.7   -16.2   -30.8
+  Crixás                             -22.6    -9.1   -21.5   -22.6
+  Cromínia                           -20.0   -31.2   -16.8   -31.8
+  Cumari                             -25.4   -43.5   -25.1   -40.1
+  Córrego Do Ouro                    -16.5   -28.9   -12.3   -27.3
+  Damianópolis                       -25.4   -33.6   -23.9    +0.1
+  Damolândia                         -17.4   -30.6   -21.5   -31.8
+  Davinópolis                        -22.8   -21.2   -23.1   -14.8
+  Diorama                            -23.6   -35.2   -14.4   -18.3
+  Divinópolis De Goiás               -23.9   -20.1   -25.7   -20.1
+  Doverlândia                        -24.9   -31.7   -15.1   -25.8
+  Edealina                           -18.3    +5.3   -11.8   -22.6
+  Edéia                              -19.8   -33.1   -14.1   -21.8
+  Estrela Do Norte                   -17.6   -31.7   -17.3   -18.0
+  Faina                              -22.2   -31.9   -18.6   -21.1
+  Fazenda Nova                       -20.3   -17.1   -16.0   -31.2
+  Firminópolis                       -13.7   -30.7    -7.5   -14.2
+  Flores De Goiás                    -26.0    -9.4   -17.7   -26.7
+  Formosa                            -18.7   -18.9   -11.5    -9.9
+  Formoso                            -23.6   -34.0   -14.4   -26.5
+  Gameleira De Goiás                 -16.9    +6.9   -15.6    +1.4
+  Goiandira                          -20.1   -33.6   -23.4   -35.3
+  Goianira                           -16.7   -25.3   -15.3   -24.3
+  Goianápolis                        -15.9   -18.8    -3.8   -13.3
+  Goianésia                          -19.1   -23.8   -16.2    -3.1
+  Goiatuba                           -15.9   -24.0   -12.9   -21.6
+  Goiás                              -21.9   -36.5   -19.8   -38.9
+  Goiânia                            -13.3   -24.4   -10.5   -15.5
+  Gouvelândia                        -23.1   -39.0   -19.4   -40.3
+  Guapó                              -18.3   -24.3   -16.9   -24.2
+  Guarani De Goiás                   -27.8   -21.4   -19.5   -28.2
+  Guaraíta                           -21.2   -16.5   -15.8   -12.5
+  Guarinos                           -30.2   +13.2   -26.8   -43.1
+  Heitoraí                           -22.2   -17.7   -11.7   -24.5
+  Hidrolina                          -22.1   -25.3   -18.4   -28.9
+  Hidrolândia                        -16.1   -23.6   -15.0   -27.2
+  Iaciara                            -22.3   +11.7   -15.4   -18.1
+  Inaciolândia                       -23.6   -15.1   -16.4   -28.3
+  Indiara                            -23.7   -38.2   -14.8    -5.4
+  Inhumas                            -10.4   -18.7   -15.6   -14.4
+  Ipameri                            -20.4   -20.4   -14.3   -25.9
+  Ipiranga De Goiás                  -21.1   -22.2   -14.8    -5.6
+  Iporá                              -19.7   -23.7   -16.3       -
+  Israelândia                        -22.4   -25.7   -19.0   -22.7
+  Itaberaí                           -19.8   -31.1   -14.4   -33.2
+  Itaguari                           -24.2   -37.1   -20.3   -30.1
+  Itaguaru                           -21.7   -14.7   -19.9   -11.4
+  Itajá                              -24.5   -32.3   -16.2    -2.3
+  Itapaci                            -19.2   -11.4   -13.6   -19.1
+  Itapirapuã                         -18.7    +5.5    -6.9    +6.7
+  Itapuranga                         -19.3   -33.9   -14.7   -24.4
+  Itarumã                            -21.4   -30.3   -17.1   -26.8
+  Itauçu                             -18.5   -33.9   -14.5   -27.8
+  Itumbiara                          -12.4    -9.0   -10.8   -33.4
+  Ivolândia                          -21.8   -23.3   -15.5   -29.5
+  Jandaia                            -20.2   -36.2   -12.3   -26.1
+  Jaraguá                            -11.8   -26.4   -11.4   -23.4
+  Jataí                              -14.1   -20.8    -7.6   +15.2
+  Jaupaci                            -22.6   -25.5   -19.0   -31.8
+  Jesúpolis                          -15.1    -8.8   -13.5   -21.0
+  Joviânia                           -19.3   -16.6   -12.3   -22.7
+  Jussara                            -15.4    -9.8    -9.8   -21.4
+  Lagoa Santa                        -26.1   -15.3   -17.6    -4.4
+  Leopoldo De Bulhões                -17.8    +8.2   -17.8   -15.0
+  Luziânia                           -17.8   -27.3   -11.8   -25.7
+  Mairipotaba                        -20.2   -24.1   -11.5   -27.5
+  Mambaí                             -19.8    -5.5   -15.1    -7.5
+  Mara Rosa                          -23.1   -36.9   -19.7   -32.2
+  Marzagão                           -19.2   -23.5   -22.8   -19.9
+  Matrinchã                          -20.3   -19.4   -17.4   -14.1
+  Maurilândia                        -15.3   +19.4    -6.6   -25.8
+  Mimoso De Goiás                    -25.9    -6.9   -21.3   -24.0
+  Minaçu                             -17.7   -23.6   -16.4   -32.8
+  Mineiros                           -18.7   -28.1   -10.1   -19.2
+  Moiporá                            -17.7   -31.9   -15.9    +5.8
+  Monte Alegre De Goiás              -23.8    +6.6   -20.6   -35.2
+  Montes Claros De Goiás             -18.3    -2.0    -9.8    -1.9
+  Montividiu                         -20.2   -37.8   -11.8   -13.3
+  Montividiu Do Norte                -20.6    -0.2   -12.8   -24.4
+  Morrinhos                          -14.4   -26.2   -11.8    -2.2
+  Morro Agudo De Goiás               -16.3   -30.1   -12.4    -9.5
+  Mossâmedes                         -22.7   -32.7   -24.9   -33.6
+  Mozarlândia                        -16.5   -23.9   -11.9    -7.8
+  Mundo Novo                         -19.1   +12.9   -13.1   -22.3
+  Mutunópolis                        -16.7    -5.0    -8.5   -11.9
+  Nazário                            -15.8   -17.7   -16.7   -29.3
+  Nerópolis                          -15.4   -28.3   -14.4   -16.5
+  Niquelândia                        -18.9   -16.2   -16.1   +17.4
+  Nova América                       -20.3   +19.9   -18.5   -20.2
+  Nova Aurora                        -27.2   -28.1   -23.2   -31.1
+  Nova Crixás                        -19.9   -16.8   -18.5   -22.6
+  Nova Glória                        -20.1   -26.1   -15.4   -13.7
+  Nova Iguaçu De Goiás               -20.2    +2.8   -16.3   -14.0
+  Nova Roma                          -30.0   -28.7   -29.2   -10.9
+  Nova Veneza                        -16.4   -26.5   -13.6   -26.1
+  Novo Brasil                        -21.3   -29.3   -14.6   -31.1
+  Novo Gama                          -17.6    -0.8   -12.1   +12.4
+  Novo Planalto                      -20.6   -30.0   -17.5   -30.4
+  Orizona                            -18.4   -36.9   -16.3    -3.0
+  Ouro Verde De Goiás                -16.8    +2.5   -12.1   +14.5
+  Ouvidor                            -19.0   -26.4   -21.7   -25.4
+  Padre Bernardo                     -19.1   -23.1   -16.8   -26.0
+  Palestina De Goiás                 -20.3   -23.2   -15.5   -24.2
+  Palmeiras De Goiás                 -18.7   -24.3   -13.2    -6.2
+  Palmelo                            -15.9   -17.5   -16.9   -20.9
+  Palminópolis                       -18.7   -33.8   -15.2   -11.0
+  Panamá                             -17.6   +24.8    -8.4    -7.2
+  Paranaiguara                       -24.1   -28.8   -16.5   -23.9
+  Paraúna                            -19.3   -20.8   -11.3   -18.2
+  Perolândia                         -27.7   -34.9   -20.0   -31.8
+  Petrolina De Goiás                 -15.4    +4.6   -14.0    -7.4
+  Pilar De Goiás                     -23.8   -31.9   -17.7    +5.6
+  Piracanjuba                        -14.8   -23.1   -20.4   -23.6
+  Piranhas                           -21.4    -2.5    -9.8   -12.4
+  Pirenópolis                        -20.6   -23.9   -16.7   -22.7
+  Pires Do Rio                       -12.5   -27.7   -10.4   -12.6
+  Planaltina                         -13.7   +14.8   -16.5   -21.6
+  Pontalina                          -16.6   -16.9    -5.4    -5.3
+  Porangatu                          -16.0   -20.7    -9.5   -22.7
+  Porteirão                          -20.7    -9.2   -18.4   -34.9
+  Portelândia                        -22.5   -28.9   -14.9   +21.6
+  Posse                              -21.0   -18.1   -13.2    +2.3
+  Professor Jamil                    -23.2   -38.3   -20.4   -37.1
+  Quirinópolis                       -16.7   -26.0    -9.8   -12.1
+  Rialma                             -14.5    -9.9    -9.6   -23.3
+  Rianápolis                         -16.2   -21.9   -12.7   -15.3
+  Rio Quente                          -9.3   -26.7   -13.4    -6.3
+  Rio Verde                          -18.9   -29.2   -11.2   -13.6
+  Rubiataba                          -16.1   -23.1   -10.5   -31.4
+  Sanclerlândia                      -17.4   -23.2   -13.4   -33.8
+  Santa Bárbara De Goiás             -20.5   -39.8   -19.8   -46.6
+  Santa Cruz De Goiás                -18.6   -19.2   -18.3   -28.3
+  Santa Fé De Goiás                  -21.8    -1.0   -13.4    -2.4
+  Santa Helena De Goiás              -16.2   -12.8   -13.3   -10.1
+  Santa Isabel                       -20.4   -30.0   -17.1   -18.4
+  Santa Rita Do Araguaia             -21.2   -25.7   -13.7   -14.5
+  Santa Rita Do Novo Destino         -21.9   -27.7   -18.4   -14.6
+  Santa Rosa De Goiás                -17.3   -38.5   -14.7   -23.8
+  Santa Tereza De Goiás              -16.9    +2.3   -18.7   -30.9
+  Santa Terezinha De Goiás           -24.9   -29.6   -18.4   -30.3
+  Santo Antônio Da Barra             -25.5   -21.4   -17.7   -11.4
+  Santo Antônio De Goiás             -16.7   -25.9   -17.4   -18.4
+  Santo Antônio Do Descoberto        -18.3   -20.8   -20.6   -27.2
+  Senador Canedo                     -15.8   -17.9   -13.6   -17.3
+  Serranópolis                       -21.2   -23.1   -13.7   -19.1
+  Silvânia                           -18.2   -23.4   -11.2   -21.1
+  Simolândia                         -27.4   -29.2   -21.9    -3.9
+  São Domingos                       -20.2    +5.3   -15.7    -3.9
+  São Francisco De Goiás             -17.8   -25.3   -11.7   -29.5
+  São João D'Aliança                 -22.3    +5.3   -11.0    +3.5
+  São João Da Paraúna                -17.0   -28.3   -16.6   -30.8
+  São Luiz Do Norte                  -22.9   -29.5   -20.6   -33.9
+  São Luís De Montes Belos            -9.4   -26.4    -9.0   -26.6
+  São Miguel Do Araguaia             -18.0   -24.6   -11.3    +2.2
+  São Miguel Do Passa Quatro         -19.5   -23.9   -19.4   -21.1
+  São Patrício                       -16.3   -27.6   -10.8   -10.5
+  São Simão                          -22.2   -12.4   -17.5   -24.2
+  Sítio D'Abadia                     -25.4    -9.7   -21.2   -35.8
+  Taquaral De Goiás                  -17.8   -18.5    -8.9   -27.6
+  Teresina De Goiás                  -33.9   -21.7   -25.3   -40.0
+  Terezópolis De Goiás               -15.2   -20.2   -16.2   -24.2
+  Trindade                           -17.9   -18.4   -16.9   -26.1
+  Trombas                            -22.0   +11.2   -10.1   -34.4
+  Três Ranchos                       -21.4   -19.6   -19.4   -34.4
+  Turvelândia                        -21.1   +14.9    -8.6   +26.9
+  Turvânia                           -17.5   -37.7   -13.9   -34.6
+  Uirapuru                           -27.3   -21.4   -19.9   -13.0
+  Uruana                             -17.5   -23.4   -14.4   -16.0
+  Uruaçu                             -19.1   -24.2   -16.7   -27.8
+  Urutaí                             -19.1   -24.0   -16.3   -30.0
+  Valparaíso De Goiás                -16.5   -25.8   -14.0   -10.1
+  Varjão                             -15.4   -25.0   -15.8   -25.0
+  Vianópolis                         -15.1    -8.3   -13.1    -9.3
+  Vicentinópolis                     -20.6   -11.1   -11.6   -28.2
+  Vila Boa                           -29.2   -18.6   -25.8   -36.0
+  Vila Propício                      -22.2   -30.2   -22.5   -32.7
+  Água Fria De Goiás                 -17.9   -10.0   -13.3   -25.7
+  Água Limpa                         -17.3   -20.8   -16.5   -14.7
+  Águas Lindas De Goiás              -19.4   -19.0   -20.0   -31.2
+
+======================================================================
+UF: PE
+======================================================================
+
+Estado
+          2018    2020    2022    2024
+  ------------------------------------
+  PE     -31.5   -27.5   -25.2   -30.0
+
+  Votos em partidos sem viés informado (contam como 0): 2018: 1.0%, 2020: 2.6%, 2022: 0.8%, 2024: 2.3%
+
+Regiões intermediárias (IBGE)
+  Região                              2018    2020    2022    2024
+  ----------------------------------------------------------------
+  Caruaru                            -33.2   -30.5   -28.9   -33.4
+  Petrolina                          -36.4   -27.4   -33.3   -33.2
+  Recife                             -29.4   -25.1   -21.4   -27.2
+  Serra Talhada                      -36.9   -39.0   -36.5   -38.7
+
+Municípios mais à esquerda e mais à direita
+  Ano   Mais à esquerda                         Mais à direita                        
+  ----------------------------------------------------------------------------------
+  2018  Granito (-51.7)                         Canhotinho (-23.8)                    
+  2020  Flores (-61.5)                          Venturosa (+17.3)                     
+  2022  Solidão (-49.2)                         Santa Cruz Do Capibaribe (-10.9)      
+  2024  Solidão (-56.7)                         Escada (+0.0)                         
+
+Top 5 municípios com maior variância (mais mudaram)
+  Município                           2018    2020    2022    2024  Variância
+  ---------------------------------------------------------------------------
+  Venturosa                          -32.1   +17.3   -35.1   -28.5      459.4
+  Trindade                           -32.5   +16.4   -29.1   -32.6      430.9
+  Araripina                          -30.5   +12.5   -29.3   -34.4      365.9
+  Sairé                              -29.1    -2.4   -26.4   -54.0      334.5
+  São Caitano                        -32.9    +8.1   -32.9   -28.2      295.1
+
+Top 5 municípios com menor variância (mais constantes)
+  Município                           2018    2020    2022    2024  Variância
+  ---------------------------------------------------------------------------
+  São Vicente Férrer                 -31.9   -29.5   -30.7   -30.6        0.7
+  Belém De Maria                     -32.0   -32.7   -34.4   -33.0        0.7
+  Carnaíba                           -44.7   -44.1   -46.3   -46.4        1.0
+  São Benedito Do Sul                -27.9   -28.9   -31.2   -30.3        1.7
+  Santa Maria Da Boa Vista           -39.9   -38.5   -38.3   -36.1        1.8
+
+  (1 município(s) sem viés em algum ano ficaram fora da variância.)
+
+Municípios (185)
+  Município                           2018    2020    2022    2024
+  ----------------------------------------------------------------
+  Abreu E Lima                       -31.1   -14.9   -17.5   -39.9
+  Afogados Da Ingazeira              -37.6   -41.5   -36.9   -42.0
+  Afrânio                            -33.3   -33.4   -32.4   -28.1
+  Agrestina                          -32.5   -40.2   -34.3   -44.8
+  Alagoinha                          -42.4   -45.2   -43.1   -30.6
+  Aliança                            -34.6   -27.5   -26.1   -27.2
+  Altinho                            -34.9   -40.6   -32.1   -42.0
+  Amaraji                            -33.3   -46.6   -29.3   -48.3
+  Angelim                            -31.3   -47.7   -35.5   -45.0
+  Araripina                          -30.5   +12.5   -29.3   -34.4
+  Araçoiaba                          -33.4   -38.1   -30.2   -36.6
+  Arcoverde                          -26.9   -21.8   -29.2   -33.9
+  Barra De Guabiraba                 -33.8   -27.2   -28.4   -27.8
+  Barreiros                          -34.3   -30.3   -20.7   -15.0
+  Belo Jardim                        -32.6   -30.3   -26.9   -25.7
+  Belém De Maria                     -32.0   -32.7   -34.4   -33.0
+  Belém Do São Francisco             -32.9   -47.0   -31.8   -32.2
+  Betânia                            -32.5   -29.5   -37.6   -39.7
+  Bezerros                           -35.1   -38.3   -28.2   -33.8
+  Bodocó                             -38.1   -45.2   -43.2   -19.0
+  Bom Conselho                       -38.0   -43.2   -39.6   -37.5
+  Bom Jardim                         -34.9    +3.6   -29.0   -27.2
+  Bonito                             -34.8   -51.8   -26.6   -40.9
+  Brejinho                           -41.9   -42.9   -29.9   -32.8
+  Brejo Da Madre De Deus             -37.2    -1.1   -25.5   -29.5
+  Brejão                             -42.7   -46.6   -30.3   -36.6
+  Buenos Aires                       -29.2   -20.1   -29.0   -18.3
+  Buíque                             -33.5   -24.6   -38.3   -27.7
+  Cabo De Santo Agostinho            -32.4   -10.5   -22.0   -21.2
+  Cabrobó                            -36.7   -44.9   -35.3   -47.3
+  Cachoeirinha                       -33.8   -41.9   -32.4   -34.1
+  Caetés                             -42.4   -17.1   -40.1   -31.0
+  Calumbi                            -31.1   -38.5   -35.1   -54.7
+  Calçado                            -34.9   -23.8   -35.3   -31.7
+  Camaragibe                         -27.7   -19.9   -19.0   -23.3
+  Camocim De São Félix               -31.6   -30.9   -27.8   -30.8
+  Camutanga                          -26.9   -30.4   -31.5   -44.0
+  Canhotinho                         -23.8   -35.4   -22.7   -24.5
+  Capoeiras                          -41.5   -39.2   -38.7   -50.5
+  Carnaubeira Da Penha               -38.3    -3.5   -35.8   -42.3
+  Carnaíba                           -44.7   -44.1   -46.3   -46.4
+  Carpina                            -28.4   -23.8   -17.7   -15.5
+  Caruaru                            -26.5   -25.7   -20.6   -28.5
+  Casinhas                           -42.6   -32.7   -41.6   -40.1
+  Catende                            -27.9   -25.0   -27.5   -36.6
+  Cedro                              -34.0   -40.1   -36.8   -33.3
+  Chã De Alegria                     -38.2   -43.7   -32.5   -31.6
+  Chã Grande                         -27.8   -36.9   -20.6   -37.5
+  Condado                            -35.5   -33.4   -25.1   -14.4
+  Correntes                          -39.9    -7.2   -28.8   -48.2
+  Cortês                             -31.3   -33.3   -27.0   -35.3
+  Cumaru                             -38.3   -19.7   -35.7   -42.5
+  Cupira                             -26.5   -23.0   -20.8   -38.3
+  Custódia                           -37.5   -33.8   -34.9   -41.1
+  Dormentes                          -39.9   -37.9   -35.2   -56.0
+  Escada                             -34.8   -12.5   -24.3    +0.0
+  Exu                                -38.9   -25.1   -40.0   -42.2
+  Feira Nova                         -30.2   -42.6   -20.1   -28.2
+  Fernando De Noronha                -25.1       -   -16.8       -
+  Ferreiros                          -37.1   -43.6   -29.0   -42.8
+  Flores                             -37.4   -61.5   -41.2   -35.4
+  Floresta                           -37.6   -47.4   -36.3   -22.3
+  Frei Miguelinho                    -27.8   -36.6   -25.5   -40.7
+  Gameleira                          -36.5    -7.3   -23.9   -31.1
+  Garanhuns                          -32.8   -21.3   -30.7   -40.1
+  Glória Do Goitá                    -31.5   -29.2   -30.7   -36.0
+  Goiana                             -33.2    +7.3   -22.9   -24.4
+  Granito                            -51.7   -56.1   -35.7   -53.4
+  Gravatá                            -29.7   -33.8   -21.7   -36.3
+  Iati                               -35.4   -33.4   -38.7   -41.5
+  Ibimirim                           -39.3   -45.1   -41.0   -33.2
+  Ibirajuba                          -38.1   -41.6   -29.2   -33.6
+  Igarassu                           -31.2   -12.5   -23.6   -24.5
+  Iguaracy                           -39.3   -44.2   -42.8   -39.6
+  Ilha De Itamaracá                  -33.6   -27.3   -28.4   -27.1
+  Inajá                              -37.8   -30.2   -37.8   -35.4
+  Ingazeira                          -43.6   -47.4   -47.5   -53.3
+  Ipojuca                            -34.1   -21.1   -26.5   -24.5
+  Ipubi                              -38.6   -44.1   -35.7   -29.4
+  Itacuruba                          -40.2   -40.7   -36.2   -43.8
+  Itambé                             -34.6   -36.1   -24.3   -41.5
+  Itapetim                           -45.1   -36.3   -44.5   -48.1
+  Itapissuma                         -34.6   -22.4   -28.4   -36.4
+  Itaquitinga                        -38.9   -28.3   -31.2   -25.0
+  Itaíba                             -34.4   -25.8   -36.9   -25.9
+  Jaboatão Dos Guararapes            -26.0    +5.8   -15.4    -0.2
+  Jaqueira                           -39.8   -36.1   -29.0   -32.9
+  Jataúba                            -33.4   -31.1   -37.3   -25.0
+  Jatobá                             -41.7   -17.2   -30.9   -33.7
+  Joaquim Nabuco                     -36.1   -19.1   -30.0   -39.5
+  João Alfredo                       -35.4   -42.5   -32.2   -44.9
+  Jucati                             -41.5   -55.1   -44.7   -44.0
+  Jupi                               -42.4   -31.2   -37.4   -27.3
+  Jurema                             -28.6   -50.3   -37.5   -56.5
+  Lagoa De Itaenga                   -31.1   -41.5   -25.6   -37.3
+  Lagoa Do Carro                     -34.7   -27.4   -28.6   -22.3
+  Lagoa Do Ouro                      -39.0   -10.7   -36.1   -29.1
+  Lagoa Dos Gatos                    -38.0   -24.1   -36.0   -20.1
+  Lagoa Grande                       -42.4   -29.5   -39.0   -48.8
+  Lajedo                             -28.6   -38.9   -29.2   -37.8
+  Limoeiro                           -34.6   -36.0   -28.4   -27.2
+  Macaparana                         -31.4   -25.8   -24.9   -18.9
+  Machados                           -35.2   -12.5   -35.0   -51.7
+  Manari                             -35.6   -40.6   -42.4   -25.0
+  Maraial                            -31.5   -33.0   -31.1   -41.9
+  Mirandiba                          -42.2   -43.2   -39.3   -47.6
+  Moreilândia                        -43.6   -53.3   -39.5   -24.1
+  Moreno                             -33.1   -11.5   -17.6    -9.5
+  Nazaré Da Mata                     -28.6   -20.4   -21.4   -32.0
+  Olinda                             -28.2   -16.4   -20.0   -22.7
+  Orobó                              -34.2   -45.0   -34.9   -27.9
+  Orocó                              -31.3   -36.3   -33.2   -41.8
+  Ouricuri                           -42.0   -21.1   -35.2   -32.4
+  Palmares                           -34.4   -21.5   -26.4   -29.4
+  Palmeirina                         -45.6    -9.3   -39.9   -26.6
+  Panelas                            -31.6   -44.2   -36.8   -46.4
+  Paranatama                         -37.4   -33.1   -34.4   -36.5
+  Parnamirim                         -40.7   -31.4   -36.8   -21.5
+  Passira                            -31.2   -19.6   -30.1   -30.3
+  Paudalho                           -31.7   -32.3   -17.9   -24.0
+  Paulista                           -27.3   -27.0   -19.2   -32.7
+  Pedra                              -35.4   -57.0   -34.9   -47.8
+  Pesqueira                          -37.9   -20.7   -34.8   -27.1
+  Petrolina                          -33.6   -28.4   -29.5   -29.5
+  Petrolândia                        -37.2   -25.3   -34.1   -22.7
+  Pombos                             -32.5   -28.9   -22.5   -27.1
+  Poção                              -35.9   -29.5   -31.6   -30.6
+  Primavera                          -38.2   -37.8   -31.1   -45.3
+  Quipapá                            -35.2   -29.2   -29.1   -45.0
+  Quixaba                            -35.6   -55.9   -39.7   -55.9
+  Recife                             -27.0   -38.9   -19.9   -34.2
+  Riacho Das Almas                   -34.9   -32.6   -28.6   -44.9
+  Ribeirão                           -34.5   -37.1   -24.4   -39.1
+  Rio Formoso                        -38.9   -33.3   -29.5   -34.7
+  Sairé                              -29.1    -2.4   -26.4   -54.0
+  Salgadinho                         -32.3   -39.7   -34.2   -26.1
+  Salgueiro                          -40.2   -17.5   -31.3   -24.1
+  Saloá                              -42.0   -16.5   -39.0   -33.9
+  Sanharó                            -39.0   -60.2   -37.8   -53.5
+  Santa Cruz                         -37.4   -49.8   -38.2   -47.5
+  Santa Cruz Da Baixa Verde          -35.8   -14.3   -33.5   -27.1
+  Santa Cruz Do Capibaribe           -26.4   -28.8   -10.9   -16.1
+  Santa Filomena                     -37.6   -34.7   -35.0   -39.6
+  Santa Maria Da Boa Vista           -39.9   -38.5   -38.3   -36.1
+  Santa Maria Do Cambucá             -33.9   -44.4   -22.5   -40.1
+  Santa Terezinha                    -29.2   -33.8   -36.0   -22.2
+  Serra Talhada                      -28.9   -37.6   -28.6   -38.7
+  Serrita                            -37.1   -32.1   -40.1   -30.9
+  Sertânia                           -40.4   -43.3   -40.5   -36.6
+  Sirinhaém                          -35.5   -26.1   -21.6   -23.8
+  Solidão                            -45.0   -44.6   -49.2   -56.7
+  Surubim                            -35.3   -39.2   -29.3   -39.1
+  São Benedito Do Sul                -27.9   -28.9   -31.2   -30.3
+  São Bento Do Una                   -39.2   -44.3   -33.2   -30.0
+  São Caitano                        -32.9    +8.1   -32.9   -28.2
+  São Joaquim Do Monte               -37.4   -38.1   -12.4   -32.3
+  São José Da Coroa Grande           -33.1   -27.1   -20.0   -36.4
+  São José Do Belmonte               -40.7   -58.1   -35.9   -49.8
+  São José Do Egito                  -36.2   -44.4   -39.0   -40.8
+  São João                           -37.3   -28.4   -40.8   -29.0
+  São Lourenço Da Mata               -29.6   -33.3   -21.9   -44.8
+  São Vicente Férrer                 -31.9   -29.5   -30.7   -30.6
+  Tabira                             -39.6   -44.8   -42.6   -43.1
+  Tacaimbó                           -41.3   -50.5   -41.1   -46.8
+  Tacaratu                           -39.1   -39.5   -34.4   -34.7
+  Tamandaré                          -36.3   -31.7   -25.8   -26.5
+  Taquaritinga Do Norte              -29.6   -38.8   -14.4   -25.5
+  Terezinha                          -36.1   -58.6   -36.1   -27.7
+  Terra Nova                         -35.7   -46.5   -34.0   -47.6
+  Timbaúba                           -30.6   -19.0   -23.5   -28.0
+  Toritama                           -26.6   -25.6   -11.1   -20.5
+  Tracunhaém                         -26.3    -7.3   -25.6   -38.4
+  Trindade                           -32.5   +16.4   -29.1   -32.6
+  Triunfo                            -30.6   -42.9   -35.7   -31.2
+  Tupanatinga                        -30.1   -31.8   -34.1   -35.6
+  Tuparetama                         -37.1   -17.1   -38.8   -39.4
+  Venturosa                          -32.1   +17.3   -35.1   -28.5
+  Verdejante                         -41.6   -45.3   -35.9   -36.0
+  Vertente Do Lério                  -35.4   -29.7   -36.9   -32.6
+  Vertentes                          -30.2   -37.6   -27.0   -42.5
+  Vicência                           -31.7   -13.2   -27.4   -39.7
+  Vitória De Santo Antão             -26.8   -36.7   -20.9   -30.2
+  Xexéu                              -35.4   -38.2   -20.2   -23.2
+  Água Preta                         -34.4   -32.0   -30.2   -33.9
+  Águas Belas                        -46.9   -52.1   -38.7   -41.8
+
+======================================================================
+UF: PI
+======================================================================
+
+Estado
+          2018    2020    2022    2024
+  ------------------------------------
+  PI     -33.0   -25.9   -43.4   -37.8
+
+  Votos em partidos sem viés informado (contam como 0): 2018: 3.4%, 2020: 1.0%, 2022: 0.3%, 2024: 0.3%
+
+Regiões intermediárias (IBGE)
+  Região                              2018    2020    2022    2024
+  ----------------------------------------------------------------
+  Corrente - Bom Jesus               -35.9   -24.5   -42.4   -32.1
+  Floriano                           -36.7   -26.8   -44.9   -39.9
+  Parnaíba                           -32.6   -20.6   -44.7   -37.5
+  Picos                              -37.4   -29.4   -45.6   -36.3
+  São Raimundo Nonato                -39.5   -31.5   -50.4   -42.8
+  Teresina                           -29.9   -26.2   -41.2   -38.2
+
+Municípios mais à esquerda e mais à direita
+  Ano   Mais à esquerda                         Mais à direita                        
+  ----------------------------------------------------------------------------------
+  2018  Porto Alegre Do Piauí (-46.3)           Teresina (-24.1)                      
+  2020  São Julião (-59.4)                      Pajeú Do Piauí (+27.3)                
+  2022  Cocal Dos Alves (-58.7)                 Teresina (-36.3)                      
+  2024  Brejo Do Piauí (-64.2)                  Palmeira Do Piauí (-14.2)             
+
+Top 5 municípios com maior variância (mais mudaram)
+  Município                           2018    2020    2022    2024  Variância
+  ---------------------------------------------------------------------------
+  Pajeú Do Piauí                     -41.3   +27.3   -37.5   -29.4      773.0
+  Elesbão Veloso                     -39.6    +8.6   -45.8   -38.3      473.3
+  Luzilândia                         -26.5    -1.4   -50.6   -53.8      445.3
+  Itainópolis                        -34.7    +1.2   -46.0   -46.3      377.3
+  Santa Luz                          -38.6    +2.3   -46.7   -39.5      371.0
+
+Top 5 municípios com menor variância (mais constantes)
+  Município                           2018    2020    2022    2024  Variância
+  ---------------------------------------------------------------------------
+  Marcolândia                        -37.4   -37.0   -39.0   -37.1        0.6
+  Bertolínia                         -42.3   -45.5   -43.2   -44.9        1.6
+  São Francisco Do Piauí             -42.0   -41.8   -45.5   -45.6        3.3
+  Sebastião Leal                     -40.1   -39.0   -39.4   -43.6        3.4
+  Milton Brandão                     -40.4   -42.6   -38.8   -37.4        3.7
+
+Municípios (224)
+  Município                           2018    2020    2022    2024
+  ----------------------------------------------------------------
+  Acauã                              -40.7   -28.8   -50.3   -36.8
+  Agricolândia                       -37.2   -25.1   -48.1   -40.8
+  Alagoinha Do Piauí                 -40.2   -45.9   -46.1   -48.8
+  Alegrete Do Piauí                  -36.7   -41.6   -47.1   -57.0
+  Alto Longá                         -34.5   -41.3   -41.8   -48.8
+  Altos                              -38.0   -41.7   -48.6   -37.7
+  Alvorada Do Gurguéia               -30.1    +3.7   -47.8   -26.4
+  Amarante                           -37.5   -14.2   -48.1   -42.2
+  Angical Do Piauí                   -34.8   -16.0   -46.5   -37.4
+  Antônio Almeida                    -36.2   -53.9   -42.0   -38.9
+  Anísio De Abreu                    -37.7   -28.5   -56.6   -62.0
+  Aroazes                            -36.1   -15.8   -49.0   -49.1
+  Aroeiras Do Itaim                  -38.8    -9.9   -44.9   -32.7
+  Arraial                            -40.5   -27.1   -42.1   -24.0
+  Assunção Do Piauí                  -39.1   -24.8   -50.2   -48.4
+  Avelino Lopes                      -35.8   -27.6   -40.1   -28.4
+  Baixa Grande Do Ribeiro            -37.7   -42.2   -42.2   -59.7
+  Barra D'Alcântara                  -38.0   -33.0   -45.3   -32.8
+  Barras                             -34.2   -18.9   -44.3   -35.2
+  Barreiras Do Piauí                 -31.1   -35.3   -46.9   -49.3
+  Barro Duro                         -33.2   -25.7   -44.2   -33.1
+  Batalha                            -36.5   -36.8   -44.7   -34.5
+  Bela Vista Do Piauí                -46.2   -50.6   -47.5   -60.3
+  Belém Do Piauí                     -38.1   -27.9   -48.7   -29.5
+  Beneditinos                        -32.7   -15.0   -50.3   -44.5
+  Bertolínia                         -42.3   -45.5   -43.2   -44.9
+  Betânia Do Piauí                   -43.5   -25.1   -46.5   -44.1
+  Boa Hora                           -35.8   -30.2   -46.7   -38.4
+  Bocaina                            -36.4   -41.6   -42.5   -45.3
+  Bom Jesus                          -34.4   -33.1   -40.5   -33.5
+  Bom Princípio Do Piauí             -37.0   -10.7   -52.6   -42.6
+  Bonfim Do Piauí                    -41.8   -22.6   -51.2   -34.5
+  Boqueirão Do Piauí                 -38.8   -43.1   -48.5   -43.6
+  Brasileira                         -39.7   -25.1   -47.9   -44.0
+  Brejo Do Piauí                     -34.7   -44.8   -54.9   -64.2
+  Buriti Dos Lopes                   -34.5   -20.5   -40.3   -37.5
+  Buriti Dos Montes                  -42.2   -29.3   -52.6   -33.9
+  Cabeceiras Do Piauí                -36.1   -21.1   -43.7   -32.0
+  Cajazeiras Do Piauí                -37.9   -43.7   -42.7   -39.4
+  Cajueiro Da Praia                  -36.3   -19.2   -47.6   -40.5
+  Caldeirão Grande Do Piauí          -39.9   -42.1   -47.3   -35.3
+  Campinas Do Piauí                  -37.7    -2.6   -53.5   -40.0
+  Campo Alegre Do Fidalgo            -34.6   -18.8   -49.0   -25.2
+  Campo Grande Do Piauí              -39.0   -32.9   -47.3   -34.7
+  Campo Largo Do Piauí               -36.3   -35.1   -42.3   -29.3
+  Campo Maior                        -29.1   -28.8   -41.0   -34.5
+  Canavieira                         -40.7   -42.8   -51.9   -49.5
+  Canto Do Buriti                    -33.0   -15.6   -42.3   -38.8
+  Capitão De Campos                  -34.2   -26.0   -45.1   -38.5
+  Capitão Gervásio Oliveira          -41.6   -51.5   -52.8   -45.0
+  Caracol                            -41.7   -37.5   -51.1   -42.5
+  Caraúbas Do Piauí                  -37.4   -32.8   -47.3   -53.1
+  Caridade Do Piauí                  -36.0   -32.2   -47.6   -32.2
+  Castelo Do Piauí                   -39.1   -42.2   -45.1   -47.6
+  Caxingó                            -36.0   -25.1   -45.4   -23.2
+  Cocal                              -36.3   -38.2   -48.5   -44.8
+  Cocal De Telha                     -33.1   -30.8   -46.5   -29.3
+  Cocal Dos Alves                    -41.8   -56.0   -58.7   -57.9
+  Coivaras                           -36.8   -40.8   -46.4   -44.9
+  Colônia Do Gurguéia                -39.1   -45.1   -44.7   -40.5
+  Colônia Do Piauí                   -40.1   -12.3   -51.7   -49.8
+  Conceição Do Canindé               -37.9   -34.1   -42.6   -30.6
+  Coronel José Dias                  -42.2   -47.0   -47.9   -45.0
+  Corrente                           -35.9   -15.3   -39.2   -22.3
+  Cristalândia Do Piauí              -34.5    -9.1   -40.1   -44.3
+  Cristino Castro                    -35.5   -49.7   -51.4   -51.8
+  Curimatá                           -38.5   -22.9   -44.2   -25.9
+  Currais                            -39.8   -31.5   -45.5   -35.6
+  Curral Novo Do Piauí               -39.5   -29.3   -48.4   -29.5
+  Curralinhos                        -32.0    -5.8   -52.7   -51.5
+  Demerval Lobão                     -36.9   -24.3   -39.1   -28.3
+  Dirceu Arcoverde                   -43.3   -41.0   -47.0   -46.9
+  Dom Expedito Lopes                 -34.2   -29.5   -47.3   -27.7
+  Dom Inocêncio                      -40.6   -24.3   -53.2   -28.6
+  Domingos Mourão                    -41.8   -11.7   -54.2   -57.3
+  Elesbão Veloso                     -39.6    +8.6   -45.8   -38.3
+  Eliseu Martins                     -37.8   -32.8   -46.9   -32.0
+  Esperantina                        -36.3   -35.9   -43.8   -33.6
+  Fartura Do Piauí                   -40.8   -28.2   -52.1   -51.7
+  Flores Do Piauí                    -33.8   -42.4   -50.1   -29.4
+  Floresta Do Piauí                  -33.4    -5.1   -54.3   -29.5
+  Floriano                           -36.2   -18.0   -46.2   -41.6
+  Francinópolis                      -36.2    +1.8   -47.8   -37.4
+  Francisco Ayres                    -36.3   -21.4   -49.2   -31.7
+  Francisco Macedo                   -41.2   -36.2   -40.3   -29.4
+  Francisco Santos                   -31.5   -22.9   -42.6   -45.6
+  Fronteiras                         -37.0   -28.4   -47.5   -44.0
+  Geminiano                          -32.8   -25.6   -48.6   -46.0
+  Gilbués                            -33.1   -24.9   -39.2   -26.8
+  Guadalupe                          -36.9   -29.3   -43.3   -32.4
+  Guaribas                           -44.1   -28.6   -54.4   -30.1
+  Hugo Napoleão                      -39.5   -46.2   -51.4   -53.1
+  Ilha Grande                        -29.7    -4.3   -46.2   -30.6
+  Inhuma                             -37.0   -33.5   -45.7   -41.6
+  Ipiranga Do Piauí                  -39.2   -41.2   -52.5   -50.4
+  Isaías Coelho                      -39.8   -26.9   -49.9   -34.9
+  Itainópolis                        -34.7    +1.2   -46.0   -46.3
+  Itaueira                           -32.9   -14.5   -44.9   -38.4
+  Jacobina Do Piauí                  -40.1   -29.9   -46.3   -29.5
+  Jaicós                             -37.6   -38.9   -46.1   -33.5
+  Jardim Do Mulato                   -41.9   -47.4   -44.4   -37.7
+  Jatobá Do Piauí                    -31.7   -36.0   -46.4   -26.8
+  Jerumenha                          -36.8    -7.2   -48.6   -50.6
+  Joaquim Pires                      -40.8   -48.4   -49.3   -45.2
+  Joca Marques                       -31.0   -13.5   -44.4   -39.9
+  José De Freitas                    -32.7   -26.7   -46.4   -43.2
+  João Costa                         -37.9   -45.0   -47.6   -42.5
+  Juazeiro Do Piauí                  -36.3   -27.0   -47.6   -32.1
+  Jurema                             -41.8   -33.3   -51.9   -48.1
+  Júlio Borges                       -35.7   -23.5   -37.8   -18.1
+  Lagoa Alegre                       -34.0   -24.3   -50.2   -38.6
+  Lagoa De São Francisco             -41.9   -43.8   -49.7   -50.2
+  Lagoa Do Barro Do Piauí            -44.3   -27.0   -51.9   -41.1
+  Lagoa Do Piauí                     -34.7   -40.2   -45.2   -38.0
+  Lagoa Do Sítio                     -37.6    -9.2   -38.4   -32.9
+  Lagoinha Do Piauí                  -35.0    -9.6   -44.5   -37.7
+  Landri Sales                       -32.1   -22.5   -47.4   -41.1
+  Luis Correia                       -32.2   -10.2   -45.5   -43.9
+  Luzilândia                         -26.5    -1.4   -50.6   -53.8
+  Madeiro                            -30.2   -12.3   -47.4   -33.8
+  Manoel Emídio                      -37.8   -28.3   -48.7   -29.4
+  Marcolândia                        -37.4   -37.0   -39.0   -37.1
+  Marcos Parente                     -35.5   -34.0   -44.0   -43.4
+  Massapê Do Piauí                   -38.1   -24.3   -42.1   -30.8
+  Matias Olímpio                     -31.1    -9.5   -45.7   -35.6
+  Miguel Alves                       -36.7   -16.3   -46.3   -36.6
+  Miguel Leão                        -31.5   -10.7   -37.7   -33.4
+  Milton Brandão                     -40.4   -42.6   -38.8   -37.4
+  Monsenhor Gil                      -35.5   -22.3   -46.8   -38.7
+  Monsenhor Hipólito                 -36.2   -25.5   -42.3   -28.9
+  Monte Alegre Do Piauí              -39.4   -29.8   -44.0   -32.9
+  Morro Cabeça No Tempo              -35.6   -23.8   -42.9   -30.4
+  Morro Do Chapéu Do Piauí           -35.8   -40.4   -49.7   -39.4
+  Murici Dos Portelas                -36.3   -14.4   -47.2   -19.0
+  Nazaré Do Piauí                    -41.6   -33.5   -50.8   -31.9
+  Nazária                            -34.3   -40.8   -47.7   -35.9
+  Nossa Senhora De Nazaré            -40.3   -33.8   -46.3   -33.1
+  Nossa Senhora Dos Remédios         -39.2    -5.1   -40.6   -41.7
+  Nova Santa Rita                    -39.6   -43.8   -50.1   -37.2
+  Novo Oriente Do Piauí              -30.6   -18.5   -45.4   -24.0
+  Novo Santo Antônio                 -37.9   -51.2   -50.6   -49.1
+  Oeiras                             -38.6   -27.8   -45.3   -22.4
+  Olho D'Água Do Piauí               -36.1   -23.9   -42.1   -36.9
+  Padre Marcos                       -42.7   -26.9   -45.2   -29.2
+  Paes Landim                        -30.2   -46.9   -45.4   -46.3
+  Pajeú Do Piauí                     -41.3   +27.3   -37.5   -29.4
+  Palmeira Do Piauí                  -34.2   -37.3   -41.7   -14.2
+  Palmeirais                         -36.9   -20.0   -53.3   -34.3
+  Paquetá                            -36.4   -12.5   -39.7   -37.9
+  Parnaguá                           -32.0   -14.6   -45.1   -35.3
+  Parnaíba                           -25.0   -10.5   -39.6   -22.7
+  Passagem Franca Do Piauí           -34.1   -30.2   -48.2   -53.2
+  Patos Do Piauí                     -36.7   -23.8   -46.1   -38.1
+  Pau D'Arco Do Piauí                -33.3   -36.5   -44.2   -45.5
+  Paulistana                         -40.8   -30.7   -47.8   -32.6
+  Pavussu                            -41.0   -26.9   -39.8   -35.9
+  Pedro Ii                           -31.5   -14.3   -44.5   -41.1
+  Pedro Laurentino                   -35.3   -43.3   -40.7   -45.6
+  Picos                              -30.8   -32.6   -41.5   -29.5
+  Pimenteiras                        -33.2    -9.9   -43.3   -44.5
+  Pio Ix                             -38.4   -29.9   -46.2   -42.3
+  Piracuruca                         -35.0   -29.3   -44.7   -43.3
+  Piripiri                           -34.1   -13.4   -46.1   -52.2
+  Porto                              -36.7   -36.2   -46.1   -39.9
+  Porto Alegre Do Piauí              -46.3   -43.5   -40.2   -38.0
+  Prata Do Piauí                     -38.0   -40.0   -44.8   -37.6
+  Queimada Nova                      -46.2   -25.4   -50.5   -36.2
+  Redenção Do Gurguéia               -36.9   -33.4   -38.9   -26.9
+  Regeneração                        -33.1   -18.2   -51.7   -33.2
+  Riacho Frio                        -44.1   -20.3   -46.2   -34.5
+  Ribeira Do Piauí                   -39.7   -26.3   -51.2   -54.3
+  Ribeiro Gonçalves                  -36.9   -33.6   -44.0   -48.3
+  Rio Grande Do Piauí                -38.3   -38.3   -48.0   -37.7
+  Santa Cruz Do Piauí                -41.1   -17.4   -53.1   -62.7
+  Santa Cruz Dos Milagres            -35.4   -16.2   -40.1   -40.1
+  Santa Filomena                     -34.7    -8.7   -37.3   -41.2
+  Santa Luz                          -38.6    +2.3   -46.7   -39.5
+  Santa Rosa Do Piauí                -40.2   -47.0   -48.3   -48.4
+  Santana Do Piauí                   -31.0   -25.0   -42.3   -16.1
+  Santo Antônio De Lisboa            -34.7   -31.5   -41.4   -45.4
+  Santo Antônio Dos Milagres         -38.0   -36.7   -47.3   -27.3
+  Santo Inácio Do Piauí              -40.8   -30.9   -56.5   -63.9
+  Sebastião Barros                   -36.5   -24.8   -47.1   -31.0
+  Sebastião Leal                     -40.1   -39.0   -39.4   -43.6
+  Sigefredo Pacheco                  -35.6   -26.3   -48.9   -45.3
+  Simplício Mendes                   -37.3   -24.1   -43.9   -29.7
+  Simões                             -38.9   -21.2   -47.5   -38.7
+  Socorro Do Piauí                   -34.7   -19.6   -39.3   -33.9
+  Sussuapara                         -35.4   -29.1   -50.0   -38.3
+  São Braz Do Piauí                  -41.3   -26.2   -53.2   -42.1
+  São Francisco De Assis Do Piauí    -38.2   -39.9   -43.2   -43.0
+  São Francisco Do Piauí             -42.0   -41.8   -45.5   -45.6
+  São Félix Do Piauí                 -34.6   -18.4   -40.2   -35.2
+  São Gonçalo Do Gurguéia            -35.6   -23.8   -39.3   -45.4
+  São Gonçalo Do Piauí               -32.9   -25.4   -40.5   -43.7
+  São José Do Divino                 -33.8   -14.6   -43.9   -31.8
+  São José Do Peixe                  -46.0   -33.4   -53.5   -53.4
+  São José Do Piauí                  -40.6   -26.6   -46.6   -29.5
+  São João Da Canabrava              -41.5   -29.4   -48.4   -29.5
+  São João Da Fronteira              -42.5   -29.9   -45.8   -28.4
+  São João Da Serra                  -34.9   -31.7   -50.4   -29.3
+  São João Da Varjota                -41.1   -37.7   -46.3   -31.1
+  São João Do Arraial                -37.7   -38.2   -50.3   -48.1
+  São João Do Piauí                  -37.4   -33.3   -47.8   -44.8
+  São Julião                         -39.4   -59.4   -39.5   -41.6
+  São Lourenço Do Piauí              -38.7   -24.8   -51.6   -29.3
+  São Luis Do Piauí                  -45.7   -39.3   -44.6   -41.6
+  São Miguel Da Baixa Grande         -34.3   -30.8   -47.5   -35.8
+  São Miguel Do Fidalgo              -44.5   -37.5   -53.8   -42.0
+  São Miguel Do Tapuio               -38.8   -27.8   -47.2   -39.7
+  São Pedro Do Piauí                 -34.1   -18.2   -39.7   -33.3
+  São Raimundo Nonato                -36.6   -26.5   -48.6   -43.7
+  Tamboril Do Piauí                  -30.4   -43.1   -47.5   -29.1
+  Tanque Do Piauí                    -32.6   -35.5   -44.7   -33.1
+  Teresina                           -24.1   -26.3   -36.3   -38.1
+  União                              -37.5   -34.4   -45.5   -33.5
+  Uruçuí                             -32.9   -25.2   -38.6   -28.7
+  Valença Do Piauí                   -30.6   -10.8   -43.7   -37.5
+  Vera Mendes                        -36.5   -28.1   -47.2   -39.4
+  Vila Nova Do Piauí                 -36.2   -28.5   -50.3   -48.1
+  Várzea Branca                      -41.1   -28.8   -56.0   -51.4
+  Várzea Grande                      -40.2   -22.6   -50.8   -41.0
+  Wall Ferraz                        -44.1   -21.8   -48.2   -38.4
+  Água Branca                        -31.9   -23.5   -42.1   -36.6
+
+======================================================================
+UF: PR
+======================================================================
+
+Estado
+          2018    2020    2022    2024
+  ------------------------------------
+  PR     -15.2   -18.9   -18.3   -18.7
+
+  Votos em partidos sem viés informado (contam como 0): 2018: 3.0%, 2020: 2.8%, 2022: 0.8%, 2024: 4.8%
+
+Regiões intermediárias (IBGE)
+  Região                              2018    2020    2022    2024
+  ----------------------------------------------------------------
+  Cascavel                           -17.6   -21.4   -16.5   -13.1
+  Curitiba                           -13.6   -17.7   -18.6   -21.0
+  Guarapuava                         -22.8   -21.0   -26.9   -20.9
+  Londrina                           -13.1   -17.4   -16.2   -19.0
+  Maringá                            -15.2   -17.3   -18.4   -19.5
+  Ponta Grossa                       -17.3   -22.4   -21.5   -19.6
+
+Municípios mais à esquerda e mais à direita
+  Ano   Mais à esquerda                         Mais à direita                        
+  ----------------------------------------------------------------------------------
+  2018  Rio Bonito Do Iguaçu (-39.2)            Sertanópolis (-6.2)                   
+  2020  Cafezal Do Sul (-50.9)                  Salgado Filho (+37.2)                 
+  2022  Rio Bonito Do Iguaçu (-38.1)            Assis Chateaubriand (-0.8)            
+  2024  Santa Maria Do Oeste (-49.7)            Cafelândia (+38.9)                    
+
+Top 5 municípios com maior variância (mais mudaram)
+  Município                           2018    2020    2022    2024  Variância
+  ---------------------------------------------------------------------------
+  Salgado Filho                      -23.1   +37.2   -27.3   -25.7      736.1
+  Laranjal                           -27.8   +28.8   -31.1   -38.4      716.4
+  Cafelândia                         -14.1    -9.5   -12.8   +38.9      490.9
+  Cidade Gaúcha                      -17.7   +27.7   -20.1   -26.8      466.8
+  São João Do Ivaí                   -22.7   +14.7   -24.7   -34.0      346.7
+
+Top 5 municípios com menor variância (mais constantes)
+  Município                           2018    2020    2022    2024  Variância
+  ---------------------------------------------------------------------------
+  Adrianópolis                       -27.6   -27.3   -26.7   -26.8        0.1
+  Clevelândia                        -22.4   -22.4   -21.7   -23.5        0.4
+  Nova Esperança Do Sudoeste         -24.9   -25.3   -27.2   -25.5        0.8
+  Cambé                              -11.4   -13.8   -12.8   -13.6        0.8
+  Bituruna                           -26.5   -28.8   -28.9   -28.6        1.0
+
+Municípios (399)
+  Município                           2018    2020    2022    2024
+  ----------------------------------------------------------------
+  Abatiá                             -20.0   -31.0   -23.1   -27.7
+  Adrianópolis                       -27.6   -27.3   -26.7   -26.8
+  Agudos Do Sul                      -16.6   -34.1   -19.8    -2.8
+  Almirante Tamandaré                -17.3   -17.1   -20.6   -17.3
+  Altamira Do Paraná                 -25.6   -40.1   -27.9   -36.9
+  Alto Paraná                        -17.9   -27.7   -22.2   -24.4
+  Alto Paraíso                       -16.8   -22.5   -20.0   -22.9
+  Alto Piquiri                       -23.2   -13.4   -23.5   -26.4
+  Altônia                            -15.4   -20.5   -17.2    +1.1
+  Alvorada Do Sul                    -15.6   -16.6   -18.1   -28.1
+  Amaporã                            -22.3   -43.5   -24.7   -23.7
+  Ampére                             -27.3   -29.3   -29.2   -30.4
+  Anahy                              -22.4   -30.0   -25.8   -31.8
+  Andirá                             -18.0   -23.4   -21.1   -18.6
+  Antonina                           -13.4   -14.5   -17.9   -21.5
+  Antônio Olinto                     -21.7   -17.4   -27.4   -22.1
+  Apucarana                           -8.6   -10.9   -14.0   -26.0
+  Arapongas                           -8.4   -15.0   -10.5    -7.6
+  Arapoti                            -14.1   -16.6   -17.5   -18.7
+  Arapuã                             -22.8   -29.0   -27.0   -29.0
+  Araruna                            -16.8    +1.2   -18.8   -17.5
+  Araucária                          -17.1    -9.7   -23.2    -9.8
+  Ariranha Do Ivaí                   -22.8   -21.0   -26.1   -29.4
+  Assaí                              -11.9   -27.0   -14.4   -16.0
+  Assis Chateaubriand                 -6.8    +7.8    -0.8    +3.7
+  Astorga                             -9.8    -6.4   -13.5    -6.8
+  Atalaia                            -18.4    -7.0   -22.9   -18.9
+  Balsa Nova                         -13.9    -3.9   -16.3    -0.3
+  Bandeirantes                       -15.3   -26.5   -13.0    +0.5
+  Barbosa Ferraz                     -20.0    +3.0   -21.2   -24.6
+  Barra Do Jacaré                    -19.6   -25.5   -26.1   -34.2
+  Barracão                           -19.5   -13.4   -19.0   -22.0
+  Bela Vista Da Caroba               -31.4   -30.8   -24.3   -22.4
+  Bela Vista Do Paraíso              -12.7   -19.0   -13.5   +21.0
+  Bituruna                           -26.5   -28.8   -28.9   -28.6
+  Boa Esperança                      -14.7   -29.8    -9.8    -5.7
+  Boa Esperança Do Iguaçu            -31.1   -39.3   -30.5   -23.2
+  Boa Ventura De São Roque           -27.9   -38.0   -34.3   -29.6
+  Boa Vista Da Aparecida             -19.1    -8.3   -21.8   -26.8
+  Bocaiúva Do Sul                    -19.1   -24.6   -21.6   -12.9
+  Bom Jesus Do Sul                   -23.8   -34.1   -27.8   -39.3
+  Bom Sucesso                        -19.7   -23.8   -24.4   -20.3
+  Bom Sucesso Do Sul                 -18.3   -30.7   -12.6   -11.3
+  Borrazópolis                       -17.5   -11.1   -21.2   -39.6
+  Braganey                           -21.8   -26.7   -18.2   -29.2
+  Brasilândia Do Sul                 -15.3   -10.0   -14.6   -13.1
+  Cafeara                            -30.8   -50.9   -29.0   -21.5
+  Cafelândia                         -14.1    -9.5   -12.8   +38.9
+  Cafezal Do Sul                     -18.7   -50.9   -16.7   -37.4
+  Califórnia                         -14.2   +14.4   -17.6    -9.9
+  Cambará                            -16.6   -27.2   -19.5   -34.0
+  Cambira                            -15.0   -23.0   -16.4    -2.8
+  Cambé                              -11.4   -13.8   -12.8   -13.6
+  Campina Da Lagoa                   -20.1   -18.9   -21.4    -3.8
+  Campina Do Simão                   -32.4   -38.9   -30.9   -35.9
+  Campina Grande Do Sul              -15.8   -21.3   -17.6   -29.9
+  Campo Bonito                       -23.1    -2.2   -25.6   -11.7
+  Campo Do Tenente                   -17.7    +0.4   -19.7   -20.3
+  Campo Largo                        -13.0   -20.6   -16.9   -20.2
+  Campo Magro                        -17.7   -25.9   -21.9   -22.3
+  Campo Mourão                       -15.3   -17.3   -17.5   -15.3
+  Candói                             -28.2   -17.1   -27.1   -30.6
+  Cantagalo                          -28.6   -10.8   -28.0    -8.4
+  Capanema                           -27.2   -38.2   -24.7   -26.3
+  Capitão Leônidas Marques           -22.4   -20.6   -19.2   -24.3
+  Carambeí                           -15.1   -38.1   -17.8    -2.9
+  Carlópolis                         -18.1   -24.8   -19.7    -7.6
+  Cascavel                           -13.2   -24.1   -13.3    +1.5
+  Castro                             -13.4   -12.6   -20.8   -23.8
+  Catanduvas                         -16.2   -23.1   -18.1   -20.4
+  Centenário Do Sul                  -26.2   -26.1   -27.0   -32.4
+  Cerro Azul                         -27.5   -29.9   -28.7   -25.6
+  Chopinzinho                        -22.1    -2.4   -19.6    -1.2
+  Cianorte                           -13.9   -17.5   -16.9   -11.8
+  Cidade Gaúcha                      -17.7   +27.7   -20.1   -26.8
+  Clevelândia                        -22.4   -22.4   -21.7   -23.5
+  Colombo                            -14.8   -22.7   -19.6   -19.7
+  Colorado                           -19.8   -20.6   -22.5   -24.9
+  Congonhinhas                       -25.8   -23.9   -27.7   -31.9
+  Conselheiro Mairinck               -20.6   -26.9   -24.6   -13.9
+  Contenda                           -17.4    +2.9   -23.1   -13.7
+  Corbélia                           -14.7   -25.9   -13.4   -22.4
+  Cornélio Procópio                  -14.6   -27.8   -16.2   -19.7
+  Coronel Domingos Soares            -31.5   -18.7   -30.7   -37.6
+  Coronel Vivida                     -20.7   -36.7   -20.4   -27.2
+  Corumbataí Do Sul                  -18.5   -28.6   -25.6   -17.7
+  Cruz Machado                       -23.1   -23.6   -23.6   -34.6
+  Cruzeiro Do Iguaçu                 -24.5   -35.7   -24.9   -31.0
+  Cruzeiro Do Oeste                  -19.0   -31.7   -22.0   -36.2
+  Cruzeiro Do Sul                    -30.0   -30.5   -33.6   -35.3
+  Cruzmaltina                        -18.9   +14.1   -19.4   -29.8
+  Curitiba                           -11.2   -17.5   -17.7   -20.3
+  Curiúva                            -19.8   -35.0   -25.8   -27.4
+  Cândido De Abreu                   -24.0    -1.9   -25.4   -10.2
+  Céu Azul                           -12.2   -17.1   -11.4    -5.5
+  Diamante D'Oeste                   -27.7   -39.4   -28.3   -31.5
+  Diamante Do Norte                  -20.0   -32.8   -22.8   -26.0
+  Diamante Do Sul                    -18.6   -29.7   -14.2   -40.3
+  Dois Vizinhos                      -23.6   -21.9   -22.4   -26.8
+  Douradina                          -15.1    +6.9   -18.6   -22.9
+  Doutor Camargo                     -14.2    -7.5   -18.4    -1.4
+  Doutor Ulysses                     -27.2   -34.1   -28.4   -29.4
+  Engenheiro Beltrão                 -13.2    +3.3   -22.8   -35.1
+  Entre Rios Do Oeste                -12.9   -18.4    -8.5   -14.7
+  Enéas Marques                      -26.1    -6.2   -21.5    +4.2
+  Esperança Nova                     -15.0   -25.7   -14.8   -22.9
+  Espigão Alto Do Iguaçu             -19.4   -24.8   -19.0   -11.8
+  Farol                              -19.7   -27.5   -24.7   -24.6
+  Faxinal                            -16.6   -13.6   -14.5    -6.3
+  Fazenda Rio Grande                 -15.4    +2.2   -19.0   -24.2
+  Fernandes Pinheiro                 -27.4   -21.2   -26.2   -22.8
+  Figueira                           -23.4    +1.9   -28.7   -18.4
+  Flor Da Serra Do Sul               -26.8   -23.6   -26.5   -27.4
+  Floraí                             -16.5    -0.7   -18.6   -23.4
+  Floresta                           -17.1   -25.2   -19.8   -27.8
+  Florestópolis                      -22.1    -0.3   -26.2   -24.8
+  Flórida                            -19.8   +13.7   -26.3   -29.6
+  Formosa Do Oeste                   -13.5   +17.2   -10.1   -22.5
+  Foz Do Iguaçu                      -12.9   -20.5   -12.1    -3.1
+  Foz Do Jordão                      -27.8   -25.9   -31.8   -33.5
+  Francisco Alves                    -19.7   -33.1   -16.0   -30.3
+  Francisco Beltrão                  -23.2   -30.4   -25.4   -22.9
+  Fênix                              -20.5    -4.4   -23.3   -19.5
+  General Carneiro                   -27.0   -33.6   -30.2   -38.6
+  Godoy Moreira                      -27.6   -29.9   -31.8   -31.7
+  Goioerê                            -15.2   -19.5   -12.7   -17.1
+  Goioxim                            -34.7   -26.7   -34.2   -46.4
+  Grandes Rios                       -19.9   -18.6   -21.5   -26.8
+  Guairaçá                           -14.5    -7.5   -20.4   -28.3
+  Guamiranga                         -20.7    -2.0   -20.1   -33.4
+  Guapirama                          -21.3   -12.8   -23.2   -30.9
+  Guaporema                          -22.4   -24.0   -15.4   -29.9
+  Guaraci                            -17.7   -25.6   -17.9   -30.1
+  Guaraniaçu                         -17.5   -35.0   -15.9    -4.6
+  Guarapuava                         -22.0   -24.6   -27.6   -11.4
+  Guaraqueçaba                       -19.4   -17.8   -22.2   -30.5
+  Guaratuba                          -11.1   -21.7   -14.6   -22.5
+  Guaíra                             -17.2   -24.2   -11.9   -22.5
+  Honório Serpa                      -28.6    -8.7   -29.0   -25.1
+  Ibaiti                             -16.3   -25.2   -21.2   -15.0
+  Ibema                              -19.1   -23.9   -22.6   -15.6
+  Ibiporã                            -13.2   -19.1   -12.8   -25.0
+  Icaraíma                           -17.1   +12.7   -17.6    -9.6
+  Iguaraçu                           -16.4   -11.1   -19.1   -27.1
+  Iguatu                             -26.4   -15.6   -20.4   -23.1
+  Imbaú                              -23.5   -11.8   -26.8   -33.2
+  Imbituva                           -20.0   -21.9   -19.8   -22.8
+  Inajá                              -24.0   -22.8   -29.2   -16.1
+  Indianópolis                       -19.5   -31.7   -19.6   -28.0
+  Inácio Martins                     -29.2   -41.0   -27.4   -21.8
+  Ipiranga                           -16.1   -31.1   -20.6    +2.9
+  Iporã                              -14.5   -29.4   -16.3   -25.4
+  Iracema Do Oeste                   -14.3    -8.1   -16.2    +5.6
+  Irati                              -20.4   -31.0   -23.7   -23.9
+  Iretama                            -25.5   -21.8   -26.2   -26.1
+  Itaguajé                           -18.6   -12.1   -24.3   -23.7
+  Itaipulândia                       -19.7   -38.1   -10.4   -26.3
+  Itambaracá                         -14.9    +3.3   -18.3   -23.8
+  Itambé                             -17.0   -13.1   -20.8   -18.9
+  Itapejara D'Oeste                  -26.2   -34.0   -24.2   -29.9
+  Itaperuçu                          -29.7   -38.5   -30.1   -37.3
+  Itaúna Do Sul                      -26.1    -7.6   -30.5   -20.1
+  Ivaiporã                           -19.5   -22.6   -23.8   -23.7
+  Ivatuba                            -14.8    +2.8   -20.9   -18.6
+  Ivaté                              -15.3    -0.8   -20.6    -7.8
+  Ivaí                               -25.0    -5.6   -24.1    +2.3
+  Jaboti                             -17.7   -19.6   -21.6   -29.2
+  Jacarezinho                        -21.4   -27.4   -25.5   -31.6
+  Jaguapitã                          -14.6    -0.2   -19.4   -22.3
+  Jaguariaíva                        -13.1   -20.4   -16.5   +14.4
+  Jandaia Do Sul                     -11.4    +2.6   -14.2   -12.9
+  Janiópolis                         -21.0   -10.8   -22.0   -32.5
+  Japira                             -20.4   -17.9   -25.6   -27.6
+  Japurá                             -16.4   -20.0   -17.0   -34.1
+  Jardim Alegre                      -24.1   -10.4   -25.4   -27.0
+  Jardim Olinda                      -24.6    -9.8   -31.3   -19.1
+  Jataizinho                         -16.3   -13.0   -15.8   -28.8
+  Jesuítas                           -12.6   -19.5    -7.1   -14.4
+  Joaquim Távora                     -17.2   -22.6   -18.5    -9.5
+  Jundiaí Do Sul                     -22.0   -25.4   -26.0   -24.0
+  Juranda                            -19.5   -19.0   -15.6   -21.6
+  Jussara                            -20.3    -2.8   -22.5    -1.4
+  Kaloré                             -15.4    -2.0   -21.0   -11.0
+  Lapa                               -17.6   -28.8   -22.5   -33.1
+  Laranjal                           -27.8   +28.8   -31.1   -38.4
+  Laranjeiras Do Sul                 -26.7   -19.4   -29.5   -29.9
+  Leópolis                           -19.6   -33.8   -20.8   -28.9
+  Lidianópolis                       -21.6    -5.8   -20.3   -23.6
+  Lindoeste                          -26.0    -5.7   -28.3   -20.5
+  Loanda                             -14.0    -9.4   -14.8   -14.8
+  Lobato                             -14.8   +14.5   -25.3    +4.9
+  Londrina                            -6.6   -19.2   -11.3   -21.2
+  Luiziana                           -23.8   -20.4   -24.1   -27.3
+  Lunardelli                         -24.2   -25.6   -23.0   -35.3
+  Lupionópolis                       -24.7    +2.1   -26.3   -30.7
+  Mallet                             -15.6   -22.4   -20.0   -25.8
+  Mamborê                            -15.2   -18.8   -13.9    -4.3
+  Mandaguari                         -15.3   -19.3   -18.2   -29.5
+  Mandaguaçu                         -17.5   -22.6   -20.8   -32.6
+  Mandirituba                        -19.3   -12.8   -21.1   -15.0
+  Manfrinópolis                      -29.9   -25.5   -27.6   -37.2
+  Mangueirinha                       -24.5   -33.8   -25.6   -29.5
+  Manoel Ribas                       -12.6    -4.1   -17.5   -29.9
+  Marechal Cândido Rondon            -12.9   -25.8    -8.6    -5.3
+  Maria Helena                       -19.0   -19.5   -22.5   -19.8
+  Marialva                            -8.1   -19.3   -15.2    +0.5
+  Marilena                           -17.7   -14.5   -26.2   -12.6
+  Mariluz                            -24.0    +6.1   -22.6   -27.1
+  Marilândia Do Sul                  -14.5   -29.0   -16.4   -16.7
+  Maringá                            -10.5   -20.2   -15.9   -19.4
+  Maripá                              -8.8    -2.8    -3.8    +4.5
+  Mariópolis                         -16.9   -21.5   -16.7    +1.9
+  Marmeleiro                         -26.7   -29.1   -26.8    -5.9
+  Marquinho                          -29.3   -25.8   -28.5   -29.2
+  Marumbi                            -21.2   -41.9   -24.1    +2.6
+  Matelândia                          -8.2   -10.3    -7.0    +0.5
+  Matinhos                           -13.5    +1.5   -18.3    -4.9
+  Mato Rico                          -27.6   -25.8   -25.1   -28.9
+  Mauá Da Serra                      -16.8   -13.3   -21.5   -33.1
+  Medianeira                         -12.1   -28.6   -11.5   -17.5
+  Mercedes                           -13.2   -25.2    -7.0   -28.1
+  Mirador                            -28.4   -14.2   -29.3   -32.3
+  Miraselva                          -21.1    -4.9   -22.7   -28.9
+  Missal                             -16.3   -29.8    -9.9   -29.1
+  Moreira Sales                      -21.4   -32.2   -19.7   -27.9
+  Morretes                           -16.7   -21.6   -16.7   -19.4
+  Munhoz De Mello                    -15.5   -18.2   -22.6   -11.9
+  Nossa Senhora Das Graças           -21.3   -19.0   -23.6   -17.2
+  Nova Aliança Do Ivaí               -18.3   -27.3   -22.5   -32.2
+  Nova América Da Colina             -19.1   -11.7   -19.2   -28.4
+  Nova Aurora                        -15.6    -6.2   -12.4   +13.1
+  Nova Cantu                         -26.4   -39.7   -28.6   -34.6
+  Nova Esperança                     -15.4    -6.7   -17.6    +3.9
+  Nova Esperança Do Sudoeste         -24.9   -25.3   -27.2   -25.5
+  Nova Fátima                        -15.4   -20.0   -22.4   -20.0
+  Nova Laranjeiras                   -29.2   -24.5   -31.5   -43.7
+  Nova Londrina                      -16.8   -26.9   -19.4   -14.6
+  Nova Olímpia                       -15.2   -23.7   -20.2   -22.8
+  Nova Prata Do Iguaçu               -26.8   -28.8   -24.4   -36.4
+  Nova Santa Bárbara                 -20.7   -18.1   -22.4   -23.4
+  Nova Santa Rosa                    -11.1   -29.0    -2.2   -17.5
+  Nova Tebas                         -21.0    -7.8   -26.7    +0.9
+  Novo Itacolomi                     -17.7    -1.4   -17.7    -2.5
+  Ortigueira                         -27.1    -7.9   -29.8   -25.5
+  Ourizona                           -29.7   -40.0   -33.2   -37.1
+  Ouro Verde Do Oeste                -18.6    -8.2   -14.4   -11.9
+  Paiçandu                           -17.5   -16.1   -21.4   -19.9
+  Palmas                             -23.8   -18.9   -26.0   -25.1
+  Palmeira                           -14.5   -25.2   -19.1   -21.0
+  Palmital                           -24.5    -8.7   -25.6    +3.1
+  Palotina                           -10.3    -4.4    -6.5    -4.9
+  Paranacity                         -22.6    -3.8   -29.2   -10.9
+  Paranaguá                          -11.3   -21.2   -18.4   -20.3
+  Paranapoema                        -31.0   -39.1   -33.2   -39.7
+  Paranavaí                          -15.1   -21.0   -15.7   -24.9
+  Paraíso Do Norte                   -23.4   -40.7   -24.6   -39.7
+  Pato Bragado                       -13.4   -24.2    -6.9   -14.4
+  Pato Branco                        -12.5   -22.2   -19.4    -1.2
+  Paula Freitas                      -18.5    -4.8   -21.7   -21.7
+  Paulo Frontin                      -17.6   -21.0   -22.3   -28.6
+  Peabiru                            -18.0   +15.1   -20.8    +0.5
+  Perobal                            -14.1    -5.6   -16.7   -28.7
+  Pinhais                            -16.0   -25.3   -15.1   -18.4
+  Pinhal De São Bento                -33.7   -30.9   -36.5   -32.2
+  Pinhalão                           -19.0   -22.8   -20.3   -33.6
+  Pinhão                             -32.3   -45.1   -35.9   -28.2
+  Piraquara                          -18.3   -24.2   -19.4   -27.1
+  Piraí Do Sul                       -16.6   -25.2   -20.8   +12.6
+  Pitanga                            -11.9    -4.3   -25.2   -30.9
+  Pitangueiras                       -14.0   -23.5   -19.3   +14.7
+  Piên                               -14.7    -6.5   -16.9   -23.0
+  Planaltina Do Paraná               -24.1    +0.2   -28.0   -32.5
+  Planalto                           -30.6   -45.9   -23.0   -31.8
+  Ponta Grossa                       -15.4   -23.6   -20.7   -26.7
+  Pontal Do Paraná                   -14.2   -29.8   -19.0    -5.1
+  Porecatu                           -19.5    +4.0   -24.0   -17.3
+  Porto Amazonas                     -14.6    +0.4   -20.5   -24.6
+  Porto Barreiro                     -32.7    +6.6   -26.8   -22.0
+  Porto Rico                         -12.5   -34.3   -15.0    +7.8
+  Porto Vitória                      -18.5   -10.0   -22.3   -19.9
+  Prado Ferreira                     -17.5    -7.8   -21.1   -29.4
+  Pranchita                          -17.9   +25.0   -14.8    +7.4
+  Presidente Castelo Branco          -20.2   -11.0   -28.7   -25.1
+  Primeiro De Maio                   -12.6    -3.9   -15.8    +1.0
+  Prudentópolis                      -14.5   -19.1   -14.7   -26.4
+  Pérola                             -16.8   -22.2   -17.0   -20.1
+  Pérola D'Oeste                     -24.6    +0.6   -10.7   +10.3
+  Quarto Centenário                  -18.3   -23.7   -16.8   +16.7
+  Quatiguá                           -14.4   -13.4   -18.0   +18.8
+  Quatro Barras                      -11.7   -19.5   -14.5   -33.1
+  Quatro Pontes                      -11.5   -25.4    -0.9    +5.7
+  Quedas Do Iguaçu                   -18.9   -27.8   -20.7   -22.9
+  Querência Do Norte                 -24.2   +10.6   -22.0    +8.3
+  Quinta Do Sol                      -19.9   -22.9   -25.9   -31.5
+  Quitandinha                        -17.5   -13.7   -18.4   -16.7
+  Ramilândia                         -25.7   -28.4   -25.1   -27.2
+  Rancho Alegre                      -13.2    +0.9   -14.9   -27.3
+  Rancho Alegre D'Oeste              -19.9   -36.7   -20.0   -15.2
+  Realeza                            -21.0   -28.8   -16.5   -13.5
+  Rebouças                           -26.1   -23.0   -25.1   -22.5
+  Renascença                         -27.7   -30.5   -25.1   -27.9
+  Reserva                            -20.3    -9.3   -22.8   -18.6
+  Reserva Do Iguaçu                  -30.6   -12.0   -31.3   -30.1
+  Ribeirão Claro                     -20.2   -36.2   -22.2   -35.2
+  Ribeirão Do Pinhal                 -23.3   -17.2   -29.7   -16.5
+  Rio Azul                           -20.8    -6.3   -17.1   -10.6
+  Rio Bom                            -18.6   -35.2   -22.0   -20.1
+  Rio Bonito Do Iguaçu               -39.2   -28.3   -38.1   -32.1
+  Rio Branco Do Ivaí                 -24.4   -15.8   -24.6    -8.6
+  Rio Branco Do Sul                  -23.0   -26.8   -23.5   -41.4
+  Rio Negro                          -12.1   -22.5   -14.4   -21.8
+  Rolândia                           -10.6    -4.7   -13.2   +15.4
+  Roncador                           -25.1   -26.8   -25.7   -28.2
+  Rondon                             -19.1   -19.7   -17.5   -15.8
+  Rosário Do Ivaí                    -21.9    -8.5   -23.3   -40.0
+  Sabáudia                           -10.2   -27.6   -13.5   -23.9
+  Salgado Filho                      -23.1   +37.2   -27.3   -25.7
+  Salto Do Itararé                   -21.6   -37.8   -28.1   -29.5
+  Salto Do Lontra                    -31.8   -38.2   -27.3   -14.0
+  Santa Amélia                       -21.5   -18.9   -22.0   -24.8
+  Santa Cecília Do Pavão             -16.9   +17.3   -20.3    +7.5
+  Santa Cruz De Monte Castelo        -13.4   -18.5   -13.6   +10.1
+  Santa Fé                           -11.9    -9.7   -19.7    -8.2
+  Santa Helena                       -17.2   -21.9   -11.7   -28.4
+  Santa Inês                         -17.8   -19.6   -22.2   -28.0
+  Santa Isabel Do Ivaí               -12.6    -3.8   -16.7   -24.4
+  Santa Izabel Do Oeste              -24.3    +4.8   -16.6   -20.1
+  Santa Lúcia                        -22.1   -12.9   -16.6    -8.1
+  Santa Maria Do Oeste               -28.5   -20.5   -34.9   -49.7
+  Santa Mariana                      -19.9   -28.7   -23.0   -24.3
+  Santa Mônica                       -26.9    -7.8   -32.4   -40.6
+  Santa Tereza Do Oeste              -18.7   -29.9   -17.4   -28.1
+  Santa Terezinha De Itaipu          -12.6   -27.7   -11.8   -23.3
+  Santana Do Itararé                 -26.7   -46.9   -29.8   -44.2
+  Santo Antônio Da Platina           -16.7   -22.4   -19.5   -22.1
+  Santo Antônio Do Caiuá             -21.0   -37.5   -30.5   -42.3
+  Santo Antônio Do Paraíso           -18.4   -19.9   -22.8   -22.8
+  Santo Antônio Do Sudoeste          -25.6    -5.0   -20.6    +3.2
+  Santo Inácio                       -25.1   -36.7   -23.6   -27.1
+  Sapopema                           -21.0   -36.8   -26.4   -26.8
+  Sarandi                            -17.3   -23.9   -20.8   -30.9
+  Saudade Do Iguaçu                  -27.0   -38.4   -30.3   -37.7
+  Sengés                             -20.1   -30.8   -19.6   -27.6
+  Serranópolis Do Iguaçu             -16.5   -40.1    -9.8   -24.9
+  Sertaneja                          -16.2   -19.5   -17.6   -11.2
+  Sertanópolis                        -6.2   -10.7   -14.1    +2.5
+  Siqueira Campos                    -20.9   -27.6   -26.4   -37.3
+  Sulina                             -25.1   -18.1   -26.1   -33.2
+  São Carlos Do Ivaí                 -15.9   -40.1   -18.9   -29.0
+  São Jerônimo Da Serra              -24.5    -5.6   -28.4   -29.9
+  São Jorge D'Oeste                  -21.1   -33.3   -24.4   -34.9
+  São Jorge Do Ivaí                  -17.3   -30.9   -16.9   -16.2
+  São Jorge Do Patrocínio            -16.4   -27.4   -19.0   -25.5
+  São José Da Boa Vista              -14.9   -12.0   -17.8   -22.7
+  São José Das Palmeiras             -21.6   -26.0   -22.2   -26.6
+  São José Dos Pinhais               -14.1    -9.8   -16.8   -25.9
+  São João                           -21.8   -31.1   -22.0   -27.5
+  São João Do Caiuá                  -23.0   -10.4   -28.8   -27.9
+  São João Do Ivaí                   -22.7   +14.7   -24.7   -34.0
+  São João Do Triunfo                -23.2   -31.2   -29.4   -34.9
+  São Manoel Do Paraná               -16.1   -27.5   -18.6   -33.4
+  São Mateus Do Sul                  -14.9   -20.2   -25.0   -24.4
+  São Miguel Do Iguaçu               -17.3   -20.2   -14.6   -25.9
+  São Pedro Do Iguaçu                -18.2   -22.6   -15.2   -18.6
+  São Pedro Do Ivaí                  -13.7   -27.3   -20.0   -21.9
+  São Pedro Do Paraná                 -9.8   -12.7   -12.5    -0.6
+  São Sebastião Da Amoreira          -21.3   -10.1   -23.4   -28.8
+  São Tomé                           -17.8   -26.0   -22.4   -33.2
+  Tamarana                           -17.6   -31.0   -16.0   -28.9
+  Tamboara                           -18.9   -24.3   -18.2   -26.9
+  Tapejara                           -15.4   +14.9   -18.5   -14.1
+  Tapira                             -18.6    -3.0   -22.1   -13.9
+  Teixeira Soares                    -24.6   -28.5   -24.5   -29.1
+  Telêmaco Borba                     -15.1   -29.9   -22.0   -10.2
+  Terra Boa                          -18.7   -35.3   -19.3   -23.7
+  Terra Rica                         -14.7   -25.8   -17.7   -28.6
+  Terra Roxa                         -16.0   -17.3   -10.0    -3.9
+  Tibagi                             -23.2   -24.7   -27.6   -25.0
+  Tijucas Do Sul                     -17.3    -1.6   -20.8   -16.0
+  Toledo                             -15.8   -19.9   -14.1   -23.9
+  Tomazina                           -19.8   -29.9   -21.5   -26.7
+  Três Barras Do Paraná              -18.5   -14.3   -17.5   +10.5
+  Tunas Do Paraná                    -16.5   -19.2   -22.9   -27.0
+  Tuneiras Do Oeste                  -20.6   +10.3   -20.8    -0.5
+  Tupãssi                             -9.1   +15.6    -6.6   +12.6
+  Turvo                              -26.1   -18.0   -32.1   -32.2
+  Ubiratã                            -18.9   -18.3   -15.6    -1.2
+  Umuarama                            -7.5   -15.6   -15.1   -25.2
+  Uniflor                            -21.7   -16.2   -26.1   -26.4
+  União Da Vitória                   -16.1   -26.0   -21.5   -18.3
+  Uraí                               -17.4   -23.4   -13.2   -22.4
+  Ventania                           -24.6    -0.9   -21.9    +4.7
+  Vera Cruz Do Oeste                 -16.3    +7.4   -16.9    +6.2
+  Verê                               -25.9   -24.2   -28.3    -2.5
+  Virmond                            -25.3    -9.2   -25.5    -7.1
+  Vitorino                           -16.1   +14.0   -21.4   -25.1
+  Wenceslau Braz                     -16.2   -30.0   -20.5   -27.9
+  Xambrê                             -17.2   -17.3   -20.3   -16.7
+  Ângulo                             -12.6   -14.3   -19.6   -11.7

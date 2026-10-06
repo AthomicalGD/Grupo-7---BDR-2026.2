@@ -1,0 +1,51 @@
+P10.b) Histórico de candidaturas e mandatos de um político, buscando pelo nome
+
+Troque o texto entre % no WHERE pelo nome (ou parte dele) do político. A busca usa o nome civil
+registrado no TSE (o da candidatura mais recente), não o nome de urna, e não ignora acentos:
+use o nome sem acento ou só um trecho sem acento (ex.: '%WELLINGTON BARROSO%').
+
+SELECT p.nome,
+       p.nr_titulo_eleitoral                              AS titulo,
+       p.dt_nascimento,
+       e.ano,
+       CASE e.tipo WHEN 1 THEN 'SUPLEMENTAR' ELSE 'ORDINÁRIA' END AS eleicao,
+       c.nome                                             AS cargo,
+       COALESCE(m.nm_municipio || ' - ' || um.sigla, u.sigla, 'BRASIL') AS local,
+       COALESCE(pa.sigla, '-')                            AS partido,
+       COALESCE(ma.ds_situacao, 'NÃO ELEITO')             AS resultado,
+       CASE WHEN ma.id_mandato IS NULL THEN NULL ELSE es.turno END AS turno_eleito
+FROM politico p
+JOIN politico_eleicao pe ON pe.id_politico = p.id_politico
+JOIN eleicao e           ON e.id_eleicao = pe.id_eleicao
+JOIN cargo c             ON c.cod_cargo = e.cod_cargo
+LEFT JOIN municipio m    ON m.cd_municipio = e.cd_municipio
+LEFT JOIN uf um          ON um.cd_ibge = m.cd_uf
+LEFT JOIN uf u           ON u.cd_ibge = e.cd_uf
+LEFT JOIN mandato ma     ON ma.id_politico_eleicao = pe.id_politico_eleicao
+LEFT JOIN partido pa     ON pa.id_partido = ma.id_partido
+LEFT JOIN eleicao es     ON es.id_eleicao = ma.id_eleicao
+WHERE p.nome ILIKE '%WELLINGTON BARROSO%'
+ORDER BY p.nome, p.id_politico, e.ano, c.nome;
+
+Exemplo de resultado ('%WELLINGTON BARROSO%'):
+
+ nome                                   | ano  | cargo             | local         | partido | resultado
+----------------------------------------+------+-------------------+---------------+---------+-----------
+ JOSE WELLINGTON BARROSO DE ARAUJO DIAS | 1994 | DEPUTADO ESTADUAL | PI            | PT      | ELEITO
+ JOSE WELLINGTON BARROSO DE ARAUJO DIAS | 1996 | VICE-PREFEITO     | Teresina - PI | -       | NÃO ELEITO
+ JOSE WELLINGTON BARROSO DE ARAUJO DIAS | 1998 | DEPUTADO FEDERAL  | PI            | PT      | ELEITO
+ JOSE WELLINGTON BARROSO DE ARAUJO DIAS | 2000 | PREFEITO          | Teresina - PI | -       | NÃO ELEITO
+ JOSE WELLINGTON BARROSO DE ARAUJO DIAS | 2002 | GOVERNADOR        | PI            | PT      | ELEITO
+ JOSE WELLINGTON BARROSO DE ARAUJO DIAS | 2006 | GOVERNADOR        | PI            | PT      | ELEITO
+ JOSE WELLINGTON BARROSO DE ARAUJO DIAS | 2010 | SENADOR           | PI            | PT      | ELEITO
+ JOSE WELLINGTON BARROSO DE ARAUJO DIAS | 2012 | PREFEITO          | Teresina - PI | -       | NÃO ELEITO
+ JOSE WELLINGTON BARROSO DE ARAUJO DIAS | 2014 | GOVERNADOR        | PI            | PT      | ELEITO
+ JOSE WELLINGTON BARROSO DE ARAUJO DIAS | 2018 | GOVERNADOR        | PI            | PT      | ELEITO
+ JOSE WELLINGTON BARROSO DE ARAUJO DIAS | 2022 | SENADOR           | PI            | PT      | ELEITO
+
+Observações:
+- Homônimos aparecem como pessoas separadas; o título eleitoral e a data de nascimento distinguem.
+- O partido só é guardado para os mandatos; candidaturas não eleitas saem com '-'.
+- "NÃO ELEITO" inclui candidaturas indeferidas, renunciadas ou substituídas (o banco não guarda
+  a situação da candidatura).
+- Só aparecem as candidaturas das UFs já carregadas no banco (e as de Presidente).
