@@ -7,8 +7,11 @@ o DF não tem eleição municipal, então não há zip do DF nesses anos.
 
 Os zips ficam inteiros em dados/tse/fotos_candidatos/<ano>/, sem extração: são
 milhões de imagens pequenas e o zip permite ler cada uma pelo nome sem espalhar
-arquivos pelo disco. Dentro do zip a foto se chama F<UF><SQ_CANDIDATO>_div.<ext>
-e se liga à candidatura (politico_eleicao.sq_candidato) pelo ano, UF e SQ.
+arquivos pelo disco. A foto se liga à candidatura (politico_eleicao.sq_candidato)
+pelo ano, UF e SQ; o nome muda conforme a eleição:
+  2006-2008 e 2016 em diante   F<UF><SQ>_div.<ext>
+  2010-2014                    <UF><SQ>_div.<ext>
+  2004                         F<UF><MUNICÍPIO TSE>_<SQ>_div.png  (o SQ só é único no município)
 
 Cada zip baixado tem a integridade conferida (CRC de todas as imagens) e fica
 registrado no manifesto com a contagem de fotos por formato. No fim, o
@@ -30,7 +33,7 @@ PRIMEIRO_ANO = 2004
 PASTA = Path("tse") / "fotos_candidatos"
 UFS = ("AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS", "MT", "PA", "PB", "PE",
        "PI", "PR", "RJ", "RN", "RO", "RR", "RS", "SC", "SE", "SP", "TO")
-FOTO = re.compile(r"^F(?P<uf>[A-Z]{2})(?P<sq>\d+)_div\.(?P<ext>jpe?g|png|bmp|gif)$", re.IGNORECASE)
+FOTO = re.compile(r"^F?(?P<uf>[A-Z]{2})(?:(?P<mun>\d+)_)?(?P<sq>\d+)_div\.(?P<ext>jpe?g|png|bmp|gif)$", re.IGNORECASE)
 
 
 def geral(ano: int) -> bool:
@@ -47,10 +50,24 @@ def anos_disponiveis(ate: int, anos=None) -> list[int]:
     return [a for a in range(PRIMEIRO_ANO, ate + 1, 2) if not anos or a in anos]
 
 
-def nome_da_foto(nomes, uf: str, sq: int | str) -> str | None:
-    """Membro do zip com a foto da candidatura (uf, sq), em qualquer extensão."""
-    prefixo = f"F{uf}{sq}_div.".upper()
-    return next((n for n in nomes if n.rsplit("/", 1)[-1].upper().startswith(prefixo)), None)
+def chave(sq: int | str, municipio: int | str | None = None) -> str:
+    """Chave da foto dentro do zip de uma UF: o SQ, ou município_SQ em 2004."""
+    return f"{int(municipio)}_{int(sq)}" if municipio else str(int(sq))
+
+
+def indice(nomes) -> dict[str, str]:
+    """{chave: membro do zip} das fotos de um zip."""
+    achadas = {}
+    for nome in nomes:
+        m = FOTO.match(nome.rsplit("/", 1)[-1])
+        if m:
+            achadas[chave(m["sq"], m["mun"])] = nome
+    return achadas
+
+
+def nome_da_foto(nomes, sq: int | str, municipio: int | str | None = None) -> str | None:
+    """Membro do zip (de uma UF) com a foto da candidatura; municipio (código TSE) só conta em 2004."""
+    return indice(nomes).get(chave(sq, municipio))
 
 
 @dataclass
@@ -102,15 +119,20 @@ def planejar(cli, raiz: Path, manifesto: Manifesto, anos: list[int], ufs, atuali
     return pacotes
 
 
+def contar(z: zipfile.ZipFile) -> dict:
+    """Fotos do zip por formato (lê só o índice do zip)."""
+    infos = [i for i in z.infolist() if FOTO.match(i.filename.rsplit("/", 1)[-1])]
+    formatos = Counter(i.filename.rsplit(".", 1)[-1].lower() for i in infos)
+    return {"fotos": len(infos), "formatos": dict(formatos), "bytes_fotos": sum(i.file_size for i in infos)}
+
+
 def conferir(zip_local: Path) -> dict:
     """Confere o CRC de todas as imagens e conta as fotos por formato."""
     with zipfile.ZipFile(zip_local) as z:
         ruim = z.testzip()
         if ruim:
             raise ValueError(f"{zip_local.name}: {ruim} está corrompido")
-        infos = [i for i in z.infolist() if FOTO.match(i.filename.rsplit("/", 1)[-1])]
-    formatos = Counter(i.filename.rsplit(".", 1)[-1].lower() for i in infos)
-    return {"fotos": len(infos), "formatos": dict(formatos), "bytes_fotos": sum(i.file_size for i in infos)}
+        return contar(z)
 
 
 def executar(cli, p: Pacote, manifesto: Manifesto) -> dict:
@@ -128,6 +150,13 @@ def _milhar(n: int) -> str:
 def gerar_resumo(raiz: Path, manifesto: Manifesto) -> Path:
     """RESUMO.md com as fotos baixadas por eleição e UF."""
     registros = {k: v for k, v in manifesto.dados.items() if k.startswith("fotos:") and (raiz / v["arquivo"]).exists()}
+    # recontagem pelo índice de cada zip: corrige registros feitos com uma regra de nomes antiga
+    for k, r in registros.items():
+        with zipfile.ZipFile(raiz / r["arquivo"]) as z:
+            atual = contar(z)
+        if atual["fotos"] != r.get("fotos"):
+            manifesto.registrar(k, **{**{c: v for c, v in r.items() if c != "atualizado_em"}, **atual})
+            r.update(atual)
     tabela: dict[int, dict[str, int]] = {}
     for chave, r in registros.items():
         _, ano, uf = chave.split(":")
@@ -143,7 +172,8 @@ def gerar_resumo(raiz: Path, manifesto: Manifesto) -> Path:
         f"Gerado por `python -m crawler --fotos` em {datetime.now():%d/%m/%Y %H:%M}.",
         f"**{_milhar(total)} fotos** em {len(registros)} zips, {tamanho / 1e9:.1f} GB. "
         f"Formatos: {', '.join(f'{k} {_milhar(v)}' for k, v in formatos.most_common())}.", "",
-        "Cada zip guarda as fotos de uma eleição e UF com o nome `F<UF><SQ_CANDIDATO>_div.<ext>`.",
+        "Cada zip guarda as fotos de uma eleição e UF. O nome liga a foto à candidatura: `F<UF><SQ>_div` "
+        "(2006-2008 e 2016+), `<UF><SQ>_div` (2010-2014) e `F<UF><MUNICÍPIO TSE>_<SQ>_div` (2004).",
         "A API lê a foto direto do zip; não é preciso extrair.", "",
         "| Ano | " + " | ".join(colunas) + " | Total |",
         "|---|" + "---:|" * (len(colunas) + 1),

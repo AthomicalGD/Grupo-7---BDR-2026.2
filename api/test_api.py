@@ -45,7 +45,7 @@ def main() -> None:
     esp = the["espectro"]["2022"]
     assert esp[0]["vies"] == min(p["vies"] for p in esp)
     assert abs(sum(p["pct"] for p in esp) - 100) < 1
-    assert the["prefeitos"] and the["comparecimento"]["2022"]["aptos"] > 0
+    assert the["prefeitos"] and "sq" not in the["prefeitos"][0] and the["comparecimento"]["2022"]["aptos"] > 0
     assert all(the["indicadores"][k] for k in ("pib_per_capita", "idhm", "populacao", "eleitores_populacao", "isentos"))
 
     assert get("/api/municipios?q=teresi")[0]["ibge"] == 2211001
@@ -62,6 +62,9 @@ def main() -> None:
     # fotos (python -m crawler --fotos --ufs PI BR): antes de 2004 o TSE não publica
     fotos = {c["ano"]: c["foto"] for c in wd["candidaturas"]}
     assert fotos[1994] is None and fotos[2022] and wd["foto"] == fotos[2022], fotos
+    assert fotos[2010] and fotos[2012], fotos   # 2010-2014: zip sem o "F" no nome
+    p2004 = [p for p in the["prefeitos"] if p["ano"] == 2004]
+    assert p2004 and p2004[0]["foto"], p2004   # 2004: chave município_SQ
     img = cliente.get(fotos[2022])
     assert img.status_code == 200 and img.headers["content-type"].startswith("image/") and len(img.content) > 1000
     assert get("/api/politicos?q=wellington barroso")[0]["foto"]

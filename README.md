@@ -92,8 +92,10 @@ python -m crawler --fotos --ufs AC BA GO PE PI PR BR
 ```
 
 - Brasil inteiro, 2004 a 2024: 296 zips, **40,6 GB** (2020 e 2024 somam 30 GB). As 6 UFs carregadas + BR: 10,2 GB.
-- Os zips ficam inteiros em `dados/tse/fotos_candidatos/<ano>/`, sem extração: são cerca de 3 milhões de
-  imagens, e a API lê cada uma direto do zip pelo nome `F<UF><SQ_CANDIDATO>_div.<ext>`.
+- Os zips ficam inteiros em `dados/tse/fotos_candidatos/<ano>/`, sem extração: são milhões de imagens
+  (só as 6 UFs + BR somam 745.963), e a API lê cada uma direto do zip pelo nome, que varia por eleição:
+  `F<UF><SQ>_div` (2006-2008 e 2016+), `<UF><SQ>_div` (2010-2014) e `F<UF><MUNICÍPIO TSE>_<SQ>_div` (2004,
+  quando o SQ só era único dentro do município).
 - Cada zip tem o CRC de todas as imagens conferido; o manifesto guarda a contagem por formato e
   `dados/tse/fotos_candidatos/RESUMO.md` mostra as fotos por eleição e UF.
 - Aceita `--anos`, `--atualizar`, `--simular`, `--limite-gb` e `--carreira-ate 2026`, e é retomável como o resto.

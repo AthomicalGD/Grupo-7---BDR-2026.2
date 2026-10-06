@@ -13,10 +13,14 @@ def main() -> None:
     assert unidades(2022, ["DF", "PI", "BR"]) == ["DF", "PI", "BR"]
     assert unidades(2024, ["DF", "PI", "BR"]) == ["PI"]
 
-    nomes = ["FPI180001605662_div.jpg", "FPI18000160566_div.png", "leiame.pdf"]
-    assert nome_da_foto(nomes, "PI", 180001605662) == "FPI180001605662_div.jpg"
-    assert nome_da_foto(nomes, "PI", 18000160566) == "FPI18000160566_div.png"   # prefixo não confunde SQs
-    assert nome_da_foto(nomes, "BA", 180001605662) is None
+    # os três formatos de nome do TSE: com F (2006-08, 2016+), sem F (2010-14) e município_SQ (2004)
+    nomes = ["FPI180001605662_div.jpg", "FPI18000160566_div.png", "PI180000000028_div.jpg",
+             "FPI10537_00073_div.png", "leiame.pdf"]
+    assert nome_da_foto(nomes, 180001605662) == "FPI180001605662_div.jpg"
+    assert nome_da_foto(nomes, 18000160566) == "FPI18000160566_div.png"   # prefixo não confunde SQs
+    assert nome_da_foto(nomes, 180000000028) == "PI180000000028_div.jpg"
+    assert nome_da_foto(nomes, 73, municipio=10537) == "FPI10537_00073_div.png"
+    assert nome_da_foto(nomes, 73) is None and nome_da_foto(nomes, 1) is None
 
     with tempfile.TemporaryDirectory() as pasta:
         z = Path(pasta) / "foto_cand2022_PI_div.zip"

@@ -29,7 +29,7 @@ from fastapi.responses import JSONResponse
 from psycopg2.extras import RealDictCursor
 from psycopg2.pool import ThreadedConnectionPool
 
-from crawler.fotos import FOTO, PASTA as PASTA_FOTOS
+from crawler.fotos import PASTA as PASTA_FOTOS, chave as chave_foto, indice as indice_fotos
 
 DADOS = Path(__file__).resolve().parent.parent / "dados"
 IBGE = DADOS / "ibge"
@@ -221,7 +221,7 @@ ORDER BY e.ano
 """
 
 SQL_PREFEITOS = f"""
-SELECT e.ano, p.nome, p.id_politico, pa.sigla AS partido, es.turno, pe.sq_candidato AS sq
+SELECT e.ano, p.nome, p.id_politico, pa.sigla AS partido, es.turno, pe.sq_candidato AS sq, e.cd_municipio
 FROM eleicao e
 JOIN politico_eleicao pe ON pe.id_eleicao = e.id_eleicao
 JOIN mandato ma ON ma.id_politico_eleicao = pe.id_politico_eleicao
@@ -264,8 +264,14 @@ def detalhe_municipio(ibge: int) -> dict:
     return {**base, "vies": v["vies"], "vies_uf": vies_ufs().get(uf["cd_ibge"], VAZIO)["vies"],
             "sem_vies_pct": v["sem_vies_pct"], "espectro": espectro,
             "indicadores": indicadores(cd, comparecimento), "comparecimento": comparecimento,
-            "prefeitos": [{**r, "foto": foto_url(r["ano"], m["sg_uf"], r.pop("sq"))}
-                          for r in consultar(SQL_PREFEITOS, (cd,))]}
+            "prefeitos": prefeitos(cd, m["sg_uf"])}
+
+
+def prefeitos(cd_municipio: int, uf: str) -> list[dict]:
+    linhas = consultar(SQL_PREFEITOS, (cd_municipio,))
+    for r in linhas:
+        r["foto"] = foto_url(r["ano"], uf, r.pop("sq"), r.pop("cd_municipio"))
+    return linhas
 
 
 def indicadores(cd_municipio: int, comparecimento: dict) -> dict:
@@ -304,25 +310,24 @@ def zip_fotos(ano: int, uf: str) -> tuple[zipfile.ZipFile, dict[str, str]] | Non
     if not caminho.exists():
         return None
     z = zipfile.ZipFile(caminho)
-    nomes = {}
-    for nome in z.namelist():
-        m = FOTO.match(nome.rsplit("/", 1)[-1])
-        if m:
-            nomes[m["sq"]] = nome
-    return z, nomes
+    return z, indice_fotos(z.namelist())
 
 
-def foto_url(ano, uf, sq) -> str | None:
-    """URL da foto da candidatura, ou None se o TSE não publicou (antes de 2004) ou não foi baixada."""
-    uf = uf or "BR"   # Presidente
-    achado = zip_fotos(int(ano), uf) if ano and sq else None
-    return f"/api/fotos/{ano}/{uf}/{sq}" if achado and str(sq) in achado[1] else None
+def foto_url(ano, uf, sq, cd_municipio=None) -> str | None:
+    """URL da foto da candidatura, ou None se o TSE não publicou (antes de 2004) ou não foi baixada.
+    Em 2004 o SQ só é único no município, então a chave leva o código TSE do município."""
+    if not (ano and sq):
+        return None
+    uf, ano = uf or "BR", int(ano)   # sem UF: Presidente
+    chave = chave_foto(sq, cd_municipio if ano == 2004 else None)
+    achado = zip_fotos(ano, uf)
+    return f"/api/fotos/{ano}/{uf}/{chave}" if achado and chave in achado[1] else None
 
 
-@app.get("/api/fotos/{ano}/{uf}/{sq}")
-def foto(ano: int, uf: str, sq: int):
+@app.get("/api/fotos/{ano}/{uf}/{chave}")
+def foto(ano: int, uf: str, chave: str):
     achado = zip_fotos(ano, uf.upper())
-    nome = achado and achado[1].get(str(sq))
+    nome = achado and achado[1].get(chave)
     if not nome:
         raise HTTPException(404, "Foto não encontrada")
     ext = nome.rsplit(".", 1)[-1].lower()
@@ -352,7 +357,7 @@ SELECT a.id_politico AS id, a.nome, extract(year FROM a.dt_nascimento)::int AS n
        min(e.ano) AS primeiro_ano, max(e.ano) AS ultimo_ano,
        count(DISTINCT pe.id_eleicao) AS candidaturas,
        count(DISTINCT pe.id_eleicao) FILTER (WHERE ma.id_mandato IS NOT NULL) AS vitorias,
-       (array_agg(e.ano || '|' || COALESCE(u.sigla, um.sigla, 'BR') || '|' || pe.sq_candidato
+       (array_agg(e.ano || '|' || COALESCE(u.sigla, um.sigla, 'BR') || '|' || pe.sq_candidato || '|' || COALESCE(e.cd_municipio, 0)
                   ORDER BY e.ano DESC))[1] AS ultima
 FROM achados a
 JOIN politico_eleicao pe ON pe.id_politico = a.id_politico
@@ -377,7 +382,7 @@ SELECT * FROM (
            ma.id_mandato IS NOT NULL AS eleito, es.turno,
            (SELECT sum(v.qtd_votos_nominais) FROM votacao_candidato_munzona v
             WHERE v.id_politico_eleicao = pe.id_politico_eleicao AND v.id_eleicao = pe.id_eleicao) AS votos,
-           e.tipo = 1 AS suplementar, COALESCE(e.cd_municipio, -e.cd_uf) AS unidade, pe.sq_candidato AS sq
+           e.tipo = 1 AS suplementar, COALESCE(e.cd_municipio, -e.cd_uf) AS unidade, pe.sq_candidato AS sq, e.cd_municipio AS cd_mun
     FROM politico_eleicao pe
     JOIN eleicao e        ON e.id_eleicao = pe.id_eleicao
     JOIN cargo c          ON c.cod_cargo = e.cod_cargo
@@ -435,7 +440,7 @@ def detalhar_politico(id_politico: int):
     for c in cands:
         anterior = (c["ano"] - (8 if c["cod_cargo"] == SENADOR else 4), c["cod_cargo"], c.pop("unidade"))
         c["reeleito"] = c["eleito"] and anterior in eleitos
-        c["foto"] = foto_url(c["ano"], c["uf"], c.pop("sq"))
+        c["foto"] = foto_url(c["ano"], c["uf"], c.pop("sq"), c.pop("cd_mun"))
     vitorias = sum(c["eleito"] for c in cands)
     fotos = [c["foto"] for c in cands if c["foto"]]
     return {**p[0], "foto": fotos[-1] if fotos else None, "ufs": sorted({c["uf"] for c in cands if c["uf"]}), "candidaturas": cands,
