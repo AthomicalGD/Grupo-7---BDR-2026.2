@@ -1,0 +1,192 @@
+@import "tailwindcss";
+
+/* Tokens do sistema visual (design/PROMPT.md §3). */
+@theme {
+  --font-sans: "Archivo Variable", "Archivo", system-ui, sans-serif;
+  --font-mono: "Red Hat Mono Variable", "Red Hat Mono", ui-monospace, monospace;
+
+  --color-papel: #f2f4f5;
+  --color-papel-2: #e6eaed;
+  --color-folha: #fcfdfd;
+  --color-tinta: #18202b;
+  --color-tinta-2: #4b5566;
+  --color-tinta-3: #5f6878;
+  --color-linha: #d9dee2;
+  --color-linha-2: #aeb6bf;
+  --color-acao: #1f5f86;
+  --color-acao-2: #174a69;
+  --color-marcador: #f7c21a;
+  --color-neutro: #e8eaec;
+
+  --color-fita-verde: #5e881b;
+  --color-fita-lima: #a2bd31;
+  --color-fita-ardosia: #5d6b94;
+  --color-fita-petroleo: #468baf;
+  --color-fita-celeste: #76acd0;
+  --color-fita-laranja: #f19929;
+  --color-fita-amarelo: #fbc700;
+
+  --color-confirma: #3f7f2a;
+  --color-corrige: #e5732a;
+  --color-branco-urna: #f4f5f2;
+  --color-eleito: #3f7f2a;
+  --color-reeleito: #1f5f86;
+
+  --radius-cartao: 16px;
+  --ease-saida: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-camera: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --shadow-papel: 0 1px 0 rgb(42 53 80 / 0.04), 0 12px 32px -12px rgb(42 53 80 / 0.22);
+  --shadow-cartao: 0 1px 2px rgb(42 53 80 / 0.06), 0 6px 18px -8px rgb(42 53 80 / 0.18);
+}
+
+/* Hierarquia tipográfica: uma família, três larguras. */
+@utility t-display {
+  font-stretch: 112%;
+  font-weight: 780;
+  font-size: clamp(2.4rem, 1.4rem + 2.6vw, 3.8rem);
+  line-height: 0.98;
+  letter-spacing: -0.018em;
+  text-wrap: balance;
+}
+@utility t-h1 {
+  font-stretch: 106%;
+  font-weight: 760;
+  font-size: clamp(1.9rem, 1.3rem + 1.4vw, 2.45rem);
+  line-height: 1.04;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+}
+@utility t-h2 {
+  font-weight: 700;
+  font-size: 1.5625rem;
+  line-height: 1.15;
+  letter-spacing: -0.006em;
+}
+@utility t-h3 {
+  font-weight: 650;
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+@utility t-rotulo {
+  font-weight: 600;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+}
+@utility t-numero {
+  font-stretch: 74%;
+  font-weight: 820;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+@utility t-mono {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    font-size: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+  html[data-fonte="1"] { font-size: 112.5%; }
+  html[data-fonte="2"] { font-size: 125%; }
+
+  html[data-contraste="alto"] {
+    --color-papel: #ffffff;
+    --color-papel-2: #e9ecef;
+    --color-folha: #ffffff;
+    --color-tinta: #000000;
+    --color-tinta-2: #1c2330;
+    --color-tinta-3: #2b3442;
+    --color-linha: #6b7480;
+    --color-linha-2: #3d4652;
+    --color-acao: #0b3f60;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-papel);
+    color: var(--color-tinta);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.55;
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-marcador) 70%, white);
+    color: var(--color-tinta);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-acao);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  button { cursor: pointer; }
+}
+
+/* ---------- movimento ---------- */
+@keyframes surgir {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes girar {
+  to { transform: rotate(360deg); }
+}
+@keyframes girar-inverso {
+  to { transform: rotate(-360deg); }
+}
+@keyframes respirar {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+@keyframes onda {
+  to { transform: translateX(-240px); }
+}
+@keyframes imprimir {
+  from { clip-path: inset(0 0 100% 0); transform: translateY(-18px); }
+  to { clip-path: inset(0 0 0 0); transform: translateY(0); }
+}
+@keyframes linha-impressa {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.municipio-surge {
+  opacity: 0;
+  animation: surgir 520ms var(--ease-saida) forwards;
+}
+.mapa-forma {
+  transition: fill 600ms var(--ease-saida), opacity 420ms var(--ease-saida), stroke 160ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* ---------- boletim: papel térmico saindo da fenda ---------- */
+.boletim-papel {
+  animation: imprimir 760ms var(--ease-saida) both;
+  /* borda serrilhada do picote do rolo */
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%;
+  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%;
+}
+.boletim-linha {
+  animation: linha-impressa 420ms var(--ease-saida) both;
+  animation-delay: calc(260ms + var(--i, 0) * 90ms);
+}

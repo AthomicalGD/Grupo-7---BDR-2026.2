@@ -126,6 +126,35 @@ python -m uvicorn api.app:app --port 8000
 - As respostas ficam em cache no processo: **reinicie a API depois de carregar UFs**.
 - Conferência contra o banco (precisa de PI carregado): `python -m api.test_api`.
 
+## Front-end (Voto Aberto)
+
+Site em `web/`: React 19 + TypeScript + Vite, TanStack Router e Query, Tailwind v4, Motion, D3
+(mapas e gráficos) e Three.js via React Three Fiber (urna e relevo 3D). Requer Node 22+, o banco
+no ar e a API rodando (seção acima).
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Abra http://localhost:5173. O Vite repassa `/api` para a API em `127.0.0.1:8000`.
+
+| Tela | Rota | Pergunta |
+|---|---|---|
+| Mapa do Brasil, viés por estado, linha do tempo 2018-2024 | `/` | P7 |
+| Estado: municípios, regiões intermediárias, extremos, relevo 3D | `/uf/PI` | P7 |
+| Boletim do município: viés, espectro do voto, prefeitos, indicadores, QR code | `/uf/PI/2211001` | P7, P3 |
+| Urna 3D de consulta (busca pelo nome) | `/urna` | P10 |
+| Carreira do político: trajetória por cargo e santinhos com foto | `/politico/368990` | P10 |
+| Fontes, método e limitações | `/metodologia` | todas |
+
+- Testes ponta a ponta (desktop 1440×900 e celular 390×844, contra os dados reais):
+  `npx playwright install chromium` uma vez, depois `npx playwright test`.
+- `npm run build` gera o site estático em `web/dist`; `npm run lint` roda o oxlint.
+- A marca é gerada por código: `npm run marca` escreve `src/assets/marca/`, `design/marca/` e o favicon.
+- O desenho do sistema está em `design/PROMPT.md` e o produto em `PRODUCT.md`.
+
 ## Organização de `dados/`
 
 ```
