@@ -1,4 +1,4 @@
-# Urna Aberta: prompt de design e construção
+# Voto Aberto: prompt de design e construção
 
 Prompt mestre do front-end. Escrito com o método do **impeccable** (produto → modo →
 mundo visual → contrato de direção → estados → verificação) e as travas do
@@ -139,7 +139,7 @@ estático. Só se anima `transform` e `opacity` (cor do mapa via transição de 
 
 - **Barra utilitária** (32px, `--tinta` sobre `--papel` escurecido): "Projeto acadêmico
   de Banco de Dados · Grupo 7 · 2026.2" à esquerda; à direita, Alto contraste e A+/A-.
-- **Cabeçalho** (64px): símbolo + "Urna Aberta" (Archivo `wdth 112`), navegação
+- **Cabeçalho** (64px): letreiro vetorizado da marca (web/src/assets/marca), navegação
   Mapa · Urna · Metodologia; item ativo com sublinhado `--marcador` de 4px.
   Embaixo, uma fita de 6px com as sete cores em onda lenta (a única onda fixa da página).
 - **Rodapé**: fontes (TSE Dados Abertos, IBGE, Atlas Brasil/Ipea, Harvard Dataverse), UFs

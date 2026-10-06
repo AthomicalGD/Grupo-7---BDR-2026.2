@@ -22,7 +22,7 @@ qualquer cidadão curioso sobre o próprio município ou sobre a carreira de um 
 
 ## Product Purpose
 
-**Urna Aberta** abre os dados públicos das eleições brasileiras e responde, de forma
+**Voto Aberto** abre os dados públicos das eleições brasileiras e responde, de forma
 visual e navegável, às perguntas do projeto. Foco atual: P7 (viés político de município
 e região na linha do tempo 2018-2024) e P10 (sobrevivência da carreira de um político,
 1994-2024). As demais perguntas (1-6, 8, 9) entram depois, sem prioridade.
@@ -55,7 +55,7 @@ cada pessoa, com dados que o próprio grupo coletou, modelou e carregou.
 
 ## Brand Commitments
 
-- Nome: **Urna Aberta**.
+- Nome: **Voto Aberto** (antes Urna Aberta). Marca: V de visto formado por barras crescentes, V lima e traço de check em tinta; vetorizada da referência do usuário em `design/marca/`, gerada por `npm run marca`.
 - Paleta clara das ondas de referência (verde, lima, ardósia, azul-petróleo,
   azul-claro, laranja, amarelo), sem copiar o layout das referências.
 - Cara de site governamental sério, sem se passar por órgão oficial: sem nome, brasão
