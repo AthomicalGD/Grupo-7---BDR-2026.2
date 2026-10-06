@@ -77,6 +77,7 @@ ITENS = {i.chave: i for i in (
     # ---- IBGE ----------------------------------------------------------------
     Item("ibge_municipios", "ibge",
          "Municípios com UF, região, meso/microrregião e regiões imediata/intermediária"),
+    Item("ibge_malhas", "ibge", "Malhas GeoJSON: contorno das UFs e municípios de cada UF (mapas)"),
     Item("ibge_pib", "ibge", "PIB municipal a preços correntes (SIDRA 5938), para o PIB per capita"),
     Item("ibge_populacao_estimada", "ibge", "População residente estimada (SIDRA 6579)"),
     Item("ibge_censo2022_populacao", "ibge", "População residente do Censo 2022 (SIDRA 4709)"),
@@ -137,6 +138,7 @@ NECESSIDADES = {
         "votacao_partido_munzona": EP,
         "municipio_tse_ibge": None,
         "ibge_municipios": None,                  # agrega municípios em regiões
+        "ibge_malhas": None,                      # mapas do viés por UF e município
         "ideologia_partidos": None,
     },
     8: {  # peso do FEFC/Fundo Partidário na receita x sucesso

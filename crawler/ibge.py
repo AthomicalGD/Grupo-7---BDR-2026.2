@@ -10,6 +10,7 @@ from .saida import gravar_csv
 SIDRA = "https://apisidra.ibge.gov.br/values"
 AGREGADOS = "https://servicodados.ibge.gov.br/api/v3/agregados"
 LOCALIDADES = "https://servicodados.ibge.gov.br/api/v1/localidades/municipios"
+MALHAS = "https://servicodados.ibge.gov.br/api/v3/malhas"
 UFS = (11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25, 26, 27, 28, 29,
        31, 32, 33, 35, 41, 42, 43, 50, 51, 52, 53)
 
@@ -100,7 +101,26 @@ def _coletar_municipios(cli, raiz: Path) -> list[Path]:
     return [destino]
 
 
+def _coletar_malhas(cli, raiz: Path) -> list[Path]:
+    """GeoJSON (propriedade codarea = código IBGE): o Brasil dividido em UFs e cada UF em municípios."""
+    pasta = raiz / "ibge" / "malhas"
+    pasta.mkdir(parents=True, exist_ok=True)
+    pedidos = [("paises/BR", "UF", "intermediaria", "brasil_ufs.geojson")]
+    pedidos += [(f"estados/{uf}", "municipio", "maxima", f"municipios_{uf}.geojson") for uf in UFS]
+    arquivos = []
+    for local, divisao, qualidade, nome in pedidos:
+        r = requisitar(cli, f"{MALHAS}/{local}", params={
+            "formato": "application/vnd.geo+json", "qualidade": qualidade, "intrarregiao": divisao})
+        destino = pasta / nome
+        destino.write_bytes(r.content)
+        print(f"    {nome}: {len(r.content) / 1e6:.1f} MB", flush=True)
+        arquivos.append(destino)
+    return arquivos
+
+
 def coletar(cli, chave: str, raiz: Path) -> list[Path]:
     if chave == "ibge_municipios":
         return _coletar_municipios(cli, raiz)
+    if chave == "ibge_malhas":
+        return _coletar_malhas(cli, raiz)
     return _coletar_tabela(cli, chave, raiz)
