@@ -4,7 +4,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from . import dataverse, ibge, ipea, tse
+from . import dataverse, fotos, ibge, ipea, tse
 from .catalogo import ITENS, PERGUNTAS, PRIMEIRO_ANO_CANDIDATOS, ULTIMO_ANO_COM_RESULTADO, montar_plano
 from .manifesto import Manifesto, gerar_indice
 from .rede import descrever_erro, novo_cliente
@@ -35,9 +35,19 @@ def _argumentos(argv):
                    help="guarda os zips do TSE em dados/_zips (ocupa mais espaço)")
     p.add_argument("--limite-gb", type=float, default=200.0,
                    help="não baixa se o total em disco for passar deste valor (padrão: 200)")
+    p.add_argument("--fotos", action="store_true",
+                   help="baixa as fotos dos candidatos (2004 em diante) em vez dos dados das perguntas; "
+                        "aceita --anos, --ufs, --simular, --atualizar e --carreira-ate")
+    p.add_argument("--ufs", nargs="+", metavar="UF",
+                   help="com --fotos: só essas UFs; BR = candidatos a Presidente (padrão: todas + BR)")
     args = p.parse_args(argv)
     if args.carreira_ate < PRIMEIRO_ANO_CANDIDATOS:
         p.error(f"--carreira-ate deve ser {PRIMEIRO_ANO_CANDIDATOS} ou posterior")
+    if args.ufs:
+        args.ufs = [u.upper() for u in args.ufs]
+        invalidas = [u for u in args.ufs if u not in (*fotos.UFS, "BR")]
+        if not args.fotos or invalidas:
+            p.error("--ufs só vale com --fotos" if not args.fotos else f"UF desconhecida: {' '.join(invalidas)}")
     return args
 
 
@@ -107,12 +117,71 @@ def _espaco_ok(tarefas, raiz: Path, limite_gb: float, manter_zips: bool) -> bool
     return True
 
 
+def _baixar_fotos(args, raiz: Path) -> int:
+    """python -m crawler --fotos: um zip por eleição e UF em dados/tse/fotos_candidatos/<ano>/."""
+    anos = fotos.anos_disponiveis(args.carreira_ate, args.anos)
+    if not anos:
+        print(f"Não há fotos nesses anos: o TSE as publica a partir de {fotos.PRIMEIRO_ANO}.")
+        return 0
+    ufs = args.ufs or [*fotos.UFS, "BR"]
+    manifesto = Manifesto(raiz)
+    falhas = []
+    with novo_cliente() as cli:
+        print("Consultando o CDN do TSE para montar o plano das fotos...", flush=True)
+        pacotes = fotos.planejar(cli, raiz, manifesto, anos, ufs, args.atualizar)
+        pendentes = [p for p in pacotes if p.pendente and not p.erro]
+        print(f"\nFotos dos candidatos: {len(pacotes)} zips de {anos[0]} a {anos[-1]}")
+        print(f"  {'ano':<6}{'a baixar':>9}{'MB':>9}{'em disco':>10}{'não publicados':>16}")
+        for ano in anos:
+            doano = [p for p in pacotes if p.ano == ano]
+            baixar_ano = [p for p in doano if p.pendente and not p.erro]
+            ausentes = " ".join(p.uf for p in doano if p.ausente) or "-"
+            print(f"  {ano:<6}{len(baixar_ano):>9}{_mb(sum(p.tamanho or 0 for p in baixar_ano)):>9}"
+                  f"{sum(not p.pendente and not p.ausente for p in doano):>10}  {ausentes:>14}")
+        for p in pacotes:
+            if p.erro:
+                print(f"  [erro] {p.ano} {p.uf}: {p.erro}")
+                falhas.append(f"{p.ano} {p.uf}: {p.erro}")
+        download = sum(p.tamanho or 0 for p in pendentes)
+        existente = _tamanho_pasta(raiz / fotos.PASTA)
+        livre = shutil.disk_usage(next(q for q in (raiz, *raiz.parents) if q.exists())).free
+        print(f"\nDownload: {_legivel(download)} | já em disco: {_legivel(existente)} | "
+              f"total final: {_legivel(existente + download)} | livre no disco: {_legivel(livre)}")
+        if _tamanho_pasta(raiz) + download > args.limite_gb * 1e9:
+            print(f"[erro] Passaria do limite de {args.limite_gb:g} GB. Reduza com --ufs/--anos ou use --limite-gb.")
+            return 2
+        if download > livre:
+            print("[erro] Espaço livre insuficiente para as fotos.")
+            return 2
+        if args.simular:
+            return 0
+        for i, p in enumerate(pendentes, 1):
+            print(f"\n[FOTOS {i}/{len(pendentes)}] {p.destino.name}", flush=True)
+            try:
+                r = fotos.executar(cli, p, manifesto)
+                formatos = ", ".join(f"{k} {v:,}" for k, v in sorted(r["formatos"].items()))
+                print(f"    {r['fotos']:,} fotos conferidas ({formatos})", flush=True)
+            except Exception as e:  # noqa: BLE001 - registra e segue para o próximo zip
+                falhas.append(f"{p.ano} {p.uf}: {descrever_erro(e)}")
+                print(f"    [erro] {descrever_erro(e)}")
+    print(f"\nResumo das fotos: {fotos.gerar_resumo(raiz, manifesto)}")
+    if falhas:
+        print("\nFalhas (rode de novo para tentar outra vez; o que já baixou não é refeito):")
+        for falha in falhas:
+            print(f"  - {falha}")
+        return 1
+    print("Concluído.")
+    return 0
+
+
 def main(argv=None) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(errors="replace")
     args = _argumentos(argv)
-    perguntas = sorted(set(args.perguntas or PERGUNTAS))
     raiz = args.dados.resolve()
+    if args.fotos:
+        return _baixar_fotos(args, raiz)
+    perguntas = sorted(set(args.perguntas or PERGUNTAS))
     plano = montar_plano(perguntas, args.fontes, args.anos, args.carreira_ate)
     if not plano:
         print("Nada a baixar com esses filtros.")
