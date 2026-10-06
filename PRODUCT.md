@@ -55,7 +55,7 @@ cada pessoa, com dados que o próprio grupo coletou, modelou e carregou.
 
 ## Brand Commitments
 
-- Nome: **Voto Aberto** (antes Urna Aberta). Marca: V de visto formado por barras crescentes, V lima e traço de check em tinta; vetorizada da referência do usuário em `design/marca/`, gerada por `npm run marca`.
+- Nome: **Voto Aberto** (antes Urna Aberta). Marca: V de visto com referência à bandeira (escolha do usuário): barras crescentes verdes e amarelas, V amarelo como metade do losango, globo azul com faixa branca e estrelas dentro dele, traço de check em tinta; vetorizada da referência do usuário em `design/marca/`, gerada por `npm run marca`.
 - Paleta clara das ondas de referência (verde, lima, ardósia, azul-petróleo,
   azul-claro, laranja, amarelo), sem copiar o layout das referências.
 - Cara de site governamental sério, sem se passar por órgão oficial: sem nome, brasão
