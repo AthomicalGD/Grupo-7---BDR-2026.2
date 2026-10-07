@@ -121,7 +121,8 @@ python -m uvicorn api.app:app --port 8000
 | `GET /api/ufs/{sigla}` | Viés da UF, das regiões intermediárias e de cada município, eleitorado apto por ano |
 | `GET /api/municipios?q=&uf=&limite=8` | Busca de municípios por nome, sem acentos, em todo o Brasil |
 | `GET /api/municipios/{ibge}` | Viés, votos por partido, indicadores (PIB per capita, IDHM...), comparecimento e prefeitos |
-| `GET /api/politicos?q=&limite=8` | Busca de políticos por nome (trigramas, sem acentos; migração `010_busca_politicos.sql`) |
+| `GET /api/politicos?q=&cargo=&ano=&uf=&partido=&resultado=&limite=8` | Busca de políticos por nome (trigramas, sem acentos; migração `010_busca_politicos.sql`) e/ou por uma candidatura que bata com todos os filtros |
+| `GET /api/partidos` | Siglas das candidaturas, com o viés médio (filtro da busca) |
 | `GET /api/politicos/aleatorio` | Um político com 5+ candidaturas e 2+ vitórias |
 | `GET /api/politicos/{id}` | Candidaturas, resultados, votos e reeleições do político (sem CPF, título ou data de nascimento) |
 | `GET /api/cadeira?ano=&cargo=&uf=&municipio=` | P1: custo da cadeira (gasto de todos os candidatos ÷ eleitos), cada eleito com gasto e votos, chance de vitória por faixa de gasto, preço por partido, despesas por tipo, receitas por fonte e o fator do IPCA |
@@ -146,14 +147,18 @@ npm run dev
 
 Abra http://localhost:5173. O Vite repassa `/api` para a API em `127.0.0.1:8000`.
 
+Para só usar ou apresentar o site, a versão de produção é bem mais leve para o computador
+(sem o modo de desenvolvimento do React): `npm run build` e depois `npx vite preview`,
+em http://localhost:4173 (também repassa `/api` para a API).
+
 | Tela | Rota | Pergunta |
 |---|---|---|
 | Mapa do Brasil, viés por estado, linha do tempo 2018-2024 | `/` | P7 |
 | Plenário: quanto custa uma cadeira, por cargo, ano e estado (ou câmara municipal), em 2D e 3D | `/cadeira` | P1 |
 | Estado: municípios, regiões intermediárias, extremos, relevo 3D | `/uf/PI` | P7 |
 | Boletim do município: viés, espectro do voto, prefeitos, custo da cadeira, indicadores, QR code | `/uf/PI/2211001` | P7, P1, P3 |
-| Urna 3D de consulta (busca pelo nome) | `/urna` | P10 |
-| Carreira do político: trajetória por cargo e santinhos com foto | `/politico/368990` | P10 |
+| Urna de consulta (UE2020 em vetor): busca pelo nome e cédula de filtros (cargo, ano, estado, partido, resultado) | `/urna` | P10 |
+| Ficha da carreira: situação atual, fita das eleições, trajetória com os partidos, custo das campanhas, santinhos | `/politico/368990` | P10, P1 |
 | Fontes, método e limitações | `/metodologia` | todas |
 
 - Testes ponta a ponta (desktop 1440×900 e celular 390×844, contra os dados reais):

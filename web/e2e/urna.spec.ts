@@ -16,7 +16,7 @@ test('urna: digitar o nome e CONFIRMA abrem a carreira (P10)', async ({ page }) 
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Wellington Barroso')
   await expect(page.getByRole('img', { name: /^Trajetória por cargo/ })).toBeVisible()
   await expect(page.locator('section[aria-labelledby="santinhos"] li')).toHaveCount(11)
-  await expect(page.getByText('em mandato de senador até 2030')).toBeVisible()
+  await expect(page.getByText(/Em mandato · senador até 2030/)).toBeVisible()
   await registrar(page, 'carreira')
 })
 

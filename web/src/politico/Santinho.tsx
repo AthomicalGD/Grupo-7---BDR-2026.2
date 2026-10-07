@@ -52,7 +52,7 @@ export function Santinho({ c, nome, inclinacao }: { c: Candidatura; nome: string
       </div>
     </>
   )
-  const classe = 'block w-[236px] shrink-0 snap-start overflow-hidden rounded-2xl bg-folha shadow-[var(--shadow-cartao)] transition-transform duration-300 hover:-translate-y-1 hover:rotate-0'
+  const classe = 'block h-full w-[236px] shrink-0 snap-start overflow-hidden rounded-2xl bg-folha shadow-[var(--shadow-cartao)] transition-transform duration-300 hover:-translate-y-1 hover:rotate-0'
   return municipal ? (
     <Link to="/uf/$sigla/$ibge" params={{ sigla: c.uf!, ibge: String(c.municipio_ibge) }} className={classe} style={{ rotate: `${inclinacao}deg` }} aria-label={`${c.ano}, ${fmtCargo(c.cargo)} em ${c.local}: ${resultado}. Abrir o boletim do município`}>
       {corpo}

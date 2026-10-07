@@ -145,7 +145,7 @@ Não imita o portal de resultados que serviu de referência nem se passa por ór
 **Key Characteristics:**
 - Mapa como tese da primeira tela; painel à direita muda com a rota (Brasil, estado, município).
 - Escala do viés contínua, laranja ↔ cinza ↔ azul, simétrica em 0, com "sem dados" sempre hachurado.
-- Objetos da eleição com função: cédula (ano), urna 3D (busca), boletim (município), santinho (eleição), plenário (cadeira), recibo (contas).
+- Objetos da eleição com função: cédula (ano e filtros da busca), urna UE2020 (busca), boletim (município), santinho (eleição), plenário (cadeira), recibo (contas), ficha da carreira (político).
 - Uma família (Archivo variável) em três larguras; mono só no papel térmico e no visor.
 - Movimento único e motivado: câmera do mapa, onda dos municípios, impressão do boletim, leque dos santinhos, cadeiras que se sentam no plenário.
 
@@ -169,7 +169,7 @@ Fundo frio de papel e tinta ardósia; cor saturada só no dado, nas fitas da mar
 - Nunca usada para viés; o partido continua com a cor do seu viés (barras do preço por partido).
 
 ### Tertiary (fitas, assinatura)
-- **Fitas** (#5e881b, #a2bd31, #5d6b94, #468baf, #76acd0, #f19929, #fbc700): a faixa ondulada do cabeçalho e do rodapé e a tira do santinho. Nunca carregam informação nem texto.
+- **Fitas** (#5e881b, #a2bd31, #5d6b94, #468baf, #76acd0, #f19929, #fbc700): a faixa ondulada do cabeçalho e do rodapé, a tira do santinho e da cédula de consulta. A do cabeçalho só ondula enquanto a API responde. Nunca carregam informação nem texto.
 - **Marca** (verde #1f9a4e, amarelo #fbc700, azul #2b4c8c): só no símbolo, que remete à bandeira (losango, globo, faixa e estrelas).
 
 ### Neutral
@@ -249,11 +249,17 @@ Papel térmico com cabeçalho em mono, picotes tracejados entre seções, linhas
 ### Santinho (assinatura)
 Cartão de 236px com a tira das sete fitas, foto de registro, ano em Archivo condensada, cargo, local, partido, votos e carimbo do resultado.
 
-### Urna 3D (assinatura)
-Modelo UE2020: corpo cinza-claro fosco com grão, visor TFT largo e branco em moldura preta (texto preto em sans, foto à direita, rodapé "Aperte a tecla:"), teclas numéricas grafite com braile e marca tátil no 5, coluna BRANCO (#f2f3f1), CORRIGE (#ee7a21) e CONFIRMA (#2fb46c, mais alta), área gravada no canto. Som sintetizado com os parâmetros medidos da urna real: senoide de ~2.300 Hz na tecla, dois bipes no CORRIGE e o trinado 2.300/2.200 Hz do fim do voto. Inclina com o ponteiro; sem WebGL ou com movimento reduzido, vira a urna 2D com o mesmo visor e teclado.
+### Urna (assinatura)
+Desenhada em vetor, de frente, com as proporções medidas numa foto do terminal do eleitor UE2020 (a versão 3D saiu: o desenho fiel lê melhor e pesa menos). Corpo cinza-claro fosco com grão (textura gerada uma vez, não filtro), visor TFT largo e branco em moldura preta (texto preto em sans, foto à direita, rodapé "Aperte a tecla:"), teclas numéricas grafite com braile e marca tátil no 5, coluna BRANCO (#f2f3f1), CORRIGE (#ee7a21) e CONFIRMA (#2fb46c, mais alta), área gravada no canto. Som sintetizado com os parâmetros medidos da urna real: senoide de ~2.300 Hz na tecla, dois bipes no CORRIGE e o trinado 2.300/2.200 Hz do fim do voto. As teclas são botões (clique, toque, Tab + Enter) e afundam 2,4 px quando apertadas, inclusive pelo teclado do computador. Com filtros, o visor mostra a consulta como a urna mostra o cargo: "CONSULTA PARA SENADOR · PI · 2022".
 
 ### Plenário (assinatura, P1)
 Hemiciclo em que cada cadeira é um eleito, vista de cima (assento na cor do gasto, encosto em tinta), numerada da esquerda para a direita pelo gasto ou pelos partidos na ordem da escala de viés. O custo da cadeira fica no miolo; em telas estreitas desce para baixo do arco. As cadeiras "sentam" em varredura (520ms, atraso até 650ms) quando a seleção muda e deslizam quando a ordem muda. Cartão com foto ao passar o mouse, setas do teclado percorrem, Enter abre a carreira; no toque, o primeiro toque mostra e o segundo abre. Vista "Em pé" (3D): colunas com altura linear ao gasto e a cadeira em cima.
+
+### Cédula de consulta (filtros da busca)
+Papel com a tira das sete fitas no topo e picotes entre as linhas: cargo, eleição (gerais e municipais em duas colunas cronológicas), estado (com a silhueta), partido (da esquerda para a direita, a casa pintada com a cor do viés) e resultado. Tudo se marca com X na casa, como a cédula de anos; uma marca por linha, marcar de novo desmarca, linha sem marca vale tudo. Recolhida, mostra as marcas como fichas removíveis. Tab entra em cada linha e as setas andam pelas casas.
+
+### Ficha da carreira
+Retrato 3x4 com borda de papel e o carimbo da situação (em mandato até, sem mandato desde, nunca eleito) na tinta dos carimbos dos santinhos; a fita da carreira (uma casa por eleição, cheia quando venceu, levando ao santinho); a resposta em texto com o contexto da reeleição do cargo na UF; trajetória com a faixa dos partidos na cor do viés.
 
 ### Recibo da prestação de contas
 Papel térmico com o mesmo picote do boletim, em Red Hat Mono 500, itens com pontilhado até o valor, total e "÷ N cadeiras". Só para despesas; receitas são uma barra única pelas fontes, com o dinheiro público primeiro.
@@ -268,6 +274,7 @@ O símbolo da marca trabalhando: as quatro barras sobem e descem como uma contag
 - **Do** mostrar ausência explicitamente: hachura para estado sem dados, "não informado" para partido sem viés, iniciais quando não há foto.
 - **Do** dar a cada gráfico tooltip no hover e no foco e a tabela equivalente ("Ver tabela").
 - **Do** animar só `transform`, `opacity` e `fill`, com `cubic-bezier(.16,1,.3,1)`, e respeitar `prefers-reduced-motion`.
+- **Do** deixar a página parada sem custo: nenhuma animação infinita, 3D só desenha sob demanda, ponteiro não re-renderiza listas grandes.
 - **Do** usar a escala tipográfica do Archivo (larguras 112/106/100/74) e algarismos tabulares em tabelas e eixos.
 
 ### Don't:
