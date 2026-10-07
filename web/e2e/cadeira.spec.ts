@@ -32,3 +32,17 @@ test('P1: vereador abre a câmara da capital e o boletim leva até ela', async (
   await expect(page).toHaveURL(/cargo=13/)
   await expect(page.locator('svg [data-i]')).toHaveCount(29)
 })
+
+test('P1: procurar um eleito e apertar Enter destaca a cadeira dele', async ({ page }) => {
+  await page.goto('/cadeira?cargo=6&ano=2022&uf=PI')
+  await expect(page.locator('svg [data-i]')).toHaveCount(10)
+  const campo = page.getByRole('combobox', { name: 'Procurar eleito neste plenário' })
+  await campo.fill('rejane')
+  await expect(page.getByRole('option', { name: /Rejane Ribeiro Sousa Dias/ })).toBeVisible()
+  await campo.press('Enter')
+  await expect(page.getByRole('status').filter({ hasText: 'Rejane Ribeiro Sousa Dias' })).toBeVisible()
+  await registrar(page, 'cadeira-busca')
+  await page.getByRole('button', { name: 'Limpar a busca e o destaque' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Rejane Ribeiro Sousa Dias' })).toHaveCount(0)
+})
+

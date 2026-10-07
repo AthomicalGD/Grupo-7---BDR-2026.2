@@ -40,7 +40,7 @@ cada pessoa, com dados que o próprio grupo coletou, modelou e carregou.
 ## Operating Context
 
 - Dados em `dados/` (crawler), carregados no PostgreSQL por UF (`python -m loader`).
-- UFs carregadas hoje: AC, BA, GO, PE, PI, PR (+ BR para Presidente). As outras
+- UFs carregadas hoje: AC, BA, GO, PE, PI, PR, RS (+ BR para Presidente). As outras
   aparecem como "sem dados carregados", nunca como zero.
 - Viés do partido: `partido.vies_politico`, de -100 (esquerda) a +100 (direita).
   Viés do município = média dos vieses ponderada pelos votos válidos de cada partido.

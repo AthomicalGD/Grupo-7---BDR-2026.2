@@ -255,8 +255,14 @@ Desenhada em vetor, de frente, com as proporções medidas numa foto do terminal
 ### Plenário (assinatura, P1)
 Hemiciclo em que cada cadeira é um eleito, vista de cima (assento na cor do gasto, encosto em tinta), numerada da esquerda para a direita pelo gasto ou pelos partidos na ordem da escala de viés. O custo da cadeira fica no miolo; em telas estreitas desce para baixo do arco. As cadeiras "sentam" em varredura (520ms, atraso até 650ms) quando a seleção muda e deslizam quando a ordem muda. Cartão com foto ao passar o mouse, setas do teclado percorrem, Enter abre a carreira; no toque, o primeiro toque mostra e o segundo abre. Vista "Em pé" (3D): colunas com altura linear ao gasto e a cadeira em cima.
 
-### Cédula de consulta (filtros da busca)
-Papel com a tira das sete fitas no topo e picotes entre as linhas: cargo, eleição (gerais e municipais em duas colunas cronológicas), estado (com a silhueta), partido (da esquerda para a direita, a casa pintada com a cor do viés) e resultado. Tudo se marca com X na casa, como a cédula de anos; uma marca por linha, marcar de novo desmarca, linha sem marca vale tudo. Recolhida, mostra as marcas como fichas removíveis. Tab entra em cada linha e as setas andam pelas casas.
+### Filtros da busca (fichas)
+Uma linha discreta de fichas sob o campo do nome: Cargo, Eleição, Estado, Partido, Resultado. Cada ficha abre um menu pequeno só quando clicada (fecha com Esc ou clique fora, abre para o lado com espaço). A escolhida fica em tinta, com o valor e um x para tirar, como os alternadores. Dentro dos menus continuam os sinais do sistema: eleições gerais e municipais em duas colunas, estado com a silhueta, partidos da esquerda para a direita com a cor do viés.
+
+### De onde vem o viés (painel do estado)
+A balança: uma barra divergente a partir do zero em que cada partido é um trecho na cor do seu viés, puxando para a esquerda ou para a direita; o traço marca o resultado, igual ao viés do mapa. Embaixo, os partidos com % dos votos, viés e quanto puxam; cada um abre os candidatos mais votados no estado, com retrato, cargo e votos, levando à carreira.
+
+### Busca no plenário
+Campo "Procurar eleito" acima do plenário; Enter destaca a cadeira: as outras escurecem (papel a 72%), a achada ganha o anel amarelo do marcador, pulsa duas vezes, e um cartão fixo ao lado leva à carreira. Em tela estreita o cartão desce para baixo do desenho.
 
 ### Ficha da carreira
 Retrato 3x4 com borda de papel e o carimbo da situação (em mandato até, sem mandato desde, nunca eleito) na tinta dos carimbos dos santinhos; a fita da carreira (uma casa por eleição, cheia quando venceu, levando ao santinho); a resposta em texto com o contexto da reeleição do cargo na UF; trajetória com a faixa dos partidos na cor do viés.
@@ -275,6 +281,8 @@ O símbolo da marca trabalhando: as quatro barras sobem e descem como uma contag
 - **Do** dar a cada gráfico tooltip no hover e no foco e a tabela equivalente ("Ver tabela").
 - **Do** animar só `transform`, `opacity` e `fill`, com `cubic-bezier(.16,1,.3,1)`, e respeitar `prefers-reduced-motion`.
 - **Do** deixar a página parada sem custo: nenhuma animação infinita, 3D só desenha sob demanda, ponteiro não re-renderiza listas grandes.
+- **Do** manter o voo da câmera leve: nada monta durante o voo (os municípios entram no pouso, em 6 anéis), sem contornos e sem hachura recalculada a cada quadro. Fontes: animações na thread principal perdem quadros quando o React renderiza junto (motion.dev/docs/performance); o traço que não escala é refeito a cada mudança de transform (código do Chromium); muitas animações viram muitas camadas (web.dev, layer count).
+- **Do** usar `content-visibility: auto` (classe `adiar`) nas seções abaixo da dobra e animar barras por `transform` em texto, não `scaleX`, para o Motion usar a GPU.
 - **Do** usar a escala tipográfica do Archivo (larguras 112/106/100/74) e algarismos tabulares em tabelas e eixos.
 
 ### Don't:

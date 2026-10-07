@@ -30,6 +30,27 @@ export interface UFDetalhe extends Omit<UF, 'municipios'> {
   municipios: MunicipioResumo[]
 }
 
+/** De onde vem o viés de uma UF num ano: partidos (com os candidatos mais votados) e quanto puxam a média. */
+export interface ComposicaoVies {
+  uf: string
+  ano: number
+  votos: number
+  vies: number | null
+  partidos: {
+    sigla: string
+    nome: string | null
+    vies: number
+    votos: number
+    pct: number
+    /** pontos que o partido soma ao viés do estado (a soma de todos dá o viés) */
+    contribuicao: number
+    nominais: number
+    legenda: number
+    candidatos_total: number
+    candidatos: { id: number; nome: string; cargo: string; local: string | null; votos: number; eleito: boolean; foto: string | null }[]
+  }[]
+}
+
 export interface MunicipioBusca {
   ibge: number
   nome: string
@@ -239,6 +260,12 @@ export const consultas = {
   ufs: () => queryOptions({ queryKey: ['ufs'], queryFn: ({ signal }) => get<UF[]>('/api/ufs', signal), ...sempre }),
   uf: (sigla: string) =>
     queryOptions({ queryKey: ['uf', sigla], queryFn: ({ signal }) => get<UFDetalhe>(`/api/ufs/${sigla}`, signal), ...sempre }),
+  composicao: (sigla: string, ano: number) =>
+    queryOptions({
+      queryKey: ['composicao', sigla, ano],
+      queryFn: ({ signal }) => get<ComposicaoVies>(`/api/ufs/${sigla}/composicao?ano=${ano}`, signal),
+      ...sempre,
+    }),
   municipio: (ibge: number) =>
     queryOptions({
       queryKey: ['municipio', ibge],

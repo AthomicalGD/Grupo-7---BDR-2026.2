@@ -40,23 +40,25 @@ test.describe('com movimento reduzido', () => {
   })
 })
 
-test('filtros: a cédula de consulta acha os políticos sem digitar nome', async ({ page }) => {
+test('filtros: as fichas acham os políticos sem digitar nome', async ({ page }) => {
   await page.goto('/urna')
-  const cedula = page.getByRole('region', { name: 'Cédula de consulta' })
-  const abrir = cedula.getByRole('button', { name: 'Abrir' })
-  if (await abrir.isVisible()) await abrir.click() // no celular ela começa recolhida
-  await cedula.getByRole('button', { name: 'Senador', exact: true }).click()
-  await cedula.getByRole('button', { name: '2022', exact: true }).click()
-  await cedula.getByRole('button', { name: 'Piauí' }).click()
-  await cedula.getByRole('button', { name: 'Se elegeu', exact: true }).click()
+  const filtros = page.getByRole('group', { name: 'Filtros da busca' })
+  await filtros.getByRole('button', { name: 'Cargo' }).click()
+  await page.getByRole('menuitemradio', { name: 'Senador' }).click()
+  await filtros.getByRole('button', { name: 'Eleição' }).click()
+  await page.getByRole('menuitemradio', { name: '2022' }).click()
+  await filtros.getByRole('button', { name: 'Estado' }).click()
+  await page.getByRole('menuitemradio', { name: 'Piauí' }).click()
+  await filtros.getByRole('button', { name: 'Resultado' }).click()
+  await page.getByRole('menuitemradio', { name: 'Se elegeu', exact: true }).click()
   await expect(page).toHaveURL(/cargo=5&eleicao=2022&uf=PI&resultado=eleito/)
   const lista = page.getByRole('listbox', { name: 'Políticos encontrados' }).getByRole('option')
   await expect(lista).toHaveCount(1, { timeout: 20_000 })
   await expect(lista.first()).toContainText('Jose Wellington Barroso de Araujo Dias')
   await registrar(page, 'urna-filtros')
-  // marcar de novo desmarca; Limpar tira tudo
-  await cedula.getByRole('button', { name: 'Senador', exact: true }).click()
+  // o x da ficha tira o filtro; Limpar tira tudo
+  await filtros.getByRole('button', { name: /Tirar o filtro cargo/ }).click()
   await expect(page).not.toHaveURL(/cargo=/)
-  await cedula.getByRole('button', { name: 'Limpar' }).click()
+  await filtros.getByRole('button', { name: 'Limpar' }).click()
   await expect(page).toHaveURL(/\/urna$/)
 })

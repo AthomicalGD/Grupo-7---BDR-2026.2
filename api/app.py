@@ -183,6 +183,76 @@ def detalhe_uf(sigla: str) -> dict:
     }
 
 
+# De onde vem o viés de uma UF num ano (P7): cada partido com os votos válidos que recebeu no estado
+# (nominais + legenda, todos os cargos do 1º turno), o viés e quanto ele puxa a média; e, dentro de
+# cada partido, os candidatos mais votados no estado, cujos votos nominais compõem esses votos.
+SQL_COMPOSICAO_PARTIDOS = """
+SELECT p.sigla, max(p.nome) AS nome, sum(v.qt_votos_validos) AS votos,
+       sum(v.qt_votos_validos * p.vies_politico) / sum(v.qt_votos_validos) AS vies
+FROM votacao_partido_municipio v
+JOIN partido p   ON p.id_partido = v.id_partido
+JOIN municipio m ON m.cd_municipio = v.cd_municipio
+WHERE m.cd_uf = %(cd_uf)s AND v.ano_eleicao = %(ano)s
+GROUP BY p.sigla
+HAVING sum(v.qt_votos_validos) > 0
+"""
+SQL_COMPOSICAO_CANDIDATOS = """
+SELECT pe.id_politico AS id, po.nome, pa.sigla AS partido, c.nome AS cargo, sum(v.votos)::bigint AS votos,
+       bool_or(ma.id_mandato IS NOT NULL) AS eleito, max(pe.sq_candidato) AS sq, max(e.cd_municipio) AS cd_mun,
+       COALESCE(max(u.sigla), max(um.sigla), 'BR') AS uf, max(mm.nm_municipio) AS local
+FROM votos_candidato_uf v                     -- pré-somado por UF (migração 012)
+JOIN politico_eleicao pe ON pe.id_politico_eleicao = v.id_politico_eleicao
+JOIN eleicao e           ON e.id_eleicao = pe.id_eleicao
+JOIN politico po         ON po.id_politico = pe.id_politico
+JOIN cargo c             ON c.cod_cargo = e.cod_cargo
+LEFT JOIN partido pa     ON pa.id_partido = pe.id_partido
+LEFT JOIN mandato ma     ON ma.id_politico_eleicao = pe.id_politico_eleicao
+LEFT JOIN uf u           ON u.cd_ibge = e.cd_uf
+LEFT JOIN municipio mm   ON mm.cd_municipio = e.cd_municipio
+LEFT JOIN uf um          ON um.cd_ibge = mm.cd_uf
+WHERE v.cd_uf = %(cd_uf)s AND v.ano = %(ano)s
+GROUP BY pe.id_politico_eleicao, pe.id_politico, po.nome, pa.sigla, c.nome
+"""
+CANDIDATOS_POR_PARTIDO = 6
+
+
+@lru_cache(maxsize=64)
+def composicao_vies(sigla: str, ano: int) -> dict:
+    cd_uf = UFS[sigla]["cd_ibge"]
+    partidos = consultar(SQL_COMPOSICAO_PARTIDOS, {"cd_uf": cd_uf, "ano": ano})
+    total = sum(p["votos"] for p in partidos)
+    candidatos: dict[str, list] = defaultdict(list)
+    for c in consultar(SQL_COMPOSICAO_CANDIDATOS, {"cd_uf": cd_uf, "ano": ano}):
+        candidatos[c["partido"]].append(c)
+    saida = []
+    for p in sorted(partidos, key=lambda p: -p["votos"]):
+        lista = sorted(candidatos.get(p["sigla"], []), key=lambda c: -c["votos"])
+        nominais = sum(c["votos"] for c in lista)
+        saida.append({
+            "sigla": p["sigla"], "nome": p["nome"], "vies": round(float(p["vies"]), 1), "votos": p["votos"],
+            "pct": round(100 * p["votos"] / total, 2),
+            "contribuicao": round(float(p["vies"]) * p["votos"] / total, 2),   # pontos que o partido soma ao viés
+            "nominais": nominais, "legenda": max(0, p["votos"] - nominais), "candidatos_total": len(lista),
+            "candidatos": [{"id": c["id"], "nome": c["nome"], "cargo": c["cargo"], "local": c["local"],
+                            "votos": c["votos"], "eleito": c["eleito"],
+                            "foto": foto_url(ano, c["uf"], c["sq"], c["cd_mun"])}
+                           for c in lista[:CANDIDATOS_POR_PARTIDO]],
+        })
+    vies_uf = sum(p["vies"] * p["votos"] for p in saida) / total if total else None
+    return {"uf": sigla, "ano": ano, "votos": total, "vies": round(vies_uf, 1) if vies_uf is not None else None,
+            "partidos": saida}
+
+
+@app.get("/api/ufs/{sigla}/composicao")
+def composicao(sigla: str, ano: int):
+    uf = uf_de(sigla)["sigla"]
+    if uf not in carregadas():
+        raise HTTPException(404, f"UF sem dados: {uf}")
+    if ano not in ANOS:
+        raise HTTPException(404, f"Ano fora da P7: {ano}")
+    return composicao_vies(uf, ano)
+
+
 @app.get("/api/municipios")
 def buscar_municipios(q: str = "", uf: str = "", limite: int = Query(8, ge=1, le=100)):
     q, uf = sem_acento(q.strip()), uf.upper()

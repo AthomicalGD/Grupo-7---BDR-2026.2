@@ -11,7 +11,7 @@ export default defineConfig({
   workers: 2,
   reporter: [['list']],
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: (process.env.SITE ?? 'http://localhost:5173'),
     trace: 'retain-on-failure',
     launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] },
   },
@@ -21,7 +21,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm run dev -- --port 5173 --strictPort',
-    url: 'http://localhost:5173',
+    url: (process.env.SITE ?? 'http://localhost:5173'),
     reuseExistingServer: true,
     timeout: 60_000,
   },

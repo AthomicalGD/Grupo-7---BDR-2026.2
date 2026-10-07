@@ -6,6 +6,7 @@ import { ViesTempo } from '../graficos/ViesTempo'
 import { inteiro, pct, vies as fmtVies } from '../lib/formato'
 import { corVies, ladoVies } from '../lib/vies'
 import { BuscaMunicipio } from './BuscaMunicipio'
+import { ComposicaoVies } from './ComposicaoVies'
 import { Trilha } from './Trilha'
 
 interface Props {
@@ -113,6 +114,11 @@ export function PainelEstado({ uf, ano, relativo, relevo, aoMudarRelativo, aoMud
           2018 e 2022 somam presidente, governador, senado e deputados; 2020 e 2024, prefeito e vereador. Compare anos do
           mesmo tipo.
         </p>
+      </section>
+
+      <section aria-labelledby="estado-conta" className="space-y-3">
+        <h2 id="estado-conta" className="t-h3">De onde vem o {fmtVies(v)}</h2>
+        <ComposicaoVies sigla={uf.sigla} nome={uf.nome} ano={ano} />
       </section>
 
       <section aria-labelledby="estado-extremos" className="space-y-3">

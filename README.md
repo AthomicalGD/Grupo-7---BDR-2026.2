@@ -80,6 +80,8 @@ python -m loader SP RJ MG
   receitas por fonte e votos do 1º turno de cada candidatura) e `despesa_por_eleicao`. O loader atualiza as views ao
   fim de cada carga. Num banco carregado antes da 011, preencha o partido e as views uma vez:
   `python -m loader.partidos` (relê só os arquivos de candidatos, ~1 min).
+- A migração `012_votos_candidato_uf.sql` pré-soma os votos nominais de cada candidatura por UF e ano
+  (view `votos_candidato_uf`, atualizada pelo loader); a composição do viés de um estado sai em milissegundos.
 - Não são carregados: votos do exterior (`ZZ`), `VIES_MUNICIPIO` (métrica ainda por calcular), `MALHA_MUNICIPIO` e `idade_media_populacao` (o crawler não baixa esses dados).
 
 ### Fotos dos candidatos
@@ -119,6 +121,7 @@ python -m uvicorn api.app:app --port 8000
 | `GET /api/saude` | Se o banco responde e as UFs carregadas (503 com instruções se o banco estiver fora) |
 | `GET /api/ufs` | As 27 UFs, com nº de municípios, se estão carregadas e o viés por ano |
 | `GET /api/ufs/{sigla}` | Viés da UF, das regiões intermediárias e de cada município, eleitorado apto por ano |
+| `GET /api/ufs/{sigla}/composicao?ano=` | De onde vem o viés da UF no ano: cada partido com votos, viés e quanto puxa a média (a soma dá o viés), e os candidatos mais votados de cada partido |
 | `GET /api/municipios?q=&uf=&limite=8` | Busca de municípios por nome, sem acentos, em todo o Brasil |
 | `GET /api/municipios/{ibge}` | Viés, votos por partido, indicadores (PIB per capita, IDHM...), comparecimento e prefeitos |
 | `GET /api/politicos?q=&cargo=&ano=&uf=&partido=&resultado=&limite=8` | Busca de políticos por nome (trigramas, sem acentos; migração `010_busca_politicos.sql`) e/ou por uma candidatura que bata com todos os filtros |
@@ -147,6 +150,10 @@ npm run dev
 
 Abra http://localhost:5173. O Vite repassa `/api` para a API em `127.0.0.1:8000`.
 
+Para rodar uma segunda API (em outra porta) sem derrubar a primeira, aponte o site para ela com
+`API_ALVO` e escolha a porta do site com `PORTA`, por exemplo `API_ALVO=http://127.0.0.1:8001 PORTA=5180 npm run dev`;
+os testes ponta a ponta usam `SITE=http://localhost:5180`.
+
 Para só usar ou apresentar o site, a versão de produção é bem mais leve para o computador
 (sem o modo de desenvolvimento do React): `npm run build` e depois `npx vite preview`,
 em http://localhost:4173 (também repassa `/api` para a API).
@@ -155,7 +162,7 @@ em http://localhost:4173 (também repassa `/api` para a API).
 |---|---|---|
 | Mapa do Brasil, viés por estado, linha do tempo 2018-2024 | `/` | P7 |
 | Plenário: quanto custa uma cadeira, por cargo, ano e estado (ou câmara municipal), em 2D e 3D | `/cadeira` | P1 |
-| Estado: municípios, regiões intermediárias, extremos, relevo 3D | `/uf/PI` | P7 |
+| Estado: municípios, de onde vem o viés (partidos e candidatos), regiões intermediárias, extremos, relevo 3D | `/uf/PI` | P7 |
 | Boletim do município: viés, espectro do voto, prefeitos, custo da cadeira, indicadores, QR code | `/uf/PI/2211001` | P7, P1, P3 |
 | Urna de consulta (UE2020 em vetor): busca pelo nome e cédula de filtros (cargo, ano, estado, partido, resultado) | `/urna` | P10 |
 | Ficha da carreira: situação atual, fita das eleições, trajetória com os partidos, custo das campanhas, santinhos | `/politico/368990` | P10, P1 |

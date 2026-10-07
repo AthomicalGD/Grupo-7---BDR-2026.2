@@ -123,7 +123,7 @@ function Campanhas({ ordem }: { ordem: Candidatura[] }) {
   const comConta = ordem.filter((c) => c.gasto != null).reverse()
   if (!comConta.length) return null
   return (
-    <section aria-labelledby="campanhas" className="mt-16">
+    <section aria-labelledby="campanhas" className="adiar mt-16">
       <h2 id="campanhas" className="t-h2">Quanto custaram as campanhas</h2>
       <p className="mt-2 max-w-[62ch] text-tinta-2">Despesa contratada declarada ao TSE, em valores da época. O TSE publica as contas por candidato desde 2018.</p>
       <ul className="mt-5 grid max-w-[880px] grid-cols-1 gap-x-10 sm:grid-cols-2">
@@ -160,7 +160,7 @@ function Santinhos({ recentes, nome }: { recentes: Candidatura[]; nome: string }
   const rolar = (sentido: number) => trilho.current?.scrollBy({ left: sentido * 500, behavior: 'smooth' })
   const botao = 'grid size-10 place-items-center rounded-full border border-linha-2 bg-folha text-tinta transition hover:border-tinta disabled:opacity-35 disabled:hover:border-linha-2'
   return (
-    <section aria-labelledby="santinhos" className="mt-16">
+    <section aria-labelledby="santinhos" className="adiar mt-16">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 id="santinhos" className="t-h2">Santinhos de cada eleição</h2>

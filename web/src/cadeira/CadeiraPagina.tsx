@@ -17,6 +17,7 @@ import { CurvaVitoria } from './CurvaVitoria'
 import { CustoVoto } from './CustoVoto'
 import { Fontes, Recibo } from './Dinheiro'
 import { corRampa, entrada, escalaGasto } from './geometria'
+import { BuscaAssento } from './BuscaAssento'
 import { Plenario } from './Plenario'
 import { PrecoPartidos } from './PrecoPartidos'
 
@@ -89,6 +90,8 @@ export function CadeiraPagina() {
   const fator = busca.epoca || !dados ? 1 : (dados.ipca[String(dados.ano)] ?? 1)
   const escala = useMemo(() => escalaGasto(dados?.cadeiras.map((a) => a.gasto) ?? []), [dados])
   const [aviso, setAviso] = useState('')
+  // o destaque vale só para a seleção em que foi feito (cargo, ano, lugar)
+  const [destaque, setDestaque] = useState<{ id: number; chave: string } | null>(null)
   const silhuetas = useMemo(() => new Map(malha ? carregadas.map((u) => [u.sigla, silhueta(malha, u.cd_ibge, 22)]) : []), [malha, carregadas])
 
   useEffect(() => {
@@ -192,6 +195,17 @@ export function CadeiraPagina() {
             Não foi possível abrir esta seleção ({q.error.message}). O plenário abaixo é o da seleção anterior.
           </p>
         )}
+        <div className="mx-auto mb-4 flex max-w-[1180px] justify-end">
+          <BuscaAssento
+            key={chave}
+            cadeiras={dados.cadeiras}
+            achado={destaque?.chave === chave ? destaque.id : null}
+            aoAchar={(i) => {
+              setDestaque(i == null ? null : { id: i, chave })
+              if (i != null && busca.pe) mudar({ pe: undefined }) // o destaque é no plano
+            }}
+          />
+        </div>
         {dados.cadeiras.length === 0 && (
           <p className="mx-auto max-w-[1180px] text-tinta-2">Nenhum eleito com prestação de contas nesta seleção.</p>
         )}
@@ -216,6 +230,7 @@ export function CadeiraPagina() {
               custo={dados.resumo.custo_cadeira}
               legenda={`por cadeira de ${dados.cargo.nome.toLowerCase()}`}
               aoAbrir={abrir}
+              destaque={destaque?.chave === chave ? destaque.id : null}
             />
           )}
           {q.isPlaceholderData && <div className="absolute right-2 top-2"><Ciranda rotulo="Contando..." tamanho={56} /></div>}
@@ -267,7 +282,7 @@ export function CadeiraPagina() {
         </div>
       </section>
 
-      <section aria-labelledby="curva" className="mx-auto mt-24 grid max-w-[1180px] grid-cols-1 gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,2fr)] lg:items-end">
+      <section aria-labelledby="curva" className="adiar mx-auto mt-24 grid max-w-[1180px] grid-cols-1 gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,2fr)] lg:items-end">
         <div>
           <h2 id="curva" className="t-h2">A partir de quanto se ganha?</h2>
           <p className="mt-3 text-tinta-2">
@@ -285,7 +300,7 @@ export function CadeiraPagina() {
         <CurvaVitoria curva={dados.curva} escala={escala} fator={fator} />
       </section>
 
-      <section aria-labelledby="partidos" className="mx-auto mt-24 max-w-[1180px]">
+      <section aria-labelledby="partidos" className="adiar mx-auto mt-24 max-w-[1180px]">
         <h2 id="partidos" className="t-h2">Quanto cada partido pagou por cadeira</h2>
         <p className="mb-6 mt-3 max-w-[64ch] text-tinta-2">
           Tudo o que os candidatos do partido gastaram, dividido pelas cadeiras que ele levou. A cor é a posição do partido na escala de viés.
@@ -293,7 +308,7 @@ export function CadeiraPagina() {
         <PrecoPartidos partidos={dados.partidos} fator={fator} />
       </section>
 
-      <section aria-labelledby="dinheiro" className="mx-auto mt-24 max-w-[1180px]">
+      <section aria-labelledby="dinheiro" className="adiar mx-auto mt-24 max-w-[1180px]">
         <h2 id="dinheiro" className="t-h2">Para onde vai e de onde vem o dinheiro</h2>
         <div className="mt-8 grid grid-cols-1 gap-12 lg:grid-cols-2 lg:items-start">
           <Recibo dados={dados} fator={fator} titulo={titulo} />
@@ -301,7 +316,7 @@ export function CadeiraPagina() {
         </div>
       </section>
 
-      <section aria-labelledby="voto" className="mx-auto mt-24 max-w-[1180px]">
+      <section aria-labelledby="voto" className="adiar mx-auto mt-24 max-w-[1180px]">
         <h2 id="voto" className="t-h2">Quanto custou cada voto</h2>
         <div className="mt-4">
           <CustoVoto cadeiras={dados.cadeiras} fator={fator} />

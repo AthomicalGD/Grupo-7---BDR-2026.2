@@ -66,6 +66,7 @@ test('metodologia e página inexistente', async ({ page }) => {
 })
 
 test('pular para o conteúdo e nenhuma tela com rolagem horizontal', async ({ page }) => {
+  test.setTimeout(120_000) // visita seis telas; no Chromium de teste o mapa é desenhado pela CPU
   await page.goto('/')
   await page.keyboard.press('Tab')
   await expect(page.getByRole('link', { name: 'Pular para o conteúdo' })).toBeFocused()
@@ -76,3 +77,24 @@ test('pular para o conteúdo e nenhuma tela com rolagem horizontal', async ({ pa
     expect(rolagem, `rolagem horizontal em ${rota}`).toBeLessThanOrEqual(largura)
   }
 })
+
+test('estado: de onde vem o viés, partido a partido, com os candidatos', async ({ page }) => {
+  await page.goto('/uf/PI?ano=2022')
+  await expect(page.getByRole('heading', { name: 'De onde vem o −41,9' })).toBeVisible({ timeout: 20_000 })
+  const pt = page.getByRole('button', { name: /^PT:/ })
+  await expect(pt).toBeVisible({ timeout: 20_000 })
+  await pt.click()
+  await expect(page.getByRole('link', { name: /Luiz Inácio Lula da Silva/ })).toBeVisible()
+  await registrar(page, 'estado-conta')
+})
+
+test('metodologia: cada questão leva à tela da resposta', async ({ page }) => {
+  await page.goto('/metodologia')
+  await page.getByRole('link', { name: 'Ver a resposta na urna' }).click()
+  await expect(page).toHaveURL(/\/urna/)
+  await page.goto('/metodologia')
+  await page.getByRole('link', { name: 'Ver a resposta no mapa' }).click()
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  await expect(page).toHaveURL(/localhost:\d+\/(\?|$)/)
+})
+

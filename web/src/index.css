@@ -149,6 +149,16 @@
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(var(--queda)); }
 }
+/* seções abaixo da dobra: o navegador só desenha quando chegam perto da tela */
+.adiar {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+/* plenário grande (centenas de cadeiras): uma animação de entrada para o conjunto, não uma por cadeira */
+.plenario-surge {
+  animation: surgir 480ms var(--ease-saida) both;
+}
+
 /* teclas da urna (SVG): afundam ao apertar, foco visível só no teclado */
 .tecla { cursor: pointer; outline: none; }
 .tecla-topo { transition: transform 70ms ease-out, filter 120ms ease-out; }
@@ -157,6 +167,13 @@
 .tecla[data-apertada='true'] .tecla-topo { transform: translateY(2.4px); }
 .tecla-foco { opacity: 0; }
 .tecla:focus-visible .tecla-foco { opacity: 1; }
+
+/* P1: a cadeira procurada pulsa duas vezes ao ser achada */
+@keyframes destaque {
+  0%, 100% { stroke-width: 4; }
+  50% { stroke-width: 9; }
+}
+.destaque-anel { animation: destaque 700ms ease-in-out 2; }
 
 /* P1: cada cadeira "senta" no plenário */
 @keyframes sentar {
@@ -188,7 +205,12 @@
   animation: surgir 520ms var(--ease-saida) forwards;
 }
 .mapa-forma {
-  transition: fill 600ms var(--ease-saida), opacity 420ms var(--ease-saida), stroke 160ms ease;
+  transition: fill 260ms var(--ease-saida), opacity 420ms var(--ease-saida), stroke 160ms ease;
+}
+/* durante o voo da câmera: sem contornos (o traço que não escala é refeito a cada quadro) e sem transições */
+[data-voando] .mapa-forma {
+  stroke: none;
+  transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

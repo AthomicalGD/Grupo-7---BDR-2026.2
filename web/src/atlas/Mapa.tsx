@@ -11,6 +11,13 @@ import { Dica } from './Dica'
 import { hover, type Foco } from './hover'
 import { SATURA_RELATIVO, valorMunicipio } from './valores'
 
+const ANEIS = 6
+
+/** A hachura dos estados sem dados fica do mesmo tamanho na tela em qualquer zoom. */
+function ajustarHachura(svg: SVGSVGElement, k: number) {
+  svg.querySelector('#hachura')?.setAttribute('patternTransform', `rotate(45) scale(${(1 / k).toFixed(4)})`)
+}
+
 const suave = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2)
 const reduzMovimento = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -37,6 +44,10 @@ export function Mapa(p: Props) {
   const zoomRef = useRef<ZoomBehavior<SVGSVGElement, unknown>>(null)
   const [vista, setVista] = useState({ x: 0, y: 0, w: LADO, h: LADO })
   const alvoAnterior = useRef<string | null>(null) // a câmera só anima quando o alvo muda
+  // durante o voo da câmera o mapa fica leve: sem contornos, sem hachura recalculada e sem montar
+  // os municípios de um estado novo (eles entram quando a câmera pousa). Ver a pesquisa em DESIGN.md.
+  const [voando, setVoando] = useState(false)
+  const escalaAtual = useRef(1)
 
   const projecao = useMemo(() => projecaoBrasil(p.malhaBrasil), [p.malhaBrasil])
   const formasUF = useMemo(() => formas(p.malhaBrasil, projecao, 2), [p.malhaBrasil, projecao])
@@ -48,6 +59,13 @@ export function Mapa(p: Props) {
   const formaMunSel = p.ibge ? formasMun.find((f) => f.codigo === p.ibge) : undefined
   const vUF = p.detalheUF?.vies[p.ano]
   const municipiosProntos = !!p.sigla && formasMun.length > 0 && p.detalheUF?.sigla === p.sigla
+  // num voo do Brasil para um estado, os ~400 municípios só montam no pouso (montar no meio do voo
+  // travava a animação); num voo para um município do mesmo estado, eles já estão na tela
+  const camadaMontada = useRef<string | null>(null)
+  const mostraMunicipios = municipiosProntos && (!voando || camadaMontada.current === p.sigla)
+  useEffect(() => {
+    camadaMontada.current = mostraMunicipios ? p.sigla ?? null : null
+  })
 
   // viewBox acompanha a proporção do contêiner, sem distorcer o mapa
   useLayoutEffect(() => {
@@ -71,10 +89,14 @@ export function Mapa(p: Props) {
       .scaleExtent([0.8, 900])
       .on('zoom', (e) => {
         cameraRef.current?.setAttribute('transform', e.transform.toString())
-        // a hachura dos estados sem dados fica do mesmo tamanho na tela em qualquer zoom
-        svg.querySelector('#hachura')?.setAttribute('patternTransform', `rotate(45) scale(${(1 / e.transform.k).toFixed(4)})`)
-        if (e.sourceEvent) hover.set(null) // arrastar ou rolar move o mapa sob o tooltip
+        escalaAtual.current = e.transform.k
+        // a hachura acompanha o zoom no gesto da pessoa; num voo animado, só no pouso (era refeita a cada quadro)
+        if (e.sourceEvent) {
+          ajustarHachura(svg, e.transform.k)
+          hover.set(null) // arrastar ou rolar move o mapa sob o tooltip
+        }
       })
+      .on('end', () => ajustarHachura(svg, escalaAtual.current))
     select(svg).call(z).on('dblclick.zoom', null)
     zoomRef.current = z
     return () => void select(svg).on('.zoom', null)
@@ -96,8 +118,17 @@ export function Mapa(p: Props) {
     const t = zoomIdentity
       .translate(vista.x + vista.w / 2 - (k * (x0 + x1)) / 2, vista.y + vista.h / 2 - (k * (y0 + y1)) / 2)
       .scale(k)
-    if (duracao) hover.set(null) // a câmera vai voar: o tooltip de onde o ponteiro estava não vale mais
-    select(svg).interrupt().transition().duration(duracao).ease(suave).call(z.transform, t)
+    if (duracao) {
+      hover.set(null) // a câmera vai voar: o tooltip de onde o ponteiro estava não vale mais
+      setVoando(true)
+    }
+    select(svg)
+      .interrupt()
+      .transition()
+      .duration(duracao)
+      .ease(suave)
+      .call(z.transform, t)
+      .on('end interrupt', () => setVoando(false))
   }
   useEffect(() => {
     // redimensionar ou a primeira medida reenquadram na hora; trocar de Brasil/estado/município anima
@@ -151,6 +182,7 @@ export function Mapa(p: Props) {
         ref={svgRef}
         viewBox={`${vista.x} ${vista.y} ${vista.w} ${vista.h}`}
         className="block h-full w-full cursor-grab active:cursor-grabbing"
+        data-voando={voando || undefined}
         role="group"
         aria-label={`Mapa do viés político em ${p.ano}: ${nomeAno}`}
       >
@@ -161,8 +193,8 @@ export function Mapa(p: Props) {
           </pattern>
         </defs>
         <g ref={cameraRef} onPointerMove={moverHover} onPointerLeave={() => hover.set(null)} onClick={clicar}>
-          <CamadaUFs formas={formasUF} ufPorCodigo={ufPorCodigo} ano={p.ano} sigla={p.sigla} vazarAtiva={municipiosProntos} aoEscolher={p.aoEscolherUF} />
-          {municipiosProntos && (
+          <CamadaUFs formas={formasUF} ufPorCodigo={ufPorCodigo} ano={p.ano} sigla={p.sigla} vazarAtiva={mostraMunicipios} aoEscolher={p.aoEscolherUF} />
+          {mostraMunicipios && (
             <CamadaMunicipios
               key={p.sigla}
               formas={formasMun}
@@ -285,30 +317,36 @@ const CamadaMunicipios = memo(function CamadaMunicipios({
   foco: boolean
   caixaUF?: Caixa
 }) {
-  // atraso de cada município proporcional à distância do clique: a onda que sai do gesto
-  const atrasos = useMemo(() => {
+  // a onda sai do ponto do clique em 6 anéis: uma animação por anel, não uma por município
+  // (centenas de animações simultâneas eram centenas de camadas para o navegador compor)
+  const aneis = useMemo(() => {
     const [[x0, y0], [x1, y1]] = caixaUF ?? [[0, 0], [1, 1]]
     const origem = origemClique ?? [(x0 + x1) / 2, (y0 + y1) / 2]
     const diag = Math.hypot(x1 - x0, y1 - y0) || 1
-    return new Map(formas.map((f) => [f.codigo, Math.round((Math.hypot(f.centro[0] - origem[0], f.centro[1] - origem[1]) / diag) * 520)]))
+    const grupos: Forma[][] = Array.from({ length: ANEIS }, () => [])
+    for (const f of formas) grupos[Math.min(ANEIS - 1, Math.floor((Math.hypot(f.centro[0] - origem[0], f.centro[1] - origem[1]) / diag) * ANEIS * 1.4))].push(f)
+    return grupos
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- a onda é calculada uma vez, na entrada do estado
   }, [formas])
   return (
-    <g style={{ opacity: foco ? 0.42 : 1, transition: 'opacity 500ms var(--ease-saida)' }}>
-      {formas.map((f) => (
-        <path
-          key={f.codigo}
-          d={f.d}
-          data-codigo={f.codigo}
-          data-tipo="municipio"
-          className="mapa-forma municipio-surge cursor-pointer"
-          style={{ animationDelay: `${180 + (atrasos.get(f.codigo) ?? 0)}ms` }}
-          fill={corVies(valorMunicipio(munPorIbge.get(f.codigo), ano, relativo, vUF), relativo ? SATURA_RELATIVO : undefined)}
-          stroke="#fcfdfd"
-          strokeWidth={0.55}
-          strokeLinejoin="round"
-          vectorEffect="non-scaling-stroke"
-        />
+    <g className="camada-municipios" style={{ opacity: foco ? 0.42 : 1, transition: 'opacity 500ms var(--ease-saida)' }}>
+      {aneis.map((anel, i) => (
+        <g key={i} className="municipio-surge" style={{ animationDelay: `${60 + i * 90}ms` }}>
+          {anel.map((f) => (
+            <path
+              key={f.codigo}
+              d={f.d}
+              data-codigo={f.codigo}
+              data-tipo="municipio"
+              className="mapa-forma cursor-pointer"
+              fill={corVies(valorMunicipio(munPorIbge.get(f.codigo), ano, relativo, vUF), relativo ? SATURA_RELATIVO : undefined)}
+              stroke="#fcfdfd"
+              strokeWidth={0.55}
+              strokeLinejoin="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
+        </g>
       ))}
     </g>
   )

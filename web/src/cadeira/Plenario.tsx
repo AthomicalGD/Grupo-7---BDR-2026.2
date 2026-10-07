@@ -38,7 +38,7 @@ const Cadeira = memo(function Cadeira({ p, cor, total, leve }: { p: Posto; cor: 
     : { style: { transform: `translate(${p.x}px, ${p.y}px) rotate(${p.giro}deg) scale(${p.d})`, transition: 'transform 700ms cubic-bezier(0.16, 1, 0.3, 1)' } }
   return (
     <g data-i={p.i} {...lugar}>
-      <g className="cadeira-senta" style={{ animationDelay: atraso }}>
+      <g className={leve ? undefined : 'cadeira-senta'} style={leve ? undefined : { animationDelay: atraso }}>
         {p.d >= 11 ? (
           <>
             <rect x={-0.44} y={-0.5} width={0.88} height={0.22} rx={0.08} fill="var(--color-tinta)" opacity={0.82} />
@@ -60,7 +60,8 @@ const Cadeira = memo(function Cadeira({ p, cor, total, leve }: { p: Posto; cor: 
 /** Todas as cadeiras; memorizado para que o ponteiro (que muda a cada cadeira) não as re-renderize. */
 const Bancada = memo(function Bancada({ lista, cores }: { lista: Posto[]; cores: Map<number, string> }) {
   const leve = lista.length > MUITAS
-  return lista.map((p) => <Cadeira key={p.a.id} p={p} cor={cores.get(p.a.id)!} total={lista.length} leve={leve} />)
+  const cadeiras = lista.map((p) => <Cadeira key={p.a.id} p={p} cor={cores.get(p.a.id)!} total={lista.length} leve={leve} />)
+  return leve ? <g className="plenario-surge">{cadeiras}</g> : cadeiras
 })
 
 /** Rótulos dos partidos em volta do arco, só onde há espaço. */
@@ -142,6 +143,28 @@ export function CartaoAssento({ a, fator, x, y, dica, alvo }: {
   )
 }
 
+/** Cartão da cadeira procurada, preso ao lado dela (posição em % do desenho, acompanha a rolagem). */
+function CartaoFixo({ a, fator, x, y, aoAbrir }: { a: Assento; fator: number; x: number; y: number; aoAbrir: (id: number) => void }) {
+  const direita = x / W > 0.55
+  return (
+    <div
+      // em tela estreita o cartão cobriria o plenário: desce para baixo do desenho
+      className="absolute z-20 flex w-[280px] gap-3 rounded-xl border border-linha bg-folha p-3 shadow-[var(--shadow-papel)] @max-xl:!static @max-xl:mt-4 @max-xl:w-full @max-xl:![transform:none]"
+      style={{ left: `${(x / W) * 100}%`, top: `${(y / H) * 100}%`, transform: `translate(${direita ? 'calc(-100% - 22px)' : '22px'}, -50%)` }}
+      role="status"
+    >
+      <Retrato foto={a.foto} nome={a.nome} tamanho={48} />
+      <div className="min-w-0 text-[0.82rem]">
+        <p className="font-bold leading-tight">{nomeProprio(a.nome)}</p>
+        <p className="text-tinta-3">{[a.partido, a.local ?? a.uf].filter(Boolean).join(' · ')}</p>
+        <p className="t-numero mt-1 text-[1.3rem]">{reaisCurto(a.gasto * fator)}</p>
+        <p className="text-tinta-2">{a.votos > 0 ? `${inteiro(a.votos)} votos · ${reaisCurto((a.gasto * fator) / a.votos)} por voto` : 'gastos na campanha'}</p>
+        <button type="button" onClick={() => aoAbrir(a.id)} className="mt-1 text-[0.78rem] font-semibold text-acao hover:underline">Abrir a carreira</button>
+      </div>
+    </div>
+  )
+}
+
 interface Props {
   /** Muda quando a seleção (ano, cargo, lugar) muda: as cadeiras se sentam de novo. */
   chave: string
@@ -152,9 +175,11 @@ interface Props {
   custo: number | null
   legenda: string // "por cadeira de deputado federal"
   aoAbrir: (id: number) => void
+  /** eleito procurado pelo nome (id do político): a cadeira fica destacada até limpar a busca */
+  destaque?: number | null
 }
 
-export function Plenario({ chave, cadeiras, escala, fator, ordem, custo, legenda, aoAbrir }: Props) {
+export function Plenario({ chave, cadeiras, escala, fator, ordem, custo, legenda, aoAbrir, destaque }: Props) {
   const id = useId()
   const lista = useMemo(() => postos(cadeiras, ordem), [cadeiras, ordem])
   const cores = useMemo(() => new Map(cadeiras.map((a) => [a.id, escala.cor(a.gasto)])), [cadeiras, escala])
@@ -164,6 +189,13 @@ export function Plenario({ chave, cadeiras, escala, fator, ordem, custo, legenda
   const cartao = useRef<HTMLDivElement>(null)
   // no toque não há hover: o primeiro toque mostra a cadeira, o segundo abre a carreira
   const toque = useRef(false)
+  const achado = destaque != null ? lista.find((p) => p.a.id === destaque) : undefined
+  // ao achar, rola até o plenário (sem animar se a pessoa pediu menos movimento)
+  useEffect(() => {
+    if (destaque == null) return
+    const reduz = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    svg.current?.scrollIntoView({ block: 'center', behavior: reduz ? 'auto' : 'smooth' })
+  }, [destaque])
 
   const naTela = (p: Posto) => {
     const r = svg.current!.getBoundingClientRect()
@@ -245,7 +277,22 @@ export function Plenario({ chave, cadeiras, escala, fator, ordem, custo, legenda
             </text>
           ))}
         </svg>
-        {/* o destaque fica num SVG à parte: mexer nele não obriga a recalcular as centenas de cadeiras */}
+        {/* cadeira procurada: as outras escurecem e ela ganha um anel amarelo */}
+        {achado && (
+          <svg viewBox={`0 0 ${W} ${H}`} className="pointer-events-none absolute inset-x-0 top-0 block w-full overflow-visible" aria-hidden>
+            <defs>
+              <mask id={`${id}-furo`}>
+                <rect width={W} height={H} fill="white" />
+                <circle cx={achado.x} cy={achado.y} r={Math.max(16, achado.d * 1.05)} fill="black" />
+              </mask>
+            </defs>
+            {/* só dentro do desenho: a legenda e os controles embaixo continuam legíveis */}
+            <rect width={W} height={H} fill="var(--color-papel)" opacity={0.72} mask={`url(#${id}-furo)`} />
+            <circle className="destaque-anel" cx={achado.x} cy={achado.y} r={Math.max(14, achado.d * 0.95)} fill="none" stroke="var(--color-marcador)" strokeWidth={4} />
+            <circle cx={achado.x} cy={achado.y} r={Math.max(14, achado.d * 0.95) + 3} fill="none" stroke="var(--color-tinta)" strokeWidth={1.5} />
+          </svg>
+        )}
+        {/* o destaque do ponteiro fica num SVG à parte: mexer nele não obriga a recalcular as centenas de cadeiras */}
         {atual && (
           <svg viewBox={`0 0 ${W} ${H}`} className="pointer-events-none absolute inset-x-0 top-0 block w-full overflow-visible" aria-hidden>
             <circle cx={atual.x} cy={atual.y} r={Math.max(7, atual.d * 0.66)} fill="none" stroke="var(--color-tinta)" strokeWidth={2.5} />
@@ -266,6 +313,7 @@ export function Plenario({ chave, cadeiras, escala, fator, ordem, custo, legenda
       {atual && foco && (
         <CartaoAssento a={atual.a} fator={fator} x={foco.x} y={foco.y} alvo={cartao} dica={foco.toque ? 'Toque de novo para abrir a carreira' : 'Clique para abrir a carreira'} />
       )}
+      {achado && !foco && <CartaoFixo a={achado.a} fator={fator} x={achado.x} y={achado.y} aoAbrir={aoAbrir} />}
     </div>
   )
 }

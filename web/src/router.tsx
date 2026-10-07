@@ -94,6 +94,8 @@ export const router = createRouter({
   defaultPendingComponent: () => <CirandaTela rotulo="Abrindo a página..." />,
   defaultPendingMs: 150,
   scrollRestoration: true,
+  // baixa o código da página quando o ponteiro para sobre o link: a troca de tela fica imediata
+  defaultPreload: 'intent',
 })
 
 declare module '@tanstack/react-router' {

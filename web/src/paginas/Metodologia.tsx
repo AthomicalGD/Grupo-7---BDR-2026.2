@@ -1,9 +1,27 @@
+import { ArrowRight } from '@phosphor-icons/react'
+import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 
-function Secao({ id, titulo, children }: { id: string; titulo: string; children: ReactNode }) {
+/** Seção da metodologia; `resposta` leva à tela em que a questão é respondida. */
+function Secao({ id, titulo, resposta, children }: {
+  id: string
+  titulo: string
+  resposta?: { para: '/' | '/cadeira' | '/urna'; rotulo: string }
+  children: ReactNode
+}) {
   return (
     <section aria-labelledby={id} className="grid gap-4 border-t border-linha py-10 md:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] md:gap-12">
-      <h2 id={id} className="t-h2">{titulo}</h2>
+      <div className="space-y-4">
+        <h2 id={id} className="t-h2">{titulo}</h2>
+        {resposta && (
+          <Link
+            to={resposta.para}
+            className="inline-flex h-10 items-center gap-2 rounded-full bg-tinta px-4 text-[0.88rem] font-semibold text-white transition hover:bg-[#2a3442] active:translate-y-px"
+          >
+            {resposta.rotulo} <ArrowRight size={15} weight="bold" aria-hidden />
+          </Link>
+        )}
+      </div>
       <div className="max-w-[68ch] space-y-4 leading-relaxed text-tinta-2 [&_b]:text-tinta [&_code]:t-mono [&_code]:rounded [&_code]:bg-papel-2 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-[0.9em] [&_code]:text-tinta">
         {children}
       </div>
@@ -22,7 +40,7 @@ export function Metodologia() {
         </p>
       </header>
 
-      <Secao id="m-cadeira" titulo="Custo da cadeira (P1)">
+      <Secao id="m-cadeira" titulo="Custo da cadeira (P1)" resposta={{ para: '/cadeira', rotulo: 'Ver a resposta no plenário' }}>
         <p>
           O custo de uma cadeira é tudo o que <b>os candidatos ao cargo</b> declararam ter contratado de despesa de
           campanha, eleitos ou não, dividido pelas <b>cadeiras preenchidas</b>. Mede quanto a disputa inteira gastou por vaga.
@@ -41,7 +59,7 @@ export function Metodologia() {
         </ul>
       </Secao>
 
-      <Secao id="m-vies" titulo="Viés político (P7)">
+      <Secao id="m-vies" titulo="Viés político (P7)" resposta={{ para: '/', rotulo: 'Ver a resposta no mapa' }}>
         <p>
           Cada partido tem um viés de <b>−100 (esquerda)</b> a <b>+100 (direita)</b>, a partir da classificação de
           especialistas de Bolognesi, Codato, Ribeiro e Silva (Harvard Dataverse). O viés de um município num ano é a média
@@ -60,7 +78,7 @@ export function Metodologia() {
         </ul>
       </Secao>
 
-      <Secao id="m-carreira" titulo="Carreira do político (P10)">
+      <Secao id="m-carreira" titulo="Carreira do político (P10)" resposta={{ para: '/urna', rotulo: 'Ver a resposta na urna' }}>
         <p>
           A pessoa é identificada entre eleições pelo <b>título eleitoral</b>; sem ele, pelo CPF; sem os dois, por nome e
           data de nascimento. As candidaturas vão de 1994 a 2024.

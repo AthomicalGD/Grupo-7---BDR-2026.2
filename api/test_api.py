@@ -113,6 +113,13 @@ def main() -> None:
     assert sum(map(len, depois.values())) < 0.8 * sum(map(len, antes.values()))
     assert all(not depois.get(p) or depois[p] == d for p, d in antes.items() if len(d) > 1)
 
+    # de onde vem o viés do PI em 2022: a soma do que cada partido puxa dá o viés do mapa
+    comp = get("/api/ufs/PI/composicao?ano=2022")
+    assert comp["vies"] == pi["vies"]["2022"] and abs(sum(p["contribuicao"] for p in comp["partidos"]) - comp["vies"]) < 0.2
+    pt = comp["partidos"][0]
+    assert pt["sigla"] == "PT" and pt["candidatos"][0]["nome"].startswith("LUIZ IN"), pt["candidatos"][0]
+    assert cliente.get("/api/ufs/XX/composicao?ano=2022").status_code == 404
+
     geo = get("/api/geo/uf/PI")
     assert len(geo["features"]) == 224
     assert horario(geo["features"][0]["geometry"]["coordinates"][0])

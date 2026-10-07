@@ -24,8 +24,9 @@ export const PrecoPartidos = memo(function PrecoPartidos({ partidos, fator }: { 
               <motion.div
                 className="absolute inset-y-0 left-0 origin-left rounded-[6px]"
                 style={{ width: `${Math.max(1.5, (100 * p.preco) / max)}%`, background: corVies(p.vies ?? 0) }}
-                initial={reduz ? false : { scaleX: 0 }}
-                whileInView={{ scaleX: 1 }}
+                // transform em texto (não scaleX): o Motion anima pela GPU (WAAPI) em vez de a cada quadro em JS
+                initial={reduz ? false : { transform: 'scaleX(0)' }}
+                whileInView={{ transform: 'scaleX(1)' }}
                 viewport={{ once: true, amount: 0.6 }}
                 transition={{ duration: 0.6, delay: Math.min(i, 12) * 0.03, ease: [0.16, 1, 0.3, 1] }}
               />
