@@ -59,6 +59,9 @@ def main() -> None:
     assert len(wd["candidaturas"]) == 11 and wd["resumo"]["candidaturas"] == 11
     reeleito = {c["ano"] for c in wd["candidaturas"] if c["cargo"] == "GOVERNADOR" and c["reeleito"]}
     assert reeleito == {2006, 2018}, reeleito
+    # o santinho: número na urna, nome de urna e a cor do partido (viés do PT)
+    senado = next(c for c in wd["candidaturas"] if c["ano"] == 2022)
+    assert (senado["numero"], senado["nome_urna"], senado["vies"]) == (131, "WELLINGTON DIAS", -68), senado
     assert not [k for k in chaves(wd) if "cpf" in k or "titulo" in k]
     assert "id" in get("/api/politicos/aleatorio")
     # busca com filtros (cédula de consulta): senador eleito no PI em 2022, sem nome

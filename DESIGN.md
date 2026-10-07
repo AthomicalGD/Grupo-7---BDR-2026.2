@@ -124,10 +124,11 @@ components:
     textColor: "{colors.tinta}"
     padding: "28px 36px 48px"
   santinho:
-    backgroundColor: "{colors.folha}"
-    textColor: "{colors.tinta}"
-    rounded: "{rounded.cartao}"
+    backgroundColor: "cor do viés do partido (corVies)"
+    textColor: "tintaSobre(viés)"
+    rounded: "10px"
     width: "236px"
+    height: "360px"
 ---
 
 # Design System: Voto Aberto
@@ -147,7 +148,7 @@ Não imita o portal de resultados que serviu de referência nem se passa por ór
 - Escala do viés contínua, laranja ↔ cinza ↔ azul, simétrica em 0, com "sem dados" sempre hachurado.
 - Objetos da eleição com função: cédula (ano e filtros da busca), urna UE2020 (busca), boletim (município), santinho (eleição), plenário (cadeira), recibo (contas), ficha da carreira (político).
 - Uma família (Archivo variável) em três larguras; mono só no papel térmico e no visor.
-- Movimento único e motivado: câmera do mapa, onda dos municípios, impressão do boletim, leque dos santinhos, cadeiras que se sentam no plenário.
+- Movimento único e motivado: câmera do mapa, onda dos municípios, impressão do boletim, leque dos santinhos (que viram para a cola), cadeiras que se sentam no plenário.
 
 ## Colors
 
@@ -174,7 +175,7 @@ Fundo frio de papel e tinta ardósia; cor saturada só no dado, nas fitas da mar
 
 ### Neutral
 - **Papel** (#f2f4f5): fundo da página. **Papel 2** (#e6eaed): barra utilitária, chips "sem dados".
-- **Folha** (#fcfdfd): superfícies que são objetos de papel (boletim, santinho, cartões, campos).
+- **Folha** (#fcfdfd): superfícies que são objetos de papel (boletim, verso do santinho, cartões, campos).
 - **Tinta** (#18202b, 14,9:1), **Tinta 2** (#4b5566, 6,8:1), **Tinta 3** (#5f6878, 5,1:1): texto principal, secundário e rótulos.
 - **Linha** (#d9dee2) e **Linha 2** (#aeb6bf): divisórias, grade dos gráficos, bordas de campo.
 
@@ -221,7 +222,7 @@ Plano por padrão; profundidade só para objetos de papel e camadas flutuantes. 
 
 ## Shapes
 
-Contêineres com 16px de raio, painéis do mapa e do relevo com 20px, controles em pílula, marcas de dados com 3-5px na ponta e o mapa sem raio. O boletim termina em serrilhado (máscara `conic-gradient`, dente de 14px) e sai de uma fenda escura de 12px. Os carimbos dos santinhos são retângulos com 5px de raio, girados −6°.
+Contêineres com 16px de raio, painéis do mapa e do relevo com 20px, controles em pílula, marcas de dados com 3-5px na ponta e o mapa sem raio. O boletim termina em serrilhado (máscara `conic-gradient`, dente de 14px) e sai de uma fenda escura de 12px. Os carimbos dos santinhos são retângulos com 4px de raio, girados −8°.
 
 ## Components
 
@@ -247,7 +248,7 @@ SVG com a malha do IBGE, câmera `d3-zoom` com transição suave (van Wijk) entr
 Papel térmico com cabeçalho em mono, picotes tracejados entre seções, linhas impressas em cascata (90ms) e QR code real da página.
 
 ### Santinho (assinatura)
-Cartão de 236px com a tira das sete fitas, foto de registro, ano em Archivo condensada, cargo, local, partido, votos e carimbo do resultado.
+O impresso de campanha, 236×360px. Frente: fundo na cor do viés do partido (a mesma do mapa, então um político que trocou de partido muda de cor no leque) com retícula de meio-tom da gráfica; a foto de registro de ponta a ponta se fundindo na cor; o ano numa aba no canto; o carimbo do resultado; o nome de urna do TSE em Archivo condensada black caixa-alta; cargo e sigla do partido em pílula branca; o número em casas brancas como no visor da urna, o maior elemento; a letra miúda "Dados do TSE · não é material de campanha" no lugar do CNPJ da gráfica; a tira das sete fitas. Sem foto (antes de 2004) vira santinho tipográfico: as iniciais enormes na própria cor. Clicar vira o santinho (giro 3D de 500ms): o verso, em folha, é a cola para a urna ("Para senador, digite" + o número) com onde, partido, votos, resultado, gasto e custo por voto, e o boletim do município quando é eleição municipal. A face escondida fica `inert`, e o foco passa para o botão da outra face. Nunca escrever "vote"; não é propaganda.
 
 ### Urna (assinatura)
 Desenhada em vetor, de frente, com as proporções medidas numa foto do terminal do eleitor UE2020 (a versão 3D saiu: o desenho fiel lê melhor e pesa menos). Corpo cinza-claro fosco com grão (textura gerada uma vez, não filtro), visor TFT largo e branco em moldura preta (texto preto em sans, foto à direita, rodapé "Aperte a tecla:"), teclas numéricas grafite com braile e marca tátil no 5, coluna BRANCO (#f2f3f1), CORRIGE (#ee7a21) e CONFIRMA (#2fb46c, mais alta), área gravada no canto. Som sintetizado com os parâmetros medidos da urna real: senoide de ~2.300 Hz na tecla, dois bipes no CORRIGE e o trinado 2.300/2.200 Hz do fim do voto. As teclas são botões (clique, toque, Tab + Enter) e afundam 2,4 px quando apertadas, inclusive pelo teclado do computador. Com filtros, o visor mostra a consulta como a urna mostra o cargo: "CONSULTA PARA SENADOR · PI · 2022".

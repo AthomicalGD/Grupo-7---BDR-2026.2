@@ -132,6 +132,7 @@ CONJUNTOS = [
         "NM_CANDIDATO": ("nome", "texto"), "NR_CPF_CANDIDATO": ("cpf", "cpf"),
         "NR_TITULO_ELEITORAL_CANDIDATO": ("titulo", "titulo"), "DT_NASCIMENTO": ("dt_nascimento", "data"),
         "DS_GRAU_INSTRUCAO": ("grau", "texto"), "NR_PARTIDO": ("nr_partido", "int"),
+        "NR_CANDIDATO": ("numero", "int"), "NM_URNA_CANDIDATO": ("nome_urna", "texto"),
         "SG_PARTIDO": ("sg_partido", "sigla"), "NM_PARTIDO": ("nm_partido", "texto"),
         "DS_SIT_TOT_TURNO": ("situacao", "sigla"),
     }, pos=_chave_pessoa, extras=(("chave", "texto"),)),

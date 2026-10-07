@@ -82,6 +82,9 @@ python -m loader SP RJ MG
   `python -m loader.partidos` (relê só os arquivos de candidatos, ~1 min).
 - A migração `012_votos_candidato_uf.sql` pré-soma os votos nominais de cada candidatura por UF e ano
   (view `votos_candidato_uf`, atualizada pelo loader); a composição do viés de um estado sai em milissegundos.
+- A migração `013_numero_e_nome_de_urna.sql` guarda o número na urna e o nome de urna de cada candidatura
+  (`politico_eleicao.nr_candidato`, `nm_urna`), usados nos santinhos. Cargas novas já gravam; num banco carregado
+  antes dela, rode `python -m loader.partidos` uma vez (~2 min).
 - Não são carregados: votos do exterior (`ZZ`), `VIES_MUNICIPIO` (métrica ainda por calcular), `MALHA_MUNICIPIO` e `idade_media_populacao` (o crawler não baixa esses dados).
 
 ### Fotos dos candidatos

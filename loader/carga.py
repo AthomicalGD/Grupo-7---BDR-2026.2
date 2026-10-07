@@ -327,14 +327,16 @@ def _candidaturas(x: _Execucao) -> None:
 
 
 def partidos_das_candidaturas(x: _Execucao) -> None:
-    """Partido pelo qual cada candidatura concorreu (o de mandato só cobre os eleitos)."""
+    """Partido (o de mandato só cobre os eleitos), número na urna e nome de urna de cada candidatura."""
     x.sql(f"""
-        UPDATE politico_eleicao pe SET id_partido = pa.id_partido
+        UPDATE politico_eleicao pe
+        SET id_partido = COALESCE(pa.id_partido, pe.id_partido), nr_candidato = c.numero, nm_urna = c.nome_urna
         FROM {{s}}candidato c
         JOIN tmp_eleicao t ON {_disp('c')}
-        JOIN partido pa ON pa.numero = c.nr_partido AND pa.sigla = c.sg_partido
+        LEFT JOIN partido pa ON pa.numero = c.nr_partido AND pa.sigla = c.sg_partido
         WHERE c.turno = 1 AND pe.id_eleicao = t.id_eleicao AND pe.sq_candidato = c.sq
-          AND pe.id_partido IS DISTINCT FROM pa.id_partido""")
+          AND (pe.id_partido IS DISTINCT FROM COALESCE(pa.id_partido, pe.id_partido)
+               OR pe.nr_candidato IS DISTINCT FROM c.numero OR pe.nm_urna IS DISTINCT FROM c.nome_urna)""")
 
 
 def atualizar_resumos(cur) -> None:

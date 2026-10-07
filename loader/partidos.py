@@ -1,6 +1,7 @@
-"""Preenche o partido das candidaturas já carregadas: python -m loader.partidos
+"""Preenche partido, número na urna e nome de urna das candidaturas já carregadas:
+python -m loader.partidos
 
-A migração 011 criou politico_eleicao.id_partido e as cargas novas já gravam o campo.
+As migrações 011 e 013 criaram esses campos em politico_eleicao e as cargas novas já os gravam.
 Este passo relê só os arquivos de candidatos das UFs carregadas e atualiza as views da P1.
 """
 import os

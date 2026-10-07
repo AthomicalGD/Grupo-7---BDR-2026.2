@@ -18,6 +18,13 @@ test('urna: digitar o nome e CONFIRMA abrem a carreira (P10)', async ({ page }) 
   await expect(page.locator('section[aria-labelledby="santinhos"] li')).toHaveCount(11)
   await expect(page.getByText(/Em mandato · senador até 2030/)).toBeVisible()
   await registrar(page, 'carreira')
+
+  // santinho de 2022: nome de urna e número do TSE; vira para a cola com o foco no verso
+  const santinho = page.locator('section[aria-labelledby="santinhos"] li').first()
+  await expect(santinho.getByText('WELLINGTON DIAS')).toBeVisible()
+  await expect(santinho.getByLabel('número 131').first()).toBeVisible()
+  await santinho.getByRole('button', { name: 'Virar o santinho de 2022 e ver a cola' }).click()
+  await expect(santinho.getByRole('button', { name: 'Desvirar o santinho' })).toBeFocused()
 })
 
 test('BRANCO sorteia um político e CORRIGE apaga', async ({ page }) => {

@@ -151,6 +151,11 @@ export interface Candidatura {
   uf: string | null
   municipio_ibge: number | null
   partido: string | null
+  /** viés do partido (escala da P7): a cor do santinho */
+  vies: number | null
+  /** número na urna e nome de urna, como no santinho */
+  numero: number | null
+  nome_urna: string | null
   situacao: string
   eleito: boolean
   reeleito: boolean

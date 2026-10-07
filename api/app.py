@@ -529,7 +529,8 @@ SELECT * FROM (
            e.ano, c.nome AS cargo, e.cod_cargo,
            COALESCE(m.nm_municipio || ' - ' || um.sigla, u.sigla, 'BRASIL') AS local,
            COALESCE(u.sigla, um.sigla) AS uf, m.cd_ibge AS municipio_ibge,
-           pa.sigla AS partido, COALESCE(ma.ds_situacao, 'NÃO ELEITO') AS situacao,
+           pa.sigla AS partido, pa.vies_politico AS vies, pe.nr_candidato AS numero, pe.nm_urna AS nome_urna,
+           COALESCE(ma.ds_situacao, 'NÃO ELEITO') AS situacao,
            cp.despesa::float AS gasto,
            ma.id_mandato IS NOT NULL AS eleito, es.turno,
            (SELECT sum(v.qtd_votos_nominais) FROM votacao_candidato_munzona v
