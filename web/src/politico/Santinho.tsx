@@ -1,9 +1,9 @@
-// Santinho de cada eleição, como o impresso de campanha: na frente, a foto de ponta a ponta se
-// fundindo na cor do partido (a mesma cor de viés da P7) com a retícula da gráfica, o nome de urna,
-// o cargo, o número em casas como no visor da urna e a letra miúda no rodapé; o carimbo do resultado
-// por cima. Clicando, ele vira: o verso é a "cola"
-// que o eleitor leva para a urna, com os dados daquela eleição. É uma reconstrução com dados do TSE,
-// não material de campanha (o verso diz isso).
+// Santinho de cada eleição, como o impresso de campanha: na frente, a cor do partido (a mesma cor de
+// viés da P7) com a retícula da gráfica, o ano em pé numa faixa, a foto inteira sangrando no topo e
+// na direita, o nome de urna, o cargo, o número em casas como no visor da urna e a letra miúda no
+// rodapé; o carimbo do resultado por cima. Clicando, ele vira: o verso é a "cola" que o eleitor leva
+// para a urna, com os dados daquela eleição. É uma reconstrução com dados do TSE, não material de
+// campanha (a frente e o verso dizem isso).
 import { ArrowCounterClockwise, ArrowRight } from '@phosphor-icons/react'
 import { Link } from '@tanstack/react-router'
 import { useRef, useState } from 'react'
@@ -80,7 +80,7 @@ export function Santinho({ c, nome, inclinacao }: { c: Candidatura; nome: string
 
   return (
     <article
-      className="santinho relative h-[360px] w-[236px] shrink-0 snap-start [perspective:1100px]"
+      className="santinho relative h-[380px] w-[236px] shrink-0 snap-start [perspective:1100px]"
       style={{ rotate: `${inclinacao}deg` }}
       aria-label={resumo}
     >
@@ -92,21 +92,24 @@ export function Santinho({ c, nome, inclinacao }: { c: Candidatura; nome: string
           inert={virado}
         >
           <div className="santinho-reticula pointer-events-none absolute inset-0" aria-hidden />
-          <div className="relative h-[220px] shrink-0">
-            {/* sem foto (antes de 2004): santinho tipográfico, as iniciais enormes na cor do partido */}
-            <Retrato
-              foto={c.foto}
-              nome={nome}
-              tamanho={120}
-              className={`!h-full !w-full !rounded-none ${c.foto ? '' : '!bg-transparent pb-6 !text-[9rem] !font-black ![font-stretch:72%] !text-current opacity-25'}`}
-            />
-            {c.foto && <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 48%, ${fundo} 97%)` }} aria-hidden />}
-            <span className="absolute left-0 top-0 rounded-br-[8px] px-2.5 pb-1 pt-1.5 text-[1.05rem] font-black leading-none tabular" style={{ background: fundo, fontStretch: '80%' }}>
+          {/* a foto do TSE tem 161×225: inteira e no tamanho dela, sem esticar nem cortar */}
+          <div className="relative flex h-[225px] shrink-0">
+            <span className="mx-auto mt-3 rotate-180 text-[2.6rem] font-black leading-none tabular [writing-mode:vertical-rl]" style={{ fontStretch: '72%' }}>
               {c.ano}
             </span>
-            <span className="absolute right-2 top-2.5"><Carimbo resultado={resultado} /></span>
+            <div className="relative h-[225px] w-[161px] shrink-0">
+              {/* sem foto (antes de 2004): santinho tipográfico, as iniciais enormes na cor do partido */}
+              <Retrato
+                foto={c.foto}
+                nome={nome}
+                tamanho={161}
+                className={`!h-full !w-full !rounded-none ${c.foto ? '' : '!bg-transparent !text-[6.5rem] !font-black ![font-stretch:72%] !text-current opacity-25'}`}
+              />
+              {c.foto && <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 78%, ${fundo})` }} aria-hidden />}
+            </div>
+            <span className="absolute bottom-9 left-2"><Carimbo resultado={resultado} /></span>
           </div>
-          <div className="relative -mt-7 flex flex-1 flex-col px-3.5 pb-2">
+          <div className="relative -mt-3 flex flex-1 flex-col px-3.5 pb-2">
             <p className="line-clamp-2 text-[1.55rem] font-black uppercase leading-[0.92] tracking-[-0.01em] [text-wrap:balance]" style={{ fontStretch: '72%' }}>
               {nomeUrna}
             </p>

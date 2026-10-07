@@ -128,7 +128,7 @@ components:
     textColor: "tintaSobre(viés)"
     rounded: "10px"
     width: "236px"
-    height: "360px"
+    height: "380px"
 ---
 
 # Design System: Voto Aberto
@@ -248,7 +248,7 @@ SVG com a malha do IBGE, câmera `d3-zoom` com transição suave (van Wijk) entr
 Papel térmico com cabeçalho em mono, picotes tracejados entre seções, linhas impressas em cascata (90ms) e QR code real da página.
 
 ### Santinho (assinatura)
-O impresso de campanha, 236×360px. Frente: fundo na cor do viés do partido (a mesma do mapa, então um político que trocou de partido muda de cor no leque) com retícula de meio-tom da gráfica; a foto de registro de ponta a ponta se fundindo na cor; o ano numa aba no canto; o carimbo do resultado; o nome de urna do TSE em Archivo condensada black caixa-alta; cargo e sigla do partido em pílula branca; o número em casas brancas como no visor da urna, o maior elemento; a letra miúda "Dados do TSE · não é material de campanha" no lugar do CNPJ da gráfica; a tira das sete fitas. Sem foto (antes de 2004) vira santinho tipográfico: as iniciais enormes na própria cor. Clicar vira o santinho (giro 3D de 500ms): o verso, em folha, é a cola para a urna ("Para senador, digite" + o número) com onde, partido, votos, resultado, gasto e custo por voto, e o boletim do município quando é eleição municipal. A face escondida fica `inert`, e o foco passa para o botão da outra face. Nunca escrever "vote"; não é propaganda.
+O impresso de campanha, 236×380px. Frente: fundo na cor do viés do partido (a mesma do mapa, então um político que trocou de partido muda de cor no leque) com retícula de meio-tom da gráfica; o ano em pé numa faixa à esquerda; a foto de registro inteira e no tamanho do TSE (161×225, nunca esticada nem cortada), sangrando no topo e na direita e se fundindo na cor só no pé; o carimbo do resultado sobre o canto da foto; o nome de urna do TSE em Archivo condensada black caixa-alta; cargo e sigla do partido em pílula branca; o número em casas brancas como no visor da urna, o maior elemento; a letra miúda "Dados do TSE · não é material de campanha" no lugar do CNPJ da gráfica; a tira das sete fitas. Sem foto (antes de 2004) vira santinho tipográfico: as iniciais enormes na própria cor. Clicar vira o santinho (giro 3D de 500ms): o verso, em folha, é a cola para a urna ("Para senador, digite" + o número) com onde, partido, votos, resultado, gasto e custo por voto, e o boletim do município quando é eleição municipal. A face escondida fica `inert`, e o foco passa para o botão da outra face. Nunca escrever "vote"; não é propaganda.
 
 ### Urna (assinatura)
 Desenhada em vetor, de frente, com as proporções medidas numa foto do terminal do eleitor UE2020 (a versão 3D saiu: o desenho fiel lê melhor e pesa menos). Corpo cinza-claro fosco com grão (textura gerada uma vez, não filtro), visor TFT largo e branco em moldura preta (texto preto em sans, foto à direita, rodapé "Aperte a tecla:"), teclas numéricas grafite com braile e marca tátil no 5, coluna BRANCO (#f2f3f1), CORRIGE (#ee7a21) e CONFIRMA (#2fb46c, mais alta), área gravada no canto. Som sintetizado com os parâmetros medidos da urna real: senoide de ~2.300 Hz na tecla, dois bipes no CORRIGE e o trinado 2.300/2.200 Hz do fim do voto. As teclas são botões (clique, toque, Tab + Enter) e afundam 2,4 px quando apertadas, inclusive pelo teclado do computador. Com filtros, o visor mostra a consulta como a urna mostra o cargo: "CONSULTA PARA SENADOR · PI · 2022".
