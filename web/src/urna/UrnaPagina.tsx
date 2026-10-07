@@ -5,8 +5,8 @@ import { lazy, Suspense, useCallback, useEffect, useId, useMemo, useRef, useStat
 import { consultas, politicoAleatorio, type PoliticoBusca } from '../api'
 import { Ciranda } from '../componentes/Ciranda'
 import { Retrato } from '../componentes/Retrato'
-import { nomeProprio } from '../lib/formato'
-import { alternarSom, somLigado, tocarConfirma, tocarTecla } from './som'
+import { nomeProprio, plural } from '../lib/formato'
+import { alternarSom, somLigado, tocarConfirma, tocarCorrige, tocarTecla } from './som'
 import type { IdTecla } from './Urna3D'
 import { desenharVisor, VISOR } from './visor'
 
@@ -30,27 +30,32 @@ function useAtrasado<T>(valor: T, ms = 220) {
   return v
 }
 
-/** Urna em 2D (sem WebGL ou com movimento reduzido): o mesmo visor e o mesmo teclado. */
+/** Urna em 2D (sem WebGL ou com movimento reduzido), no mesmo desenho do UE2020: tela larga em
+ *  moldura preta no topo, teclado numérico grafite e a coluna BRANCO / CORRIGE / CONFIRMA. */
 function Urna2D({ canvas, versao, aoApertar }: { canvas: HTMLCanvasElement; versao: number; aoApertar: (id: IdTecla) => void }) {
   const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
     ref.current?.getContext('2d')?.drawImage(canvas, 0, 0)
   }, [canvas, versao])
-  const tecla = 'grid h-11 place-items-center rounded-lg text-lg font-black shadow-[0_3px_0_#11161e] active:translate-y-[3px] active:shadow-none'
+  const tecla = 'grid h-9 place-items-center rounded-[5px] font-bold transition-transform active:translate-y-[1px]'
+  const digito = `${tecla} bg-[#2a2d31] text-[0.95rem] text-white`
   return (
     <div className="grid h-full place-items-center">
-      <div className="grid w-full max-w-[640px] grid-cols-[1fr_190px] gap-5 rounded-[30px] bg-[#e2e6e9] p-6 shadow-[var(--shadow-papel)]">
-        <div className="rounded-2xl bg-[#2b3442] p-3">
-          <canvas ref={ref} width={VISOR.largura} height={VISOR.altura} className="block w-full rounded-md" aria-hidden />
+      <div className="w-full max-w-[620px] rounded-[18px] bg-[#e3e6e8] p-[3%] pt-0 shadow-[var(--shadow-papel)]">
+        <div className="mx-[3%] bg-[#111315] p-[2.2%]">
+          <canvas ref={ref} width={VISOR.largura} height={VISOR.altura} className="block w-full" aria-hidden />
         </div>
-        <div className="grid grid-cols-3 content-start gap-2 rounded-2xl bg-[#2b3442] p-3">
-          {(['1', '2', '3', '4', '5', '6', '7', '8', '9'] as IdTecla[]).map((d) => (
-            <button key={d} type="button" className={`${tecla} bg-branco-urna text-tinta`} onClick={() => aoApertar(d)} aria-label={`Tecla ${d}`}>{d}</button>
-          ))}
-          <button type="button" className={`${tecla} col-start-2 bg-branco-urna text-tinta`} onClick={() => aoApertar('0')} aria-label="Tecla 0">0</button>
-          <button type="button" className={`${tecla} col-span-3 mt-1 bg-branco-urna text-xs text-tinta`} onClick={() => aoApertar('branco')}>BRANCO</button>
-          <button type="button" className={`${tecla} col-span-3 bg-corrige text-xs text-tinta`} onClick={() => aoApertar('corrige')}>CORRIGE</button>
-          <button type="button" className={`${tecla} col-span-3 h-12 bg-confirma text-sm text-white`} onClick={() => aoApertar('confirma')}>CONFIRMA</button>
+        <div className="mt-[4%] grid grid-cols-[1fr_auto] items-start gap-4 px-[3%]">
+          <div className="pt-1 text-[0.75rem] font-semibold leading-tight text-[#8a929a]">Voto Aberto<br />VA2026</div>
+          <div className="grid grid-cols-[repeat(3,52px)_80px] gap-1.5">
+            {(['1', '2', '3', '4', '5', '6', '7', '8', '9'] as IdTecla[]).map((d, i) => (
+              <button key={d} type="button" className={digito} style={{ gridRow: Math.floor(i / 3) + 1, gridColumn: (i % 3) + 1 }} onClick={() => aoApertar(d)} aria-label={`Tecla ${d}`}>{d}</button>
+            ))}
+            <button type="button" className={digito} style={{ gridRow: 4, gridColumn: 2 }} onClick={() => aoApertar('0')} aria-label="Tecla 0">0</button>
+            <button type="button" className={`${tecla} bg-[#f2f3f1] text-[0.7rem] text-[#141414] ring-1 ring-[#cfd4d8]`} style={{ gridRow: 1, gridColumn: 4 }} onClick={() => aoApertar('branco')}>BRANCO</button>
+            <button type="button" className={`${tecla} bg-[#ee7a21] text-[0.7rem] text-[#141414]`} style={{ gridRow: 2, gridColumn: 4 }} onClick={() => aoApertar('corrige')}>CORRIGE</button>
+            <button type="button" className={`${tecla} h-[3.4rem] bg-[#2fb46c] text-[0.7rem] text-[#141414]`} style={{ gridRow: '3 / span 2', gridColumn: 4 }} onClick={() => aoApertar('confirma')}>CONFIRMA</button>
+          </div>
         </div>
       </div>
     </div>
@@ -109,7 +114,7 @@ export function UrnaPagina() {
     if (!escolhido || fim) return
     tocarConfirma()
     setFim(true)
-    const espera = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 500 : 1500
+    const espera = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 900 : 1500
     setTimeout(() => navegar({ to: '/politico/$id', params: { id: String(escolhido.id) } }), espera)
   }, [escolhido, fim, navegar])
 
@@ -118,7 +123,8 @@ export function UrnaPagina() {
       if (fim) return
       pulsar(t)
       if (t === 'confirma') return confirmar()
-      tocarTecla()
+      if (t === 'corrige') tocarCorrige()
+      else tocarTecla()
       if (t === 'corrige') {
         setTexto('')
         setSelecionado(0)
@@ -154,8 +160,8 @@ export function UrnaPagina() {
   }
 
   return (
-    <div className="mx-auto grid max-w-[1440px] items-center gap-10 px-4 pt-8 md:px-[72px] lg:min-h-[calc(100dvh-120px)] lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-14">
-      <div className="relative h-[46dvh] min-h-[320px] lg:h-[min(72dvh,640px)]">
+    <div className="mx-auto grid max-w-[1440px] gap-10 px-4 pt-8 md:px-[72px] lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-start lg:gap-14">
+      <div className="relative h-[46dvh] min-h-[320px] lg:sticky lg:top-[100px] lg:h-[calc(100dvh-164px)] lg:max-h-[720px]">
         {usa3D ? (
           <Suspense fallback={<div className="grid h-full place-items-center"><Ciranda rotulo="Ligando a urna..." /></div>}>
             <Urna3D canvas={canvas} versao={versao} pulsos={pulsos} aoApertar={(t) => void apertar(t)} />
@@ -215,12 +221,12 @@ export function UrnaPagina() {
               onDoubleClick={confirmar}
               className={`flex cursor-pointer items-center gap-3 rounded-2xl border px-3 py-2 transition-colors ${i === selecionado ? 'border-tinta bg-folha' : 'border-transparent hover:bg-folha/70'}`}
             >
-              <span className="t-mono w-4 text-center text-[0.85rem] font-bold text-tinta-3">{i + 1}</span>
+              <span className="w-4 text-center text-[0.85rem] font-bold tabular text-tinta-3">{i + 1}</span>
               <Retrato foto={r.foto} nome={r.nome} tamanho={34} />
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-semibold">{nomeProprio(r.nome)}</span>
                 <span className="block text-[0.78rem] text-tinta-3 tabular">
-                  {r.ufs.join(' ') || 'BR'} · {r.primeiro_ano}-{r.ultimo_ano} · {r.candidaturas} eleições · {r.vitorias} vitórias
+                  {r.ufs.join(' ') || 'BR'} · {r.primeiro_ano}-{r.ultimo_ano} · {plural(r.candidaturas, 'eleição', 'eleições')} · {plural(r.vitorias, 'vitória', 'vitórias')}
                 </span>
               </span>
             </li>
@@ -231,10 +237,10 @@ export function UrnaPagina() {
         </ul>
 
         <div className="flex flex-wrap items-center gap-3 border-t border-linha pt-5">
-          <button type="button" onClick={() => void apertar('confirma')} disabled={!escolhido || fim} className="h-11 rounded-full bg-confirma px-6 font-bold tracking-wide text-white shadow-[0_3px_0_#2a5a1c] transition active:translate-y-[2px] active:shadow-none disabled:opacity-40">
+          <button type="button" onClick={() => void apertar('confirma')} disabled={!escolhido || fim} className="h-11 rounded-full bg-confirma px-6 font-bold tracking-wide text-white shadow-[var(--shadow-cartao)] transition active:translate-y-[2px] disabled:opacity-40">
             CONFIRMA
           </button>
-          <button type="button" onClick={() => void apertar('corrige')} className="h-11 rounded-full bg-corrige px-5 font-bold tracking-wide text-tinta shadow-[0_3px_0_#a8521b] transition active:translate-y-[2px] active:shadow-none">
+          <button type="button" onClick={() => void apertar('corrige')} className="h-11 rounded-full bg-corrige px-5 font-bold tracking-wide text-tinta shadow-[var(--shadow-cartao)] transition active:translate-y-[2px]">
             CORRIGE
           </button>
           <button type="button" onClick={() => void apertar('branco')} className="inline-flex h-11 items-center gap-2 rounded-full border-[1.5px] border-linha-2 bg-branco-urna px-5 font-bold tracking-wide text-tinta transition hover:border-tinta active:translate-y-[2px]">

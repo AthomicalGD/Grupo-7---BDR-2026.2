@@ -121,6 +121,10 @@
     text-rendering: optimizeLegibility;
   }
 
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-linha-2) transparent;
+  }
   ::selection {
     background: color-mix(in oklab, var(--color-marcador) 70%, white);
     color: var(--color-tinta);
@@ -140,15 +144,23 @@
   from { opacity: 0; }
   to { opacity: 1; }
 }
-@keyframes girar {
-  to { transform: rotate(360deg); }
+/* loading: as barras do símbolo contam e o globo gira (período da faixa = 100) */
+@keyframes apurar {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(var(--queda)); }
 }
-@keyframes girar-inverso {
-  to { transform: rotate(-360deg); }
+/* P1: cada cadeira "senta" no plenário */
+@keyframes sentar {
+  from { opacity: 0; transform: translateY(-0.6px) scale(0.3); }
+  to { opacity: 1; transform: none; }
 }
-@keyframes respirar {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.06); }
+.cadeira-senta {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sentar 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes globo {
+  to { transform: translateX(-100px); }
 }
 @keyframes onda {
   to { transform: translateX(-240px); }

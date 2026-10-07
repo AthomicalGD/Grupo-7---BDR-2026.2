@@ -38,6 +38,8 @@ function estrela(cx, cy, r) {
   return 'M' + pts.join('L') + 'Z'
 }
 
+export const ESTRELAS = [[-14, 20, 5], [12, 12, 4], [2, 30, 3.4]].map(([dx, dy, r]) => estrela(124 + dx, 158 + dy, r))
+
 /** Globo da bandeira recortado pelo V: disco azul, faixa branca em arco e três estrelas. */
 function globo(id) {
   const cx = 124, cy = 158, r = 46
@@ -45,7 +47,7 @@ function globo(id) {
     defs: `<clipPath id="${id}"><path d="${GEO.v}"/></clipPath><clipPath id="${id}-d"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath>`,
     corpo: `<g clip-path="url(#${id})"><circle cx="${cx}" cy="${cy}" r="${r}" fill="${BANDEIRA.azul}"/>` +
       `<path clip-path="url(#${id}-d)" d="M${cx - r - 4} ${cy + 4}Q${cx} ${(cy - r * 0.62).toFixed(1)} ${cx + r + 4} ${cy - 6}" stroke="${COR.branco}" stroke-width="7.5" fill="none"/>` +
-      [[-14, 20, 5], [12, 12, 4], [2, 30, 3.4]].map(([dx, dy, er]) => `<path d="${estrela(cx + dx, cy + dy, er)}" fill="${COR.branco}"/>`).join('') + '</g>',
+      ESTRELAS.map((d) => `<path d="${d}" fill="${COR.branco}"/>`).join('') + '</g>',
   }
 }
 
