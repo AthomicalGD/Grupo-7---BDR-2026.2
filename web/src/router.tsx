@@ -1,5 +1,5 @@
 import { createRootRoute, createRoute, createRouter, lazyRouteComponent, Link } from '@tanstack/react-router'
-import { ANOS, type Ano } from './api'
+import { ANOS, ANOS_ELEICAO, CARGOS_BUSCA, type Ano, type FiltrosBusca } from './api'
 import { Atlas } from './atlas/Atlas'
 import { CirandaTela } from './componentes/Ciranda'
 import { Moldura } from './componentes/Moldura'
@@ -54,6 +54,13 @@ const urna = createRoute({
   getParentRoute: () => raiz,
   path: '/urna',
   component: lazyRouteComponent(() => import('./urna/UrnaPagina'), 'UrnaPagina'),
+  validateSearch: (s: Record<string, unknown>): FiltrosBusca => ({
+    cargo: CARGOS_BUSCA.some((c) => c.cod === Number(s.cargo)) ? Number(s.cargo) : undefined,
+    eleicao: ANOS_ELEICAO.includes(Number(s.eleicao) as (typeof ANOS_ELEICAO)[number]) ? Number(s.eleicao) : undefined,
+    uf: typeof s.uf === 'string' && /^[A-Z]{2}$/.test(s.uf) ? s.uf : undefined,
+    partido: typeof s.partido === 'string' && /^[A-Z0-9 ÇÃÁÉÍÓÚÂÊÔÕ]{2,20}$/.test(s.partido) ? s.partido : undefined,
+    resultado: s.resultado === 'eleito' || s.resultado === 'nao_eleito' ? s.resultado : undefined,
+  }),
 })
 const cadeira = createRoute({
   getParentRoute: () => raiz,

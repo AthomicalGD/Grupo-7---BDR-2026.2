@@ -1,7 +1,7 @@
 // Tela da urna desenhada num canvas, encaixado no lugar do visor do desenho da urna.
 // Segue a tela de votação do modelo UE2020: TFT larga e branca, texto preto em sans, foto do
 // candidato à direita e o rodapé "Aperte a tecla:" separado por uma linha.
-import type { PoliticoBusca } from '../api'
+import { CARGOS_BUSCA, type FiltrosBusca, type PoliticoBusca } from '../api'
 import { nomeProprio, plural } from '../lib/formato'
 
 export const VISOR = { largura: 1280, altura: 604 } // proporção da tela do UE2020 (~2,1:1)
@@ -13,7 +13,21 @@ export interface EstadoVisor {
   buscando: boolean
   fim: boolean
   cursor: boolean
+  /** filtros ativos, já resumidos ("SENADOR · PI · 2022"); vazio sem filtro */
+  filtro: string
 }
+
+/** Resumo para o visor da urna, como o "SEU VOTO PARA SENADOR" da urna real. */
+export function filtroNoVisor(f: FiltrosBusca): string {
+  return [
+    CARGOS_BUSCA.find((c) => c.cod === f.cargo)?.nome.toUpperCase(),
+    f.uf,
+    f.eleicao,
+    f.partido,
+    f.resultado === 'eleito' ? 'ELEITOS' : f.resultado === 'nao_eleito' ? 'NÃO ELEITOS' : undefined,
+  ].filter(Boolean).join(' · ')
+}
+
 
 const FUNDO = '#fbfbfa', TINTA = '#141414', APAGADO = '#646a70', LINHA = '#c9cdd1'
 const SANS = '"Archivo Variable", Archivo, Arial, system-ui, sans-serif'
@@ -45,7 +59,7 @@ export function desenharVisor(canvas: HTMLCanvasElement, e: EstadoVisor, foto: H
 
   c.fillStyle = TINTA
   c.font = `600 24px ${SANS}`
-  c.fillText('CONSULTA DE CARREIRA', M, 48)
+  c.fillText(e.filtro ? `CONSULTA PARA ${e.filtro}` : 'CONSULTA DE CARREIRA', M, 48)
   c.fillStyle = APAGADO
   c.textAlign = 'right'
   c.fillText('VOTO ABERTO', W - M, 48)
@@ -64,22 +78,25 @@ export function desenharVisor(canvas: HTMLCanvasElement, e: EstadoVisor, foto: H
   const comResultados = e.resultados.length > 0
   const fw = 196, fh = 246, fx = W - M - fw, fy = 160
   const larguraLista = comResultados ? fx - M - 28 : W - 2 * M
-  if (!e.texto.trim()) {
+  if (comResultados) {
+    // a lista vem abaixo; com filtros ela aparece mesmo sem nome digitado
+  } else if (!e.texto.trim() && !e.filtro) {
     c.fillStyle = TINTA
     c.font = `700 40px ${SANS}`
     c.fillText('Digite o nome de um político', M, 232)
     c.fillStyle = APAGADO
     c.font = `500 28px ${SANS}`
     c.fillText('Use o teclado do computador. A busca ignora acentos.', M, 280)
-  } else if (e.texto.trim().length < 3) {
+  } else if (e.texto.trim().length < 3 && !e.filtro) {
     c.fillStyle = APAGADO
     c.font = `500 30px ${SANS}`
     c.fillText('Continue digitando (mínimo de 3 letras)', M, 220)
-  } else if (!comResultados) {
+  } else {
     c.fillStyle = APAGADO
     c.font = `500 30px ${SANS}`
     c.fillText(e.buscando ? 'Procurando...' : 'Nenhum político encontrado', M, 220)
-  } else {
+  }
+  if (comResultados) {
     e.resultados.slice(0, 6).forEach((r, i) => {
       const y = 154 + i * 58
       const ativo = i === e.selecionado

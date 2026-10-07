@@ -61,6 +61,13 @@ def main() -> None:
     assert reeleito == {2006, 2018}, reeleito
     assert not [k for k in chaves(wd) if "cpf" in k or "titulo" in k]
     assert "id" in get("/api/politicos/aleatorio")
+    # busca com filtros (cédula de consulta): senador eleito no PI em 2022, sem nome
+    filtrada = get("/api/politicos?cargo=5&ano=2022&uf=PI&resultado=eleito")
+    assert [p["id"] for p in filtrada] == [368990], filtrada
+    assert 368990 in [p["id"] for p in get("/api/politicos?q=wellington&partido=PT&cargo=3")]
+    assert cliente.get("/api/politicos?cargo=99").status_code == 422
+    pt = next(p for p in get("/api/partidos") if p["sigla"] == "PT")
+    assert pt["vies"] == -68 and pt["candidaturas"] > 0
     # P10a: senador no PI, como em respostas/10a_taxa_reeleicao.txt (4 tentaram, 1 reeleito)
     assert wd["contexto_reeleicao"] == {"cargo": "SENADOR", "uf": "PI", "tentaram": 4, "reeleitos": 1, "taxa": 25.0}
 

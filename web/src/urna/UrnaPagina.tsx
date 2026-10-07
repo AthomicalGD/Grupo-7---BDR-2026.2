@@ -1,13 +1,14 @@
 import { Shuffle, SpeakerHigh, SpeakerSlash } from '@phosphor-icons/react'
 import { useQuery } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
-import { consultas, politicoAleatorio, type PoliticoBusca } from '../api'
+import { consultas, filtrando, politicoAleatorio, type FiltrosBusca, type PoliticoBusca } from '../api'
 import { Retrato } from '../componentes/Retrato'
 import { nomeProprio, plural } from '../lib/formato'
 import { alternarSom, somLigado, tocarConfirma, tocarCorrige, tocarTecla } from './som'
 import { Urna, type IdTecla } from './Urna'
-import { desenharVisor, VISOR } from './visor'
+import { FiltroCandidatura } from './FiltroCandidatura'
+import { desenharVisor, filtroNoVisor, VISOR } from './visor'
 
 function useAtrasado<T>(valor: T, ms = 220) {
   const [v, setV] = useState(valor)
@@ -32,9 +33,15 @@ export function UrnaPagina() {
   const [foto, setFoto] = useState<HTMLImageElement | null>(null)
   const canvas = useMemo(() => Object.assign(document.createElement('canvas'), { width: VISOR.largura, height: VISOR.altura }), [])
 
+  const filtros = useSearch({ from: '/urna' })
+  const comFiltro = filtrando(filtros)
+  const mudarFiltros = (f: FiltrosBusca) => {
+    setSelecionado(0)
+    void navegar({ to: '/urna', search: f, replace: true, resetScroll: false })
+  }
   const q = useAtrasado(texto.trim())
-  const busca = useQuery({ ...consultas.buscaPoliticos(q), placeholderData: (anterior) => anterior })
-  const resultados: PoliticoBusca[] = q.length >= 3 ? (busca.data ?? []).slice(0, 6) : []
+  const busca = useQuery({ ...consultas.buscaPoliticos(q, filtros), placeholderData: (anterior) => anterior })
+  const resultados: PoliticoBusca[] = q.length >= 3 || comFiltro ? (busca.data ?? []).slice(0, 6) : []
   const escolhido = resultados[Math.min(selecionado, resultados.length - 1)]
 
   useEffect(() => {
@@ -55,10 +62,10 @@ export function UrnaPagina() {
 
   // redesenha o visor a cada mudança (e quando as fontes terminam de carregar)
   useEffect(() => {
-    desenharVisor(canvas, { texto, resultados, selecionado, buscando: busca.isFetching, fim, cursor }, foto)
+    desenharVisor(canvas, { texto, resultados, selecionado, buscando: busca.isFetching, fim, cursor, filtro: filtroNoVisor(filtros) }, foto)
     setVersao((v) => v + 1)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvas, texto, busca.data, busca.isFetching, selecionado, fim, cursor, foto, q])
+  }, [canvas, texto, busca.data, busca.isFetching, selecionado, fim, cursor, foto, q, filtros])
   useEffect(() => {
     void document.fonts.ready.then(() => setCursor((c) => c))
   }, [])
@@ -153,9 +160,14 @@ export function UrnaPagina() {
             className="h-[52px] w-full rounded-full border-[1.5px] border-tinta bg-folha px-5 text-base outline-none placeholder:text-tinta-3 focus-visible:outline-[3px] focus-visible:outline-acao"
           />
           <p id={`${id}-dica`} className="mt-2 text-[0.85rem] text-tinta-3">
-            O campo e o visor são o mesmo. A busca ignora acentos e usa o nome civil registrado no TSE.
+            O campo e o visor são o mesmo. A busca ignora acentos e usa o nome civil registrado no TSE; com filtros, o nome é opcional.
           </p>
         </div>
+
+        <FiltroCandidatura filtros={filtros} aoMudar={mudarFiltros} />
+        {comFiltro && q.length < 3 && resultados.length > 0 && (
+          <p className="text-[0.85rem] text-tinta-3">Sem nome digitado: primeiro quem mais se elegeu nessas candidaturas.</p>
+        )}
 
         <ul id={`${id}-lista`} role="listbox" aria-label="Políticos encontrados" className="space-y-1.5">
           {resultados.map((r, i) => (
@@ -181,8 +193,12 @@ export function UrnaPagina() {
               </span>
             </li>
           ))}
-          {q.length >= 3 && !busca.isFetching && resultados.length === 0 && (
-            <li className="px-3 text-tinta-2">Nenhum político encontrado para “{q}”.</li>
+          {(q.length >= 3 || comFiltro) && !busca.isFetching && resultados.length === 0 && (
+            <li className="px-3 text-tinta-2">
+              {q.length < 3
+                ? 'Nenhuma candidatura bate com esses filtros. Afrouxe uma lacuna ou limpe os filtros.'
+                : `Nenhum político encontrado para “${q}”${comFiltro ? ' com esses filtros. Afrouxe uma lacuna ou limpe os filtros.' : '.'}`}
+            </li>
           )}
         </ul>
 

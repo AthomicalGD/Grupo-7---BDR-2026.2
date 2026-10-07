@@ -144,6 +144,22 @@ function AreaGravada() {
   )
 }
 
+/** Grão fosco do plástico: ruído gerado uma vez num canvas pequeno e repetido como padrão
+ *  (um filtro feTurbulence seria recalculado a cada repintura, ao apertar cada tecla). */
+function texturaGrao(): string {
+  const c = document.createElement('canvas')
+  c.width = c.height = 96
+  const g = c.getContext('2d')
+  if (!g) return ''
+  const img = g.createImageData(96, 96)
+  for (let i = 0; i < img.data.length; i += 4) {
+    const v = 80 + Math.random() * 90
+    img.data.set([v, v + 3, v + 6, Math.random() * 30], i)
+  }
+  g.putImageData(img, 0, 0)
+  return c.toDataURL()
+}
+
 const DIGITOS: { id: IdTecla; col: number; lin: number }[] = [
   ...['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((d, i) => ({ id: d as IdTecla, col: i % 3, lin: Math.floor(i / 3) })),
   { id: '0', col: 1, lin: 3 },
@@ -156,6 +172,7 @@ export function Urna({ canvas, versao, pulsos, aoApertar }: {
   aoApertar: (id: IdTecla) => void
 }) {
   const visor = useRef<HTMLCanvasElement>(null)
+  const [grao] = useState(texturaGrao)
   useEffect(() => {
     visor.current?.getContext('2d')?.drawImage(canvas, 0, 0)
   }, [canvas, versao])
@@ -185,18 +202,12 @@ export function Urna({ canvas, versao, pulsos, aoApertar }: {
             <stop offset="0" stopColor="#1d2124" />
             <stop offset="1" stopColor="#101214" />
           </linearGradient>
-          {/* grão fosco do plástico */}
-          <filter id="urna-grao" x="0" y="0" width="100%" height="100%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="7" />
-            <feColorMatrix values="0 0 0 0 0.35  0 0 0 0 0.38  0 0 0 0 0.4  0 0 0 0.09 0" />
-            <feComposite in2="SourceGraphic" operator="in" />
-          </filter>
+          <pattern id="urna-grao" width="96" height="96" patternUnits="userSpaceOnUse">
+            <image href={grao} width="96" height="96" />
+          </pattern>
           <filter id="urna-sombra" x="-10%" y="-200%" width="120%" height="500%">
             <feGaussianBlur stdDeviation="9" />
           </filter>
-          <clipPath id="urna-recorte">
-            <rect width={CORPO.w} height={CORPO.h} rx={12} />
-          </clipPath>
         </defs>
 
         <ellipse cx={OX + CORPO.w / 2} cy={OY + CORPO.h + 30} rx={CORPO.w * 0.53} ry={16} fill="#1c2630" opacity={0.28} filter="url(#urna-sombra)" />
@@ -207,7 +218,7 @@ export function Urna({ canvas, versao, pulsos, aoApertar }: {
           <rect x={-8} y={CORPO.h + 25} width={CORPO.w + 16} height={3} rx={1.5} fill="#8f989d" />
           {/* corpo */}
           <rect width={CORPO.w} height={CORPO.h} rx={12} fill="url(#urna-corpo)" />
-          <rect width={CORPO.w} height={CORPO.h} rx={12} fill="#fff" filter="url(#urna-grao)" clipPath="url(#urna-recorte)" />
+          <rect width={CORPO.w} height={CORPO.h} rx={12} fill="url(#urna-grao)" opacity={0.55} />
           <rect width={CORPO.w} height={CORPO.h} rx={12} fill="url(#urna-lado)" />
           <rect x={0.6} y={0.6} width={CORPO.w - 1.2} height={CORPO.h - 1.2} rx={11.5} fill="none" stroke="#fff" strokeOpacity={0.7} strokeWidth={1.2} />
           <path d={`M10 ${CORPO.h - 0.5}H${CORPO.w - 10}`} stroke="#8d969b" strokeWidth={1.4} />

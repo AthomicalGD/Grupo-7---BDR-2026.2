@@ -65,5 +65,10 @@ export const cargoPlural = (c: string) =>
     .map((p) => (p.endsWith('r') ? p + 'es' : p.endsWith('l') ? p.slice(0, -1) + 'is' : p + 's'))
     .join(' ')
 
+const NA = new Set(['BA', 'PB'])
+const EM = new Set(['AL', 'GO', 'MG', 'MS', 'MT', 'PE', 'RO', 'RR', 'SC', 'SE', 'SP'])
+/** "no Piauí", "na Bahia", "em Goiás". */
+export const noEstado = (sigla: string, nome: string) => `${NA.has(sigla) ? 'na' : EM.has(sigla) ? 'em' : 'no'} ${nome}`
+
 /** Busca sem acento e sem caixa. */
 export const semAcento = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()

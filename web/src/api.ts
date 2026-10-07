@@ -100,6 +100,28 @@ export interface PoliticoBusca {
   foto: string | null
 }
 
+/** Filtros da busca: descrevem uma candidatura ("senador, 2022, PI, PT, eleito"). */
+export interface FiltrosBusca {
+  cargo?: number
+  /** ano da eleição (no endereço, `eleicao`: `ano` já é o ano do mapa) */
+  eleicao?: number
+  uf?: string
+  partido?: string
+  resultado?: 'eleito' | 'nao_eleito'
+}
+export const filtrando = (f: FiltrosBusca) => Object.values(f).some((v) => v != null && v !== '')
+
+export const CARGOS_BUSCA = [
+  { cod: 1, nome: 'presidente' },
+  { cod: 3, nome: 'governador' },
+  { cod: 5, nome: 'senador' },
+  { cod: 6, nome: 'deputado federal' },
+  { cod: 7, nome: 'deputado estadual' },
+  { cod: 11, nome: 'prefeito' },
+  { cod: 13, nome: 'vereador' },
+] as const
+export const ANOS_ELEICAO = [2024, 2022, 2020, 2018, 2016, 2014, 2012, 2010, 2008, 2006, 2004, 2002, 2000, 1998, 1996, 1994] as const
+
 export interface Candidatura {
   ano: number
   cargo: string
@@ -231,13 +253,19 @@ export const consultas = {
       enabled: q.trim().length >= 2,
       ...sempre,
     }),
-  buscaPoliticos: (q: string) =>
+  buscaPoliticos: (q: string, f: FiltrosBusca = {}) =>
     queryOptions({
-      queryKey: ['busca-politicos', q],
-      queryFn: ({ signal }) => get<PoliticoBusca[]>(`/api/politicos?q=${encodeURIComponent(q)}&limite=6`, signal),
-      enabled: q.trim().length >= 3,
+      queryKey: ['busca-politicos', q, f],
+      queryFn: ({ signal }) => {
+        const p = new URLSearchParams({ q, limite: '6' })
+        for (const [k, v] of Object.entries(f)) if (v != null && v !== '') p.set(k === 'eleicao' ? 'ano' : k, String(v))
+        return get<PoliticoBusca[]>(`/api/politicos?${p}`, signal)
+      },
+      enabled: q.trim().length >= 3 || filtrando(f),
       ...sempre,
     }),
+  partidos: () =>
+    queryOptions({ queryKey: ['partidos'], queryFn: ({ signal }) => get<{ sigla: string; candidaturas: number; vies: number }[]>('/api/partidos', signal), ...sempre }),
   politico: (id: number) =>
     queryOptions({ queryKey: ['politico', id], queryFn: ({ signal }) => get<Politico>(`/api/politicos/${id}`, signal), ...sempre }),
   cadeira: (ano: number, cargo: number, uf = '', municipio?: number) =>
