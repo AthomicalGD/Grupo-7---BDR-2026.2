@@ -1,7 +1,7 @@
 // Gasto × chance de vitória: uma barra por faixa de gasto (escala log), altura = % de eleitos.
 // Barra na mesma cor do plenário (o eixo x é o gasto). Faixas com menos de 5 candidatos ficam
 // só no contorno: a taxa delas não diz nada.
-import { useId, useState } from 'react'
+import { memo, useId, useState } from 'react'
 import type { Cadeira } from '../api'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { inteiro, pct, plural, reaisCurto } from '../lib/formato'
@@ -9,7 +9,7 @@ import { entrada, MINIMO, type EscalaGasto } from './geometria'
 
 const W = 760, H = 290, m = { e: 44, d: 10, c: 40, b: 46 }
 
-export function CurvaVitoria({ curva, escala, fator }: { curva: Cadeira['curva']; escala: EscalaGasto; fator: number }) {
+export const CurvaVitoria = memo(function CurvaVitoria({ curva, escala, fator }: { curva: Cadeira['curva']; escala: EscalaGasto; fator: number }) {
   const id = useId()
   const [foco, setFoco] = useState<number | null>(null)
   const n = curva.length
@@ -87,8 +87,8 @@ export function CurvaVitoria({ curva, escala, fator }: { curva: Cadeira['curva']
       <TabelaAlternavel
         titulo="Candidatos e eleitos por faixa de gasto"
         colunas={['Faixa de gasto', 'Candidatos', 'Eleitos', '% eleitos']}
-        linhas={curva.map((b) => [faixa(b), inteiro(b.candidatos), inteiro(b.eleitos), pct((100 * b.eleitos) / b.candidatos, 1)])}
+        linhas={() => curva.map((b) => [faixa(b), inteiro(b.candidatos), inteiro(b.eleitos), pct((100 * b.eleitos) / b.candidatos, 1)])}
       />
     </figure>
   )
-}
+})

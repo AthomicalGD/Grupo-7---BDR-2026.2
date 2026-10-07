@@ -1,6 +1,7 @@
 // Custo por voto de cada eleito: gasto da campanha ÷ votos nominais do 1º turno.
 // Os cinco mais caros e os cinco mais baratos, com foto; quem não declarou gasto fica fora do ranking.
 import { Link } from '@tanstack/react-router'
+import { memo } from 'react'
 import type { Assento } from '../api'
 import { Retrato } from '../componentes/Retrato'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
@@ -41,7 +42,7 @@ function Lista({ titulo, linhas, fator }: { titulo: string; linhas: Linha[]; fat
   )
 }
 
-export function CustoVoto({ cadeiras, fator }: { cadeiras: Assento[]; fator: number }) {
+export const CustoVoto = memo(function CustoVoto({ cadeiras, fator }: { cadeiras: Assento[]; fator: number }) {
   const linhas = cadeiras
     .filter((a) => a.votos > 0 && a.gasto > 0)
     .map((a) => ({ ...a, porVoto: (a.gasto * fator) / a.votos }))
@@ -71,8 +72,8 @@ export function CustoVoto({ cadeiras, fator }: { cadeiras: Assento[]; fator: num
       <TabelaAlternavel
         titulo="Custo por voto de cada eleito"
         colunas={['Eleito', 'Partido', 'Gasto', 'Votos', 'Por voto']}
-        linhas={linhas.map((l) => [nomeProprio(l.nome), l.partido ?? '-', reaisCurto(l.gasto * fator), inteiro(l.votos), reaisCurto(l.porVoto)])}
+        linhas={() => linhas.map((l) => [nomeProprio(l.nome), l.partido ?? '-', reaisCurto(l.gasto * fator), inteiro(l.votos), reaisCurto(l.porVoto)])}
       />
     </div>
   )
-}
+})

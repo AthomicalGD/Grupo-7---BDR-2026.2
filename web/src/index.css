@@ -149,6 +149,15 @@
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(var(--queda)); }
 }
+/* teclas da urna (SVG): afundam ao apertar, foco visível só no teclado */
+.tecla { cursor: pointer; outline: none; }
+.tecla-topo { transition: transform 70ms ease-out, filter 120ms ease-out; }
+.tecla:hover .tecla-topo { filter: brightness(1.06); }
+.tecla:active .tecla-topo,
+.tecla[data-apertada='true'] .tecla-topo { transform: translateY(2.4px); }
+.tecla-foco { opacity: 0; }
+.tecla:focus-visible .tecla-foco { opacity: 1; }
+
 /* P1: cada cadeira "senta" no plenário */
 @keyframes sentar {
   from { opacity: 0; transform: translateY(-0.6px) scale(0.3); }

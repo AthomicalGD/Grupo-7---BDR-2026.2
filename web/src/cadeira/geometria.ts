@@ -101,3 +101,22 @@ export const MINIMO = 5
 export function entrada(curva: Cadeira['curva']) {
   return curva.find((f) => f.candidatos >= MINIMO && f.eleitos / f.candidatos >= 0.5)
 }
+
+const medidas = new WeakMap<HTMLElement, { w: number; h: number }>()
+
+/** Mede o cartão uma vez por conteúdo; seguir o ponteiro não força layout a cada movimento. */
+export function medir(el: HTMLElement | null) {
+  if (el) medidas.set(el, { w: el.offsetWidth, h: el.offsetHeight })
+}
+
+/** Põe o cartão ao lado do ponteiro sem sair da tela. Move por transform (camada própria, sem
+ *  layout nem repintura do plenário embaixo) e direto no elemento: segue o mouse sem render. */
+export function posicionar(el: HTMLElement | null, x: number, y: number) {
+  if (!el) return
+  if (!medidas.has(el)) medir(el)
+  const { w, h } = medidas.get(el)!
+  let left = x + 16, top = y + 16
+  if (left + w > window.innerWidth - 8) left = x - w - 16
+  if (top + h > window.innerHeight - 8) top = y - h - 16
+  el.style.transform = `translate3d(${Math.max(8, left)}px, ${Math.max(8, top)}px, 0)`
+}

@@ -1,12 +1,13 @@
 // Preço por partido: gasto de todos os candidatos do partido ÷ cadeiras que ele conquistou.
 // A cor é a posição do partido na escala de viés da P7; quem gastou sem eleger fica numa lista à parte.
 import { motion, useReducedMotion } from 'motion/react'
+import { memo } from 'react'
 import type { Cadeira } from '../api'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { inteiro, plural, reaisCurto } from '../lib/formato'
 import { corVies, tintaSobre } from '../lib/vies'
 
-export function PrecoPartidos({ partidos, fator }: { partidos: Cadeira['partidos']; fator: number }) {
+export const PrecoPartidos = memo(function PrecoPartidos({ partidos, fator }: { partidos: Cadeira['partidos']; fator: number }) {
   const reduz = useReducedMotion()
   const com = partidos.filter((p) => p.cadeiras > 0).map((p) => ({ ...p, preco: (p.gasto * fator) / p.cadeiras })).sort((a, b) => b.preco - a.preco)
   const sem = partidos.filter((p) => p.cadeiras === 0 && p.gasto > 0).sort((a, b) => b.gasto - a.gasto)
@@ -58,8 +59,8 @@ export function PrecoPartidos({ partidos, fator }: { partidos: Cadeira['partidos
       <TabelaAlternavel
         titulo="Gasto, cadeiras e preço por cadeira de cada partido"
         colunas={['Partido', 'Candidatos', 'Cadeiras', 'Gasto total', 'Preço por cadeira']}
-        linhas={partidos.map((p) => [p.sigla, inteiro(p.candidatos), inteiro(p.cadeiras), reaisCurto(p.gasto * fator), p.cadeiras ? reaisCurto((p.gasto * fator) / p.cadeiras) : 'sem cadeira'])}
+        linhas={() => partidos.map((p) => [p.sigla, inteiro(p.candidatos), inteiro(p.cadeiras), reaisCurto(p.gasto * fator), p.cadeiras ? reaisCurto((p.gasto * fator) / p.cadeiras) : 'sem cadeira'])}
       />
     </div>
   )
-}
+})

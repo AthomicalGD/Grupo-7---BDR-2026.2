@@ -2,9 +2,12 @@
 
 Uso (da pasta do projeto): python -m api.test_api
 """
+import json
+from collections import defaultdict
+
 from fastapi.testclient import TestClient
 
-from api.app import app
+from api.app import IBGE, app
 
 cliente = TestClient(app)
 
@@ -87,6 +90,21 @@ def main() -> None:
     gasto = {c["ano"]: c["gasto"] for c in wd["candidaturas"]}
     assert gasto[2022] > 0 and gasto[1994] is None, gasto
     assert all(c["partido"] for c in wd["candidaturas"])   # partido também nas derrotas (migração 011)
+
+    # malha simplificada sem frestas: ponto de fronteira compartilhada fica nos dois vizinhos ou em nenhum
+    original = json.loads((IBGE / "malhas" / "municipios_22.geojson").read_text(encoding="utf-8"))
+    def pontos(fc):
+        donos = defaultdict(set)
+        for i, f in enumerate(fc["features"]):
+            g = f["geometry"]
+            for pol in g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]]:
+                for anel in pol:
+                    for x, y in anel:
+                        donos[(x, y)].add(i)
+        return donos
+    antes, depois = pontos(original), pontos(get("/api/geo/uf/PI"))
+    assert sum(map(len, depois.values())) < 0.8 * sum(map(len, antes.values()))
+    assert all(not depois.get(p) or depois[p] == d for p, d in antes.items() if len(d) > 1)
 
     geo = get("/api/geo/uf/PI")
     assert len(geo["features"]) == 224

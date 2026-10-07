@@ -2,13 +2,14 @@
 // As cadeiras se sentam da esquerda para a direita quando a seleção muda e deslizam para o novo
 // lugar quando a ordem muda (por gasto ou por partido). Teclado: setas percorrem, Enter abre.
 import { animate, useReducedMotion } from 'motion/react'
-import { memo, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { memo, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type RefObject } from 'react'
 import type { Assento } from '../api'
 import { Retrato } from '../componentes/Retrato'
 import { inteiro, nomeProprio, reaisCurto } from '../lib/formato'
-import { hemiciclo, ordenar, type EscalaGasto, type Ordem } from './geometria'
+import { hemiciclo, medir, ordenar, posicionar, type EscalaGasto, type Ordem } from './geometria'
 
 const W = 1000, H = 520, S = 468, CX = 500, CY = 500
+const MUITAS = 400 // acima disso (prefeitos de vários estados): posição por atributo, sem transição por cadeira
 
 interface Posto {
   a: Assento
@@ -28,15 +29,15 @@ function postos(cadeiras: Assento[], ordem: Ordem): Posto[] {
 }
 
 /** Uma cadeira vista de cima: assento na cor do gasto, encosto escuro. Pequena demais, vira um ponto. */
-const Cadeira = memo(function Cadeira({ p, cor, total }: { p: Posto; cor: string; total: number }) {
+const Cadeira = memo(function Cadeira({ p, cor, total, leve }: { p: Posto; cor: string; total: number; leve: boolean }) {
   const vazio = p.a.gasto <= 0
   // o atraso de "sentar" vale o lugar na montagem; reordenar não reinicia a animação
   const [atraso] = useState(() => `${Math.round((p.i / Math.max(1, total)) * 650)}ms`)
+  const lugar = leve
+    ? { transform: `translate(${p.x} ${p.y}) rotate(${p.giro}) scale(${p.d})` }
+    : { style: { transform: `translate(${p.x}px, ${p.y}px) rotate(${p.giro}deg) scale(${p.d})`, transition: 'transform 700ms cubic-bezier(0.16, 1, 0.3, 1)' } }
   return (
-    <g
-      data-i={p.i}
-      style={{ transform: `translate(${p.x}px, ${p.y}px) rotate(${p.giro}deg) scale(${p.d})`, transition: 'transform 700ms cubic-bezier(0.16, 1, 0.3, 1)' }}
-    >
+    <g data-i={p.i} {...lugar}>
       <g className="cadeira-senta" style={{ animationDelay: atraso }}>
         {p.d >= 11 ? (
           <>
@@ -49,11 +50,17 @@ const Cadeira = memo(function Cadeira({ p, cor, total }: { p: Posto; cor: string
             />
           </>
         ) : (
-          <circle r={0.48} fill={vazio ? 'var(--color-folha)' : cor} stroke="var(--color-tinta)" strokeOpacity={0.3} strokeWidth={0.6} vectorEffect="non-scaling-stroke" />
+          <circle r={0.48} fill={vazio ? 'var(--color-folha)' : cor} stroke="var(--color-tinta)" strokeOpacity={0.3} strokeWidth={0.07} />
         )}
       </g>
     </g>
   )
+})
+
+/** Todas as cadeiras; memorizado para que o ponteiro (que muda a cada cadeira) não as re-renderize. */
+const Bancada = memo(function Bancada({ lista, cores }: { lista: Posto[]; cores: Map<number, string> }) {
+  const leve = lista.length > MUITAS
+  return lista.map((p) => <Cadeira key={p.a.id} p={p} cor={cores.get(p.a.id)!} total={lista.length} leve={leve} />)
 })
 
 /** Rótulos dos partidos em volta do arco, só onde há espaço. */
@@ -98,23 +105,27 @@ function NumeroAnimado({ valor }: { valor: number | null }) {
   return <span ref={ref}>{reaisCurto(valor)}</span>
 }
 
-export function CartaoAssento({ a, fator, x, y, dica }: { a: Assento; fator: number; x: number; y: number; dica?: string }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [pos, setPos] = useState({ left: x, top: y })
+export function CartaoAssento({ a, fator, x, y, dica, alvo }: {
+  a: Assento
+  fator: number
+  x: number
+  y: number
+  dica?: string
+  /** quem segue o ponteiro move o cartão por este ref, sem render */
+  alvo?: RefObject<HTMLDivElement | null>
+}) {
+  const proprio = useRef<HTMLDivElement>(null)
+  const ref = alvo ?? proprio
   useLayoutEffect(() => {
-    if (!ref.current) return
-    const { width, height } = ref.current.getBoundingClientRect()
-    let left = x + 16, top = y + 16
-    if (left + width > window.innerWidth - 8) left = x - width - 16
-    if (top + height > window.innerHeight - 8) top = y - height - 16
-    setPos({ left: Math.max(8, left), top: Math.max(8, top) })
-  }, [x, y])
+    medir(ref.current)
+    posicionar(ref.current, x, y)
+  }, [ref, x, y, a])
   return (
     <div
       ref={ref}
       role="tooltip"
-      className="pointer-events-none fixed z-40 flex w-[290px] gap-3 rounded-xl border border-linha bg-folha/97 p-3 shadow-[var(--shadow-papel)]"
-      style={{ left: pos.left, top: pos.top }}
+      className="pointer-events-none fixed left-0 top-0 z-40 flex w-[290px] gap-3 rounded-xl border border-linha bg-folha p-3 shadow-[var(--shadow-papel)] will-change-transform"
+      style={{ transform: `translate3d(${x + 16}px, ${y + 16}px, 0)` }}
     >
       <Retrato foto={a.foto} nome={a.nome} tamanho={52} />
       <div className="min-w-0 text-[0.82rem]">
@@ -148,8 +159,9 @@ export function Plenario({ chave, cadeiras, escala, fator, ordem, custo, legenda
   const lista = useMemo(() => postos(cadeiras, ordem), [cadeiras, ordem])
   const cores = useMemo(() => new Map(cadeiras.map((a) => [a.id, escala.cor(a.gasto)])), [cadeiras, escala])
   const rotulos = useMemo(() => (ordem === 'partido' ? rotulosPartidos(lista) : []), [lista, ordem])
-  const [foco, setFoco] = useState<{ i: number; x: number; y: number; toque?: boolean } | null>(null)
+  const [foco, setFoco] = useState<{ i: number; x: number; y: number; toque?: boolean; teclado?: boolean } | null>(null)
   const svg = useRef<SVGSVGElement>(null)
+  const cartao = useRef<HTMLDivElement>(null)
   // no toque não há hover: o primeiro toque mostra a cadeira, o segundo abre a carreira
   const toque = useRef(false)
 
@@ -159,7 +171,7 @@ export function Plenario({ chave, cadeiras, escala, fator, ordem, custo, legenda
   }
   const ir = (i: number) => {
     const p = lista[Math.max(0, Math.min(lista.length - 1, i))]
-    if (p) setFoco({ i: p.i, ...naTela(p) })
+    if (p) setFoco({ i: p.i, ...naTela(p), teclado: true })
   }
   const teclado = (e: KeyboardEvent) => {
     if (!lista.length) return
@@ -189,7 +201,7 @@ export function Plenario({ chave, cadeiras, escala, fator, ordem, custo, legenda
         aria-describedby={`${id}-vivo`}
         onKeyDown={teclado}
         onBlur={() => setFoco(null)}
-        className="rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-acao"
+        className="relative rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-acao"
       >
         <svg
           ref={svg}
@@ -197,15 +209,18 @@ export function Plenario({ chave, cadeiras, escala, fator, ordem, custo, legenda
           className="block w-full cursor-pointer select-none overflow-visible"
           aria-hidden
           onPointerDown={(e) => (toque.current = e.pointerType !== 'mouse')}
-          onPointerOver={(e) => {
-            const i = sob(e.target)
-            if (i != null && e.pointerType === 'mouse') setFoco({ i: Number(i), x: e.clientX, y: e.clientY })
-          }}
           onPointerMove={(e) => {
-            if (foco && e.pointerType === 'mouse') setFoco({ ...foco, x: e.clientX, y: e.clientY })
+            if (e.pointerType !== 'mouse') return
+            const s = sob(e.target)
+            // o estado só muda ao entrar em outra cadeira; entre elas, o cartão só acompanha o ponteiro
+            if (s != null) {
+              const i = Number(s), x = e.clientX, y = e.clientY
+              setFoco((f) => (f && f.i === i && !f.toque && !f.teclado ? f : { i, x, y }))
+            }
+            posicionar(cartao.current, e.clientX, e.clientY)
           }}
-          onPointerOut={(e) => {
-            if (sob(e.relatedTarget ?? document.body) == null) setFoco(null)
+          onPointerLeave={(e) => {
+            if (e.pointerType === 'mouse') setFoco(null)
           }}
           onClick={(e) => {
             const i = sob(e.target)
@@ -215,13 +230,8 @@ export function Plenario({ chave, cadeiras, escala, fator, ordem, custo, legenda
           }}
         >
           <g key={chave}>
-            {lista.map((p) => (
-              <Cadeira key={p.a.id} p={p} cor={cores.get(p.a.id)!} total={lista.length} />
-            ))}
+            <Bancada lista={lista} cores={cores} />
           </g>
-          {atual && (
-            <circle cx={atual.x} cy={atual.y} r={Math.max(7, atual.d * 0.66)} fill="none" stroke="var(--color-tinta)" strokeWidth={2.5} pointerEvents="none" />
-          )}
           {rotulos.map((r) => (
             <text
               key={r.sigla + r.x}
@@ -235,6 +245,12 @@ export function Plenario({ chave, cadeiras, escala, fator, ordem, custo, legenda
             </text>
           ))}
         </svg>
+        {/* o destaque fica num SVG à parte: mexer nele não obriga a recalcular as centenas de cadeiras */}
+        {atual && (
+          <svg viewBox={`0 0 ${W} ${H}`} className="pointer-events-none absolute inset-x-0 top-0 block w-full overflow-visible" aria-hidden>
+            <circle cx={atual.x} cy={atual.y} r={Math.max(7, atual.d * 0.66)} fill="none" stroke="var(--color-tinta)" strokeWidth={2.5} />
+          </svg>
+        )}
       </div>
       {/* no miolo do hemiciclo; em telas estreitas o miolo é pequeno demais e o número desce para baixo dele */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center text-center @max-xl:static @max-xl:mt-4">
@@ -245,9 +261,11 @@ export function Plenario({ chave, cadeiras, escala, fator, ordem, custo, legenda
         <p className="mt-1.5 max-w-[30cqw] text-[clamp(0.72rem,1.6cqw,1rem)] font-semibold leading-snug text-tinta-2 @max-xl:max-w-none @max-xl:text-[0.9rem]">{legenda}</p>
       </div>
       <p id={`${id}-vivo`} className="sr-only" aria-live="polite">
-        {atual ? `${nomeProprio(atual.a.nome)}, ${atual.a.partido ?? ''}: gastou ${reaisCurto(atual.a.gasto * fator)}, ${inteiro(atual.a.votos)} votos.` : ''}
+        {atual && foco?.teclado ? `${nomeProprio(atual.a.nome)}, ${atual.a.partido ?? ''}: gastou ${reaisCurto(atual.a.gasto * fator)}, ${inteiro(atual.a.votos)} votos.` : ''}
       </p>
-      {atual && foco && <CartaoAssento a={atual.a} fator={fator} x={foco.x} y={foco.y} dica={foco.toque ? 'Toque de novo para abrir a carreira' : 'Clique para abrir a carreira'} />}
+      {atual && foco && (
+        <CartaoAssento a={atual.a} fator={fator} x={foco.x} y={foco.y} alvo={cartao} dica={foco.toque ? 'Toque de novo para abrir a carreira' : 'Clique para abrir a carreira'} />
+      )}
     </div>
   )
 }

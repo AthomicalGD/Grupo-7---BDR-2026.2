@@ -1,28 +1,38 @@
 // Formatação pt-BR e nomes do TSE.
 const MENOS = '−'
 
-export const inteiro = (n: number | null | undefined) => (n == null ? '-' : n.toLocaleString('pt-BR'))
+// toLocaleString cria um formatador a cada chamada; com milhares de valores (tabelas, plenário) pesa.
+const formatadores = new Map<string, Intl.NumberFormat>()
+function nf(casas: number, moeda = false) {
+  const chave = `${casas}${moeda}`
+  let f = formatadores.get(chave)
+  if (!f) {
+    f = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas, ...(moeda ? { style: 'currency', currency: 'BRL' } : {}) })
+    formatadores.set(chave, f)
+  }
+  return f
+}
 
-export const decimal = (n: number | null | undefined, casas = 1) =>
-  n == null ? '-' : n.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas })
+export const inteiro = (n: number | null | undefined) => (n == null ? '-' : nf(0).format(n))
+
+export const decimal = (n: number | null | undefined, casas = 1) => (n == null ? '-' : nf(casas).format(n))
 
 /** Viés com sinal tipográfico: "−41,9", "+12,0", "0,0". */
 export function vies(n: number | null | undefined): string {
   if (n == null) return '-'
-  const s = Math.abs(n).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+  const s = nf(1).format(Math.abs(n))
   return n < -0.05 ? MENOS + s : n > 0.05 ? '+' + s : s
 }
 
 export const pct = (n: number | null | undefined, casas = 1) => (n == null ? '-' : decimal(n, casas) + '%')
 
-export const reais = (n: number | null | undefined) =>
-  n == null ? '-' : n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
+export const reais = (n: number | null | undefined) => (n == null ? '-' : nf(0, true).format(n))
 
 /** Valor curto para leitura rápida: "R$ 5,6 mi", "R$ 33,8 mil", "R$ 940", "R$ 21,60". */
 export function reaisCurto(n: number | null | undefined): string {
   if (n == null) return '-'
   const a = Math.abs(n)
-  const f = (v: number, casas: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas })
+  const f = (v: number, casas: number) => nf(casas).format(v)
   if (a >= 1e9) return `R$ ${f(n / 1e9, 1)} bi`
   if (a >= 1e6) return `R$ ${f(n / 1e6, 1)} mi`
   if (a >= 1e4) return `R$ ${f(n / 1e3, 1)} mil`
@@ -45,7 +55,7 @@ export function nomeProprio(nome: string): string {
 export const cargo = (c: string) => c.charAt(0) + c.slice(1).toLowerCase()
 
 /** "1 eleição", "11 eleições". */
-export const plural = (n: number, um: string, varios: string) => `${n.toLocaleString('pt-BR')} ${n === 1 ? um : varios}`
+export const plural = (n: number, um: string, varios: string) => `${inteiro(n)} ${n === 1 ? um : varios}`
 
 /** "SENADOR" -> "senadores", "DEPUTADO FEDERAL" -> "deputados federais". */
 export const cargoPlural = (c: string) =>

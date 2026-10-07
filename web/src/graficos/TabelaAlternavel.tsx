@@ -2,7 +2,8 @@
 import { Table } from '@phosphor-icons/react'
 import { useId, useState } from 'react'
 
-export function TabelaAlternavel({ titulo, colunas, linhas }: { titulo: string; colunas: string[]; linhas: string[][] }) {
+/** `linhas` pode ser uma função: só é chamada quando a tabela abre (o plenário tem até 1.500 eleitos). */
+export function TabelaAlternavel({ titulo, colunas, linhas }: { titulo: string; colunas: string[]; linhas: string[][] | (() => string[][]) }) {
   const [aberta, setAberta] = useState(false)
   const id = useId()
   return (
@@ -29,7 +30,7 @@ export function TabelaAlternavel({ titulo, colunas, linhas }: { titulo: string; 
               </tr>
             </thead>
             <tbody>
-              {linhas.map((l, i) => (
+              {(typeof linhas === 'function' ? linhas() : linhas).map((l, i) => (
                 <tr key={i} className="border-t border-linha">
                   {l.map((c, j) => (j === 0 ? <th key={j} scope="row" className="py-1.5 pr-4 text-left font-semibold">{c}</th> : <td key={j} className="py-1.5 pr-4">{c}</td>))}
                 </tr>

@@ -639,10 +639,75 @@ def cadeira(ano: int, cargo: int, ufs: tuple[str, ...], municipio: int | None) -
 
 # ───────── Malhas (IBGE) ─────────
 
+TOLERANCIA_MALHA = 0.0006   # graus (~66 m)
+
+
+def _douglas_peucker(pts: list, tol: float) -> list:
+    """Douglas-Peucker iterativo; mantém as duas pontas."""
+    if len(pts) < 3:
+        return pts
+    manter = [False] * len(pts)
+    manter[0] = manter[-1] = True
+    pilha = [(0, len(pts) - 1)]
+    while pilha:
+        a, b = pilha.pop()
+        (x1, y1), (x2, y2) = pts[a], pts[b]
+        dx, dy = x2 - x1, y2 - y1
+        norma = math.hypot(dx, dy) or 1e-12
+        pior, ip = -1.0, -1
+        for i in range(a + 1, b):
+            d = abs(dy * (pts[i][0] - x1) - dx * (pts[i][1] - y1)) / norma
+            if d > pior:
+                pior, ip = d, i
+        if pior > tol:
+            manter[ip] = True
+            pilha += [(a, ip), (ip, b)]
+    return [p for p, m in zip(pts, manter) if m]
+
+
+def simplificar(features: list, tol: float) -> None:
+    """Simplifica os anéis sem abrir frestas entre vizinhos: cada anel é cortado nos pontos em que
+    muda o conjunto de feições que o compartilham (fronteira com A, com B, divisa do estado...), e
+    cada trecho é simplificado numa direção canônica. O mesmo trecho de fronteira sai idêntico nos
+    dois municípios que o dividem. Altera as coordenadas no lugar."""
+    donos: dict[tuple, set] = defaultdict(set)
+    aneis = []
+    for i, f in enumerate(features):
+        g = f["geometry"]
+        for poligono in g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]]:
+            for anel in poligono:
+                aneis.append(anel)
+                for x, y in anel:
+                    donos[(x, y)].add(i)
+    for anel in aneis:
+        aberto = anel[:-1]   # o anel GeoJSON repete o primeiro ponto no fim
+        n = len(aberto)
+        if n < 8:
+            continue
+        chave = [frozenset(donos[(x, y)]) for x, y in aberto]
+        cortes = [k for k in range(n) if chave[k] != chave[k - 1] or chave[k] != chave[(k + 1) % n]]
+        # começa num corte (ou, sem nenhum, no menor ponto): o vizinho começa no mesmo lugar
+        inicio = cortes[0] if cortes else min(range(n), key=lambda k: tuple(aberto[k]))
+        aberto = aberto[inicio:] + aberto[:inicio]
+        cortes = sorted((k - inicio) % n for k in cortes) or [0]
+        limites = [*cortes, n]
+        fechado = aberto + [aberto[0]]
+        novo = [fechado[0]]
+        for a, b in zip(limites, limites[1:]):
+            trecho = fechado[a:b + 1]
+            # direção canônica: o mesmo trecho, percorrido ao contrário pelo vizinho, dá o mesmo resultado
+            invertido = (tuple(trecho[0]), tuple(trecho[1])) > (tuple(trecho[-1]), tuple(trecho[-2]))
+            t = _douglas_peucker(trecho[::-1] if invertido else trecho, tol)
+            novo += (t[::-1] if invertido else t)[1:]
+        if len(novo) >= 4:
+            anel[:] = novo
+
+
 @lru_cache(maxsize=32)
 def malha(arquivo: str) -> tuple[bytes, bytes]:
     """GeoJSON com os anéis invertidos: o IBGE segue a RFC 7946 (exterior anti-horário) e o
     d3-geo exige o exterior no sentido horário. Das propriedades fica só codarea, como inteiro.
+    Municípios saem simplificados sem quebrar a topologia (simplificar).
     Guarda também a versão gzip: comprimir a cada pedido levaria segundos nas UFs grandes."""
     dados = json.loads((IBGE / "malhas" / arquivo).read_text(encoding="utf-8"))
     for f in dados["features"]:
@@ -651,6 +716,10 @@ def malha(arquivo: str) -> tuple[bytes, bytes]:
             for anel in poligono:
                 anel.reverse()
         f["properties"] = {"codarea": int(f["properties"]["codarea"])}
+    if arquivo.startswith("municipios_"):
+        # a malha máxima do IBGE tem pontos a cada dezenas de metros: pesada para desenhar e animar.
+        # ~66 m de tolerância: menos de 1 px no zoom de um município médio, ~3 px no menor da BA.
+        simplificar(dados["features"], TOLERANCIA_MALHA)
     bruto = json.dumps(dados, separators=(",", ":")).encode()
     return bruto, gzip.compress(bruto, 6)
 

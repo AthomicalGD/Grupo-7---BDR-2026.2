@@ -68,7 +68,7 @@ function BarraUtilitaria() {
 function Cabecalho() {
   const caminho = useRouterState({ select: (s) => s.location.pathname })
   return (
-    <header className="sticky top-0 z-30 bg-folha/95 backdrop-blur-[6px]">
+    <header className="sticky top-0 z-30 bg-folha">
       <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-3 px-4 sm:gap-6 md:h-[72px] md:px-[72px]">
         <Link to="/" className="shrink-0" aria-label="Voto Aberto, página inicial">
           <img src={letreiro} alt="Voto Aberto" className="hidden h-9 w-auto min-[420px]:block md:h-10" />
@@ -100,7 +100,7 @@ function Cabecalho() {
           </ul>
         </nav>
       </div>
-      <Fita />
+      <Fita viva />
     </header>
   )
 }

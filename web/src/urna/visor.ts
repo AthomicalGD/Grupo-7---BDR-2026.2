@@ -1,4 +1,4 @@
-// Tela da urna desenhada num canvas (textura no 3D, ou o próprio canvas no modo 2D).
+// Tela da urna desenhada num canvas, encaixado no lugar do visor do desenho da urna.
 // Segue a tela de votação do modelo UE2020: TFT larga e branca, texto preto em sans, foto do
 // candidato à direita e o rodapé "Aperte a tecla:" separado por uma linha.
 import type { PoliticoBusca } from '../api'

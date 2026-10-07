@@ -1,9 +1,9 @@
 // Relevo do voto: municípios extrudados, altura = eleitorado apto (raiz quadrada, para que a
 // capital não esconda o resto), cor = viés. Orbita com o mouse; clique abre o boletim.
 import { Bounds, Html, OrbitControls } from '@react-three/drei'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { geoConicEqualArea } from 'd3-geo'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import type { Ano, Malha, UFDetalhe } from '../api'
 import { inteiro, vies as fmtVies } from '../lib/formato'
@@ -69,14 +69,19 @@ function Coluna({ bloco, altura, cor, selecionado, aoPassar, aoClicar }: {
   const ref = useRef<THREE.Mesh>(null)
   const material = useRef<THREE.MeshStandardMaterial>(null)
   const alvo = useMemo(() => new THREE.Color(cor), [cor])
-  // cresce do chão e acompanha a troca de ano com amortecimento
-  useFrame((_, dt) => {
+  const invalidar = useThree((s) => s.invalidate)
+  useEffect(() => invalidar(), [altura, cor, selecionado, invalidar])
+  // cresce do chão e acompanha a troca de ano com amortecimento; o canvas só desenha sob demanda,
+  // então cada coluna pede o próximo quadro enquanto não chegou ao alvo
+  useFrame((estado, dt) => {
     const m = ref.current
     if (!m || !material.current) return
-    const k = 1 - Math.exp(-dt * 5.5)
+    const k = 1 - Math.exp(-Math.min(dt, 1 / 30) * 5.5)
     m.scale.z += (altura - m.scale.z) * k
     material.current.color.lerp(alvo, k)
-    material.current.emissiveIntensity += ((selecionado ? 0.35 : 0) - material.current.emissiveIntensity) * k
+    const brilho = selecionado ? 0.35 : 0
+    material.current.emissiveIntensity += (brilho - material.current.emissiveIntensity) * k
+    if (Math.abs(altura - m.scale.z) > 0.01 || Math.abs(brilho - material.current.emissiveIntensity) > 0.01) estado.invalidate()
   })
   return (
     <mesh
@@ -124,7 +129,7 @@ export default function Relevo3D({ malha, uf, ano, relativo, ibge, aoEscolher }:
 
   return (
     <div className="relative h-full w-full overflow-hidden rounded-[20px] bg-[radial-gradient(ellipse_at_50%_35%,#ffffff,#e6eaed_75%)]">
-      <Canvas shadows="percentage" dpr={[1, 2]} camera={{ position: [0, 78, 92], fov: 38, near: 1, far: 800 }} aria-label={`Relevo 3D dos municípios de ${uf.nome} em ${ano}`}>
+      <Canvas frameloop="demand" shadows="percentage" dpr={[1, 1.5]} camera={{ position: [0, 78, 92], fov: 38, near: 1, far: 800 }} aria-label={`Relevo 3D dos municípios de ${uf.nome} em ${ano}`}>
         <hemisphereLight args={['#ffffff', '#c9d0d8', 1.05]} />
         <directionalLight position={[60, 120, 40]} intensity={1.6} castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-70} shadow-camera-right={70} shadow-camera-top={70} shadow-camera-bottom={-70} />
         <Bounds fit clip observe margin={1.08}>
@@ -160,7 +165,7 @@ export default function Relevo3D({ malha, uf, ano, relativo, ibge, aoEscolher }:
           <planeGeometry args={[LADO * 1.6, LADO * 1.6]} />
           <shadowMaterial opacity={0.12} />
         </mesh>
-        <OrbitControls makeDefault enablePan={false} minDistance={50} maxDistance={220} minPolarAngle={0.25} maxPolarAngle={1.25} autoRotate={sobre == null} autoRotateSpeed={0.35} />
+        <OrbitControls makeDefault enablePan={false} minDistance={50} maxDistance={220} minPolarAngle={0.25} maxPolarAngle={1.25} />
       </Canvas>
       <p className="pointer-events-none absolute bottom-3 left-4 rounded-full bg-folha/85 px-3 py-1 text-[0.75rem] font-semibold text-tinta-2">
         Altura: eleitores aptos em {ano} · arraste para girar

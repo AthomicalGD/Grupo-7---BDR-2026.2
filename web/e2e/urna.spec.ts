@@ -26,7 +26,7 @@ test('BRANCO sorteia um político e CORRIGE apaga', async ({ page }) => {
   await page.getByRole('button', { name: /BRANCO sorteia/ }).click()
   await expect(nome).not.toHaveValue('')
   await expect(page.getByRole('option').first()).toBeVisible({ timeout: 20_000 })
-  await page.getByRole('button', { name: 'CORRIGE' }).click()
+  await page.getByRole('button', { name: 'CORRIGE' }).first().click()
   await expect(nome).toHaveValue('')
 })
 

@@ -1,25 +1,13 @@
 import { Shuffle, SpeakerHigh, SpeakerSlash } from '@phosphor-icons/react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { lazy, Suspense, useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { consultas, politicoAleatorio, type PoliticoBusca } from '../api'
-import { Ciranda } from '../componentes/Ciranda'
 import { Retrato } from '../componentes/Retrato'
 import { nomeProprio, plural } from '../lib/formato'
 import { alternarSom, somLigado, tocarConfirma, tocarCorrige, tocarTecla } from './som'
-import type { IdTecla } from './Urna3D'
+import { Urna, type IdTecla } from './Urna'
 import { desenharVisor, VISOR } from './visor'
-
-const Urna3D = lazy(() => import('./Urna3D'))
-
-function temWebGL() {
-  try {
-    const c = document.createElement('canvas')
-    return !!(c.getContext('webgl2') || c.getContext('webgl'))
-  } catch {
-    return false
-  }
-}
 
 function useAtrasado<T>(valor: T, ms = 220) {
   const [v, setV] = useState(valor)
@@ -28,38 +16,6 @@ function useAtrasado<T>(valor: T, ms = 220) {
     return () => clearTimeout(id)
   }, [valor, ms])
   return v
-}
-
-/** Urna em 2D (sem WebGL ou com movimento reduzido), no mesmo desenho do UE2020: tela larga em
- *  moldura preta no topo, teclado numérico grafite e a coluna BRANCO / CORRIGE / CONFIRMA. */
-function Urna2D({ canvas, versao, aoApertar }: { canvas: HTMLCanvasElement; versao: number; aoApertar: (id: IdTecla) => void }) {
-  const ref = useRef<HTMLCanvasElement>(null)
-  useEffect(() => {
-    ref.current?.getContext('2d')?.drawImage(canvas, 0, 0)
-  }, [canvas, versao])
-  const tecla = 'grid h-9 place-items-center rounded-[5px] font-bold transition-transform active:translate-y-[1px]'
-  const digito = `${tecla} bg-[#2a2d31] text-[0.95rem] text-white`
-  return (
-    <div className="grid h-full place-items-center">
-      <div className="w-full max-w-[620px] rounded-[18px] bg-[#e3e6e8] p-[3%] pt-0 shadow-[var(--shadow-papel)]">
-        <div className="mx-[3%] bg-[#111315] p-[2.2%]">
-          <canvas ref={ref} width={VISOR.largura} height={VISOR.altura} className="block w-full" aria-hidden />
-        </div>
-        <div className="mt-[4%] grid grid-cols-[1fr_auto] items-start gap-4 px-[3%]">
-          <div className="pt-1 text-[0.75rem] font-semibold leading-tight text-[#8a929a]">Voto Aberto<br />VA2026</div>
-          <div className="grid grid-cols-[repeat(3,52px)_80px] gap-1.5">
-            {(['1', '2', '3', '4', '5', '6', '7', '8', '9'] as IdTecla[]).map((d, i) => (
-              <button key={d} type="button" className={digito} style={{ gridRow: Math.floor(i / 3) + 1, gridColumn: (i % 3) + 1 }} onClick={() => aoApertar(d)} aria-label={`Tecla ${d}`}>{d}</button>
-            ))}
-            <button type="button" className={digito} style={{ gridRow: 4, gridColumn: 2 }} onClick={() => aoApertar('0')} aria-label="Tecla 0">0</button>
-            <button type="button" className={`${tecla} bg-[#f2f3f1] text-[0.7rem] text-[#141414] ring-1 ring-[#cfd4d8]`} style={{ gridRow: 1, gridColumn: 4 }} onClick={() => aoApertar('branco')}>BRANCO</button>
-            <button type="button" className={`${tecla} bg-[#ee7a21] text-[0.7rem] text-[#141414]`} style={{ gridRow: 2, gridColumn: 4 }} onClick={() => aoApertar('corrige')}>CORRIGE</button>
-            <button type="button" className={`${tecla} h-[3.4rem] bg-[#2fb46c] text-[0.7rem] text-[#141414]`} style={{ gridRow: '3 / span 2', gridColumn: 4 }} onClick={() => aoApertar('confirma')}>CONFIRMA</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
 }
 
 export function UrnaPagina() {
@@ -75,7 +31,6 @@ export function UrnaPagina() {
   const [versao, setVersao] = useState(0)
   const [foto, setFoto] = useState<HTMLImageElement | null>(null)
   const canvas = useMemo(() => Object.assign(document.createElement('canvas'), { width: VISOR.largura, height: VISOR.altura }), [])
-  const usa3D = useMemo(() => temWebGL() && !window.matchMedia('(prefers-reduced-motion: reduce)').matches, [])
 
   const q = useAtrasado(texto.trim())
   const busca = useQuery({ ...consultas.buscaPoliticos(q), placeholderData: (anterior) => anterior })
@@ -143,6 +98,8 @@ export function UrnaPagina() {
     [confirmar, fim, resultados.length],
   )
 
+  const aoApertar = useCallback((t: IdTecla) => void apertar(t), [apertar])
+
   const teclado = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault()
@@ -161,15 +118,8 @@ export function UrnaPagina() {
 
   return (
     <div className="mx-auto grid max-w-[1440px] gap-10 px-4 pt-8 md:px-[72px] lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-start lg:gap-14">
-      <div className="relative h-[46dvh] min-h-[320px] lg:sticky lg:top-[100px] lg:h-[calc(100dvh-164px)] lg:max-h-[720px]">
-        {usa3D ? (
-          <Suspense fallback={<div className="grid h-full place-items-center"><Ciranda rotulo="Ligando a urna..." /></div>}>
-            <Urna3D canvas={canvas} versao={versao} pulsos={pulsos} aoApertar={(t) => void apertar(t)} />
-          </Suspense>
-        ) : (
-          <Urna2D canvas={canvas} versao={versao} aoApertar={(t) => void apertar(t)} />
-        )}
-        {usa3D && <p className="pointer-events-none absolute inset-x-0 bottom-0 text-center text-[0.8rem] text-tinta-3">Incline com o mouse · as teclas respondem ao toque, ao clique e ao teclado</p>}
+      <div className="lg:sticky lg:top-[112px]">
+        <Urna canvas={canvas} versao={versao} pulsos={pulsos} aoApertar={aoApertar} />
       </div>
 
       <div className="space-y-6 pb-10">

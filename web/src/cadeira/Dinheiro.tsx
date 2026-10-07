@@ -1,6 +1,7 @@
 // Para onde vai e de onde vem o dinheiro da disputa.
 // Para onde: um recibo de prestação de contas, item a item, impresso como o boletim do município.
 // De onde: uma barra só, dividida pelas fontes declaradas; o dinheiro público vem primeiro.
+import { memo } from 'react'
 import type { Cadeira } from '../api'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { pct, plural, reaisCurto } from '../lib/formato'
@@ -42,7 +43,7 @@ interface Props {
   titulo: string // "Deputado federal · 2022 · 6 estados"
 }
 
-export function Recibo({ dados, fator, titulo }: Props) {
+export const Recibo = memo(function Recibo({ dados, fator, titulo }: Props) {
   const total = dados.despesas.reduce((s, d) => s + d.valor, 0)
   const { cadeiras } = dados.resumo
   return (
@@ -75,13 +76,13 @@ export function Recibo({ dados, fator, titulo }: Props) {
       <TabelaAlternavel
         titulo="Despesa por tipo"
         colunas={['Tipo de despesa', 'Valor', '% do total']}
-        linhas={dados.despesas.map((d) => [d.categoria, reaisCurto(d.valor * fator), pct((100 * d.valor) / total, 1)])}
+        linhas={() => dados.despesas.map((d) => [d.categoria, reaisCurto(d.valor * fator), pct((100 * d.valor) / total, 1)])}
       />
     </figure>
   )
-}
+})
 
-export function Fontes({ dados, fator }: { dados: Cadeira; fator: number }) {
+export const Fontes = memo(function Fontes({ dados, fator }: { dados: Cadeira; fator: number }) {
   const r = dados.receitas
   const total = FONTES.reduce((s, f) => s + r[f.chave], 0)
   if (!total) return <p className="text-tinta-2">Nenhuma receita declarada nesta disputa.</p>
@@ -109,4 +110,4 @@ export function Fontes({ dados, fator }: { dados: Cadeira; fator: number }) {
       </dl>
     </figure>
   )
-}
+})
