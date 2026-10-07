@@ -99,13 +99,35 @@ function Carimbo({ resultado }: { resultado: string }) {
   )
 }
 
+// O giro: o santinho sobe enquanto vira, passa um pouco do ponto e assenta como papel. Só `transform`
+// e `opacity`, pela Web Animations API (não roda ao montar e não pesa parado).
+const GIRO: KeyframeAnimationOptions = { duration: 780, easing: 'cubic-bezier(0.45, 0.05, 0.25, 1)' }
+
+function quadrosDoGiro(paraOVerso: boolean): Keyframe[] {
+  const [a, b, c, d] = paraOVerso ? [0, 80, 192, 180] : [180, 100, -12, 0]
+  return [
+    { transform: `translateY(0) rotateY(${a}deg) scale(1)` },
+    { transform: `translateY(-18px) rotateY(${b}deg) scale(1.07)`, offset: 0.42 },
+    { transform: `translateY(-3px) rotateY(${c}deg) scale(1.01)`, offset: 0.78 },
+    { transform: `translateY(0) rotateY(${d}deg) scale(1)` },
+  ]
+}
+
 export function Santinho({ c, nome, inclinacao }: { c: Candidatura; nome: string; inclinacao: number }) {
   const [virado, setVirado] = useState(false)
   const frente = useRef<HTMLButtonElement>(null)
   const verso = useRef<HTMLButtonElement>(null)
-  // a face que tinha o foco fica inerte: o foco passa para o botão da outra
+  const folha = useRef<HTMLDivElement>(null)
+  const sombra = useRef<HTMLDivElement>(null)
   const virar = (v: boolean) => {
     flushSync(() => setVirado(v))
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      folha.current?.animate(quadrosDoGiro(v), GIRO)
+      // a sombra no chão cresce enquanto ele sobe; o brilho do papel cruza a face que chega
+      sombra.current?.animate([{ opacity: 0, transform: 'scaleX(0.8)' }, { opacity: 0.55, transform: 'scaleX(1.12)', offset: 0.42 }, { opacity: 0, transform: 'scaleX(0.8)' }], GIRO)
+      folha.current?.querySelectorAll('.santinho-brilho')[v ? 1 : 0]?.animate([{ transform: 'translateX(-110%)' }, { transform: 'translateX(110%)' }], { duration: 640, delay: 340, easing: 'ease-out' })
+    }
+    // a face que tinha o foco fica inerte: o foco passa para o botão da outra
     const alvo = v ? verso : frente
     alvo.current?.focus({ preventScroll: true })
   }
@@ -117,11 +139,12 @@ export function Santinho({ c, nome, inclinacao }: { c: Candidatura; nome: string
 
   return (
     <article
-      className="santinho relative h-[404px] w-[236px] shrink-0 snap-start [perspective:1100px]"
+      className="santinho relative h-[404px] w-[236px] shrink-0 snap-start [perspective:900px]"
       style={{ rotate: `${inclinacao}deg` }}
       aria-label={resumo}
     >
-      <div className="santinho-folha relative h-full w-full transition-transform duration-500 [transform-style:preserve-3d]" style={{ transform: virado ? 'rotateY(180deg)' : undefined }}>
+      <div ref={sombra} className="pointer-events-none absolute inset-x-5 -bottom-4 h-6 rounded-[50%] bg-tinta/40 opacity-0 blur-md" aria-hidden />
+      <div ref={folha} className="santinho-folha relative h-full w-full transition-[translate] duration-300 [transform-style:preserve-3d]" style={{ transform: virado ? 'rotateY(180deg)' : undefined }}>
         {/* FRENTE: o impresso */}
         <div
           className="absolute inset-0 flex flex-col overflow-hidden rounded-[10px] shadow-[var(--shadow-cartao)] [backface-visibility:hidden]"
@@ -168,6 +191,7 @@ export function Santinho({ c, nome, inclinacao }: { c: Candidatura; nome: string
             </div>
             <p className="mt-2 text-[0.56rem] leading-none opacity-75">Dados do TSE · não é material de campanha</p>
           </div>
+          <div className="santinho-brilho" aria-hidden />
           <button
             type="button"
             ref={frente}
@@ -231,6 +255,7 @@ export function Santinho({ c, nome, inclinacao }: { c: Candidatura; nome: string
               </div>
             </div>
           </div>
+          <div className="santinho-brilho santinho-brilho-verso" aria-hidden />
         </div>
       </div>
     </article>
