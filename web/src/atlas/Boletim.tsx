@@ -1,6 +1,6 @@
 // Boletim do Município: sai da fenda como o papel térmico do boletim de urna.
 // Responde a P7 (viés no tempo e espectro) e traz a P3 (indicadores) e os prefeitos (ponte para a P10).
-import { X } from '@phosphor-icons/react'
+import { ArrowRight, X } from '@phosphor-icons/react'
 import { Link } from '@tanstack/react-router'
 import { useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import { encode } from 'uqr'
@@ -8,7 +8,7 @@ import type { Ano, Municipio } from '../api'
 import { Retrato } from '../componentes/Retrato'
 import { Espectro } from '../graficos/Espectro'
 import { ViesTempo } from '../graficos/ViesTempo'
-import { decimal, nomeProprio, pct, reais } from '../lib/formato'
+import { decimal, nomeProprio, pct, plural, reais, reaisCurto } from '../lib/formato'
 import { Trilha } from './Trilha'
 
 function QR({ texto }: { texto: string }) {
@@ -120,8 +120,54 @@ export function Boletim({ m, ano, aoFechar }: { m: Municipio; ano: Ano; aoFechar
                 </ol>
               </Linha>
 
+              {m.cadeiras.length > 0 && (
+                <>
+                  <Picote />
+                  <Linha i={4}>
+                    <h3 className="t-h3">Quanto custou cada cadeira</h3>
+                    <p className="mb-4 text-[0.85rem] text-tinta-3">Gasto de todos os candidatos dividido pelas vagas, em reais de 2024</p>
+                    <table className="w-full text-[0.88rem] tabular">
+                      <caption className="sr-only">Custo da cadeira de prefeito e de vereador em {m.nome}</caption>
+                      <thead>
+                        <tr className="text-left text-[0.78rem] text-tinta-3">
+                          <th scope="col" className="pb-2 font-semibold">Cargo</th>
+                          {[2020, 2024].map((a) => <th key={a} scope="col" className="pb-2 text-right font-semibold">{a}</th>)}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[11, 13].map((cod) => {
+                          const linhas = m.cadeiras.filter((c) => c.cod_cargo === cod)
+                          if (!linhas.length) return null
+                          return (
+                            <tr key={cod} className="border-t border-linha">
+                              <th scope="row" className="py-2.5 text-left font-semibold">{linhas[0].cargo}</th>
+                              {[2020, 2024].map((a) => {
+                                const c = linhas.find((l) => l.ano === a)
+                                return (
+                                  <td key={a} className="py-2.5 text-right">
+                                    <span className="block font-bold">{c?.custo_cadeira != null ? reaisCurto(c.custo_cadeira * c.fator_ipca) : '-'}</span>
+                                    {c && <span className="block text-[0.74rem] text-tinta-3">{plural(c.candidatos, 'candidato', 'candidatos')}, {plural(c.cadeiras, 'vaga', 'vagas')}</span>}
+                                  </td>
+                                )
+                              })}
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                    <Link
+                      to="/cadeira"
+                      search={{ cargo: 13, ano: 2024, uf: m.uf, municipio: m.ibge }}
+                      className="mt-3 inline-flex items-center gap-1.5 text-[0.85rem] font-semibold text-acao hover:underline"
+                    >
+                      Ver a câmara no plenário <ArrowRight size={14} weight="bold" aria-hidden />
+                    </Link>
+                  </Linha>
+                </>
+              )}
+
               <Picote />
-              <Linha i={4}>
+              <Linha i={5}>
                 <h3 className="t-h3 mb-4">Indicadores do município</h3>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-6">
                   <Indicador valor={reais(ind.pib_per_capita?.valor)} rotulo="PIB per capita" fonte={`${ind.pib_per_capita?.ano ?? '-'} · IBGE`} />
@@ -134,7 +180,7 @@ export function Boletim({ m, ano, aoFechar }: { m: Municipio; ano: Ano; aoFechar
           )}
 
           <Picote />
-          <Linha i={5} className="flex items-center gap-5">
+          <Linha i={6} className="flex items-center gap-5">
             <QR texto={url} />
             <div className="space-y-1">
               <p className="font-semibold">Aponte a câmera para abrir este boletim</p>

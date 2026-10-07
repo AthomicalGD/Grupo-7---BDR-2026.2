@@ -1,0 +1,271 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-07T12:00:00-03:00",
+  "title": "Design System: Voto Aberto",
+  "extensions": {
+    "colorMeta": {
+      "papel": {
+        "role": "neutral",
+        "displayName": "Papel Frio",
+        "canonical": "#f2f4f5",
+        "tonalRamp": [
+          "#1d2125",
+          "#353b40",
+          "#4f565c",
+          "#6b7379",
+          "#899197",
+          "#a8afb4",
+          "#c8cdd1",
+          "#e8ebed"
+        ]
+      },
+      "tinta": {
+        "role": "neutral",
+        "displayName": "Tinta Ardósia",
+        "canonical": "#18202b",
+        "tonalRamp": [
+          "#0e131a",
+          "#18202b",
+          "#2b3442",
+          "#3f4959",
+          "#566072",
+          "#727c8d",
+          "#9aa2b0",
+          "#c7ccd4"
+        ]
+      },
+      "acao": {
+        "role": "primary",
+        "displayName": "Azul Ação",
+        "canonical": "#1f5f86",
+        "tonalRamp": [
+          "#0b2638",
+          "#123a54",
+          "#1a4f70",
+          "#1f5f86",
+          "#3d7ea5",
+          "#6a9ec0",
+          "#9dc0d8",
+          "#d3e3ee"
+        ]
+      },
+      "marcador": {
+        "role": "primary",
+        "displayName": "Amarelo Marcador",
+        "canonical": "#f7c21a"
+      },
+      "vies-esquerda": {
+        "role": "data",
+        "displayName": "Laranja Esquerda (−60)",
+        "canonical": "oklch(0.50 0.15 46)",
+        "tonalRamp": [
+          "#a43f00",
+          "#c25e27",
+          "#dc8256",
+          "#edad90",
+          "#e8eaec"
+        ]
+      },
+      "vies-direita": {
+        "role": "data",
+        "displayName": "Azul Direita (+60)",
+        "canonical": "oklch(0.45 0.11 254)",
+        "tonalRamp": [
+          "#e8eaec",
+          "#9ebce1",
+          "#6c97cc",
+          "#4475b0",
+          "#235690"
+        ]
+      },
+      "confirma": {
+        "role": "object",
+        "displayName": "Verde CONFIRMA",
+        "canonical": "#3f7f2a"
+      },
+      "corrige": {
+        "role": "object",
+        "displayName": "Laranja CORRIGE",
+        "canonical": "#e5732a"
+      },
+      "gasto-inicio": {
+        "role": "data",
+        "displayName": "Gasto: início da rampa (YlGn 16%)",
+        "canonical": "#edf8b4"
+      },
+      "gasto-fim": {
+        "role": "data",
+        "displayName": "Gasto: fim da rampa (YlGn)",
+        "canonical": "#004529"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display (Archivo 112)",
+        "purpose": "A tese de cada tela."
+      },
+      "headline": {
+        "displayName": "Headline (Archivo 106)",
+        "purpose": "Nome do estado, município ou político."
+      },
+      "numero": {
+        "displayName": "Número (Archivo 74)",
+        "purpose": "Viés e votos em destaque."
+      },
+      "mono": {
+        "displayName": "Red Hat Mono",
+        "purpose": "Papel térmico do boletim e visor da urna."
+      }
+    },
+    "shadows": [
+      {
+        "name": "cartao",
+        "value": "0 1px 2px rgb(42 53 80 / .06), 0 6px 18px -8px rgb(42 53 80 / .18)",
+        "purpose": "Cédula, santinho, controles do mapa."
+      },
+      {
+        "name": "papel",
+        "value": "0 1px 0 rgb(42 53 80 / .04), 0 12px 32px -12px rgb(42 53 80 / .22)",
+        "purpose": "Tooltips e listas de busca."
+      },
+      {
+        "name": "boletim",
+        "value": "drop-shadow(0 14px 22px rgb(42 53 80 / .16))",
+        "purpose": "Papel térmico com borda serrilhada."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-saida",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Entradas, painéis, tooltips."
+      },
+      {
+        "name": "camera",
+        "value": "d3-zoom + interpolateZoom, 950-1150ms, ease cúbico",
+        "purpose": "Brasil → estado → município."
+      },
+      {
+        "name": "onda-municipios",
+        "value": "fade 520ms, atraso proporcional à distância do clique (até 520ms)",
+        "purpose": "Municípios surgindo a partir do gesto."
+      },
+      {
+        "name": "impressao",
+        "value": "clip-path 760ms + linhas em cascata de 90ms",
+        "purpose": "Boletim saindo da fenda."
+      },
+      {
+        "name": "fill",
+        "value": "transition fill 600ms",
+        "purpose": "Troca de ano no mapa."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "simbolo-so",
+        "value": "420px"
+      },
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "max",
+        "value": "1440px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botão primário",
+      "kind": "button",
+      "refersTo": "botao-primario",
+      "description": "Ação principal de uma área (Linha do tempo).",
+      "html": "<button class=\"ds-btn\">Linha do tempo</button>",
+      "css": ".ds-btn{background:var(--color-tinta,#18202b);color:#fff;border:0;border-radius:9999px;height:40px;padding:0 16px;font:600 .85rem 'Archivo Variable',Archivo,sans-serif;transition:transform .18s cubic-bezier(.16,1,.3,1),background .18s}.ds-btn:hover{background:#2a3442}.ds-btn:active{transform:scale(.97)}.ds-btn:focus-visible{outline:3px solid #1f5f86;outline-offset:2px}"
+    },
+    {
+      "name": "Tecla CONFIRMA",
+      "kind": "button",
+      "refersTo": "tecla-confirma",
+      "description": "Tecla verde da urna: abre a carreira escolhida.",
+      "html": "<button class=\"ds-confirma\">CONFIRMA</button>",
+      "css": ".ds-confirma{background:#3f7f2a;color:#fff;border:0;border-radius:9999px;height:44px;padding:0 24px;font:800 1rem 'Archivo Variable',Archivo,sans-serif;letter-spacing:.04em;box-shadow:0 3px 0 #2a5a1c;transition:transform .12s}.ds-confirma:active{transform:translateY(2px);box-shadow:none}.ds-confirma:focus-visible{outline:3px solid #1f5f86;outline-offset:2px}"
+    },
+    {
+      "name": "Campo de busca",
+      "kind": "input",
+      "refersTo": "campo-busca",
+      "description": "Busca de município ou político, sem acento.",
+      "html": "<label class=\"ds-busca\"><span>⌕</span><input placeholder=\"Digite um município\"></label>",
+      "css": ".ds-busca{display:flex;align-items:center;gap:12px;height:52px;padding:0 20px;border:1.5px solid #aeb6bf;border-radius:9999px;background:#fcfdfd;color:#4b5566}.ds-busca:focus-within{border-color:#18202b}.ds-busca input{border:0;outline:0;background:transparent;font:400 1rem 'Archivo Variable',Archivo,sans-serif;color:#18202b;flex:1}"
+    },
+    {
+      "name": "Cartão de estado",
+      "kind": "card",
+      "refersTo": "cartao-estado",
+      "description": "Silhueta do estado, nome, sigla e viés do ano.",
+      "html": "<button class=\"ds-uf\"><span class=\"ds-sil\"></span><span class=\"ds-nome\">Piauí<small>PI</small></span><b>−41,9</b></button>",
+      "css": ".ds-uf{display:flex;align-items:center;gap:14px;width:260px;padding:12px 14px;border:1px solid #d9dee2;border-radius:16px;background:#fcfdfd;text-align:left;transition:border-color .2s,box-shadow .2s}.ds-uf:hover{border-color:#18202b;box-shadow:0 1px 2px rgb(42 53 80/.06),0 6px 18px -8px rgb(42 53 80/.18)}.ds-sil{width:40px;height:40px;border-radius:6px;background:#c25e27}.ds-nome{flex:1;font:600 1rem 'Archivo Variable',Archivo,sans-serif;color:#18202b}.ds-nome small{display:block;font:500 .75rem 'Red Hat Mono',monospace;color:#5f6878}.ds-uf b{font:820 1.45rem 'Archivo Variable',Archivo,sans-serif;font-stretch:74%}"
+    },
+    {
+      "name": "Santinho",
+      "kind": "custom",
+      "refersTo": "santinho",
+      "description": "Cartão de uma eleição da carreira com carimbo do resultado.",
+      "html": "<article class=\"ds-santinho\"><div class=\"ds-fitas\"></div><p class=\"ds-ano\">2022</p><p class=\"ds-cargo\">SENADOR</p><span class=\"ds-carimbo\">Eleito</span></article>",
+      "css": ".ds-santinho{width:236px;border-radius:16px;background:#fcfdfd;overflow:hidden;box-shadow:0 1px 2px rgb(42 53 80/.06),0 6px 18px -8px rgb(42 53 80/.18);padding-bottom:16px}.ds-fitas{height:10px;background:linear-gradient(90deg,#5e881b 0 14.3%,#a2bd31 0 28.6%,#5d6b94 0 42.9%,#468baf 0 57.1%,#76acd0 0 71.4%,#f19929 0 85.7%,#fbc700 0)}.ds-ano{margin:16px 16px 0;font:900 2.35rem 'Archivo Variable',Archivo,sans-serif;font-stretch:80%;line-height:.9}.ds-cargo{margin:6px 16px;font:700 .74rem 'Archivo Variable',Archivo,sans-serif;letter-spacing:.08em}.ds-carimbo{display:inline-block;margin:8px 16px 0;padding:2px 8px;border:2px solid #3f7f2a;border-radius:5px;color:#3f7f2a;font:900 .7rem 'Archivo Variable',Archivo,sans-serif;text-transform:uppercase;letter-spacing:.08em;transform:rotate(-6deg)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "A urna aberta",
+    "overview": "O sistema é feito dos objetos da eleição brasileira operando sobre dado real: cédula, mapa, urna eletrônica, boletim de urna e santinhos. Superfície clara e fria de serviço público, tinta ardósia, uma família tipográfica em três larguras e sete fitas onduladas como assinatura; a cor forte fica para o dado e para os objetos reconhecíveis.",
+    "keyCharacteristics": [
+      "Mapa como tese da primeira tela, painel que muda com a rota",
+      "Escala do viés laranja ↔ cinza ↔ azul, simétrica em 0; ausência sempre hachurada",
+      "Objetos da eleição com função: cédula, urna 3D, boletim, santinho",
+      "Archivo variável em três larguras; mono só no papel térmico e no visor",
+      "Movimento único e motivado"
+    ],
+    "rules": [
+      {
+        "name": "A Regra do Dado Colorido",
+        "body": "Cor saturada mostra viés, resultado ou tecla; o resto é papel, tinta e linha.",
+        "section": "colors"
+      },
+      {
+        "name": "A Regra da Ausência Visível",
+        "body": "Sem dados é hachura com rótulo; partido sem viés é 'não informado'.",
+        "section": "colors"
+      },
+      {
+        "name": "A Regra de Uma Família",
+        "body": "Hierarquia por largura e peso do Archivo.",
+        "section": "typography"
+      },
+      {
+        "name": "A Regra do Papel",
+        "body": "Só o que é papel no mundo real ganha sombra de objeto.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do pintar viés só com corVies() (OKLCH, simétrico em 0)",
+      "Do mostrar ausência explicitamente",
+      "Do dar a cada gráfico tooltip, foco de teclado e tabela equivalente",
+      "Do respeitar prefers-reduced-motion"
+    ],
+    "donts": [
+      "Don't usar nome, brasão ou marca de órgão oficial",
+      "Don't pôr texto nas cores das fitas ou da escala",
+      "Don't inventar cor de partido",
+      "Don't usar travessão em texto visível",
+      "Don't mostrar CPF, título eleitoral ou data completa de nascimento"
+    ]
+  }
+}

@@ -58,6 +58,8 @@ def main() -> None:
     assert reeleito == {2006, 2018}, reeleito
     assert not [k for k in chaves(wd) if "cpf" in k or "titulo" in k]
     assert "id" in get("/api/politicos/aleatorio")
+    # P10a: senador no PI, como em respostas/10a_taxa_reeleicao.txt (4 tentaram, 1 reeleito)
+    assert wd["contexto_reeleicao"] == {"cargo": "SENADOR", "uf": "PI", "tentaram": 4, "reeleitos": 1, "taxa": 25.0}
 
     # fotos (python -m crawler --fotos --ufs PI BR): antes de 2004 o TSE não publica
     fotos = {c["ano"]: c["foto"] for c in wd["candidaturas"]}
@@ -69,6 +71,22 @@ def main() -> None:
     assert img.status_code == 200 and img.headers["content-type"].startswith("image/") and len(img.content) > 1000
     assert get("/api/politicos?q=wellington barroso")[0]["foto"]
     assert cliente.get("/api/fotos/2022/PI/1").status_code == 404
+
+    # P1: deputado federal no PI em 2022, como em respostas/01_custo_cadeira.txt (R$ 6,21 mi por cadeira)
+    cad = get("/api/cadeira?ano=2022&cargo=6&uf=PI")
+    assert cad["resumo"]["cadeiras"] == 10 and round(cad["resumo"]["custo_cadeira"]) == 6212110, cad["resumo"]
+    assert len(cad["cadeiras"]) == 10 and cad["cadeiras"][0]["gasto"] >= cad["cadeiras"][-1]["gasto"]
+    assert abs(sum(p["gasto"] for p in cad["partidos"]) - cad["resumo"]["gasto_total"]) < 1
+    assert sum(f["candidatos"] for f in cad["curva"]) == cad["resumo"]["candidatos"]
+    assert cad["ipca"]["2024"] == 1 and cad["ipca"]["2018"] > 1.3 and set(cad["anos"]) == {"2018", "2022"}
+    assert cliente.get("/api/cadeira?ano=2022&cargo=13&municipio=2211001").status_code == 404   # sem eleição municipal
+    assert cliente.get("/api/cadeira?ano=2024&cargo=13&uf=PI").status_code == 422             # vereador pede município
+    vt = get("/api/cadeira?ano=2024&cargo=13&municipio=2211001")
+    assert vt["escopo"]["municipio"]["nome"] == "Teresina" and vt["resumo"]["cadeiras"] == 29
+    assert {(c["ano"], c["cod_cargo"]) for c in the["cadeiras"]} == {(2020, 11), (2020, 13), (2024, 11), (2024, 13)}
+    gasto = {c["ano"]: c["gasto"] for c in wd["candidaturas"]}
+    assert gasto[2022] > 0 and gasto[1994] is None, gasto
+    assert all(c["partido"] for c in wd["candidaturas"])   # partido também nas derrotas (migração 011)
 
     geo = get("/api/geo/uf/PI")
     assert len(geo["features"]) == 224

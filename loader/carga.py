@@ -193,17 +193,7 @@ def _disputas(x: _Execucao) -> None:
           AND (c.ue = 'BR' OR uf.cd_ibge IS NOT NULL OR m.cd_municipio IS NOT NULL)
         ORDER BY c.cd_eleicao, c.turno, c.cod_cargo, c.ue, c.ds_eleicao
         ON CONFLICT DO NOTHING""", "eleicao")
-    # Disputas da UF (e as nacionais), com a unidade eleitoral no formato do staging.
-    x.sql("""
-        CREATE TEMP TABLE tmp_eleicao ON COMMIT DROP AS
-        SELECT e.id_eleicao, e.cd_eleicao, e.ano, e.turno, e.tipo, e.cod_cargo,
-               COALESCE(e.cd_municipio::text, uf.sigla::text, 'BR') AS ue
-        FROM eleicao e
-        LEFT JOIN uf ON uf.cd_ibge = e.cd_uf
-        LEFT JOIN municipio m ON m.cd_municipio = e.cd_municipio
-        WHERE COALESCE(m.cd_uf, e.cd_uf) = %(cd_uf)s OR (e.cd_uf IS NULL AND e.cd_municipio IS NULL);
-        CREATE INDEX ON tmp_eleicao (cd_eleicao, turno, cod_cargo, ue);
-        ANALYZE tmp_eleicao""")
+    _tmp_eleicao(x)
     x.sql("""
         UPDATE eleicao e SET quantidade_de_vagas = v.qt
         FROM (SELECT cd_eleicao, cod_cargo, ue, max(qt_vaga) AS qt FROM {s}vagas GROUP BY 1, 2, 3) v
@@ -226,6 +216,20 @@ def _disputas(x: _Execucao) -> None:
         WHERE nr_partido IS NOT NULL AND sg_partido IS NOT NULL
         ORDER BY nr_partido, sg_partido, nm_partido NULLS LAST
         ON CONFLICT (numero, sigla) DO NOTHING""", "partido")
+
+
+def _tmp_eleicao(x: _Execucao) -> None:
+    """Disputas da UF (e as nacionais), com a unidade eleitoral no formato do staging."""
+    x.sql("""
+        CREATE TEMP TABLE tmp_eleicao ON COMMIT DROP AS
+        SELECT e.id_eleicao, e.cd_eleicao, e.ano, e.turno, e.tipo, e.cod_cargo,
+               COALESCE(e.cd_municipio::text, uf.sigla::text, 'BR') AS ue
+        FROM eleicao e
+        LEFT JOIN uf ON uf.cd_ibge = e.cd_uf
+        LEFT JOIN municipio m ON m.cd_municipio = e.cd_municipio
+        WHERE COALESCE(m.cd_uf, e.cd_uf) = %(cd_uf)s OR (e.cd_uf IS NULL AND e.cd_municipio IS NULL);
+        CREATE INDEX ON tmp_eleicao (cd_eleicao, turno, cod_cargo, ue);
+        ANALYZE tmp_eleicao""")
 
 
 def _politicos(x: _Execucao) -> None:
@@ -294,6 +298,7 @@ def _candidaturas(x: _Execucao) -> None:
         WHERE c.turno = 1
         ORDER BY t.id_eleicao, c.sq
         ON CONFLICT (id_eleicao, sq_candidato) DO NOTHING""", "politico_eleicao")
+    partidos_das_candidaturas(x)
     # (código da eleição, UE, SQ) -> candidatura, tanto com o código do 1º turno quanto com o do 2º.
     x.sql("""
         CREATE TEMP TABLE tmp_candidatura ON COMMIT DROP AS
@@ -319,6 +324,22 @@ def _candidaturas(x: _Execucao) -> None:
         WHERE c.situacao = ANY(%(eleitos)s)
         ORDER BY k.id_politico_eleicao, c.turno DESC
         ON CONFLICT (id_politico_eleicao) DO NOTHING""", "mandato")
+
+
+def partidos_das_candidaturas(x: _Execucao) -> None:
+    """Partido pelo qual cada candidatura concorreu (o de mandato só cobre os eleitos)."""
+    x.sql(f"""
+        UPDATE politico_eleicao pe SET id_partido = pa.id_partido
+        FROM {{s}}candidato c
+        JOIN tmp_eleicao t ON {_disp('c')}
+        JOIN partido pa ON pa.numero = c.nr_partido AND pa.sigla = c.sg_partido
+        WHERE c.turno = 1 AND pe.id_eleicao = t.id_eleicao AND pe.sq_candidato = c.sq
+          AND pe.id_partido IS DISTINCT FROM pa.id_partido""")
+
+
+def atualizar_resumos(cur) -> None:
+    """Views materializadas que dependem da carga (migração 011)."""
+    cur.execute("REFRESH MATERIALIZED VIEW campanha; REFRESH MATERIALIZED VIEW despesa_por_eleicao")
 
 
 def _votacao(x: _Execucao) -> None:

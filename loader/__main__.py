@@ -113,6 +113,10 @@ def main(argv=None) -> int:
                 print(f"      {tabela:<28}{n:>12,}")
             for motivo, n in sorted(resumo["descartadas"].items()):
                 print(f"      descartadas: {motivo:<40}{n:>10,}")
+        print("\nAtualizando os resumos de campanha ...", end="", flush=True)
+        carga.atualizar_resumos(cur)
+        conn.commit()
+        print(" ok")
         print(f"\nConcluído em {_duracao(time.monotonic() - inicio)}.")
     conn.close()
     return 0

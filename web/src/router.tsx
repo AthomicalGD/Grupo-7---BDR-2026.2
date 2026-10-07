@@ -10,6 +10,19 @@ export interface BuscaAtlas {
   relevo?: boolean
 }
 
+export interface BuscaCadeira {
+  cargo?: number
+  ano?: Ano
+  uf?: string
+  municipio?: number
+  epoca?: boolean
+  ordem?: 'partido'
+  pe?: boolean
+}
+
+const sim = (v: unknown) => (v === true || v === 'true' ? true : undefined)
+const numero = (v: unknown) => (Number.isFinite(Number(v)) && v !== '' && v != null ? Number(v) : undefined)
+
 const raiz = createRootRoute({
   component: Moldura,
   notFoundComponent: () => (
@@ -42,6 +55,20 @@ const urna = createRoute({
   path: '/urna',
   component: lazyRouteComponent(() => import('./urna/UrnaPagina'), 'UrnaPagina'),
 })
+const cadeira = createRoute({
+  getParentRoute: () => raiz,
+  path: '/cadeira',
+  component: lazyRouteComponent(() => import('./cadeira/CadeiraPagina'), 'CadeiraPagina'),
+  validateSearch: (s: Record<string, unknown>): BuscaCadeira => ({
+    cargo: numero(s.cargo),
+    ano: ANOS.includes(Number(s.ano) as Ano) ? (Number(s.ano) as Ano) : undefined,
+    uf: typeof s.uf === 'string' && /^[A-Z]{2}$/.test(s.uf) ? s.uf : undefined,
+    municipio: numero(s.municipio),
+    epoca: sim(s.epoca),
+    ordem: s.ordem === 'partido' ? 'partido' : undefined,
+    pe: sim(s.pe),
+  }),
+})
 const politico = createRoute({
   getParentRoute: () => raiz,
   path: '/politico/$id',
@@ -53,7 +80,7 @@ const metodologia = createRoute({
   component: lazyRouteComponent(() => import('./paginas/Metodologia'), 'Metodologia'),
 })
 
-const arvore = raiz.addChildren([atlas.addChildren([inicio, estado, municipio]), urna, politico, metodologia])
+const arvore = raiz.addChildren([atlas.addChildren([inicio, estado, municipio]), urna, cadeira, politico, metodologia])
 
 export const router = createRouter({
   routeTree: arvore,

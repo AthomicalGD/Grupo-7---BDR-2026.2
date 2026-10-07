@@ -8,7 +8,13 @@ import { ANOS, type Ano } from '../api'
 const TIPO: Record<Ano, string> = { 2018: 'Geral', 2020: 'Municipal', 2022: 'Geral', 2024: 'Municipal' }
 const PASSO_MS = 1600
 
-export function CedulaAnos({ ano, aoMudar }: { ano: Ano; aoMudar: (a: Ano) => void }) {
+export function CedulaAnos({ ano, aoMudar, anos = ANOS, linhaDoTempo = true }: {
+  ano: Ano
+  aoMudar: (a: Ano) => void
+  /** Só os anos que valem aqui (a P1 mostra os dois anos do tipo de eleição do cargo). */
+  anos?: readonly Ano[]
+  linhaDoTempo?: boolean
+}) {
   const [tocando, setTocando] = useState(false)
   const atual = useRef(ano)
   useEffect(() => {
@@ -17,21 +23,21 @@ export function CedulaAnos({ ano, aoMudar }: { ano: Ano; aoMudar: (a: Ano) => vo
 
   useEffect(() => {
     if (!tocando) return
-    if (atual.current === ANOS[ANOS.length - 1]) aoMudar(ANOS[0])
+    if (atual.current === anos[anos.length - 1]) aoMudar(anos[0])
     const id = setInterval(() => {
-      const i = ANOS.indexOf(atual.current)
-      if (i >= ANOS.length - 1) return setTocando(false)
-      aoMudar(ANOS[i + 1])
+      const i = anos.indexOf(atual.current)
+      if (i >= anos.length - 1) return setTocando(false)
+      aoMudar(anos[i + 1])
     }, PASSO_MS)
     return () => clearInterval(id)
-  }, [tocando, aoMudar])
+  }, [tocando, aoMudar, anos])
 
   const teclado = (e: KeyboardEvent) => {
-    const i = ANOS.indexOf(ano)
+    const i = anos.indexOf(ano)
     const delta = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0
     if (!delta) return
     e.preventDefault()
-    const proximo = ANOS[(i + delta + ANOS.length) % ANOS.length]
+    const proximo = anos[(i + delta + anos.length) % anos.length]
     aoMudar(proximo)
     document.getElementById(`cedula-${proximo}`)?.focus()
   }
@@ -39,7 +45,7 @@ export function CedulaAnos({ ano, aoMudar }: { ano: Ano; aoMudar: (a: Ano) => vo
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-linha bg-folha p-1.5 pr-2 shadow-[var(--shadow-cartao)]">
       <div role="radiogroup" aria-label="Ano da eleição" className="grid flex-1 grid-cols-2 sm:flex sm:flex-wrap" onKeyDown={teclado}>
-        {ANOS.map((a) => {
+        {anos.map((a) => {
           const marcado = a === ano
           return (
             <button
@@ -73,7 +79,7 @@ export function CedulaAnos({ ano, aoMudar }: { ano: Ano; aoMudar: (a: Ano) => vo
           )
         })}
       </div>
-      <button
+      {linhaDoTempo && <button
         type="button"
         onClick={() => setTocando((t) => !t)}
         aria-pressed={tocando}
@@ -81,7 +87,7 @@ export function CedulaAnos({ ano, aoMudar }: { ano: Ano; aoMudar: (a: Ano) => vo
       >
         {tocando ? <Pause size={14} weight="fill" /> : <Play size={14} weight="fill" />}
         Linha do tempo
-      </button>
+      </button>}
     </div>
   )
 }

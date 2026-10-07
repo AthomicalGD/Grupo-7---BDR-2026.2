@@ -84,6 +84,8 @@ export interface Municipio {
   indicadores: Partial<Record<'pib_per_capita' | 'idhm' | 'populacao' | 'eleitores_populacao' | 'isentos', Indicador | null>>
   comparecimento: PorAno<Comparecimento>
   prefeitos: Prefeito[]
+  /** P1: custo da cadeira de prefeito e de vereador no município (2020 e 2024). */
+  cadeiras: (ResumoCadeira & { ano: number; cod_cargo: number; cargo: string; fator_ipca: number })[]
 }
 
 export interface PoliticoBusca {
@@ -111,6 +113,8 @@ export interface Candidatura {
   reeleito: boolean
   turno: number | null
   votos: number | null
+  /** Despesa contratada da campanha (P1); null antes de 2018. */
+  gasto: number | null
   suplementar: boolean
   foto: string | null
 }
@@ -130,6 +134,56 @@ export interface Politico {
     primeiro_ano: number | null
     ultimo_ano: number | null
   }
+  /** P10a: taxa de reeleição do cargo mais recente na UF (null sem dados suficientes). */
+  contexto_reeleicao: { cargo: string; uf: string; tentaram: number; reeleitos: number; taxa: number } | null
+}
+
+// ───────── P1: quanto custa uma cadeira ─────────
+
+export const CARGOS_P1 = [
+  { cod: 6, nome: 'Deputado federal', curto: 'Dep. federal', municipal: false },
+  { cod: 7, nome: 'Deputado estadual', curto: 'Dep. estadual', municipal: false },
+  { cod: 5, nome: 'Senador', curto: 'Senador', municipal: false },
+  { cod: 3, nome: 'Governador', curto: 'Governador', municipal: false },
+  { cod: 11, nome: 'Prefeito', curto: 'Prefeito', municipal: true },
+  { cod: 13, nome: 'Vereador', curto: 'Vereador', municipal: true },
+] as const
+export type CodCargoP1 = (typeof CARGOS_P1)[number]['cod']
+
+export interface ResumoCadeira {
+  candidatos: number
+  cadeiras: number
+  gasto_total: number
+  custo_cadeira: number | null
+  mediana_eleito: number | null
+  mediana_nao_eleito: number | null
+}
+
+export interface Assento {
+  id: number
+  nome: string
+  partido: string | null
+  vies: number | null
+  uf: string
+  local: string | null
+  gasto: number
+  votos: number
+  foto: string | null
+}
+
+export interface Cadeira {
+  ano: number
+  cargo: { cod: CodCargoP1; nome: string }
+  escopo: { ufs: string[]; municipio: { ibge: number; nome: string } | null }
+  /** Fator do IPCA de outubro para reais de out/2024, por ano. */
+  ipca: Record<string, number>
+  resumo: ResumoCadeira
+  anos: Record<string, ResumoCadeira>
+  cadeiras: Assento[]
+  partidos: { sigla: string; numero: number | null; vies: number | null; candidatos: number; cadeiras: number; gasto: number }[]
+  curva: { de: number; ate: number; candidatos: number; eleitos: number }[]
+  despesas: { categoria: string; valor: number }[]
+  receitas: Record<'fundo_eleitoral' | 'fundo_partidario' | 'pessoas_fisicas' | 'proprios' | 'outros', number>
 }
 
 export type Malha = FeatureCollection<Polygon | MultiPolygon, { codarea: number }>
@@ -186,6 +240,13 @@ export const consultas = {
     }),
   politico: (id: number) =>
     queryOptions({ queryKey: ['politico', id], queryFn: ({ signal }) => get<Politico>(`/api/politicos/${id}`, signal), ...sempre }),
+  cadeira: (ano: number, cargo: number, uf = '', municipio?: number) =>
+    queryOptions({
+      queryKey: ['cadeira', ano, cargo, uf, municipio ?? null],
+      queryFn: ({ signal }) =>
+        get<Cadeira>(`/api/cadeira?ano=${ano}&cargo=${cargo}&uf=${uf}${municipio ? `&municipio=${municipio}` : ''}`, signal),
+      ...sempre,
+    }),
   malhaBrasil: () =>
     queryOptions({ queryKey: ['malha', 'BR'], queryFn: ({ signal }) => get<Malha>('/api/geo/brasil', signal), ...sempre }),
   malhaUF: (sigla: string) =>

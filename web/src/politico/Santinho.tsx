@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 import type { Candidatura } from '../api'
 import { Retrato } from '../componentes/Retrato'
 import { situacao } from '../lib/carreira'
-import { cargo as fmtCargo, inteiro } from '../lib/formato'
+import { cargo as fmtCargo, inteiro, reaisCurto } from '../lib/formato'
 
 const FITAS = ['#5E881B', '#A2BD31', '#5D6B94', '#468BAF', '#76ACD0', '#F19929', '#FBC700']
 
@@ -34,6 +34,13 @@ export function Santinho({ c, nome, inclinacao }: { c: Candidatura; nome: string
         <div className="text-[0.76rem] leading-snug text-tinta-3">
           <p>{c.partido ? `Partido ${c.partido}` : 'Partido não registrado'}</p>
           {c.votos != null && <p className="font-semibold text-tinta tabular">{inteiro(c.votos)} votos</p>}
+          {/* P1: o que a campanha gastou (valor da época); o TSE só publica as contas desde 2018 aqui */}
+          {c.gasto != null && (
+            <>
+              <p className="tabular whitespace-nowrap">Campanha de {reaisCurto(c.gasto)}</p>
+              {c.votos ? <p className="tabular whitespace-nowrap">{reaisCurto(c.gasto / c.votos)} por voto</p> : null}
+            </>
+          )}
           {c.suplementar && <p>Eleição suplementar</p>}
         </div>
         <span

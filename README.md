@@ -75,6 +75,11 @@ python -m loader SP RJ MG
 - Na primeira carga entra também `BR`: as candidaturas a Presidente, necessárias à votação de toda UF.
 - O viés dos partidos (`partido.vies_politico`, de -100 a +100) vem da migração `006_vies_partidos.sql`;
   partidos sem viés informado ficam com 0.
+- A migração `011_custo_da_cadeira.sql` (P1) guarda o partido de toda candidatura (`politico_eleicao.id_partido`),
+  o IPCA de outubro de cada ano (`ipca_outubro`, IBGE/SIDRA 1737) e as views materializadas `campanha` (gasto,
+  receitas por fonte e votos do 1º turno de cada candidatura) e `despesa_por_eleicao`. O loader atualiza as views ao
+  fim de cada carga. Num banco carregado antes da 011, preencha o partido e as views uma vez:
+  `python -m loader.partidos` (relê só os arquivos de candidatos, ~1 min).
 - Não são carregados: votos do exterior (`ZZ`), `VIES_MUNICIPIO` (métrica ainda por calcular), `MALHA_MUNICIPIO` e `idade_media_populacao` (o crawler não baixa esses dados).
 
 ### Fotos dos candidatos
@@ -119,10 +124,11 @@ python -m uvicorn api.app:app --port 8000
 | `GET /api/politicos?q=&limite=8` | Busca de políticos por nome (trigramas, sem acentos; migração `010_busca_politicos.sql`) |
 | `GET /api/politicos/aleatorio` | Um político com 5+ candidaturas e 2+ vitórias |
 | `GET /api/politicos/{id}` | Candidaturas, resultados, votos e reeleições do político (sem CPF, título ou data de nascimento) |
+| `GET /api/cadeira?ano=&cargo=&uf=&municipio=` | P1: custo da cadeira (gasto de todos os candidatos ÷ eleitos), cada eleito com gasto e votos, chance de vitória por faixa de gasto, preço por partido, despesas por tipo, receitas por fonte e o fator do IPCA |
 | `GET /api/fotos/{ano}/{uf}/{sq}` | Foto da candidatura, lida do zip do TSE (candidaturas, busca e prefeitos já trazem a URL em `foto`) |
 | `GET /api/geo/brasil`, `GET /api/geo/uf/{sigla}` | Malhas do IBGE em GeoJSON, com os anéis no sentido que o d3-geo espera |
 
-- O viés segue a mesma conta de `scripts/07_vies_politico_municipio.py`.
+- O viés segue a mesma conta de `scripts/07_vies_politico_municipio.py`; o custo da cadeira, a de `scripts/01_custo_cadeira.py`.
 - As respostas ficam em cache no processo: **reinicie a API depois de carregar UFs**.
 - Conferência contra o banco (precisa de PI carregado): `python -m api.test_api`.
 
@@ -143,8 +149,9 @@ Abra http://localhost:5173. O Vite repassa `/api` para a API em `127.0.0.1:8000`
 | Tela | Rota | Pergunta |
 |---|---|---|
 | Mapa do Brasil, viés por estado, linha do tempo 2018-2024 | `/` | P7 |
+| Plenário: quanto custa uma cadeira, por cargo, ano e estado (ou câmara municipal), em 2D e 3D | `/cadeira` | P1 |
 | Estado: municípios, regiões intermediárias, extremos, relevo 3D | `/uf/PI` | P7 |
-| Boletim do município: viés, espectro do voto, prefeitos, indicadores, QR code | `/uf/PI/2211001` | P7, P3 |
+| Boletim do município: viés, espectro do voto, prefeitos, custo da cadeira, indicadores, QR code | `/uf/PI/2211001` | P7, P1, P3 |
 | Urna 3D de consulta (busca pelo nome) | `/urna` | P10 |
 | Carreira do político: trajetória por cargo e santinhos com foto | `/politico/368990` | P10 |
 | Fontes, método e limitações | `/metodologia` | todas |

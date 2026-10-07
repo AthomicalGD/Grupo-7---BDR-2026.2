@@ -1,0 +1,315 @@
+P1) Quanto custa uma cadeira?
+Custo da cadeira = soma da despesa contratada de todos os candidatos ao cargo ÷ cadeiras
+preenchidas. Mostra quanto a disputa inteira gastou para preencher cada vaga.
+
+Colunas: Gasto total = despesa de todos os candidatos; Custo da cadeira = Gasto total ÷ Cadeiras
+(em reais da época e em reais de outubro de 2024, pelo IPCA); Eleito / Não eleito = despesa
+mediana de cada grupo.
+
+Observações:
+- Despesa contratada declarada ao TSE, sem "Doações financeiras a outros candidatos/partidos"
+  (o dinheiro reaparece como despesa de quem recebeu).
+- Prefeito e vereador: o custo da UF soma todos os municípios; ao lado, a distribuição do
+  custo da cadeira entre os municípios.
+- Excluídos: eleições suplementares, Presidente (disputa nacional), vices e suplentes
+  (R$ 0,2 mi em quatro eleições).
+
+================================================================================================================
+UF: AC
+================================================================================================================
+
+Deputado Federal
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018          87         8       R$ 19,08 mi        R$ 2,39 mi       R$ 3,29 mi        R$ 1,19 mi           R$ 9.987
+  2022         140         8       R$ 47,76 mi        R$ 5,97 mi       R$ 6,55 mi        R$ 1,23 mi          R$ 67.240
+  De 2018 para 2022, já descontada a inflação: +99%.
+
+Deputado Estadual
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018         474        24       R$ 11,58 mi        R$ 482.549       R$ 665.279        R$ 121.675           R$ 3.568
+  2022         359        24       R$ 24,07 mi        R$ 1,00 mi       R$ 1,10 mi        R$ 155.183          R$ 14.886
+  De 2018 para 2022, já descontada a inflação: +66%.
+
+Senador
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018           7         2        R$ 3,82 mi        R$ 1,91 mi       R$ 2,64 mi        R$ 1,13 mi         R$ 110.851
+  2022           9         1       R$ 13,15 mi       R$ 13,15 mi      R$ 14,44 mi        R$ 2,68 mi         R$ 1,47 mi
+  De 2018 para 2022, já descontada a inflação: +448%.
+
+Governador
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018           6         1        R$ 4,90 mi        R$ 4,90 mi       R$ 6,75 mi        R$ 2,17 mi          R$ 11.500
+  2022           7         1       R$ 15,40 mi       R$ 15,40 mi      R$ 16,91 mi        R$ 4,08 mi         R$ 2,50 mi
+  De 2018 para 2022, já descontada a inflação: +150%.
+
+Prefeito
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2020          91        22        R$ 7,49 mi        R$ 340.483       R$ 440.548         R$ 86.501          R$ 39.348
+  2024          63        22       R$ 11,53 mi        R$ 523.942       R$ 523.942        R$ 159.800         R$ 134.000
+  De 2020 para 2024, já descontada a inflação: +19%.
+  2020, por município: mediana R$ 208.235; mais barato R$ 83.858; mais caro R$ 1,60 mi.
+  2024, por município: mediana R$ 369.850; mais barato R$ 148.364; mais caro R$ 1,90 mi.
+
+Vereador
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2020       2.874       231        R$ 8,17 mi         R$ 35.375        R$ 45.771          R$ 1.340               R$ 0
+  2024       2.183       241       R$ 28,64 mi        R$ 118.846       R$ 118.846         R$ 12.000           R$ 3.610
+  De 2020 para 2024, já descontada a inflação: +160%.
+  2020, por município: mediana R$ 15.984; mais barato R$ 0; mais caro R$ 244.097.
+  2024, por município: mediana R$ 54.678; mais barato R$ 9.345; mais caro R$ 711.414.
+
+================================================================================================================
+UF: BA
+================================================================================================================
+
+Deputado Federal
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018         503        39       R$ 67,65 mi        R$ 1,73 mi       R$ 2,39 mi        R$ 916.311           R$ 2.550
+  2022         776        39      R$ 191,51 mi        R$ 4,91 mi       R$ 5,39 mi        R$ 1,75 mi          R$ 20.011
+  De 2018 para 2022, já descontada a inflação: +125%.
+
+Deputado Estadual
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018         643        63       R$ 39,45 mi        R$ 626.192       R$ 863.315        R$ 198.375           R$ 2.917
+  2022         913        63      R$ 103,49 mi        R$ 1,64 mi       R$ 1,80 mi        R$ 548.032          R$ 13.245
+  De 2018 para 2022, já descontada a inflação: +109%.
+
+Senador
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018          11         2        R$ 5,65 mi        R$ 2,82 mi       R$ 3,89 mi        R$ 1,20 mi          R$ 27.354
+  2022           6         1       R$ 10,95 mi       R$ 10,95 mi      R$ 12,03 mi        R$ 3,62 mi         R$ 318.974
+  De 2018 para 2022, já descontada a inflação: +209%.
+
+Governador
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018           7         1       R$ 17,31 mi       R$ 17,31 mi      R$ 23,87 mi        R$ 7,45 mi          R$ 69.380
+  2022           6         1       R$ 43,93 mi       R$ 43,93 mi      R$ 48,24 mi       R$ 10,60 mi         R$ 962.869
+  De 2018 para 2022, já descontada a inflação: +102%.
+
+Prefeito
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2020       1.366       415      R$ 124,08 mi        R$ 298.988       R$ 386.857         R$ 72.917          R$ 33.028
+  2024       1.149       416      R$ 222,30 mi        R$ 534.374       R$ 534.374        R$ 157.150          R$ 95.180
+  De 2020 para 2024, já descontada a inflação: +38%.
+  2020, por município: mediana R$ 154.186; mais barato R$ 14.894; mais caro R$ 19,76 mi.
+  2024, por município: mediana R$ 306.904; mais barato R$ 66.260; mais caro R$ 23,19 mi.
+
+Vereador
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2020      38.839     4.621       R$ 60,23 mi         R$ 13.035        R$ 16.866          R$ 1.748             R$ 100
+  2024      32.879     4.595      R$ 162,59 mi         R$ 35.385        R$ 35.385          R$ 3.000             R$ 490
+  De 2020 para 2024, já descontada a inflação: +110%.
+  2020, por município: mediana R$ 4.838; mais barato R$ 151; mais caro R$ 351.300.
+  2024, por município: mediana R$ 11.720; mais barato R$ 50; mais caro R$ 1,15 mi.
+
+================================================================================================================
+UF: GO
+================================================================================================================
+
+Deputado Federal
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018         229        17       R$ 39,11 mi        R$ 2,30 mi       R$ 3,17 mi        R$ 1,12 mi           R$ 5.000
+  2022         391        17      R$ 118,44 mi        R$ 6,97 mi       R$ 7,65 mi        R$ 2,24 mi          R$ 49.927
+  De 2018 para 2022, já descontada a inflação: +141%.
+
+Deputado Estadual
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018         907        41       R$ 46,33 mi        R$ 1,13 mi       R$ 1,56 mi        R$ 279.984           R$ 2.000
+  2022         800        41       R$ 65,25 mi        R$ 1,59 mi       R$ 1,75 mi        R$ 411.978          R$ 14.540
+  De 2018 para 2022, já descontada a inflação: +12%.
+
+Senador
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018          12         2       R$ 12,90 mi        R$ 6,45 mi       R$ 8,89 mi        R$ 1,21 mi         R$ 232.470
+  2022          10         1       R$ 20,63 mi       R$ 20,63 mi      R$ 22,65 mi        R$ 1,46 mi         R$ 2,34 mi
+  De 2018 para 2022, já descontada a inflação: +155%.
+
+Governador
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018           7         1       R$ 20,61 mi       R$ 20,61 mi      R$ 28,42 mi        R$ 8,32 mi         R$ 1,28 mi
+  2022           9         1       R$ 23,85 mi       R$ 23,85 mi      R$ 26,19 mi        R$ 9,79 mi         R$ 181.466
+  De 2018 para 2022, já descontada a inflação: -8%.
+
+Prefeito
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2020         882       246       R$ 92,56 mi        R$ 376.275       R$ 486.859         R$ 79.453          R$ 42.597
+  2024         644       244      R$ 175,51 mi        R$ 719.293       R$ 719.293        R$ 146.954         R$ 104.569
+  De 2020 para 2024, já descontada a inflação: +48%.
+  2020, por município: mediana R$ 175.638; mais barato R$ 21.600; mais caro R$ 8,93 mi.
+  2024, por município: mediana R$ 275.667; mais barato R$ 35.400; mais caro R$ 32,57 mi.
+
+Vereador
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2020      23.148     2.516       R$ 54,39 mi         R$ 21.617        R$ 27.970          R$ 1.897             R$ 500
+  2024      18.668     2.431       R$ 98,42 mi         R$ 40.487        R$ 40.487          R$ 3.000           R$ 1.000
+  De 2020 para 2024, já descontada a inflação: +45%.
+  2020, por município: mediana R$ 7.379; mais barato R$ 223; mais caro R$ 357.400.
+  2024, por município: mediana R$ 10.372; mais barato R$ 0; mais caro R$ 799.610.
+
+================================================================================================================
+UF: PE
+================================================================================================================
+
+Deputado Federal
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018         361        25       R$ 44,48 mi        R$ 1,78 mi       R$ 2,45 mi        R$ 1,24 mi           R$ 1.903
+  2022         474        25      R$ 147,28 mi        R$ 5,89 mi       R$ 6,47 mi        R$ 2,27 mi          R$ 40.000
+  De 2018 para 2022, já descontada a inflação: +164%.
+
+Deputado Estadual
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018         681        49       R$ 41,13 mi        R$ 839.327       R$ 1,16 mi        R$ 294.448           R$ 2.000
+  2022         613        49       R$ 73,38 mi        R$ 1,50 mi       R$ 1,64 mi        R$ 390.620          R$ 10.000
+  De 2018 para 2022, já descontada a inflação: +42%.
+
+Senador
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018          12         2       R$ 10,30 mi        R$ 5,15 mi       R$ 7,10 mi        R$ 2,04 mi          R$ 41.520
+  2022           9         1       R$ 17,94 mi       R$ 17,94 mi      R$ 19,70 mi        R$ 4,48 mi         R$ 1,43 mi
+  De 2018 para 2022, já descontada a inflação: +177%.
+
+Governador
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018           7         1       R$ 16,30 mi       R$ 16,30 mi      R$ 22,48 mi        R$ 8,74 mi         R$ 153.980
+  2022          11         1       R$ 64,95 mi       R$ 64,95 mi      R$ 71,32 mi       R$ 17,14 mi         R$ 552.348
+  De 2018 para 2022, já descontada a inflação: +217%.
+
+Prefeito
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2020         660       180       R$ 91,48 mi        R$ 508.224       R$ 657.586        R$ 103.645          R$ 40.360
+  2024         523       183      R$ 144,15 mi        R$ 787.702       R$ 787.702        R$ 160.000         R$ 116.852
+  De 2020 para 2024, já descontada a inflação: +20%.
+  2020, por município: mediana R$ 211.558; mais barato R$ 34.150; mais caro R$ 28,31 mi.
+  2024, por município: mediana R$ 337.247; mais barato R$ 69.984; mais caro R$ 24,18 mi.
+
+Vereador
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2020      19.764     2.151       R$ 51,19 mi         R$ 23.799        R$ 30.793          R$ 2.589               R$ 0
+  2024      15.002     2.149       R$ 99,78 mi         R$ 46.430        R$ 46.430          R$ 5.000             R$ 485
+  De 2020 para 2024, já descontada a inflação: +51%.
+  2020, por município: mediana R$ 7.554; mais barato R$ 778; mais caro R$ 483.247.
+  2024, por município: mediana R$ 15.783; mais barato R$ 39; mais caro R$ 859.915.
+
+================================================================================================================
+UF: PI
+================================================================================================================
+
+Deputado Federal
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018         143        10       R$ 24,60 mi        R$ 2,46 mi       R$ 3,39 mi        R$ 1,00 mi           R$ 6.042
+  2022         177        10       R$ 62,12 mi        R$ 6,21 mi       R$ 6,82 mi        R$ 1,83 mi          R$ 30.891
+  De 2018 para 2022, já descontada a inflação: +101%.
+
+Deputado Estadual
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018         219        30       R$ 19,99 mi        R$ 666.299       R$ 918.609        R$ 320.182           R$ 1.884
+  2022         210        30       R$ 35,38 mi        R$ 1,18 mi       R$ 1,30 mi        R$ 524.828          R$ 13.984
+  De 2018 para 2022, já descontada a inflação: +41%.
+
+Senador
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018          18         2        R$ 7,28 mi        R$ 3,64 mi       R$ 5,02 mi        R$ 2,28 mi           R$ 8.352
+  2022           8         1        R$ 6,82 mi        R$ 6,82 mi       R$ 7,49 mi        R$ 2,68 mi          R$ 41.212
+  De 2018 para 2022, já descontada a inflação: +49%.
+
+Governador
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018          10         1        R$ 7,03 mi        R$ 7,03 mi       R$ 9,69 mi        R$ 3,04 mi          R$ 62.076
+  2022           9         1       R$ 15,06 mi       R$ 15,06 mi      R$ 16,53 mi        R$ 6,57 mi         R$ 241.596
+  De 2018 para 2022, já descontada a inflação: +71%.
+
+Prefeito
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2020         608       222       R$ 36,96 mi        R$ 166.495       R$ 215.426         R$ 53.432          R$ 22.973
+  2024         496       224       R$ 54,73 mi        R$ 244.312       R$ 244.312        R$ 100.221          R$ 65.000
+  De 2020 para 2024, já descontada a inflação: +13%.
+  2020, por município: mediana R$ 99.183; mais barato R$ 16.303; mais caro R$ 9,09 mi.
+  2024, por município: mediana R$ 179.295; mais barato R$ 27.500; mais caro R$ 7,03 mi.
+
+Vereador
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2020       9.440     2.144       R$ 32,25 mi         R$ 15.040        R$ 19.461          R$ 2.700           R$ 1.475
+  2024       7.977     2.143       R$ 66,81 mi         R$ 31.178        R$ 31.178          R$ 3.870           R$ 3.000
+  De 2020 para 2024, já descontada a inflação: +60%.
+  2020, por município: mediana R$ 7.280; mais barato R$ 1.127; mais caro R$ 346.150.
+  2024, por município: mediana R$ 10.573; mais barato R$ 1.153; mais caro R$ 904.436.
+
+================================================================================================================
+UF: PR
+================================================================================================================
+
+Deputado Federal
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018         450        30       R$ 72,64 mi        R$ 2,42 mi       R$ 3,34 mi        R$ 1,15 mi           R$ 8.927
+  2022         632        30      R$ 156,28 mi        R$ 5,21 mi       R$ 5,72 mi        R$ 2,31 mi          R$ 38.700
+  De 2018 para 2022, já descontada a inflação: +71%.
+
+Deputado Estadual
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018         767        54       R$ 45,95 mi        R$ 850.984       R$ 1,17 mi        R$ 271.869           R$ 5.000
+  2022         902        54       R$ 80,28 mi        R$ 1,49 mi       R$ 1,63 mi        R$ 480.088          R$ 19.073
+  De 2018 para 2022, já descontada a inflação: +39%.
+
+Senador
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018          16         2       R$ 11,85 mi        R$ 5,93 mi       R$ 8,17 mi        R$ 1,71 mi          R$ 24.157
+  2022          10         1       R$ 18,33 mi       R$ 18,33 mi      R$ 20,13 mi        R$ 5,10 mi         R$ 1,01 mi
+  De 2018 para 2022, já descontada a inflação: +146%.
+
+Governador
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2018          10         1       R$ 24,60 mi       R$ 24,60 mi      R$ 33,91 mi        R$ 8,78 mi          R$ 25.354
+  2022           9         1       R$ 22,38 mi       R$ 22,38 mi      R$ 24,58 mi       R$ 14,04 mi         R$ 270.065
+  De 2018 para 2022, já descontada a inflação: -28%.
+
+Prefeito
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2020       1.352       396      R$ 111,66 mi        R$ 281.982       R$ 364.854         R$ 57.023          R$ 29.047
+  2024       1.139       398      R$ 228,87 mi        R$ 575.054       R$ 575.054        R$ 136.243          R$ 74.006
+  De 2020 para 2024, já descontada a inflação: +58%.
+  2020, por município: mediana R$ 115.256; mais barato R$ 13.200; mais caro R$ 17,78 mi.
+  2024, por município: mediana R$ 252.485; mais barato R$ 7.811; mais caro R$ 37,56 mi.
+
+Vereador
+   Ano  Candidatos  Cadeiras       Gasto total  Custo da cadeira    Em R$ de 2024  Eleito (mediana)  Não eleito (med.)
+  --------------------------------------------------------------------------------------------------------------------
+  2020      34.329     3.869       R$ 55,47 mi         R$ 14.338        R$ 18.551          R$ 1.005             R$ 192
+  2024      31.719     3.905      R$ 122,06 mi         R$ 31.257        R$ 31.257          R$ 2.000             R$ 550
+  De 2020 para 2024, já descontada a inflação: +68%.
+  2020, por município: mediana R$ 4.814; mais barato R$ 0; mais caro R$ 311.896.
+  2024, por município: mediana R$ 9.926; mais barato R$ 0; mais caro R$ 721.141.

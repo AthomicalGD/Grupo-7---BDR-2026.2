@@ -31,6 +31,7 @@ function usePreferencia(chave: string, atributo: string, inicial: string) {
 const NAV = [
   { para: '/', rotulo: 'Mapa', ativo: (p: string) => p === '/' || p.startsWith('/uf') },
   { para: '/urna', rotulo: 'Urna', ativo: (p: string) => p.startsWith('/urna') || p.startsWith('/politico') },
+  { para: '/cadeira', rotulo: 'Cadeira', ativo: (p: string) => p.startsWith('/cadeira') },
   { para: '/metodologia', rotulo: 'Metodologia', ativo: (p: string) => p.startsWith('/metodologia') },
 ] as const
 
@@ -68,20 +69,20 @@ function Cabecalho() {
   const caminho = useRouterState({ select: (s) => s.location.pathname })
   return (
     <header className="sticky top-0 z-30 bg-folha/95 backdrop-blur-[6px]">
-      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-6 px-4 md:h-[72px] md:px-[72px]">
+      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-3 px-4 sm:gap-6 md:h-[72px] md:px-[72px]">
         <Link to="/" className="shrink-0" aria-label="Voto Aberto, página inicial">
           <img src={letreiro} alt="Voto Aberto" className="hidden h-9 w-auto min-[420px]:block md:h-10" />
           <img src={simbolo} alt="Voto Aberto" className="h-9 w-auto min-[420px]:hidden" />
         </Link>
         <nav aria-label="Principal">
-          <ul className="flex items-center gap-1 sm:gap-3">
+          <ul className="flex items-center gap-0 sm:gap-3">
             {NAV.map((item) => {
               const ativo = item.ativo(caminho)
               return (
                 <li key={item.para} className="relative">
                   <Link
                     to={item.para}
-                    className={`block rounded-md px-2 py-2 text-[0.95rem] transition-colors sm:px-3 sm:text-base ${ativo ? 'font-semibold text-tinta' : 'text-tinta-2 hover:text-tinta'}`}
+                    className={`block rounded-md px-1.5 py-2 text-[0.88rem] transition-colors min-[420px]:px-2 min-[420px]:text-[0.95rem] sm:px-3 sm:text-base ${ativo ? 'font-semibold text-tinta' : 'text-tinta-2 hover:text-tinta'}`}
                     aria-current={ativo ? 'page' : undefined}
                   >
                     {item.rotulo}
@@ -89,7 +90,7 @@ function Cabecalho() {
                   {ativo && (
                     <motion.span
                       layoutId="nav-marcador"
-                      className="absolute inset-x-2 -bottom-[14px] h-1 rounded-full bg-marcador sm:inset-x-3 md:-bottom-[18px]"
+                      className="absolute inset-x-1.5 -bottom-[14px] h-1 rounded-full bg-marcador min-[420px]:inset-x-2 sm:inset-x-3 md:-bottom-[18px]"
                       transition={{ type: 'spring', stiffness: 420, damping: 36 }}
                     />
                   )}
@@ -114,16 +115,16 @@ function Rodape() {
         <div className="space-y-4">
           <img src={letreiroNegativo} alt="Voto Aberto" className="-ml-2 h-14 w-auto" />
           <p className="max-w-[46ch] text-sm leading-relaxed">
-            Viés político de estados e municípios de 2018 a 2024 e a carreira de cada político desde 1994, com
-            dados abertos coletados, modelados e carregados pelo Grupo 7.
+            Viés político de estados e municípios, o custo de cada cadeira e a carreira de cada político desde
+            1994, com dados abertos coletados, modelados e carregados pelo Grupo 7.
           </p>
           <p className="text-sm font-semibold text-white">Este não é um site oficial da Justiça Eleitoral.</p>
         </div>
         <div>
           <h2 className="t-rotulo mb-3 text-white">Fontes dos dados</h2>
           <ul className="space-y-1.5 text-sm">
-            <li>TSE, Portal de Dados Abertos: candidaturas, votação, fotos</li>
-            <li>IBGE: malhas municipais, PIB, população, Censo 2022</li>
+            <li>TSE, Portal de Dados Abertos: candidaturas, votação, contas de campanha, fotos</li>
+            <li>IBGE: malhas municipais, PIB, população, Censo 2022, IPCA</li>
             <li>Atlas Brasil (PNUD, Ipea, FJP): IDHM</li>
             <li>Harvard Dataverse: ideologia dos partidos</li>
           </ul>

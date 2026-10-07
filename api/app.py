@@ -12,6 +12,7 @@ UF e região intermediária, a mesma média sobre os votos de todos os seus muni
 import csv
 import gzip
 import json
+import math
 import os
 import random
 import unicodedata
@@ -243,7 +244,7 @@ def detalhe_municipio(ibge: int) -> dict:
     cd = base["carregada"] and consultar("SELECT cd_municipio FROM municipio WHERE cd_ibge = %s", (ibge,))
     if not cd:
         return {**base, "vies": {}, "vies_uf": {}, "sem_vies_pct": {}, "espectro": {},
-                "indicadores": {}, "comparecimento": {}, "prefeitos": []}
+                "indicadores": {}, "comparecimento": {}, "prefeitos": [], "cadeiras": []}
     cd = cd[0]["cd_municipio"]
 
     v = vies([r for r in votos_vies() if r["cd_ibge"] == ibge], lambda r: 0).get(0, VAZIO)
@@ -264,7 +265,18 @@ def detalhe_municipio(ibge: int) -> dict:
     return {**base, "vies": v["vies"], "vies_uf": vies_ufs().get(uf["cd_ibge"], VAZIO)["vies"],
             "sem_vies_pct": v["sem_vies_pct"], "espectro": espectro,
             "indicadores": indicadores(cd, comparecimento), "comparecimento": comparecimento,
-            "prefeitos": prefeitos(cd, m["sg_uf"])}
+            "prefeitos": prefeitos(cd, m["sg_uf"]), "cadeiras": cadeiras_municipio(ibge, m["sg_uf"])}
+
+
+def cadeiras_municipio(ibge: int, uf: str) -> list[dict]:
+    """P1 no boletim: custo da cadeira de prefeito e de vereador no município."""
+    out = []
+    for ano in (2020, 2024):
+        for cargo in (11, 13):
+            r = resumo_cadeira(campanhas(ano, cargo, (uf,), ibge))
+            if r["cadeiras"]:
+                out.append({"ano": ano, "cod_cargo": cargo, "cargo": CARGOS_P1[cargo], "fator_ipca": ipca()[ano], **r})
+    return out
 
 
 def prefeitos(cd_municipio: int, uf: str) -> list[dict]:
@@ -379,6 +391,7 @@ SELECT * FROM (
            COALESCE(m.nm_municipio || ' - ' || um.sigla, u.sigla, 'BRASIL') AS local,
            COALESCE(u.sigla, um.sigla) AS uf, m.cd_ibge AS municipio_ibge,
            pa.sigla AS partido, COALESCE(ma.ds_situacao, 'NÃO ELEITO') AS situacao,
+           cp.despesa::float AS gasto,
            ma.id_mandato IS NOT NULL AS eleito, es.turno,
            (SELECT sum(v.qtd_votos_nominais) FROM votacao_candidato_munzona v
             WHERE v.id_politico_eleicao = pe.id_politico_eleicao AND v.id_eleicao = pe.id_eleicao) AS votos,
@@ -390,8 +403,9 @@ SELECT * FROM (
     LEFT JOIN uf um       ON um.cd_ibge = m.cd_uf
     LEFT JOIN uf u        ON u.cd_ibge = e.cd_uf
     LEFT JOIN mandato ma  ON ma.id_politico_eleicao = pe.id_politico_eleicao
-    LEFT JOIN partido pa  ON pa.id_partido = ma.id_partido
+    LEFT JOIN partido pa  ON pa.id_partido = COALESCE(pe.id_partido, ma.id_partido)
     LEFT JOIN eleicao es  ON es.id_eleicao = ma.id_eleicao
+    LEFT JOIN campanha cp ON cp.id_politico_eleicao = pe.id_politico_eleicao
     WHERE pe.id_politico = %s
     ORDER BY pe.id_eleicao, eleito DESC, votos DESC NULLS LAST
 ) c
@@ -427,6 +441,39 @@ def politico_aleatorio():
     return random.choice(veteranos())
 
 
+# Taxa de reeleição (P10a), como em scripts/10a_taxa_reeleicao.py: dos eleitos para o cargo na UF
+# (ou em seus municípios), quantos disputaram o mesmo cargo na mesma unidade na eleição ordinária
+# seguinte (8 anos depois para senador) e quantos venceram. Só entram ciclos cuja eleição seguinte
+# já está no banco.
+SQL_REELEICAO = """
+WITH cand AS (
+    SELECT pe.id_politico, e.ano, COALESCE(e.cd_municipio, -e.cd_uf) AS unidade,
+           bool_or(ma.id_mandato IS NOT NULL) AS eleito
+    FROM politico_eleicao pe
+    JOIN eleicao e ON e.id_eleicao = pe.id_eleicao
+    LEFT JOIN municipio m ON m.cd_municipio = e.cd_municipio
+    LEFT JOIN mandato ma ON ma.id_politico_eleicao = pe.id_politico_eleicao
+    WHERE e.tipo <> 1 AND e.cod_cargo = %(cargo)s AND COALESCE(m.cd_uf, e.cd_uf) = %(cd_uf)s
+    GROUP BY 1, 2, 3
+)
+SELECT count(DISTINCT (a.id_politico, a.ano)) FILTER (WHERE b.id_politico IS NOT NULL) AS tentaram,
+       count(DISTINCT (a.id_politico, a.ano)) FILTER (WHERE b.eleito) AS reeleitos
+FROM cand a
+LEFT JOIN cand b ON b.id_politico = a.id_politico AND b.unidade = a.unidade AND b.ano = a.ano + %(passo)s
+WHERE a.eleito AND a.ano + %(passo)s <= (SELECT max(ano) FROM cand)
+"""
+CARGOS_TITULARES = {3, 5, 6, 7, 8, 11, 13}   # governador, senador, deputados, prefeito, vereador
+
+
+@lru_cache(maxsize=256)
+def taxa_reeleicao(cod_cargo: int, sigla: str) -> dict | None:
+    r = consultar(SQL_REELEICAO, {"cargo": cod_cargo, "cd_uf": UFS[sigla]["cd_ibge"],
+                                  "passo": 8 if cod_cargo == SENADOR else 4})[0]
+    if not r["tentaram"]:
+        return None
+    return {"tentaram": r["tentaram"], "reeleitos": r["reeleitos"], "taxa": round(100 * r["reeleitos"] / r["tentaram"], 1)}
+
+
 @app.get("/api/politicos/{id_politico}")
 def detalhar_politico(id_politico: int):
     p = consultar("SELECT id_politico AS id, nome, extract(year FROM dt_nascimento)::int AS nascimento_ano "
@@ -443,11 +490,151 @@ def detalhar_politico(id_politico: int):
         c["foto"] = foto_url(c["ano"], c["uf"], c.pop("sq"), c.pop("cd_mun"))
     vitorias = sum(c["eleito"] for c in cands)
     fotos = [c["foto"] for c in cands if c["foto"]]
+    # contexto da P10a: a taxa de reeleição do cargo mais recente disputado (titular, com UF carregada)
+    ultima = next((c for c in reversed(cands) if c["cod_cargo"] in CARGOS_TITULARES and c["uf"] in carregadas()), None)
+    taxa = ultima and taxa_reeleicao(ultima["cod_cargo"], ultima["uf"])
+    contexto = {"cargo": ultima["cargo"], "uf": ultima["uf"], **taxa} if taxa else None
     return {**p[0], "foto": fotos[-1] if fotos else None, "ufs": sorted({c["uf"] for c in cands if c["uf"]}), "candidaturas": cands,
             "resumo": {"candidaturas": len(cands), "vitorias": vitorias, "derrotas": len(cands) - vitorias,
                        "reeleicoes": sum(c["reeleito"] for c in cands),
                        "primeiro_ano": cands[0]["ano"] if cands else None,
-                       "ultimo_ano": cands[-1]["ano"] if cands else None}}
+                       "ultimo_ano": cands[-1]["ano"] if cands else None},
+            "contexto_reeleicao": contexto}
+
+
+# ───────── Quanto custa uma cadeira? (P1), como em scripts/01_custo_cadeira.py ─────────
+# Custo da cadeira = despesa contratada de todos os candidatos ao cargo ÷ cadeiras preenchidas.
+# Contas e votos por candidatura vêm da view campanha (migração 011); valores nominais, com o
+# fator do IPCA de outubro para reais de out/2024 ao lado, para o front alternar.
+
+CARGOS_P1 = {6: "Deputado federal", 7: "Deputado estadual", 5: "Senador", 3: "Governador",
+             11: "Prefeito", 13: "Vereador"}
+MUNICIPAIS = {11, 13}
+
+SQL_CAMPANHAS = """
+SELECT pe.id_politico_eleicao, pe.id_eleicao, pe.id_politico AS id, p.nome, pe.sq_candidato AS sq,
+       e.cd_municipio, m.cd_ibge AS municipio_ibge, m.nm_municipio, COALESCE(u.sigla, um.sigla) AS uf,
+       c.despesa, c.votos, c.fundo_eleitoral, c.fundo_partidario, c.pessoas_fisicas, c.proprios, c.outros,
+       ma.id_mandato IS NOT NULL AS eleito, pa.sigla AS partido, pa.numero, pa.vies_politico AS vies
+FROM campanha c
+JOIN politico_eleicao pe ON pe.id_politico_eleicao = c.id_politico_eleicao
+JOIN politico p          ON p.id_politico = pe.id_politico
+JOIN eleicao e           ON e.id_eleicao = pe.id_eleicao
+LEFT JOIN municipio m    ON m.cd_municipio = e.cd_municipio
+LEFT JOIN uf um          ON um.cd_ibge = m.cd_uf
+LEFT JOIN uf u           ON u.cd_ibge = e.cd_uf
+LEFT JOIN mandato ma     ON ma.id_politico_eleicao = pe.id_politico_eleicao
+LEFT JOIN partido pa     ON pa.id_partido = COALESCE(pe.id_partido, ma.id_partido)
+WHERE e.ano = %(ano)s AND e.cod_cargo = %(cargo)s AND e.tipo <> 1
+  AND COALESCE(u.sigla, um.sigla) = ANY(%(ufs)s)
+  AND (%(municipio)s::int IS NULL OR m.cd_ibge = %(municipio)s::int)
+"""
+
+
+@lru_cache(maxsize=1)
+def ipca() -> dict[int, float]:
+    """Fator para levar reais de outubro de cada ano a reais de outubro de 2024."""
+    idx = {r["ano"]: float(r["indice"]) for r in consultar("SELECT ano, indice FROM ipca_outubro")}
+    return {a: round(idx[2024] / i, 4) for a, i in idx.items()}
+
+
+@lru_cache(maxsize=256)
+def campanhas(ano: int, cargo: int, ufs: tuple[str, ...], municipio: int | None) -> list[dict]:
+    linhas = consultar(SQL_CAMPANHAS, {"ano": ano, "cargo": cargo, "ufs": list(ufs), "municipio": municipio})
+    for r in linhas:
+        for k in ("despesa", "fundo_eleitoral", "fundo_partidario", "pessoas_fisicas", "proprios", "outros"):
+            r[k] = float(r[k])
+        r["votos"] = int(r["votos"])
+    return linhas
+
+
+def mediana(valores: list[float]) -> float | None:
+    v = sorted(valores)
+    if not v:
+        return None
+    meio = len(v) // 2
+    return v[meio] if len(v) % 2 else (v[meio - 1] + v[meio]) / 2
+
+
+def resumo_cadeira(linhas: list[dict]) -> dict:
+    eleitos = [r for r in linhas if r["eleito"]]
+    total = sum(r["despesa"] for r in linhas)
+    return {"candidatos": len(linhas), "cadeiras": len(eleitos), "gasto_total": round(total, 2),
+            "custo_cadeira": round(total / len(eleitos), 2) if eleitos else None,
+            "mediana_eleito": mediana([r["despesa"] for r in eleitos]),
+            "mediana_nao_eleito": mediana([r["despesa"] for r in linhas if not r["eleito"]])}
+
+
+def curva_vitoria(linhas: list[dict]) -> list[dict]:
+    """Chance de vitória por faixa de gasto: faixas em escala log (cada uma ~1,78x a anterior,
+    4 por potência de 10) a partir de R$ 100; quem declarou menos que isso fica na primeira."""
+    faixas: dict[int, list[int]] = {}
+    for r in linhas:
+        k = max(0, math.floor(4 * math.log10(max(r["despesa"], 1)) - 8))   # 0 = até R$ 177
+        f = faixas.setdefault(k, [0, 0])
+        f[0] += 1
+        f[1] += r["eleito"]
+    return [{"de": 0 if k == 0 else round(10 ** ((k + 8) / 4), 2), "ate": round(10 ** ((k + 9) / 4), 2),
+             "candidatos": n, "eleitos": e} for k, (n, e) in sorted(faixas.items())]
+
+
+@app.get("/api/cadeira")
+def custo_cadeira(ano: int, cargo: int, uf: str = "", municipio: int | None = None):
+    if cargo not in CARGOS_P1:
+        raise HTTPException(404, f"Cargo fora da P1: {cargo}")
+    if ano not in ipca() or (ano % 4 == 0) != (cargo in MUNICIPAIS):
+        raise HTTPException(404, f"Não houve eleição para {CARGOS_P1[cargo].lower()} em {ano}")
+    ufs = tuple(sorted(carregadas()))
+    if uf:
+        if uf.upper() not in ufs:
+            raise HTTPException(404, f"UF sem dados: {uf}")
+        ufs = (uf.upper(),)
+    if cargo == 13 and municipio is None:
+        raise HTTPException(422, "Para vereador, escolha um município")
+    if municipio is not None:
+        if municipio not in MUNICIPIOS or MUNICIPIOS[municipio]["sg_uf"] not in ufs:
+            raise HTTPException(404, f"Município sem dados: {municipio}")
+        ufs = (MUNICIPIOS[municipio]["sg_uf"],)
+    return cadeira(ano, cargo, ufs, municipio)
+
+
+@lru_cache(maxsize=256)
+def cadeira(ano: int, cargo: int, ufs: tuple[str, ...], municipio: int | None) -> dict:
+    linhas = campanhas(ano, cargo, ufs, municipio)
+    # A curva de vitória do vereador usa a UF toda: um município sozinho tem poucos candidatos.
+    curva = curva_vitoria(campanhas(ano, cargo, ufs, None) if municipio else linhas)
+    eleitos = sorted((r for r in linhas if r["eleito"]), key=lambda r: -r["despesa"])
+    cadeiras = [{"id": r["id"], "nome": r["nome"], "partido": r["partido"], "vies": r["vies"], "uf": r["uf"],
+                 "local": r["nm_municipio"] if cargo == 11 else None, "gasto": r["despesa"], "votos": r["votos"],
+                 "foto": foto_url(ano, r["uf"], r["sq"], r["cd_municipio"])} for r in eleitos]
+
+    partidos: dict[str, dict] = {}
+    for r in linhas:
+        p = partidos.setdefault(r["partido"] or "?", {"sigla": r["partido"] or "Sem partido", "numero": r["numero"],
+                                                     "vies": r["vies"], "candidatos": 0, "cadeiras": 0, "gasto": 0.0})
+        p["candidatos"] += 1
+        p["cadeiras"] += r["eleito"]
+        p["gasto"] = round(p["gasto"] + r["despesa"], 2)
+
+    fontes = ("fundo_eleitoral", "fundo_partidario", "pessoas_fisicas", "proprios", "outros")
+    despesas = consultar("SELECT categoria, sum(valor)::float AS valor FROM despesa_por_eleicao "
+                         "WHERE id_eleicao = ANY(%s) GROUP BY 1 ORDER BY 2 DESC",
+                         (sorted({r["id_eleicao"] for r in linhas}),))
+    outras = sum(d["valor"] for d in despesas[8:])
+    tipo = [a for a in ipca() if (a % 4 == 0) == (cargo in MUNICIPAIS)]
+    m = MUNICIPIOS.get(municipio) if municipio else None
+    return {
+        "ano": ano, "cargo": {"cod": cargo, "nome": CARGOS_P1[cargo]},
+        "escopo": {"ufs": list(ufs), "municipio": {"ibge": municipio, "nome": m["municipio"]} if m else None},
+        "ipca": {str(a): f for a, f in ipca().items()},
+        "resumo": resumo_cadeira(linhas),
+        "anos": {str(a): resumo_cadeira(campanhas(a, cargo, ufs, municipio)) for a in tipo},
+        "cadeiras": cadeiras,
+        "partidos": sorted(partidos.values(), key=lambda p: (-p["cadeiras"], -p["gasto"])),
+        "curva": curva,
+        "despesas": despesas[:8] + ([{"categoria": "Outras", "valor": outras}] if outras else []),
+        "receitas": {f: round(sum(r[f] for r in linhas), 2) for f in fontes},
+    }
 
 
 # ───────── Malhas (IBGE) ─────────

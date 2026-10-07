@@ -22,6 +22,25 @@ export function Metodologia() {
         </p>
       </header>
 
+      <Secao id="m-cadeira" titulo="Custo da cadeira (P1)">
+        <p>
+          O custo de uma cadeira é tudo o que <b>os candidatos ao cargo</b> declararam ter contratado de despesa de
+          campanha, eleitos ou não, dividido pelas <b>cadeiras preenchidas</b>. Mede quanto a disputa inteira gastou por vaga.
+        </p>
+        <p className="rounded-xl border border-linha bg-folha px-5 py-4 text-tinta">
+          custo da cadeira = Σ despesa contratada dos candidatos ÷ número de eleitos
+        </p>
+        <ul className="list-disc space-y-2 pl-5">
+          <li><b>Despesa:</b> a contratada declarada ao TSE (2018 a 2024), sem as doações a outras campanhas, que reaparecem como despesa de quem recebeu.</li>
+          <li><b>Inflação:</b> os valores são levados a reais de outubro de 2024 pelo IPCA de outubro de cada ano (IBGE, tabela 1737). O alternador mostra os valores da época.</li>
+          <li><b>Preço de entrada:</b> a primeira faixa de gasto em que metade ou mais dos candidatos se elegeu (faixas com menos de 5 candidatos não contam).</li>
+          <li><b>Eleito típico e quem perdeu:</b> a mediana do gasto de cada grupo, que não se deixa puxar por meia dúzia de campanhas milionárias.</li>
+          <li><b>Custo por voto:</b> gasto da campanha ÷ votos nominais do 1º turno.</li>
+          <li><b>Preço por partido:</b> despesa de todos os candidatos do partido ÷ cadeiras que ele conquistou.</li>
+          <li>Vices e suplentes ficam de fora (gastaram R$ 0,2 mi nas quatro eleições); eleições suplementares também.</li>
+        </ul>
+      </Secao>
+
       <Secao id="m-vies" titulo="Viés político (P7)">
         <p>
           Cada partido tem um viés de <b>−100 (esquerda)</b> a <b>+100 (direita)</b>, a partir da classificação de
@@ -49,7 +68,7 @@ export function Metodologia() {
         <ul className="list-disc space-y-2 pl-5">
           <li><b>Reeleição:</b> eleito para o mesmo cargo, na mesma UF ou município, na eleição ordinária anterior (quatro anos antes; oito para senador).</li>
           <li><b>Votos:</b> nominais do 1º turno, disponíveis de 2018 a 2024 nos estados carregados.</li>
-          <li><b>Partido:</b> conhecido nos mandatos; candidaturas não eleitas aparecem sem partido.</li>
+          <li><b>Partido:</b> o da candidatura, eleita ou não.</li>
           <li><b>Privacidade:</b> CPF, título eleitoral e data completa de nascimento nunca aparecem; só o ano.</li>
           <li><b>Fotos:</b> as fotos de registro que o TSE publica desde 2004.</li>
         </ul>
@@ -57,7 +76,8 @@ export function Metodologia() {
 
       <Secao id="m-fontes" titulo="Fontes">
         <ul className="space-y-2">
-          <li><b>TSE, Portal de Dados Abertos:</b> candidaturas, votação por município e zona, comparecimento, fotos.</li>
+          <li><b>TSE, Portal de Dados Abertos:</b> candidaturas, votação por município e zona, comparecimento, prestação de contas, fotos.</li>
+          <li><b>IBGE, SIDRA:</b> IPCA (número-índice de outubro), para corrigir os valores de campanha.</li>
           <li><b>IBGE:</b> malhas municipais (GeoJSON), PIB municipal, estimativas de população e Censo 2022.</li>
           <li><b>Atlas Brasil (PNUD, Ipea, FJP):</b> IDHM; o mais recente é o do Censo 2010.</li>
           <li><b>Harvard Dataverse:</b> classificação ideológica dos partidos.</li>
