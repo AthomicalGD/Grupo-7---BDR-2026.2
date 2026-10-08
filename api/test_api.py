@@ -123,6 +123,16 @@ def main() -> None:
     assert pt["sigla"] == "PT" and pt["candidatos"][0]["nome"].startswith("LUIZ IN"), pt["candidatos"][0]
     assert cliente.get("/api/ufs/XX/composicao?ano=2022").status_code == 404
 
+    # P4: os números de respostas/04_escolaridade.txt (vereador 2024, superior completo: 6.763 de 33.147)
+    esc = get("/api/escola?ano=2024")
+    vereador = next(c for c in esc["cargos"] if c["cod"] == 13)
+    assert (vereador["candidatos"][7], vereador["eleitos"][7]) == (33147, 6763), vereador
+    assert [q["eleitos"] for q in esc["quintis"]][::4] == [26.2, 46.8] and abs(esc["correlacao"] - 0.417) < 0.01
+    the = get("/api/escola/municipio/2211001?ano=2024")
+    assert len([e for e in the["eleitos"] if e["cargo"] == 13]) == 29 and the["quintil"] == 5
+    assert not [k for k in chaves(the) if "cpf" in k or "titulo" in k]
+    assert cliente.get("/api/escola?ano=2020").status_code == 404
+
     geo = get("/api/geo/uf/PI")
     assert len(geo["features"]) == 224
     assert horario(geo["features"][0]["geometry"]["coordinates"][0])

@@ -11,6 +11,7 @@ import { silhueta } from '../atlas/geo'
 import { Alternador } from '../atlas/PainelEstado'
 import { Ciranda, CirandaTela } from '../componentes/Ciranda'
 import { ErroCarga } from '../componentes/ErroCarga'
+import { Escolha } from '../componentes/Escolha'
 import { inteiro, noEstado as noEstadoUF, plural, reaisCurto } from '../lib/formato'
 import type { BuscaCadeira } from '../router'
 import { CurvaVitoria } from './CurvaVitoria'
@@ -30,21 +31,6 @@ const CAPITAIS: Record<string, number> = {
   RO: 1100205, AC: 1200401, AM: 1302603, RR: 1400100, PA: 1501402, AP: 1600303, TO: 1721000, MA: 2111300, PI: 2211001,
   CE: 2304400, RN: 2408102, PB: 2507507, PE: 2611606, AL: 2704302, SE: 2800308, BA: 2927408, MG: 3106200, ES: 3205309,
   RJ: 3304557, SP: 3550308, PR: 4106902, SC: 4205407, RS: 4314902, MS: 5002704, MT: 5103403, GO: 5208707, DF: 5300108,
-}
-
-function Escolha({ ativo, aoClicar, children, rotulo }: { ativo: boolean; aoClicar: () => void; children: React.ReactNode; rotulo?: string }) {
-  return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={ativo}
-      aria-label={rotulo}
-      onClick={aoClicar}
-      className={`inline-flex h-10 items-center gap-2 rounded-full border px-3.5 text-[0.86rem] font-semibold whitespace-nowrap transition-[background-color,color,transform] active:scale-[0.97] ${ativo ? 'border-tinta bg-tinta text-white' : 'border-linha bg-folha text-tinta-2 hover:border-linha-2 hover:text-tinta'}`}
-    >
-      {children}
-    </button>
-  )
 }
 
 function Lede({ dados, ano, outro, cargo, lugar }: { dados: Cadeira; ano: number; outro: number; cargo: string; lugar: string }) {

@@ -32,6 +32,7 @@ const NAV = [
   { para: '/', rotulo: 'Mapa', ativo: (p: string) => p === '/' || p.startsWith('/uf') },
   { para: '/urna', rotulo: 'Urna', ativo: (p: string) => p.startsWith('/urna') || p.startsWith('/politico') },
   { para: '/cadeira', rotulo: 'Cadeira', ativo: (p: string) => p.startsWith('/cadeira') },
+  { para: '/escola', rotulo: 'Escola', ativo: (p: string) => p.startsWith('/escola') },
   { para: '/metodologia', rotulo: 'Metodologia', ativo: (p: string) => p.startsWith('/metodologia') },
 ] as const
 

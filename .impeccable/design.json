@@ -97,6 +97,26 @@
         "role": "data",
         "displayName": "Gasto: fim da rampa (YlGn)",
         "canonical": "#004529"
+      },
+      "escola-inicio": {
+        "role": "data",
+        "displayName": "Escolaridade: analfabeto (roxo mimeógrafo claro)",
+        "canonical": "#e1d8ed"
+      },
+      "escola-fim": {
+        "role": "data",
+        "displayName": "Escolaridade: superior completo (roxo mimeógrafo)",
+        "canonical": "#431575",
+        "tonalRamp": [
+          "#e1d8ed",
+          "#c8b7dd",
+          "#b199cf",
+          "#9a7dbf",
+          "#8362af",
+          "#6d499d",
+          "#582f8a",
+          "#431575"
+        ]
       }
     },
     "typographyMeta": {
@@ -235,7 +255,7 @@
     "rules": [
       {
         "name": "A Regra do Dado Colorido",
-        "body": "Cor saturada mostra viés, resultado ou tecla; o resto é papel, tinta e linha.",
+        "body": "Cor saturada mostra viés, gasto, escolaridade, resultado ou tecla; o resto é papel, tinta e linha.",
         "section": "colors"
       },
       {

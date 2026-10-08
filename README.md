@@ -130,6 +130,8 @@ python -m uvicorn api.app:app --port 8000
 | `GET /api/ufs` | As 27 UFs, com nº de municípios, se estão carregadas e o viés por ano |
 | `GET /api/ufs/{sigla}` | Viés da UF, das regiões intermediárias e de cada município, eleitorado apto por ano |
 | `GET /api/ufs/{sigla}/composicao?ano=` | De onde vem o viés da UF no ano: cada partido com votos, viés e quanto puxa a média (a soma dá o viés), e os candidatos mais votados de cada partido |
+| `GET /api/escola?ano=` | P4 (2022 ou 2024): quem votou, candidatos e eleitos por grau de escolaridade e cargo, municípios em quintis pela escolaridade de quem votou e a correlação |
+| `GET /api/escola/municipio/{ibge}?ano=` | P4 no município: quem votou por grau, os eleitos (2024) com grau e partido, os votos para deputado (2022) ou vereador por grau, e o quintil |
 | `GET /api/municipios?q=&uf=&limite=8` | Busca de municípios por nome, sem acentos, em todo o Brasil |
 | `GET /api/municipios/{ibge}` | Viés, votos por partido, indicadores (PIB per capita, IDHM...), comparecimento e prefeitos |
 | `GET /api/politicos?q=&cargo=&ano=&uf=&partido=&resultado=&limite=8` | Busca de políticos por nome (trigramas, sem acentos; migração `010_busca_politicos.sql`) e/ou por uma candidatura que bata com todos os filtros |
@@ -170,6 +172,7 @@ em http://localhost:4173 (também repassa `/api` para a API).
 |---|---|---|
 | Mapa do Brasil, viés por estado, linha do tempo 2018-2024 | `/` | P7 |
 | Plenário: quanto custa uma cadeira, por cargo, ano e estado (ou câmara municipal), em 2D e 3D | `/cadeira` | P1 |
+| Escola: a peneira (quem votou, candidatos, eleitos por escolaridade), de cada 100 santinhos quantos viram cadeira, a régua dos municípios e o lugar | `/escola` | P4 |
 | Estado: municípios, de onde vem o viés (partidos e candidatos), regiões intermediárias, extremos, relevo 3D | `/uf/PI` | P7 |
 | Boletim do município: viés, espectro do voto, prefeitos, custo da cadeira, indicadores, QR code | `/uf/PI/2211001` | P7, P1, P3 |
 | Urna de consulta (UE2020 em vetor): busca pelo nome e cédula de filtros (cargo, ano, estado, partido, resultado) | `/urna` | P10 |

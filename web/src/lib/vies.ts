@@ -8,7 +8,7 @@ const MEIO = [0.935, 0.004, 250] as const
 const DIR = [0.45, 0.11, 254] as const
 export const SATURA = 60
 
-function oklchParaHex(L: number, C: number, H: number): string {
+export function oklchParaHex(L: number, C: number, H: number): string {
   const h = (H * Math.PI) / 180
   const a = C * Math.cos(h), b = C * Math.sin(h)
   const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3

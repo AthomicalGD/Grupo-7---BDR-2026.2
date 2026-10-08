@@ -6,7 +6,7 @@ import type { ReactNode } from 'react'
 function Secao({ id, titulo, resposta, children }: {
   id: string
   titulo: string
-  resposta?: { para: '/' | '/cadeira' | '/urna'; rotulo: string }
+  resposta?: { para: '/' | '/cadeira' | '/urna' | '/escola'; rotulo: string }
   children: ReactNode
 }) {
   return (
@@ -59,7 +59,7 @@ export function Metodologia() {
         </ul>
       </Secao>
 
-      <Secao id="m-escolaridade" titulo="Escolaridade de quem é eleito e de quem vota (P4)">
+      <Secao id="m-escolaridade" titulo="Escolaridade de quem é eleito e de quem vota (P4)" resposta={{ para: '/escola', rotulo: 'Ver a resposta na peneira' }}>
         <p>
           Duas perguntas, para 2022 e 2024: a <b>escolaridade do candidato</b> muda a chance de ser eleito? E os lugares
           em que <b>quem vota</b> estudou menos elegem pessoas que estudaram menos? O TSE descreve candidato e eleitor

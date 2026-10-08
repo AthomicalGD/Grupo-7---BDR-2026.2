@@ -244,6 +244,57 @@ export class ErroApi extends Error {
   }
 }
 
+/** P4: os 8 graus do TSE, de 1 (analfabeto) a 8 (superior completo); vetores com 8 posições. */
+export interface Escola {
+  ano: 2022 | 2024
+  ufs: string[]
+  /** como o lugar é medido: eleitos do município (2024) ou o voto para deputado (2022) */
+  medida: 'eleitos' | 'votados'
+  niveis: { nivel: number; rotulo: string }[]
+  /** comparecimento do 1º turno por grau, nas UFs carregadas */
+  votantes: number[]
+  cargos: { cod: number; nome: string; candidatos: number[]; eleitos: number[] }[]
+  quintis: (QuintilEscola & { q: number })[]
+  todos: QuintilEscola
+  correlacao: number | null
+}
+
+/** Médias dos municípios do grupo: % com superior completo de quem votou, dos candidatos, dos eleitos e dos votos. */
+export interface QuintilEscola {
+  municipios: number
+  de: number
+  ate: number
+  votantes: number | null
+  candidatos: number | null
+  eleitos: number | null
+  votados: number | null
+}
+
+export interface EleitoEscola {
+  id: number
+  nome: string
+  nome_urna: string | null
+  cargo: number
+  partido: string | null
+  vies: number | null
+  nivel: number | null
+  foto: string | null
+}
+
+export interface EscolaLugar {
+  ibge: number
+  nome: string
+  uf: string
+  ano: 2022 | 2024
+  votantes: number[]
+  votados: number[]
+  eleitos: EleitoEscola[]
+  quintil: number | null
+  pct: { votantes: number | null; candidatos: number | null; eleitos: number | null; votados: number | null }
+}
+
+export const ANOS_ESCOLA = [2022, 2024] as const
+
 async function get<T>(caminho: string, signal?: AbortSignal): Promise<T> {
   let r: Response
   try {
@@ -305,6 +356,14 @@ export const consultas = {
       queryKey: ['cadeira', ano, cargo, uf, municipio ?? null],
       queryFn: ({ signal }) =>
         get<Cadeira>(`/api/cadeira?ano=${ano}&cargo=${cargo}&uf=${uf}${municipio ? `&municipio=${municipio}` : ''}`, signal),
+      ...sempre,
+    }),
+  escola: (ano: number) =>
+    queryOptions({ queryKey: ['escola', ano], queryFn: ({ signal }) => get<Escola>(`/api/escola?ano=${ano}`, signal), ...sempre }),
+  escolaLugar: (ibge: number, ano: number) =>
+    queryOptions({
+      queryKey: ['escola-lugar', ibge, ano],
+      queryFn: ({ signal }) => get<EscolaLugar>(`/api/escola/municipio/${ibge}?ano=${ano}`, signal),
       ...sempre,
     }),
   malhaBrasil: () =>
