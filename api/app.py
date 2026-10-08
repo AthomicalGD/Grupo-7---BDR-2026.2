@@ -911,8 +911,10 @@ JOIN eleicao e       USING (id_eleicao)
 JOIN cargo c         USING (cod_cargo)
 JOIN escolaridade es ON es.ds_grau = pe.ds_grau_instrucao
 LEFT JOIN mandato m  USING (id_politico_eleicao)
+LEFT JOIN municipio mu ON mu.cd_municipio = e.cd_municipio
 WHERE e.ano = %(ano)s AND e.tipo = 2 AND e.cod_cargo = ANY(%(cargos)s)
   AND pe.ds_sit_tot_turno IS NOT NULL AND es.nivel IS NOT NULL
+  AND (%(cd_uf)s::int IS NULL OR COALESCE(mu.cd_uf, e.cd_uf) = %(cd_uf)s)
 GROUP BY 1, 2, 3
 """
 
@@ -920,8 +922,10 @@ SQL_ESCOLA_VOTANTES = """
 SELECT es.nivel, sum(p.qtd_comparecimento)::bigint AS votantes
 FROM perfil_eleitorado_munzona p
 JOIN zona_eleitoral z USING (id_zona)
+JOIN municipio mu     USING (cd_municipio)
 JOIN escolaridade es  ON es.ds_grau = p.ds_grau_escolaridade
 WHERE p.ano_eleicao = %(ano)s AND es.nivel IS NOT NULL AND (%(mun)s::int IS NULL OR z.cd_municipio = %(mun)s)
+  AND (%(cd_uf)s::int IS NULL OR mu.cd_uf = %(cd_uf)s)
 GROUP BY 1
 """
 
@@ -958,7 +962,7 @@ votos AS (
     WHERE e.ano = %(ano)s AND e.turno = 1 AND e.tipo = 2 AND e.cod_cargo = ANY(%(voto)s) AND es.nivel IS NOT NULL
     GROUP BY 1
 )
-SELECT mu.cd_ibge AS ibge, vt.votantes::float, d.candidatos::float, d.eleitos::float, vo.votados::float
+SELECT mu.cd_ibge AS ibge, mu.cd_uf, vt.votantes::float, d.candidatos::float, d.eleitos::float, vo.votados::float
 FROM votantes vt
 JOIN municipio mu   USING (cd_municipio)
 LEFT JOIN disputa d USING (cd_municipio)
@@ -1026,14 +1030,19 @@ def municipios_escola(ano: int) -> dict[int, dict]:
     return {r["ibge"]: {**r, "quintil": bisect.bisect_left(cortes, r["votantes"]) + 1} for r in linhas}
 
 
-@lru_cache(maxsize=2)
-def escola_ano(ano: int) -> dict:
+@lru_cache(maxsize=16)
+def escola_ano(ano: int, uf: str = "") -> dict:
+    """O quadro das UFs carregadas ou de uma só; com UF, os quintos dividem os municípios dela."""
+    cd_uf = UFS[uf]["cd_ibge"] if uf else None
     por_cargo: dict[int, dict] = {}
-    for r in consultar(SQL_ESCOLA_CARGOS, {"ano": ano, "cargos": CARGOS_ESCOLA[ano]}):
+    for r in consultar(SQL_ESCOLA_CARGOS, {"ano": ano, "cargos": CARGOS_ESCOLA[ano], "cd_uf": cd_uf}):
         c = por_cargo.setdefault(r["cargo"], {"cod": r["cargo"], "nome": r["nome"], "candidatos": [0] * 8, "eleitos": [0] * 8})
         c["candidatos"][r["nivel"] - 1] = r["candidatos"]
         c["eleitos"][r["nivel"] - 1] = r["eleitos"]
-    mun = list(municipios_escola(ano).values())
+    mun = [m for m in municipios_escola(ano).values() if cd_uf is None or m["cd_uf"] == cd_uf]
+    if cd_uf is not None:   # quintos dentro da UF (cortes nos quantis, como no conjunto)
+        cortes = statistics.quantiles([m["votantes"] for m in mun], n=5, method="inclusive")
+        mun = [{**m, "quintil": bisect.bisect_left(cortes, m["votantes"]) + 1} for m in mun]
     medida = "eleitos" if ano == 2024 else "votados"   # 2022: deputado é eleito pelo estado
 
     def resumo(grupo: list[dict]) -> dict:
@@ -1042,9 +1051,9 @@ def escola_ano(ano: int) -> dict:
                 **{k: _media([m[k] for m in grupo if m[k] is not None]) for k in ("votantes", "candidatos", "eleitos", "votados")}}
 
     return {
-        "ano": ano, "ufs": sorted(carregadas() - {"BR"}), "medida": medida,
+        "ano": ano, "uf": uf or None, "ufs": [uf] if uf else sorted(carregadas() - {"BR"}), "medida": medida,
         "niveis": consultar(SQL_ESCOLA_NIVEIS),
-        "votantes": _por_nivel(consultar(SQL_ESCOLA_VOTANTES, {"ano": ano, "mun": None}), "votantes"),
+        "votantes": _por_nivel(consultar(SQL_ESCOLA_VOTANTES, {"ano": ano, "mun": None, "cd_uf": cd_uf}), "votantes"),
         "cargos": [por_cargo[c] for c in CARGOS_ESCOLA[ano] if c in por_cargo],
         "quintis": [{"q": q, **resumo([m for m in mun if m["quintil"] == q])} for q in range(1, 6)],
         "todos": resumo(mun),
@@ -1053,8 +1062,12 @@ def escola_ano(ano: int) -> dict:
 
 
 @app.get("/api/escola")
-def escola(ano: int = 2024):
-    return escola_ano(_ano_escola(ano))
+def escola(ano: int = 2024, uf: str = ""):
+    if uf:
+        uf = uf_de(uf)["sigla"]
+        if uf not in carregadas():
+            raise HTTPException(404, f"UF sem dados: {uf}")
+    return escola_ano(_ano_escola(ano), uf)
 
 
 @lru_cache(maxsize=256)
@@ -1071,7 +1084,7 @@ def escola_lugar(ibge: int, ano: int) -> dict:
     linha = municipios_escola(ano).get(ibge, {})
     return {
         "ibge": ibge, "nome": m["municipio"], "uf": m["sg_uf"], "ano": ano,
-        "votantes": _por_nivel(consultar(SQL_ESCOLA_VOTANTES, {"ano": ano, "mun": cd}), "votantes"),
+        "votantes": _por_nivel(consultar(SQL_ESCOLA_VOTANTES, {"ano": ano, "mun": cd, "cd_uf": None}), "votantes"),
         "votados": _por_nivel(consultar(SQL_ESCOLA_VOTADOS, {"ano": ano, "mun": cd, "voto": VOTO_ESCOLA[ano]}), "votos"),
         "eleitos": eleitos,
         "quintil": linha.get("quintil"),

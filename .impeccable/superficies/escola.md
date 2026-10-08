@@ -5,11 +5,11 @@ Tarefa: entender se a escolaridade do candidato muda a chance de se eleger e se 
 
 ## Direction contract
 
-THESIS: a página da P4 é a peneira da urna: oito fitas de escolaridade, na tinta roxa do mimeógrafo escolar, escorrendo de quem votou para quem se candidatou e para quem se elegeu. Recusa barras agrupadas por escolaridade e o hero de número grande.
-OWN-WORLD: papel, folha e tinta do Voto Aberto; rampa ordinal de 8 tons em roxo mimeógrafo só para escolaridade; verde eleito para quem virou cadeira; santinhos e a cadeira do plenário como unidades; Archivo nas três larguras; cédula de anos como seletor.
-STORY: em segundos vê que o diploma engorda a cada etapa (2022: 11% → 53% → 79%); depois conta, em santinhos, a chance de cada grau; por fim acha um município: a sala de 100 eleitores diante da câmara que ele elegeu.
-FIRST VIEWPORT: título Display à esquerda com a frase-resposta; cédula 2022|2024 à direita; fichas de cargo; a peneira em largura total, três postes, fitas rotuladas nas pontas, destaque no superior completo. Abre em 2022.
-FORM: ensaio em três atos, opção 1 de 3 estruturas apresentadas ao usuário pela ferramenta de perguntas. O sorteio de conceito (concept-seed) não rodou: o launcher do impeccable não está instalado nesta máquina; não há seed key.
+THESIS: do caderno ao plenário: a P4 conta a eleição pelos seus objetos, cada um com 100 unidades na cor do grau de escolaridade: o caderno de votação (quem votou assina), os santinhos (quem se candidatou), o plenário com a cadeira do sistema (quem se elegeu); o município é um boletim. Recusa formas de fora da eleição (peneira, régua, sala) e cores de fora do sistema. (Primeira versão, com roxo mimeógrafo e metáforas da escola, recusada pelo usuário por quebrar a paleta e a integridade conceitual.)
+OWN-WORLD: papel, folha e tinta do Voto Aberto; a escala da bandeira (amarelo → verde → azul da marca, luminosidade monotônica) só para escolaridade; verde eleito para quem virou cadeira; o santinho, a cadeira do plenário e o papel térmico do boletim como unidades e suportes; Archivo nas três larguras; cédula de anos.
+STORY: em segundos vê o azul do superior completo crescer do caderno (11 de 100) aos santinhos (53) e ao plenário (79); depois conta, em santinhos, a chance de cada grau; por fim compara cinco câmaras e lê o boletim de um município.
+FIRST VIEWPORT: título Display "Quanto estudou quem senta na cadeira?" com a frase-resposta; cédula 2022|2024 à direita; fichas de cargo; a chave dos 8 graus; os três objetos lado a lado com o "de 100" de cada um. Abre em 2022.
+FORM: ensaio em três atos (escolha do usuário); cores "A · bandeira" e formas "objetos da eleição" escolhidas pelo usuário na pergunta estruturada. Sem concept-seed: o launcher do impeccable não está instalado; não há seed key.
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance.
 
 ## Decisões em aberto

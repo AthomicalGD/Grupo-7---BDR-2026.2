@@ -97,13 +97,13 @@ test('metodologia: cada questão leva à tela da resposta', async ({ page }) => 
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
   await expect(page).toHaveURL(/localhost:\d+\/(\?|$)/)
 
-  // P4: as consultas abrem com um clique e a resposta está na peneira
+  // P4: as consultas abrem com um clique e a resposta está na escola
   await page.goto('/metodologia')
   const p4 = page.locator('section[aria-labelledby="m-escolaridade"]')
   await p4.getByText('As consultas', { exact: true }).click()
   await expect(p4.getByText('Chance de ser eleito por grau e cargo')).toBeVisible()
   await expect(p4.locator('pre').first()).toContainText('FROM politico_eleicao pe')
-  await p4.getByRole('link', { name: 'Ver a resposta na peneira' }).click()
+  await p4.getByRole('link', { name: 'Ver a resposta na escola' }).click()
   await expect(page).toHaveURL(/\/escola/)
 })
 

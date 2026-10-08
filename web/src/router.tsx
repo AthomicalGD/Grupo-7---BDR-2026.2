@@ -22,10 +22,11 @@ export interface BuscaCadeira {
 
 export interface BuscaEscola {
   ano?: Ano
-  /** cargo da peneira (sem ele, todos os cargos do ano) */
+  /** cargo do caderno ao plenário (sem ele, todos os cargos do ano) */
   cargo?: number
   /** cargo dos 100 santinhos */
   santinho?: number
+  uf?: string
   ibge?: number
 }
 
@@ -93,6 +94,7 @@ const escola = createRoute({
     ano: Number(s.ano) === 2022 ? 2022 : Number(s.ano) === 2024 ? 2024 : undefined,
     cargo: numero(s.cargo),
     santinho: numero(s.santinho),
+    uf: typeof s.uf === 'string' && /^[A-Z]{2}$/.test(s.uf) ? s.uf : undefined,
     ibge: numero(s.ibge),
   }),
 })

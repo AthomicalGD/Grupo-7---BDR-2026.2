@@ -212,7 +212,7 @@ export function Metodologia() {
         </Detalhe>
       </Secao>
 
-      <Secao id="m-escolaridade" titulo="Escolaridade de quem é eleito e de quem vota (P4)" resposta={{ para: '/escola', rotulo: 'Ver a resposta na peneira' }}>
+      <Secao id="m-escolaridade" titulo="Escolaridade de quem é eleito e de quem vota (P4)" resposta={{ para: '/escola', rotulo: 'Ver a resposta na escola' }}>
         <p>
           Duas perguntas, para 2022 e 2024: a <b>escolaridade do candidato</b> muda a chance de ser eleito? E os lugares
           em que <b>quem vota</b> estudou menos elegem pessoas que estudaram menos? O TSE descreve candidato e eleitor

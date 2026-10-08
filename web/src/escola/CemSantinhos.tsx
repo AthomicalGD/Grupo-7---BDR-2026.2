@@ -6,25 +6,33 @@
 import { useReducedMotion } from 'motion/react'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { inteiro, pct, plural } from '../lib/formato'
-import { cor, useLargura } from './escolaridade'
+import { useLargura } from './escolaridade'
 
 const MINIMO = 30 // graus com menos candidatos viram nota: 1 em 2 não é 50%
 const CONTORNO = '#87919d' // santinho vazio: 3,1:1 sobre a folha
 
+/** O santinho em miniatura: cartão, janela da foto e linha do nome; o eleito fica no verde de quem venceu. */
 function Santinho({ x, y, w, h, eleito, atraso }: { x: number; y: number; w: number; h: number; eleito: boolean; atraso: number }) {
+  const transicao = { transitionDelay: `${atraso}ms` }
   return (
-    <rect
-      x={x}
-      y={y}
-      width={w}
-      height={h}
-      rx={Math.min(1.6, w / 4)}
-      fill={eleito ? 'var(--color-eleito)' : 'var(--color-folha)'}
-      stroke={eleito ? 'var(--color-eleito)' : CONTORNO}
-      strokeWidth={0.8}
-      className="transition-[fill,stroke] duration-300"
-      style={{ transitionDelay: `${atraso}ms` }}
-    />
+    <g>
+      <rect
+        x={x} y={y} width={w} height={h} rx={Math.min(1.6, w / 5)}
+        fill={eleito ? 'var(--color-eleito)' : 'var(--color-folha)'}
+        stroke={eleito ? 'var(--color-eleito)' : CONTORNO}
+        strokeWidth={0.8}
+        className="transition-[fill,stroke] duration-300"
+        style={transicao}
+      />
+      <rect
+        x={x + w * 0.2} y={y + h * 0.12} width={w * 0.6} height={h * 0.42} rx={Math.min(1, w / 10)}
+        fill={eleito ? 'var(--color-folha)' : 'var(--color-papel-2)'}
+        opacity={eleito ? 0.85 : 1}
+        className="transition-[fill] duration-300"
+        style={transicao}
+      />
+      <rect x={x + w * 0.2} y={y + h * 0.66} width={w * 0.6} height={Math.max(0.8, h * 0.07)} fill={eleito ? 'var(--color-folha)' : CONTORNO} opacity={0.6} />
+    </g>
   )
 }
 
@@ -76,15 +84,12 @@ export function CemSantinhos({ candidatos, eleitos, rotulos, destaque, aoDestaca
             const rotulo = (
               <span className={estreito ? 'flex items-baseline gap-3' : 'block'}>
                 <span className={`flex items-baseline gap-1 ${estreito ? 'order-2 ml-auto' : 'mt-3'}`}>
-                  <span className={`t-numero tabular ${estreito ? 'text-[1.6rem]' : 'text-[2rem]'} ${ativo ? 'text-eleito' : 'text-tinta'}`}>{k}</span>
+                  <span className={`t-numero tabular ${estreito ? 'text-[1.6rem]' : 'text-[2rem]'} ${ativo ? 'text-tinta' : 'text-tinta-2'}`}>{k}</span>
                   <span className="text-[0.8rem] text-tinta-3">de 100</span>
                 </span>
                 <span className="block">
-                  <span className="mt-1.5 flex items-start gap-1.5">
-                    <span className="mt-[3px] size-2.5 shrink-0 rounded-[2px]" style={{ background: cor(n) }} aria-hidden />
-                    <span className={`text-[0.86rem] leading-tight ${ativo ? 'font-bold text-tinta' : 'text-tinta-2'}`}>{rotulos[n - 1]}</span>
-                  </span>
-                  <span className="tabular mt-0.5 block pl-4 text-[0.74rem] text-tinta-3">{plural(candidatos[n - 1], 'candidato', 'candidatos')}</span>
+                  <span className={`mt-1.5 block text-[0.86rem] leading-tight ${ativo ? 'font-bold text-tinta' : 'text-tinta-2'}`}>{rotulos[n - 1]}</span>
+                  <span className="tabular mt-0.5 block text-[0.74rem] text-tinta-3">{plural(candidatos[n - 1], 'candidato', 'candidatos')}</span>
                 </span>
               </span>
             )

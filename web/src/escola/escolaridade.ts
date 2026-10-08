@@ -1,14 +1,10 @@
-// P4: a régua dos 8 graus de escolaridade do TSE e a cor de cada um.
-// A cor é o roxo do mimeógrafo, a tinta das provas e apostilas da escola brasileira: uma matiz só,
-// do lilás quase papel (analfabeto) ao roxo fechado (superior completo). Não cruza com o viés
-// (laranja e azul), com o gasto (amarelo e verde) nem com o verde de quem foi eleito.
+// P4: os 8 graus de escolaridade do TSE e a cor de cada um.
+// A escala é a da bandeira, feita das âncoras da marca: do amarelo (analfabeto) ao verde e ao azul
+// da marca (superior completo), com a luminosidade caindo sempre (OKLCH 0,93 → 0,38), então a ordem
+// se lê do claro ao escuro. Quanto mais estudo, mais fundo o azul.
 import { useLayoutEffect, useRef, useState, type RefObject } from 'react'
-import { oklchParaHex } from '../lib/vies'
 
-export const TINTA_ESCOLA = Array.from({ length: 8 }, (_, i) => {
-  const t = i / 7
-  return oklchParaHex(0.895 - 0.565 * t ** 0.95, 0.03 + 0.12 * (1 - (1 - t) ** 1.6), 306 - 6 * t)
-})
+export const TINTA_ESCOLA = ['#f9e99a', '#e4d948', '#a3cc4d', '#52b766', '#029e72', '#00808d', '#0d5c91', '#1c3e81']
 
 /** Tinta do texto sobre cada tom: escura nos quatro claros, papel nos quatro escuros. */
 export const tintaSobreGrau = (nivel: number) => (nivel <= 4 ? 'var(--color-tinta)' : 'var(--color-folha)')
@@ -16,6 +12,16 @@ export const tintaSobreGrau = (nivel: number) => (nivel <= 4 ? 'var(--color-tint
 export const cor = (nivel: number) => TINTA_ESCOLA[nivel - 1]
 
 export const SUPERIOR = 8
+
+/** As 100 unidades em ordem de leitura, do superior completo (primeiro) ao analfabeto. */
+export function unidades(cem: number[]): number[] {
+  const u: number[] = []
+  for (let g = 8; g >= 1; g--) for (let k = 0; k < cem[g - 1]; k++) u.push(g)
+  return u
+}
+
+/** Opacidade de uma unidade: cheia no grau em destaque, recuada nos outros. */
+export const alfa = (g: number, destaque: number | null) => (destaque == null || g === destaque ? 1 : 0.3)
 
 export const soma = (v: number[]) => v.reduce((s, x) => s + x, 0)
 
@@ -26,8 +32,8 @@ export const porCento = (v: number[]) => {
 }
 
 /**
- * Distribui 100 unidades entre os graus pelos maiores restos: a sala tem sempre 100 carteiras e
- * o quadro dos votos sempre 100 cédulas, sem sobrar nem faltar uma.
+ * Distribui 100 unidades entre os graus pelos maiores restos: o caderno tem sempre 100 assinaturas,
+ * o plenário 100 cadeiras e o boletim soma 100, sem sobrar nem faltar uma.
  */
 export function cem(v: number[]): number[] {
   const p = porCento(v)

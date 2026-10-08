@@ -172,7 +172,7 @@ em http://localhost:4173 (também repassa `/api` para a API).
 |---|---|---|
 | Mapa do Brasil, viés por estado, linha do tempo 2018-2024 | `/` | P7 |
 | Plenário: quanto custa uma cadeira, por cargo, ano e estado (ou câmara municipal), em 2D e 3D | `/cadeira` | P1 |
-| Escola: a peneira (quem votou, candidatos, eleitos por escolaridade), de cada 100 santinhos quantos viram cadeira, a régua dos municípios e o lugar | `/escola` | P4 |
+| Escola: do caderno de votação ao plenário (quem votou, candidatos e eleitos por escolaridade), de cada 100 santinhos quantos viram cadeira, cinco câmaras e o boletim da escolaridade do município | `/escola` | P4 |
 | Estado: municípios, de onde vem o viés (partidos e candidatos), regiões intermediárias, extremos, relevo 3D | `/uf/PI` | P7 |
 | Boletim do município: viés, espectro do voto, prefeitos, custo da cadeira, indicadores, QR code | `/uf/PI/2211001` | P7, P1, P3 |
 | Urna de consulta (UE2020 em vetor): busca pelo nome e cédula de filtros (cargo, ano, estado, partido, resultado) | `/urna` | P10 |

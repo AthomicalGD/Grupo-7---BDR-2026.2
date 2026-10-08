@@ -100,22 +100,22 @@
       },
       "escola-inicio": {
         "role": "data",
-        "displayName": "Escolaridade: analfabeto (roxo mimeógrafo claro)",
-        "canonical": "#e1d8ed"
+        "displayName": "Escolaridade: analfabeto (amarelo da bandeira)",
+        "canonical": "#f9e99a"
       },
       "escola-fim": {
         "role": "data",
-        "displayName": "Escolaridade: superior completo (roxo mimeógrafo)",
-        "canonical": "#431575",
+        "displayName": "Escolaridade: superior completo (azul da bandeira)",
+        "canonical": "#1c3e81",
         "tonalRamp": [
-          "#e1d8ed",
-          "#c8b7dd",
-          "#b199cf",
-          "#9a7dbf",
-          "#8362af",
-          "#6d499d",
-          "#582f8a",
-          "#431575"
+          "#f9e99a",
+          "#e4d948",
+          "#a3cc4d",
+          "#52b766",
+          "#029e72",
+          "#00808d",
+          "#0d5c91",
+          "#1c3e81"
         ]
       }
     },

@@ -32,8 +32,8 @@ colors:
   marca-azul: "#2b4c8c"
   gasto-inicio: "#edf8b4"
   gasto-fim: "#004529"
-  escola-inicio: "#e1d8ed"
-  escola-fim: "#431575"
+  escola-inicio: "#f9e99a"
+  escola-fim: "#1c3e81"
 typography:
   display:
     fontFamily: "Archivo Variable, Archivo, system-ui, sans-serif"
@@ -172,8 +172,10 @@ Fundo frio de papel e tinta ardósia; cor saturada só no dado, nas fitas da mar
 - Nunca usada para viés; o partido continua com a cor do seu viés (barras do preço por partido).
 
 ### Data (escolaridade, P4)
-- **Roxo mimeógrafo** (#e1d8ed → #431575): os 8 graus do TSE, de analfabeto (lilás quase papel) a superior completo (roxo fechado), uma matiz só em OKLCH (L 0,895 → 0,33, C 0,03 → 0,15, H 306 → 300), em `web/src/escola/escolaridade.ts`. É a tinta das provas e apostilas mimeografadas da escola brasileira, e a única matiz do sistema que não cruza com o viés (laranja e azul), o gasto (amarelo e verde) nem o verde de quem foi eleito.
-- Texto em tinta sobre os quatro tons claros e em folha sobre os quatro escuros. Superior completo ganha contorno de 1,6px em tinta onde a cor seria o único sinal (sala, câmara, legenda).
+- **Escala da bandeira** (#f9e99a → #1c3e81): os 8 graus do TSE, de analfabeto (amarelo claro) a superior completo (azul fechado), feita das âncoras da marca: o amarelo #fbc700, o verde #1f9a4e e o azul #2b4c8c, em OKLCH com a luminosidade sempre caindo (0,93 → 0,38), então a ordem se lê do claro ao escuro. Quanto mais estudo, mais fundo o azul. Em `web/src/escola/escolaridade.ts`.
+- Os tons claros levam contorno de tinta a 20% sobre a folha, para não sumir. Texto em tinta sobre os quatro tons claros e em folha sobre os quatro escuros.
+- O grau em destaque ganha contorno de tinta de 1,2px nas suas unidades; os outros recuam a 30% de opacidade, e a composição continua à vista. Unidade vazia (fora da conta) é folha com contorno #87919d (3,1:1).
+- Só existe na página da Escola; o viés continua laranja ↔ azul e o gasto amarelo → verde em suas páginas.
 
 ### Tertiary (fitas, assinatura)
 - **Fitas** (#5e881b, #a2bd31, #5d6b94, #468baf, #76acd0, #f19929, #fbc700): a faixa ondulada do cabeçalho e do rodapé, a tira do santinho e da cédula de consulta. A do cabeçalho só ondula enquanto a API responde. Nunca carregam informação nem texto.
@@ -262,17 +264,17 @@ Desenhada em vetor, de frente, com as proporções medidas numa foto do terminal
 ### Plenário (assinatura, P1)
 Hemiciclo em que cada cadeira é um eleito, vista de cima (assento na cor do gasto, encosto em tinta), numerada da esquerda para a direita pelo gasto ou pelos partidos na ordem da escala de viés. O custo da cadeira fica no miolo; em telas estreitas desce para baixo do arco. As cadeiras "sentam" em varredura (520ms, atraso até 650ms) quando a seleção muda e deslizam quando a ordem muda. Cartão com foto ao passar o mouse, setas do teclado percorrem, Enter abre a carreira; no toque, o primeiro toque mostra e o segundo abre. Vista "Em pé" (3D): colunas com altura linear ao gasto e a cadeira em cima.
 
-### Peneira (assinatura, P4)
-Três postes (quem votou, candidatos, eleitos) com os 8 graus empilhados, superior completo em cima, e uma fita por grau escorrendo de um poste ao outro (curvas de Bézier, 2px entre os trechos). O grau em destaque (padrão: superior completo) fica a 96% com contorno de tinta nos três postes e fichas condensadas com o % em cada poste; os outros a 50%. Os nomes dos graus, à esquerda e na altura do seu trecho, são os botões de destaque (no celular viram uma legenda em duas colunas). A frase abaixo diz os três números e a chance de se eleger. Ao mudar ano ou cargo, a peneira escorre de novo: uma máscara que se abre da esquerda (1,25s, `cubic-bezier(.16,1,.3,1)`).
+### Do caderno ao plenário (assinatura, P4)
+A mesma eleição contada por três objetos, cada um com 100 unidades (Isotype) na cor do grau, do superior completo para baixo: o **caderno de votação** (uma folha pautada com 100 linhas de assinatura em 5 colunas, três rabiscos alternados; quem votou assina), os **santinhos** (100 santinhos em miniatura, cartão na cor do grau, janela da foto e linha do nome; quem se candidatou) e o **plenário** (100 cadeiras do sistema, encosto em tinta e assento na cor do grau; quem se elegeu), com título e total em cima, desenho alinhado na base e o "de 100" do grau em destaque embaixo. A chave dos 8 graus é uma fileira de botões (no celular, uma linha que rola de lado, como as fichas de cargo); escolher um grau, ou passar o ponteiro por qualquer unidade, acende as unidades dele nos três objetos. As cadeiras se sentam em varredura quando o ano ou o cargo muda.
 
 ### De cada 100 santinhos (P4)
-Um quadro de 100 santinhos por grau (Isotype: cada um vale 1% dos candidatos do grau), do menor para o maior. Eleitos no verde de quem venceu, enchendo de baixo para cima nos quadros 10×10 (no celular, faixas 25×4 enchendo da esquerda, um grau por linha), então a altura do verde se compara como barra. Tracejado em tinta na média do cargo. Santinho vazio em folha com contorno #87919d (3,1:1). Graus com menos de 30 candidatos viram nota.
+Um quadro de 100 santinhos por grau (cada um vale 1% dos candidatos do grau), do menor para o maior, sem amostra de cor nos rótulos: aqui o verde significa só eleito. O santinho tem janela de foto e linha do nome; o eleito fica no verde de quem venceu e enche o quadro de baixo para cima (no celular, faixas 25×4 da esquerda), como barra. Tracejado em tinta na média do cargo. Graus com menos de 30 candidatos viram nota.
 
-### Régua dos municípios (P4)
-Os municípios em cinco quintos pela % de quem votou com superior completo. Por linha: anel (quem votou, valor embaixo), traço (candidatos do município) e ponto em roxo fechado (eleitos do município em 2024; votos para deputado em 2022), ligados por uma barra lilás que é a distância entre eleitor e eleito. A última linha é o município escolhido, em papel 2 com anel amarelo do marcador no ponto.
+### Cinco câmaras (P4)
+Os municípios em cinco quintos pela % de quem votou com superior completo; cada quinto é um plenário de 100 cadeiras com os eleitos de superior completo no azul do topo da escala e os outros em folha com contorno #87919d (2024). Em 2022, 100 votos para deputado como casas da cédula, marcadas com X (dois traços, como a cédula de anos) as dos candidatos com superior completo. Embaixo, o "de 100" e, com superior de cada 100, quem votou e os candidatos. O quinto do município do boletim leva contorno no amarelo do marcador (o anel de seleção, como na busca do plenário).
 
-### O lugar (P4)
-A sala de aula (100 carteiras de quem votou, do superior em cima) diante da câmara eleita: o hemiciclo com a cadeira do plenário (encosto em tinta, assento na cor do grau) e o prefeito no miolo; em 2022, os 100 votos para deputado. Superior completo com contorno e contagem escrita. Toque mostra, segundo toque abre a carreira; Enter abre.
+### Boletim da escolaridade (P4)
+O município no papel térmico do boletim de urna: fenda escura, borda serrilhada, cabeçalho em mono, picotes e linhas impressas em cascata. Uma tabela por grau (de 100 que votaram; cadeiras da câmara em 2024 ou votos para deputado de 100 em 2022), a câmara eleita no plenário com a cadeira do sistema e o prefeito no miolo, e o fecho em mono. Toque mostra a cadeira, o segundo toque abre a carreira.
 
 ### Filtros da busca (fichas)
 Uma linha discreta de fichas sob o campo do nome: Cargo, Eleição, Estado, Partido, Resultado. Cada ficha abre um menu pequeno só quando clicada (fecha com Esc ou clique fora, abre para o lado com espaço). A escolhida fica em tinta, com o valor e um x para tirar, como os alternadores. Dentro dos menus continuam os sinais do sistema: eleições gerais e municipais em duas colunas, estado com a silhueta, partidos da esquerda para a direita com a cor do viés.

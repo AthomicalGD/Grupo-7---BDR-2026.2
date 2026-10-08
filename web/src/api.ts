@@ -247,6 +247,8 @@ export class ErroApi extends Error {
 /** P4: os 8 graus do TSE, de 1 (analfabeto) a 8 (superior completo); vetores com 8 posições. */
 export interface Escola {
   ano: 2022 | 2024
+  /** a UF filtrada, ou nulo para todas as carregadas */
+  uf: string | null
   ufs: string[]
   /** como o lugar é medido: eleitos do município (2024) ou o voto para deputado (2022) */
   medida: 'eleitos' | 'votados'
@@ -358,8 +360,8 @@ export const consultas = {
         get<Cadeira>(`/api/cadeira?ano=${ano}&cargo=${cargo}&uf=${uf}${municipio ? `&municipio=${municipio}` : ''}`, signal),
       ...sempre,
     }),
-  escola: (ano: number) =>
-    queryOptions({ queryKey: ['escola', ano], queryFn: ({ signal }) => get<Escola>(`/api/escola?ano=${ano}`, signal), ...sempre }),
+  escola: (ano: number, uf = '') =>
+    queryOptions({ queryKey: ['escola', ano, uf], queryFn: ({ signal }) => get<Escola>(`/api/escola?ano=${ano}&uf=${uf}`, signal), ...sempre }),
   escolaLugar: (ibge: number, ano: number) =>
     queryOptions({
       queryKey: ['escola-lugar', ibge, ano],
