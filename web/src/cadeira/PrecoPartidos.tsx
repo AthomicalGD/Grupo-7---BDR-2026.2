@@ -15,11 +15,11 @@ export const PrecoPartidos = memo(function PrecoPartidos({ partidos, fator }: { 
 
   return (
     <div>
-      <ol className="grid gap-1.5">
+      <ol className="grid gap-[5px]">
         {com.map((p, i) => (
           <li key={p.sigla} className="grid grid-cols-[6.4rem_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[8.2rem_minmax(0,1fr)_9.5rem]">
             <span className="truncate text-[0.88rem] font-bold" title={p.sigla}>{p.sigla}</span>
-            <div className="relative h-7">
+            <div className="relative h-5">
               {/* a barra cresce em scaleX; o valor fica fora dela para não ser esticado junto */}
               <motion.div
                 className="absolute inset-y-0 left-0 origin-left rounded-[6px]"

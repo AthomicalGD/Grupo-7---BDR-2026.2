@@ -124,8 +124,8 @@ export function UrnaPagina() {
   }
 
   return (
-    <div className="mx-auto grid max-w-[1440px] gap-10 px-4 pt-8 md:px-[72px] lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-start lg:gap-14">
-      <div className="lg:sticky lg:top-[112px]">
+    <div className="mx-auto grid max-w-[1440px] gap-10 px-4 pt-6 md:px-[72px] lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-start lg:gap-14">
+      <div className="mx-auto w-full lg:sticky lg:top-[84px] lg:max-w-[calc((100dvh-136px)*1.27)]">
         <Urna canvas={canvas} versao={versao} pulsos={pulsos} aoApertar={aoApertar} />
       </div>
 

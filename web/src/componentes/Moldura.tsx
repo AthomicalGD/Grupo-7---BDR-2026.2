@@ -42,7 +42,7 @@ function BarraUtilitaria() {
   const botao = 'rounded px-2 py-0.5 hover:bg-folha/70 disabled:opacity-40 disabled:hover:bg-transparent'
   return (
     <div className="bg-papel-2 text-tinta-2">
-      <div className="mx-auto flex h-8 max-w-[1440px] items-center justify-between gap-4 px-4 text-[0.78rem] md:px-[72px]">
+      <div className="mx-auto flex h-7 max-w-[1440px] items-center justify-between gap-4 px-4 text-[0.76rem] md:px-[72px]">
         <p className="truncate">Projeto acadêmico de Banco de Dados · Grupo 7 · 2026.2</p>
         <div className="flex shrink-0 items-center gap-1 font-semibold">
           <button
@@ -70,10 +70,10 @@ function Cabecalho() {
   const caminho = useRouterState({ select: (s) => s.location.pathname })
   return (
     <header className="sticky top-0 z-30 bg-folha">
-      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-3 px-4 sm:gap-6 md:h-[72px] md:px-[72px]">
+      <div className="mx-auto flex h-14 max-w-[1440px] items-center justify-between gap-3 px-4 sm:gap-6 md:px-[72px]">
         <Link to="/" className="shrink-0" aria-label="Voto Aberto, página inicial">
-          <img src={letreiro} alt="Voto Aberto" className="hidden h-9 w-auto min-[420px]:block md:h-10" />
-          <img src={simbolo} alt="Voto Aberto" className="h-9 w-auto min-[420px]:hidden" />
+          <img src={letreiro} alt="Voto Aberto" className="hidden h-8 w-auto min-[420px]:block md:h-9" />
+          <img src={simbolo} alt="Voto Aberto" className="h-8 w-auto min-[420px]:hidden" />
         </Link>
         <nav aria-label="Principal">
           <ul className="flex items-center gap-0 sm:gap-3">
@@ -83,7 +83,7 @@ function Cabecalho() {
                 <li key={item.para} className="relative">
                   <Link
                     to={item.para}
-                    className={`block rounded-md px-1.5 py-2 text-[0.88rem] transition-colors min-[420px]:px-2 min-[420px]:text-[0.95rem] sm:px-3 sm:text-base ${ativo ? 'font-semibold text-tinta' : 'text-tinta-2 hover:text-tinta'}`}
+                    className={`block rounded-md px-1.5 py-2 text-[0.88rem] transition-colors min-[420px]:px-2 min-[420px]:text-[0.95rem] sm:px-3 sm:text-[0.97rem] ${ativo ? 'font-semibold text-tinta' : 'text-tinta-2 hover:text-tinta'}`}
                     aria-current={ativo ? 'page' : undefined}
                   >
                     {item.rotulo}
@@ -91,7 +91,7 @@ function Cabecalho() {
                   {ativo && (
                     <motion.span
                       layoutId="nav-marcador"
-                      className="absolute inset-x-1.5 -bottom-[14px] h-1 rounded-full bg-marcador min-[420px]:inset-x-2 sm:inset-x-3 md:-bottom-[18px]"
+                      className="absolute inset-x-1.5 -bottom-[10px] h-1 rounded-full bg-marcador min-[420px]:inset-x-2 sm:inset-x-3"
                       transition={{ type: 'spring', stiffness: 420, damping: 36 }}
                     />
                   )}
@@ -110,11 +110,11 @@ function Rodape() {
   const { data: ufs } = useQuery(consultas.ufs())
   const carregadas = ufs?.filter((u) => u.carregada).map((u) => u.sigla) ?? []
   return (
-    <footer className="mt-24 bg-tinta text-[#c9d0d8]">
+    <footer className="mt-16 bg-tinta text-[#c9d0d8]">
       <Fita altura={7} />
-      <div className="mx-auto grid max-w-[1440px] gap-10 px-4 py-14 md:grid-cols-[1.2fr_1fr_1fr] md:px-[72px]">
+      <div className="mx-auto grid max-w-[1440px] gap-10 px-4 py-10 md:grid-cols-[1.2fr_1fr_1fr] md:px-[72px]">
         <div className="space-y-4">
-          <img src={letreiroNegativo} alt="Voto Aberto" className="-ml-2 h-14 w-auto" />
+          <img src={letreiroNegativo} alt="Voto Aberto" className="-ml-2 h-12 w-auto" />
           <p className="max-w-[46ch] text-sm leading-relaxed">
             Viés político de estados e municípios, o custo de cada cadeira e a carreira de cada político desde
             1994, com dados abertos coletados, modelados e carregados pelo Grupo 7.

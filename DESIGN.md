@@ -37,26 +37,26 @@ colors:
 typography:
   display:
     fontFamily: "Archivo Variable, Archivo, system-ui, sans-serif"
-    fontSize: "clamp(2.4rem, 1.4rem + 2.6vw, 3.8rem)"
+    fontSize: "clamp(2rem, 1.1rem + 2vw, 3.1rem)"
     fontWeight: 780
     lineHeight: 0.98
     letterSpacing: "-0.018em"
     fontVariation: "'wdth' 112"
   headline:
     fontFamily: "Archivo Variable, Archivo, system-ui, sans-serif"
-    fontSize: "clamp(1.9rem, 1.3rem + 1.4vw, 2.45rem)"
+    fontSize: "clamp(1.6rem, 1.1rem + 1.05vw, 2.1rem)"
     fontWeight: 760
     lineHeight: 1.04
     letterSpacing: "-0.012em"
     fontVariation: "'wdth' 106"
   title:
     fontFamily: "Archivo Variable, Archivo, system-ui, sans-serif"
-    fontSize: "1.5625rem"
+    fontSize: "1.375rem"
     fontWeight: 700
-    lineHeight: 1.15
+    lineHeight: 1.18
   subtitle:
     fontFamily: "Archivo Variable, Archivo, system-ui, sans-serif"
-    fontSize: "1.25rem"
+    fontSize: "1.125rem"
     fontWeight: 650
     lineHeight: 1.25
   body:
@@ -200,10 +200,10 @@ Fundo frio de papel e tinta ardósia; cor saturada só no dado, nas fitas da mar
 **Character:** uma grotesca latino-americana (Omnibus-Type) usada em três larguras: expandida para a tese, normal para ler, condensada para os números. A mono existe só onde o objeto real imprime em mono.
 
 ### Hierarchy
-- **Display** (780, clamp(2.4rem → 3.8rem), 0.98, `wdth` 112): a tese de cada tela ("Para onde o voto pendeu").
-- **Headline** (760, clamp(1.9rem → 2.45rem), 1.04, `wdth` 106): nome do estado, do município, do político.
-- **Title** (700, 1.5625rem, 1.15): seções de página.
-- **Subtitle** (650, 1.25rem, 1.25): títulos de gráficos e blocos.
+- **Display** (780, clamp(2rem → 3.1rem), 0.98, `wdth` 112): a tese de cada tela ("Para onde o voto pendeu").
+- **Headline** (760, clamp(1.6rem → 2.1rem), 1.04, `wdth` 106): nome do estado, do município, do político.
+- **Title** (700, 1.375rem, 1.18): seções de página.
+- **Subtitle** (650, 1.125rem, 1.25): títulos de gráficos e blocos.
 - **Body** (400, 1rem, 1.55): textos explicativos, até ~54ch na coluna do painel.
 - **Label** (600, 0.8125rem, 1.3): rótulos, legendas, metadados.
 - **Número** (820, `wdth` 74): valores de viés e votos em destaque; algarismos proporcionais. Tabelas e eixos usam `tabular-nums`.
@@ -214,7 +214,9 @@ Fundo frio de papel e tinta ardósia; cor saturada só no dado, nas fitas da mar
 
 ## Layout
 
-Grade de 12 colunas com `max-width: 1440px` e calha de 72px (16px no celular). No atlas, o mapa ocupa 7/12 e fica fixo enquanto o painel (5/12) rola; abaixo de 1024px o mapa vai para cima com 58dvh e o painel desce. O cabeçalho é fixo (72px + 9px de fita); a barra utilitária (32px) rola. Espaço maior acima do título que abaixo; seções do painel separadas por 36px. Nenhuma tela tem rolagem horizontal em 390px (verificado nos testes).
+Grade de 12 colunas com `max-width: 1440px` e calha de 72px (16px no celular). No atlas, o mapa ocupa 7/12 e fica fixo enquanto o painel (5/12) rola; abaixo de 1024px o mapa vai para cima com 58dvh e o painel desce. O cabeçalho é fixo (56px + 9px de fita); a barra utilitária (28px) rola. Espaço maior acima do título que abaixo; seções do painel separadas por 28px e seções de página por 64px. Nenhuma tela tem rolagem horizontal em 390px (verificado nos testes).
+
+**A Regra da Janela de Notebook.** Cada grupo que se lê junto (um gráfico com a sua legenda e o seu número, o mapa com o boletim, os dois anos de uma comparação) cabe inteiro numa janela de 1366×657 (um notebook com a barra do navegador), sem zoom. Desenhos grandes se limitam pela altura da janela com `dvh`: a urna, o plenário da Cadeira (`min(1180px, (100dvh − 120px) × 1,92)`), o mapa da Escola e a coluna fixa do atlas. Os objetos da Escola não passam de ~200px de altura.
 
 ## Elevation & Depth
 
@@ -265,7 +267,7 @@ Desenhada em vetor, de frente, com as proporções medidas numa foto do terminal
 Hemiciclo em que cada cadeira é um eleito, vista de cima (assento na cor do gasto, encosto em tinta), numerada da esquerda para a direita pelo gasto ou pelos partidos na ordem da escala de viés. O custo da cadeira fica no miolo; em telas estreitas desce para baixo do arco. As cadeiras "sentam" em varredura (520ms, atraso até 650ms) quando a seleção muda e deslizam quando a ordem muda. Cartão com foto ao passar o mouse, setas do teclado percorrem, Enter abre a carreira; no toque, o primeiro toque mostra e o segundo abre. Vista "Em pé" (3D): colunas com altura linear ao gasto e a cadeira em cima.
 
 ### Do caderno ao plenário (assinatura, P4)
-A mesma eleição contada por três objetos, cada um com 100 unidades (Isotype) na cor do grau, do superior completo para baixo: o **caderno de votação** (uma folha pautada com 100 linhas de assinatura em 5 colunas, três rabiscos alternados; quem votou assina), os **santinhos** (100 santinhos em miniatura, cartão na cor do grau, janela da foto e linha do nome; quem se candidatou) e o **plenário** (100 cadeiras do sistema, encosto em tinta e assento na cor do grau; quem se elegeu), com título e total em cima, desenho alinhado na base e o "de 100" do grau em destaque embaixo. A chave dos 8 graus é uma fileira de botões (no celular, uma linha que rola de lado, como as fichas de cargo); escolher um grau, ou passar o ponteiro por qualquer unidade, acende as unidades dele nos três objetos. As cadeiras se sentam em varredura quando o ano ou o cargo muda.
+A mesma eleição contada por três objetos, cada um com 100 unidades (Isotype) na cor do grau, do superior completo para baixo: o **caderno de votação** (uma folha pautada com 100 linhas de assinatura em 5 colunas, três rabiscos alternados; quem votou assina), os **santinhos** (100 santinhos em miniatura, cartão na cor do grau, janela da foto e linha do nome; quem se candidatou) e o **plenário** (100 cadeiras do sistema, encosto em tinta e assento na cor do grau; quem se elegeu), com título e total em cima, desenho alinhado na base e o "de 100" do grau em destaque embaixo; os três com ~200px de altura. A chave dos 8 graus é uma coluna de botões à esquerda dos objetos, do superior completo para baixo, na ordem em que eles se empilham (no celular, uma linha que rola de lado, como as fichas de cargo); escolher um grau, ou passar o ponteiro por qualquer unidade, acende as unidades dele nos três objetos. As cadeiras se sentam em varredura quando o ano ou o cargo muda.
 
 ### De cada 100 santinhos (P4)
 Um quadro de 100 santinhos por grau (cada um vale 1% dos candidatos do grau), do menor para o maior, sem amostra de cor nos rótulos: aqui o verde significa só eleito. O santinho tem janela de foto e linha do nome; o eleito fica no verde de quem venceu e enche o quadro de baixo para cima (no celular, faixas 25×4 da esquerda), como barra. Tracejado em tinta na média do cargo. Graus com menos de 30 candidatos viram nota.
@@ -274,19 +276,19 @@ Um quadro de 100 santinhos por grau (cada um vale 1% dos candidatos do grau), do
 Os municípios em cinco quintos pela % de quem votou com superior completo; cada quinto é um plenário de 100 cadeiras com os eleitos de superior completo no azul do topo da escala e os outros em folha com contorno #87919d (2024). Em 2022, 100 votos para deputado como casas da cédula, marcadas com X (dois traços, como a cédula de anos) as dos candidatos com superior completo. Embaixo, o "de 100" e, com superior de cada 100, quem votou e os candidatos. O quinto do município do boletim leva contorno no amarelo do marcador (o anel de seleção, como na busca do plenário).
 
 ### Boletim da escolaridade (P4)
-O município no papel térmico do boletim de urna: fenda escura, borda serrilhada, cabeçalho em mono, picotes e linhas impressas em cascata. Uma tabela por grau (de 100 que votaram; cadeiras da câmara em 2024 ou votos para deputado de 100 em 2022), a câmara eleita no plenário com a cadeira do sistema e o prefeito no miolo, e o fecho em mono. Toque mostra a cadeira, o segundo toque abre a carreira.
+O município no papel térmico do boletim de urna: fenda escura, borda serrilhada, cabeçalho em mono, picotes e linhas impressas em cascata. Uma tabela por grau (de 100 que votaram; cadeiras da câmara em 2024 ou votos para deputado de 100 em 2022), a câmara eleita no plenário com a cadeira do sistema e o prefeito no miolo, e, sob a câmara, quantos vereadores têm superior e o grau do prefeito (em 2022, o fecho em mono). Toque mostra a cadeira, o segundo toque abre a carreira.
 
 ### Filtro por estado (P4)
-No cabeçalho, sob a cédula de anos: "Todos" e uma pílula por estado carregado com a silhueta (as mesmas da Cadeira), em grade de 4 no largo e numa linha que rola de lado no celular. Recorta a página inteira: a frase de abertura diz "na Bahia", os quintos dividem os municípios do estado e o boletim abre na capital. Com filtro, os atos mostram sob o título a pílula "Recorte: 2022 · Bahia" com um x para tirar o filtro.
+No cabeçalho, sob a cédula de anos: "Todos" e uma pílula por estado carregado com a silhueta (as mesmas da Cadeira), em grade de 4 no largo e numa linha que rola de lado no celular. Recorta a página inteira: a frase de abertura diz "na Bahia", os quintos dividem os municípios do estado e o boletim abre na capital. Com filtro, os atos mostram ao lado do título a pílula "Recorte: 2022 · Bahia" com um x para tirar o filtro.
 
 ### Cada cadeira, cada estado (P4)
-2022 ao lado de 2024, em duas colunas com o ano em número grande. Cada linha é uma faixa de composição (os 8 graus em fila, do analfabeto ao superior completo, na escala da bandeira) com o "de 100 com superior" à direita: primeiro a faixa de quem votou (mais fina e clara, a régua), depois um cargo por linha e um estado por linha. Clicar num estado aplica o filtro; o estado filtrado leva o anel do marcador.
+2022 ao lado de 2024, em duas colunas com o ano em número grande. Cada linha é uma faixa de composição (os 8 graus em fila, do analfabeto ao superior completo, na escala da bandeira) com o "de 100 com superior" à direita: primeiro a faixa de quem votou (mais fina e clara, a régua), depois um cargo por linha. Embaixo, os estados numa tabela só, com 2022 e 2024 na mesma linha (faixa, "de 100" e, miúdos, quantos eleitos e quantos de 100 que votaram têm superior); no celular, os dois anos um sob o outro dentro do estado. Clicar num estado aplica o filtro; o estado filtrado leva o anel do marcador.
 
 ### Os partidos e o diploma (P4)
 O espectro da P7 contado em diploma: cada partido é uma coluna, da esquerda para a direita na ordem do viés e na cor do viés (a cor do partido é o seu viés), com a largura pelos eleitos e a altura pelos eleitos com superior completo; o traço em tinta é a mesma conta entre os candidatos e o tracejado, a média. A escala vai até o maior valor arredondado (não até 100), para as diferenças aparecerem. Cada coluna tem na base uma tira na cor do seu viés (a posição não é o viés: o eixo é a soma dos eleitos); os dois extremos citados no texto ganham chamada com sigla e valor, por cima de tudo. Cartão com os números ao passar o mouse. No celular vira uma linha por partido (sigla, barra na cor do viés, traço dos candidatos).
 
 ### Mapa e dispersão da escolaridade (P4)
-Um alternador troca as duas vistas dos municípios. O mapa pinta cada município na escala da bandeira (de 0 a 100, 12,5 pontos por tom) pelos eleitos com superior (2024) ou pelos votos para deputado em candidatos com superior (2022), sobre o Brasil hachurado como no mapa do viés; o município do boletim leva contorno no amarelo do marcador. A dispersão põe cada município como ponto (quem votou × eleitos, tamanho por quem votou) com a diagonal pontilhada "eleito = eleitor" e a tendência tracejada. Clicar em qualquer município abre o boletim.
+Um alternador troca as duas vistas dos municípios. O mapa pinta cada município na escala da bandeira (de 0 a 100, 12,5 pontos por tom) pelos eleitos com superior (2024) ou pelos votos para deputado em candidatos com superior (2022), sobre o Brasil hachurado como no mapa do viés; o município do boletim leva contorno no amarelo do marcador. A dispersão põe cada município como ponto (quem votou × eleitos, tamanho por quem votou) com a diagonal pontilhada "eleito = eleitor" e a tendência tracejada. Clicar em qualquer município abre o boletim. O mapa não passa da altura da janela, para caber ao lado do boletim.
 
 ### Ranking dos municípios (P4)
 Três listas impressas como linhas do boletim (cabeçalho em mono, picote, posição e valor em mono com pontilhado até o número): mais diploma, menos diploma e maior distância do eleitor. Só entram câmaras com ao menos 5 eleitos; quando o extremo empata em mais municípios do que a lista mostra, ela diz quantos ("63 empatam em 0 de 100; os maiores:"). Cada linha abre o boletim. Em 2022 a seção das cinco câmaras se chama "Cinco cédulas".

@@ -94,7 +94,7 @@ export function EscolaPagina() {
   const onde = ufInfo ? ` ${noEstado(ufInfo.sigla, ufInfo.nome)}` : ''
   // com estado escolhido, cada ato lembra o recorte e deixa tirar o filtro
   const selo = ufInfo && (
-    <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-linha bg-folha py-0.5 pl-3 pr-1 text-[0.78rem] text-tinta-2">
+    <p className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-linha bg-folha py-0.5 pl-3 pr-1 text-[0.78rem] text-tinta-2">
       Recorte: {ano} · {ufInfo.nome}
       <button type="button" onClick={() => mudar({ uf: undefined, ibge: undefined })} aria-label="Tirar o filtro de estado" className="grid size-6 place-items-center rounded-full hover:bg-papel focus-visible:outline-2 focus-visible:outline-acao">
         <X size={12} weight="bold" aria-hidden />
@@ -106,28 +106,28 @@ export function EscolaPagina() {
   const quintilDoLugar = vLugar == null ? null : d.quintis.findIndex((x) => vLugar <= x.ate + 0.05) + 1 || 5
 
   return (
-    <div className="mx-auto max-w-[1440px] px-4 pb-12 pt-8 md:px-[72px] md:pt-10" aria-busy={q.isPlaceholderData}>
-      <header className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+    <div className="mx-auto max-w-[1440px] px-4 pb-12 pt-6 md:px-[72px] md:pt-7" aria-busy={q.isPlaceholderData}>
+      <header className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <div>
           <h1 className="t-display">Quanto estudou quem senta na cadeira?</h1>
-          <p className="mt-4 max-w-[56ch] text-[clamp(1.15rem,1rem+0.7vw,1.5rem)] font-medium leading-[1.42] text-tinta-2" style={{ fontStretch: '96%' }}>
+          <p className="mt-3 max-w-[60ch] text-[clamp(1.08rem,0.95rem+0.5vw,1.32rem)] font-medium leading-[1.42] text-tinta-2" style={{ fontStretch: '96%' }}>
             Em {ano}{ufInfo ? `, ${noEstado(ufInfo.sigla, ufInfo.nome)},` : ''} quem se elegeu tinha{' '}
             <b className="tabular font-bold text-tinta">{decimal(vezes, vezes >= 5 ? 0 : 1)} vezes</b> mais diploma do que quem votou: superior completo era{' '}
             <b className="tabular font-bold text-tinta">{pct(sup(d.votantes), 0)}</b> de quem votou,{' '}
             <b className="tabular font-bold text-tinta">{pct(sup(todos.candidatos), 0)}</b> de quem se candidatou e{' '}
             <b className="tabular font-bold text-tinta">{pct(sup(todos.eleitos), 0)}</b> de quem se elegeu.
           </p>
-          <p className="mt-3 text-[0.86rem] text-tinta-3">
+          <p className="mt-2 text-[0.82rem] text-tinta-3">
             {lista(d.ufs)} · comparecimento do 1º turno e candidaturas aptas, com a escolaridade declarada ao TSE
           </p>
         </div>
-        <div className="grid min-w-0 gap-4 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-end lg:grid-cols-1">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-end lg:grid-cols-1">
           <fieldset>
-            <legend className="t-rotulo mb-2 text-tinta-2">Eleição</legend>
+            <legend className="t-rotulo mb-1.5 text-tinta-2">Eleição</legend>
             <CedulaAnos ano={ano} anos={ANOS} linhaDoTempo={false} aoMudar={(a) => mudar({ ano: a, cargo: undefined, santinho: undefined })} />
           </fieldset>
           <fieldset className="min-w-0">
-            <legend className="t-rotulo mb-2 text-tinta-2">Estado</legend>
+            <legend className="t-rotulo mb-1.5 text-tinta-2">Estado</legend>
             <div role="radiogroup" aria-label="Estado" className="-mx-4 flex snap-x gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 lg:grid lg:grid-cols-4 [&>button]:shrink-0 [&>button]:snap-start">
               <Escolha ativo={!uf} aoClicar={() => mudar({ uf: undefined, ibge: undefined })}>Todos</Escolha>
               {carregadas.map((u) => (
@@ -144,8 +144,8 @@ export function EscolaPagina() {
       </header>
 
       {/* ato 1: do caderno de votação ao plenário */}
-      <section aria-label="Do caderno de votação ao plenário" className="mt-7">
-        <div role="radiogroup" aria-label="Cargo" className="-mx-4 mb-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [&>button]:shrink-0 [&>button]:snap-start">
+      <section aria-label="Do caderno de votação ao plenário" className="mt-6">
+        <div role="radiogroup" aria-label="Cargo" className="-mx-4 mb-5 flex snap-x gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [&>button]:shrink-0 [&>button]:snap-start">
           <Escolha ativo={!cargoObjetos} aoClicar={() => mudar({ cargo: undefined })}>Todos os cargos</Escolha>
           {d.cargos.map((c) => (
             <Escolha key={c.cod} ativo={c.cod === cargoObjetos?.cod} aoClicar={() => mudar({ cargo: c.cod })}>{nomeCargo(c.nome)}</Escolha>
@@ -174,10 +174,12 @@ export function EscolaPagina() {
       </section>
 
       {/* ato 2: os 100 santinhos */}
-      <section aria-labelledby="santinhos-p4" className="adiar mt-24">
-        <h2 id="santinhos-p4" className="t-h1">De cada 100 santinhos, quantos viram cadeira</h2>
-        {selo}
-        <p className="mt-3 max-w-[64ch] text-[1.02rem] leading-relaxed text-tinta-2">
+      <section aria-labelledby="santinhos-p4" className="adiar mt-16">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <h2 id="santinhos-p4" className="t-h1">De cada 100 santinhos, quantos viram cadeira</h2>
+          {selo}
+        </div>
+        <p className="mt-2 max-w-[76ch] text-[1.02rem] leading-relaxed text-tinta-2">
           {veredito ? (
             <>
               {veredito}: para {nomeCargo(cargo100.nome).toLowerCase()}, de cada 100 candidatos com superior completo,{' '}
@@ -192,7 +194,7 @@ export function EscolaPagina() {
             </>
           )}
         </p>
-        <div role="radiogroup" aria-label="Cargo dos santinhos" className="mb-5 mt-5 flex flex-wrap gap-2">
+        <div role="radiogroup" aria-label="Cargo dos santinhos" className="mb-5 mt-4 flex flex-wrap gap-2">
           {d.cargos.map((c) => (
             <Escolha key={c.cod} ativo={c.cod === cargo100.cod} aoClicar={() => mudar({ santinho: c.cod })}>{nomeCargo(c.nome)}</Escolha>
           ))}
@@ -201,9 +203,9 @@ export function EscolaPagina() {
       </section>
 
       {/* ato 3: cada cadeira e cada estado, 2022 ao lado de 2024 */}
-      <section aria-labelledby="cadeiras-p4" className="adiar mt-24">
+      <section aria-labelledby="cadeiras-p4" className="adiar mt-16">
         <h2 id="cadeiras-p4" className="t-h1">Cada cadeira, cada estado</h2>
-        <div className="mt-3">
+        <div className="mt-2">
           {comparar ? (
             <CadaCadeira dados={comparar} uf={uf} rotulos={rotulos} aoEscolherUf={(s) => mudar({ uf: s || undefined, ibge: undefined })} />
           ) : (
@@ -213,17 +215,21 @@ export function EscolaPagina() {
       </section>
 
       {/* ato 4: os partidos, na ordem e na cor do viés */}
-      <section aria-labelledby="partidos-p4" className="adiar mt-24">
-        <h2 id="partidos-p4" className="t-h1">Os partidos e o diploma</h2>
-        {selo}
-        <div className="mt-3">{partidos ? <Partidos partidos={partidos} onde={onde} /> : <p className="text-tinta-3">Contando os partidos...</p>}</div>
+      <section aria-labelledby="partidos-p4" className="adiar mt-16">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <h2 id="partidos-p4" className="t-h1">Os partidos e o diploma</h2>
+          {selo}
+        </div>
+        <div className="mt-2">{partidos ? <Partidos partidos={partidos} onde={onde} /> : <p className="text-tinta-3">Contando os partidos...</p>}</div>
       </section>
 
       {/* ato 5: o lugar: mapa ou dispersão, o boletim, as cinco câmaras e o ranking */}
-      <section aria-labelledby="lugar-p4" className="adiar mt-24">
-        <h2 id="lugar-p4" className="t-h1">{d.medida === 'eleitos' ? 'O lugar e quem ele elege' : 'O lugar e em quem ele vota'}</h2>
-        {selo}
-        <p className="mt-3 max-w-[64ch] text-[1.02rem] leading-relaxed text-tinta-2">
+      <section aria-labelledby="lugar-p4" className="adiar mt-16">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <h2 id="lugar-p4" className="t-h1">{d.medida === 'eleitos' ? 'O lugar e quem ele elege' : 'O lugar e em quem ele vota'}</h2>
+          {selo}
+        </div>
+        <p className="mt-2 max-w-[76ch] text-[1.02rem] leading-relaxed text-tinta-2">
           {d.medida === 'eleitos' ? (
             <>
               Onde quem vota estudou menos, a câmara tem menos gente com diploma: <b className="tabular text-tinta">{pct(q1.eleitos, 0)}</b> dos
@@ -238,7 +244,7 @@ export function EscolaPagina() {
             </>
           )}
         </p>
-        <div className="mt-8 grid grid-cols-1 gap-x-12 gap-y-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+        <div className="mt-5 grid grid-cols-1 gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
           <div className="min-w-0">
             <Alternador
               rotulo="Vista dos municípios"
@@ -246,7 +252,7 @@ export function EscolaPagina() {
               aoMudar={setVista}
               opcoes={[{ valor: 'mapa', rotulo: 'Mapa' }, { valor: 'dispersao', rotulo: 'Dispersão' }]}
             />
-            <div className="mt-4">
+            <div className="mt-3">
               {!municipios ? (
                 <p className="text-tinta-3">Abrindo os municípios...</p>
               ) : vista === 'mapa' ? (
@@ -262,11 +268,11 @@ export function EscolaPagina() {
           </div>
         </div>
 
-        <h3 className="t-h2 mt-16">{d.medida === 'eleitos' ? 'Cinco câmaras' : 'Cinco cédulas'}</h3>
-        <p className="mt-2 max-w-[70ch] text-[0.98rem] leading-relaxed text-tinta-2">
+        <h3 className="t-h2 mt-12">{d.medida === 'eleitos' ? 'Cinco câmaras' : 'Cinco cédulas'}</h3>
+        <p className="mt-2 max-w-[76ch] text-[0.98rem] leading-relaxed text-tinta-2">
           Os {inteiro(d.todos.municipios)} municípios{ufInfo ? ` ${noEstado(ufInfo.sigla, ufInfo.nome)}` : ''} em cinco grupos do mesmo tamanho, do eleitorado menos ao mais escolarizado.
         </p>
-        <div className="mt-5">
+        <div className="mt-4">
           <CincoCamaras dados={d} quintilDoLugar={quintilDoLugar} />
           <p className="mt-4 text-[0.86rem] text-tinta-3">
             Correlação entre os {inteiro(d.todos.municipios)} municípios: <b className="tabular text-tinta-2">{decimal(Math.abs(d.correlacao ?? 0) < 0.005 ? 0 : d.correlacao, 2)}</b>
@@ -274,13 +280,13 @@ export function EscolaPagina() {
           </p>
         </div>
 
-        <h3 className="t-h2 mt-16">O ranking dos municípios</h3>
+        <h3 className="t-h2 mt-12">O ranking dos municípios</h3>
         <div className="mt-2">
           {municipios && <Ranking municipios={municipios} medida={d.medida} selecionado={ibge} aoEscolher={(i) => mudar({ ibge: i })} />}
         </div>
       </section>
 
-      <footer className="mt-16 border-t border-linha pt-6">
+      <footer className="mt-12 border-t border-linha pt-5">
         <Link to="/metodologia" hash="m-escolaridade" className="inline-flex items-center gap-1.5 font-semibold text-acao hover:underline">
           Como medimos a escolaridade <ArrowRight size={14} weight="bold" aria-hidden />
         </Link>

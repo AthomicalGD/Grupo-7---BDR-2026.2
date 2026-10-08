@@ -35,7 +35,7 @@ function Lede({ dados, ano, outro, cargo, lugar }: { dados: Cadeira; ano: number
   const vezes = r.mediana_eleito && r.mediana_nao_eleito ? r.mediana_eleito / r.mediana_nao_eleito : null
   const b = (t: string) => <b className="tabular font-bold text-tinta">{t}</b>
   return (
-    <p className="max-w-[54ch] text-[clamp(1.2rem,1rem+0.8vw,1.55rem)] font-medium leading-[1.42] text-tinta-2" style={{ fontStretch: '96%' }}>
+    <p className="max-w-[54ch] text-[clamp(1.1rem,0.95rem+0.55vw,1.35rem)] font-medium leading-[1.42] text-tinta-2" style={{ fontStretch: '96%' }}>
       Em {ano}, {b(inteiro(r.candidatos))} candidatos a {cargo.toLowerCase()} {lugar} gastaram {b(reaisCurto(r.gasto_total * fator))}{' '}
       por {b(plural(r.cadeiras, 'cadeira', 'cadeiras'))}. {r.cadeiras === 1 ? 'O eleito' : 'O eleito típico'} gastou {b(reaisCurto((r.mediana_eleito ?? 0) * fator))}
       {r.mediana_nao_eleito ? <>; quem perdeu, {b(reaisCurto(r.mediana_nao_eleito * fator))}{vezes && vezes >= 2 ? `, ${inteiro(Math.round(vezes))} vezes menos` : ''}</> : '; quem perdeu, na maioria, não declarou gasto'}.
@@ -95,7 +95,7 @@ export function CadeiraPagina() {
   const abrir = (id: number) => navegar({ to: '/politico/$id', params: { id: String(id) } })
 
   return (
-    <div className="mx-auto max-w-[1440px] px-4 pb-24 pt-8 md:px-[72px] md:pt-10">
+    <div className="mx-auto max-w-[1440px] px-4 pb-12 pt-6 md:px-[72px] md:pt-7">
       <header className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <div>
           <h1 className="t-display">Quanto custa uma cadeira?</h1>
@@ -111,7 +111,7 @@ export function CadeiraPagina() {
         />
       </header>
 
-      <div className="mt-9 grid gap-x-10 gap-y-6 xl:grid-cols-[minmax(0,1.25fr)_auto]">
+      <div className="mt-6 grid gap-x-10 gap-y-4 xl:grid-cols-[minmax(0,1.25fr)_auto]">
         <fieldset className="min-w-0">
           <legend className="t-rotulo mb-2 text-tinta-2">Cargo</legend>
           <div role="radiogroup" aria-label="Cargo" className="flex flex-wrap gap-2">
@@ -165,31 +165,31 @@ export function CadeiraPagina() {
                 </p>
               </div>
             )}
+            <div className="flex w-full justify-end sm:ml-auto sm:w-[320px]">
+              <BuscaAssento
+                key={chave}
+                cadeiras={dados.cadeiras}
+                achado={destaque?.chave === chave ? destaque.id : null}
+                aoAchar={(i) => {
+                  setDestaque(i == null ? null : { id: i, chave })
+                  if (i != null && busca.pe) mudar({ pe: undefined }) // o destaque é no plano
+                }}
+              />
+            </div>
           </div>
         </fieldset>
       </div>
 
-      <section aria-label="Plenário" className="mt-10" aria-busy={q.isPlaceholderData}>
+      <section aria-label="Plenário" className="mt-6" aria-busy={q.isPlaceholderData}>
         {q.error && (
           <p role="alert" className="mx-auto mb-4 max-w-[1180px] rounded-xl border border-corrige/40 bg-folha px-4 py-3 text-[0.9rem]">
             Não foi possível abrir esta seleção ({q.error.message}). O plenário abaixo é o da seleção anterior.
           </p>
         )}
-        <div className="mx-auto mb-4 flex max-w-[1180px] justify-end">
-          <BuscaAssento
-            key={chave}
-            cadeiras={dados.cadeiras}
-            achado={destaque?.chave === chave ? destaque.id : null}
-            aoAchar={(i) => {
-              setDestaque(i == null ? null : { id: i, chave })
-              if (i != null && busca.pe) mudar({ pe: undefined }) // o destaque é no plano
-            }}
-          />
-        </div>
         {dados.cadeiras.length === 0 && (
           <p className="mx-auto max-w-[1180px] text-tinta-2">Nenhum eleito com prestação de contas nesta seleção.</p>
         )}
-        <div className={`relative mx-auto max-w-[1180px] transition-opacity duration-300 ${q.isPlaceholderData ? 'opacity-55' : ''}`}>
+        <div className={`relative mx-auto max-w-[min(1180px,calc((100dvh-120px)*1.92))] transition-opacity duration-300 ${q.isPlaceholderData ? 'opacity-55' : ''}`}>
           {busca.pe ? (
             <div className="relative aspect-[16/10] overflow-hidden rounded-[20px] bg-[radial-gradient(ellipse_at_50%_30%,#ffffff,#e6eaed_78%)] sm:aspect-[16/8.5]">
               <Suspense fallback={<div className="grid h-full place-items-center"><Ciranda rotulo="Levantando as cadeiras..." /></div>}>
@@ -254,7 +254,7 @@ export function CadeiraPagina() {
           </p>
         )}
 
-        <div className="mx-auto mt-12 max-w-[1180px]">
+        <div className="mx-auto mt-8 max-w-[1180px]">
           <Lede dados={dados} ano={dados.ano} outro={anos.find((a) => a !== dados.ano)!} cargo={dados.cargo.nome} lugar={lugarFrase} />
           <p className="mt-4 text-[0.8rem] text-tinta-3">
             {busca.epoca ? 'Valores da época.' : 'Valores em reais de outubro de 2024, corrigidos pelo IPCA.'} Passe o mouse ou toque numa cadeira para ver quem é; clique para abrir a carreira.
@@ -262,7 +262,7 @@ export function CadeiraPagina() {
         </div>
       </section>
 
-      <section aria-labelledby="curva" className="adiar mx-auto mt-24 grid max-w-[1180px] grid-cols-1 gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,2fr)] lg:items-end">
+      <section aria-labelledby="curva" className="adiar mx-auto mt-16 grid max-w-[1180px] grid-cols-1 gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,2fr)] lg:items-end">
         <div>
           <h2 id="curva" className="t-h2">A partir de quanto se ganha?</h2>
           <p className="mt-3 text-tinta-2">
@@ -270,7 +270,7 @@ export function CadeiraPagina() {
           </p>
           {limiar ? (
             <p className="mt-6">
-              <span className="t-numero block text-[clamp(2.4rem,1.6rem+2.4vw,3.6rem)] leading-none">{reaisCurto(limiar.de * fator)}</span>
+              <span className="t-numero block text-[clamp(2.2rem,1.5rem+2vw,3.1rem)] leading-none">{reaisCurto(limiar.de * fator)}</span>
               <span className="mt-2 block text-tinta-2">é o preço de entrada: a partir daí, metade ou mais dos candidatos se elege.</span>
             </p>
           ) : (
@@ -280,7 +280,7 @@ export function CadeiraPagina() {
         <CurvaVitoria curva={dados.curva} escala={escala} fator={fator} />
       </section>
 
-      <section aria-labelledby="partidos" className="adiar mx-auto mt-24 max-w-[1180px]">
+      <section aria-labelledby="partidos" className="adiar mx-auto mt-16 max-w-[1180px]">
         <h2 id="partidos" className="t-h2">Quanto cada partido pagou por cadeira</h2>
         <p className="mb-6 mt-3 max-w-[64ch] text-tinta-2">
           Tudo o que os candidatos do partido gastaram, dividido pelas cadeiras que ele levou. A cor é a posição do partido na escala de viés.
@@ -288,7 +288,7 @@ export function CadeiraPagina() {
         <PrecoPartidos partidos={dados.partidos} fator={fator} />
       </section>
 
-      <section aria-labelledby="dinheiro" className="adiar mx-auto mt-24 max-w-[1180px]">
+      <section aria-labelledby="dinheiro" className="adiar mx-auto mt-16 max-w-[1180px]">
         <h2 id="dinheiro" className="t-h2">Para onde vai e de onde vem o dinheiro</h2>
         <div className="mt-8 grid grid-cols-1 gap-12 lg:grid-cols-2 lg:items-start">
           <Recibo dados={dados} fator={fator} titulo={titulo} />
@@ -296,7 +296,7 @@ export function CadeiraPagina() {
         </div>
       </section>
 
-      <section aria-labelledby="voto" className="adiar mx-auto mt-24 max-w-[1180px]">
+      <section aria-labelledby="voto" className="adiar mx-auto mt-16 max-w-[1180px]">
         <h2 id="voto" className="t-h2">Quanto custou cada voto</h2>
         <div className="mt-4">
           <CustoVoto cadeiras={dados.cadeiras} fator={fator} />

@@ -96,8 +96,8 @@ export function Atlas() {
   }
 
   return (
-    <div className="mx-auto grid max-w-[1440px] gap-8 px-4 pt-6 md:px-[72px] lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12 lg:pt-8">
-      <section aria-label="Mapa" className="flex flex-col gap-4 lg:sticky lg:top-[100px] lg:h-[calc(100dvh-164px)] lg:self-start">
+    <div className="mx-auto grid max-w-[1440px] gap-8 px-4 pt-5 md:px-[72px] lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12 lg:pt-6">
+      <section aria-label="Mapa" className="flex flex-col gap-4 lg:sticky lg:top-[81px] lg:h-[calc(100dvh-133px)] lg:self-start">
         <CedulaAnos ano={ano} aoMudar={mudarAno} />
         <div className="relative h-[58dvh] min-h-[340px] lg:h-auto lg:min-h-0 lg:flex-1">
           {relevo && detalheUF.data && malhaUF.data ? (

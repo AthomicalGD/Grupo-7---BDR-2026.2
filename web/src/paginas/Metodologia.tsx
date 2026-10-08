@@ -20,9 +20,9 @@ function Secao({ id, titulo, resposta, children }: {
   children: ReactNode
 }) {
   return (
-    <section aria-labelledby={id} className="grid scroll-mt-28 gap-4 border-t border-linha py-10 md:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] md:gap-12">
+    <section aria-labelledby={id} className="grid scroll-mt-20 gap-4 border-t border-linha py-10 md:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] md:gap-12">
       <div className="space-y-4">
-        <h2 id={id} className="t-h2 scroll-mt-28">{titulo}</h2>
+        <h2 id={id} className="t-h2 scroll-mt-20">{titulo}</h2>
         {resposta && (
           <Link
             to={resposta.para}
@@ -121,10 +121,10 @@ const INDICE = [
 
 export function Metodologia() {
   return (
-    <article className="mx-auto max-w-[1440px] px-4 pb-16 pt-12 md:px-[72px]">
+    <article className="mx-auto max-w-[1440px] px-4 pb-12 pt-7 md:px-[72px]">
       <header className="pb-10">
         <h1 className="t-display">Como os números são feitos</h1>
-        <p className="mt-5 max-w-[60ch] text-[1.1rem] leading-relaxed text-tinta-2">
+        <p className="mt-4 max-w-[64ch] text-[1.05rem] leading-relaxed text-tinta-2">
           Tudo aqui sai de dados abertos baixados, modelados e carregados pelo grupo. Nada é estimado à mão: cada número
           pode ser refeito com os comandos do repositório. Em cada questão, abra os blocos para ver de onde vêm os dados,
           o que deu trabalho e as consultas SQL que fizemos.

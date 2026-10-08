@@ -69,7 +69,7 @@ export function PainelEstado({ uf, ano, relativo, relevo, aoMudarRelativo, aoMud
   }
 
   return (
-    <div className="space-y-9">
+    <div className="space-y-7">
       <header className="space-y-3">
         <Trilha uf={uf.nome} />
         <div className="flex flex-wrap items-end justify-between gap-4">
@@ -80,7 +80,7 @@ export function PainelEstado({ uf, ano, relativo, relevo, aoMudarRelativo, aoMud
             </p>
           </div>
           <div className="text-right">
-            <p className="t-numero text-[2.6rem]" style={{ color: v != null && Math.abs(v) > 30 ? corVies(v) : undefined }}>
+            <p className="t-numero text-[2.3rem]" style={{ color: v != null && Math.abs(v) > 30 ? corVies(v) : undefined }}>
               {fmtVies(v)}
             </p>
             <p className="text-[0.82rem] text-tinta-2">{ladoVies(v)} em {ano}</p>

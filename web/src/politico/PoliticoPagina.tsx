@@ -101,7 +101,7 @@ function Resposta({ p, l }: { p: Politico; l: Leitura }) {
   const r = p.resumo
   const ctx = p.contexto_reeleicao
   return (
-    <div className="max-w-[60ch] space-y-3 text-[clamp(1.05rem,0.95rem+0.4vw,1.2rem)] leading-[1.55] text-tinta-2">
+    <div className="max-w-[60ch] space-y-3 text-[clamp(1rem,0.92rem+0.3vw,1.12rem)] leading-[1.55] text-tinta-2">
       <p>
         Desde {b(String(r.primeiro_ano))}, disputou {b(plural(r.candidaturas, 'eleição', 'eleições'))} e venceu {b(inteiro(r.vitorias))}
         {r.reeleicoes > 0 && <>, com {b(plural(r.reeleicoes, 'reeleição', 'reeleições'))}</>}.{' '}
@@ -123,7 +123,7 @@ function Campanhas({ ordem }: { ordem: Candidatura[] }) {
   const comConta = ordem.filter((c) => c.gasto != null).reverse()
   if (!comConta.length) return null
   return (
-    <section aria-labelledby="campanhas" className="adiar mt-16">
+    <section aria-labelledby="campanhas" className="adiar mt-12">
       <h2 id="campanhas" className="t-h2">Quanto custaram as campanhas</h2>
       <p className="mt-2 max-w-[62ch] text-tinta-2">Despesa contratada declarada ao TSE, em valores da época. O TSE publica as contas por candidato desde 2018.</p>
       <ul className="mt-5 grid max-w-[880px] grid-cols-1 gap-x-10 sm:grid-cols-2">
@@ -160,7 +160,7 @@ function Santinhos({ recentes, nome }: { recentes: Candidatura[]; nome: string }
   const rolar = (sentido: number) => trilho.current?.scrollBy({ left: sentido * 500, behavior: 'smooth' })
   const botao = 'grid size-10 place-items-center rounded-full border border-linha-2 bg-folha text-tinta transition hover:border-tinta disabled:opacity-35 disabled:hover:border-linha-2'
   return (
-    <section aria-labelledby="santinhos" className="adiar mt-16">
+    <section aria-labelledby="santinhos" className="adiar mt-12">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 id="santinhos" className="t-h2">Santinhos de cada eleição</h2>
@@ -181,7 +181,7 @@ function Santinhos({ recentes, nome }: { recentes: Candidatura[]; nome: string }
         className="-mx-4 mt-5 flex snap-x snap-mandatory scroll-pl-4 items-stretch gap-5 overflow-x-auto px-4 pb-8 pt-3 md:-mx-[72px] md:scroll-pl-[72px] md:px-[72px]"
       >
         {recentes.map((c, i) => (
-          <li key={`${c.ano}-${c.cod_cargo}-${i}`} id={idSantinho(c)} className="flex scroll-mt-24 list-none">
+          <li key={`${c.ano}-${c.cod_cargo}-${i}`} id={idSantinho(c)} className="flex scroll-mt-20 list-none">
             <Santinho c={c} nome={nome} inclinacao={i % 2 ? -1.2 : 0.9} />
           </li>
         ))}
@@ -215,7 +215,7 @@ export function PoliticoPagina() {
         <ArrowLeft size={14} weight="bold" aria-hidden /> Nova consulta na urna
       </Link>
 
-      <header className="mt-6 grid gap-x-10 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-start">
+      <header className="mt-4 grid gap-x-10 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-start">
         <div className="flex gap-5 sm:gap-7">
           <motion.div
             className="shrink-0"
@@ -251,7 +251,7 @@ export function PoliticoPagina() {
         </div>
       </header>
 
-      <section aria-labelledby="trajetoria" className="mt-16">
+      <section aria-labelledby="trajetoria" className="mt-12">
         <h2 id="trajetoria" className="t-h2">Trajetória por cargo</h2>
         <p className="mb-5 mt-2 max-w-[66ch] text-tinta-2">
           Cada ponto é uma candidatura, ligada à seguinte; a barra é o mandato. Embaixo, o partido de cada eleição na cor do seu viés.

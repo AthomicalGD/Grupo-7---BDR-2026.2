@@ -65,7 +65,7 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
 
   return (
     <div>
-      <div ref={ref} className="relative" style={{ height: H }}>
+      <div ref={ref} className="relative mx-auto max-w-[calc((100dvh-190px)*1.05)]" style={{ height: H }}>
         {!desenho ? (
           <div className="grid h-full place-items-center text-[0.86rem] text-tinta-3">Desenhando o mapa...</div>
         ) : (
@@ -114,7 +114,7 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
           </div>
         )}
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.76rem] text-tinta-3">
+      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.76rem] text-tinta-3">
         <span>0%</span>
         {Array.from({ length: 8 }, (_, i) => <span key={i} className="h-3 w-6 rounded-[2px]" style={{ background: cor(i + 1) }} aria-hidden />)}
         <span>100% {medida === 'eleitos' ? 'dos eleitos' : 'dos votos para deputado'} com superior completo</span>

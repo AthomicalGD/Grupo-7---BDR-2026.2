@@ -9,7 +9,7 @@ import { inteiro, nomeProprio, pct, vies as fmtVies } from '../lib/formato'
 import { corVies, gradienteVies } from '../lib/vies'
 import { useLargura } from './escolaridade'
 
-const ALTURA = 250
+const ALTURA = 210
 const MIN_ELEITOS = 1
 const ROTULO = 18 // espaço para o número em cima da coluna
 
@@ -55,14 +55,14 @@ export function Partidos({ partidos, onde }: { partidos: PartidoEscola[]; onde: 
 
   return (
     <div>
-      <p className="max-w-[70ch] text-[1.02rem] leading-relaxed text-tinta-2">
+      <p className="max-w-[76ch] text-[1.02rem] leading-relaxed text-tinta-2">
         Entre os eleitos dos partidos à esquerda{onde}, {frase(esq, 'esquerda')}; à direita, {frase(dir, 'direita')}.
         {mais && menos && (
           <> O partido com mais diploma entre os que elegeram ao menos 5 é o <b className="text-tinta">{mais.sigla}</b> ({Math.round(taxa(mais.eleitos_superior, mais.eleitos))} de 100); o com menos, o <b className="text-tinta">{menos.sigla}</b> ({Math.round(taxa(menos.eleitos_superior, menos.eleitos))}).</>
         )}
       </p>
 
-      <div ref={ref} className="relative mt-8" style={{ height: estreito ? 'auto' : ALTURA + 40 }} onPointerLeave={() => setFoco(null)}>
+      <div ref={ref} className="relative mt-5" style={{ height: estreito ? 'auto' : ALTURA + 40 }} onPointerLeave={() => setFoco(null)}>
         {estreito && (
           <ol className="space-y-1.5" aria-label="Partidos na ordem do viés, com os eleitos com superior completo">
             {comEleitos.map((p) => {

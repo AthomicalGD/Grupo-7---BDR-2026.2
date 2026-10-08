@@ -171,6 +171,13 @@ Para só usar ou apresentar o site, a versão de produção é bem mais leve par
 (sem o modo de desenvolvimento do React): `npm run build` e depois `npx vite preview`,
 em http://localhost:4173 (também repassa `/api` para a API).
 
+Para abrir no celular, com o celular no mesmo Wi-Fi do computador: `npx vite preview --host`
+e, no celular, `http://<IP do computador>:4173` (o IP sai no próprio terminal, em "Network", ou no
+`ipconfig`). Só a porta do site precisa ficar aberta: a API continua em `127.0.0.1` e é o Vite que
+repassa `/api`. Na primeira vez o Windows pergunta se o Node.js pode usar a rede: permita em
+redes privadas. Redes de universidade costumam isolar os aparelhos entre si; nesse caso, use o
+roteador do celular.
+
 | Tela | Rota | Pergunta |
 |---|---|---|
 | Mapa do Brasil, viés por estado, linha do tempo 2018-2024 | `/` | P7 |

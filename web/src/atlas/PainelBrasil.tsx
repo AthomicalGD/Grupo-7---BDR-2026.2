@@ -24,8 +24,8 @@ export function PainelBrasil({ ufs, malha, ano, aoEscolherUF, aoEscolherMunicipi
   const maisDir = comValor.length ? comValor.reduce((a, b) => (a.vies[ano]! >= b.vies[ano]! ? a : b)) : undefined
 
   return (
-    <div className="space-y-9">
-      <header className="space-y-4">
+    <div className="space-y-7">
+      <header className="space-y-3">
         <h1 className="t-display">Para onde o voto pendeu</h1>
         <p className="max-w-[54ch] text-[1.05rem] leading-relaxed text-tinta-2">
           Viés partidário de cada estado e município de 2018 a 2024, de −100 (esquerda) a +100 (direita), calculado
@@ -48,16 +48,16 @@ export function PainelBrasil({ ufs, malha, ano, aoEscolherUF, aoEscolherMunicipi
                 <button
                   type="button"
                   onClick={() => aoEscolherUF(u.sigla)}
-                  className="group flex w-full items-center gap-3.5 rounded-2xl border border-linha bg-folha px-3.5 py-3 text-left transition-[border-color,transform,box-shadow] hover:border-tinta hover:shadow-[var(--shadow-cartao)] active:scale-[0.99]"
+                  className="group flex w-full items-center gap-2.5 rounded-2xl border border-linha bg-folha px-3 py-2.5 text-left transition-[border-color,transform,box-shadow] hover:border-tinta hover:shadow-[var(--shadow-cartao)] active:scale-[0.99]"
                 >
-                  <svg viewBox="0 0 40 40" className="size-10 shrink-0 overflow-visible" aria-hidden>
+                  <svg viewBox="0 0 40 40" className="size-9 shrink-0 overflow-visible" aria-hidden>
                     <path d={silhuetas.get(u.sigla)} fill={corVies(v)} stroke="var(--color-tinta)" strokeWidth={0.9} strokeLinejoin="round" className="mapa-forma" />
                   </svg>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-semibold">{u.nome}</span>
                     <span className="t-mono block text-[0.75rem] text-tinta-3">{u.sigla}</span>
                   </span>
-                  <span className="t-numero text-[1.45rem] tabular">{fmtVies(v)}</span>
+                  <span className="t-numero shrink-0 text-[1.3rem] tabular">{fmtVies(v)}</span>
                 </button>
               </li>
             )

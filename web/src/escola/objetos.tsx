@@ -28,10 +28,10 @@ const RABISCOS = [
 
 /** Folha do caderno de votação: 100 linhas de assinatura em 5 colunas, como quem votou assina. */
 export function Caderno({ graus, destaque, largura, aoDestacar }: Unidades) {
-  const PAD = 10, VAO = 4, COLS = 5, ALT = 8.5
+  const PAD = 10, VAO = 4, COLS = 5, ALT = 6.6, ENTRE = 2
   const w = (largura - 2 * PAD - (COLS - 1) * VAO) / COLS
   const linhas = Math.ceil(graus.length / COLS)
-  const altura = PAD + 10 + linhas * (ALT + 2.6) + PAD
+  const altura = PAD + 10 + linhas * (ALT + ENTRE) + PAD
   return (
     <svg width={largura} height={altura} aria-hidden className="overflow-visible">
       <rect x={0.5} y={0.5} width={largura - 1} height={altura - 1} rx={6} fill="var(--color-folha)" stroke="var(--color-linha)" />
@@ -39,7 +39,7 @@ export function Caderno({ graus, destaque, largura, aoDestacar }: Unidades) {
       <line x1={PAD} x2={largura - PAD} y1={PAD + 4} y2={PAD + 4} stroke="var(--color-linha-2)" />
       {graus.map((g, i) => {
         const x = PAD + (i % COLS) * (w + VAO)
-        const y = PAD + 10 + Math.floor(i / COLS) * (ALT + 2.6)
+        const y = PAD + 10 + Math.floor(i / COLS) * (ALT + ENTRE)
         const ativo = g === destaque
         return (
           <g key={i} opacity={alfa(g, destaque)} className="transition-opacity duration-300" onPointerEnter={() => aoDestacar?.(g)}>

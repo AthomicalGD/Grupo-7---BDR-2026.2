@@ -231,7 +231,7 @@
       "refersTo": "cartao-estado",
       "description": "Silhueta do estado, nome, sigla e viés do ano.",
       "html": "<button class=\"ds-uf\"><span class=\"ds-sil\"></span><span class=\"ds-nome\">Piauí<small>PI</small></span><b>−41,9</b></button>",
-      "css": ".ds-uf{display:flex;align-items:center;gap:14px;width:260px;padding:12px 14px;border:1px solid #d9dee2;border-radius:16px;background:#fcfdfd;text-align:left;transition:border-color .2s,box-shadow .2s}.ds-uf:hover{border-color:#18202b;box-shadow:0 1px 2px rgb(42 53 80/.06),0 6px 18px -8px rgb(42 53 80/.18)}.ds-sil{width:40px;height:40px;border-radius:6px;background:#c25e27}.ds-nome{flex:1;font:600 1rem 'Archivo Variable',Archivo,sans-serif;color:#18202b}.ds-nome small{display:block;font:500 .75rem 'Red Hat Mono',monospace;color:#5f6878}.ds-uf b{font:820 1.45rem 'Archivo Variable',Archivo,sans-serif;font-stretch:74%}"
+      "css": ".ds-uf{display:flex;align-items:center;gap:10px;width:260px;padding:10px 12px;border:1px solid #d9dee2;border-radius:16px;background:#fcfdfd;text-align:left;transition:border-color .2s,box-shadow .2s}.ds-uf:hover{border-color:#18202b;box-shadow:0 1px 2px rgb(42 53 80/.06),0 6px 18px -8px rgb(42 53 80/.18)}.ds-sil{width:36px;height:36px;border-radius:6px;background:#c25e27}.ds-nome{flex:1;font:600 1rem 'Archivo Variable',Archivo,sans-serif;color:#18202b}.ds-nome small{display:block;font:500 .75rem 'Red Hat Mono',monospace;color:#5f6878}.ds-uf b{font:820 1.3rem 'Archivo Variable',Archivo,sans-serif;font-stretch:74%}"
     },
     {
       "name": "Santinho",

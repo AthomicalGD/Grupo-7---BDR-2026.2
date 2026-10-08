@@ -44,7 +44,7 @@
 @utility t-display {
   font-stretch: 112%;
   font-weight: 780;
-  font-size: clamp(2.4rem, 1.4rem + 2.6vw, 3.8rem);
+  font-size: clamp(2rem, 1.1rem + 2vw, 3.1rem);
   line-height: 0.98;
   letter-spacing: -0.018em;
   text-wrap: balance;
@@ -52,20 +52,20 @@
 @utility t-h1 {
   font-stretch: 106%;
   font-weight: 760;
-  font-size: clamp(1.9rem, 1.3rem + 1.4vw, 2.45rem);
+  font-size: clamp(1.6rem, 1.1rem + 1.05vw, 2.1rem);
   line-height: 1.04;
   letter-spacing: -0.012em;
   text-wrap: balance;
 }
 @utility t-h2 {
   font-weight: 700;
-  font-size: 1.5625rem;
-  line-height: 1.15;
+  font-size: 1.375rem;
+  line-height: 1.18;
   letter-spacing: -0.006em;
 }
 @utility t-h3 {
   font-weight: 650;
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   line-height: 1.25;
 }
 @utility t-rotulo {

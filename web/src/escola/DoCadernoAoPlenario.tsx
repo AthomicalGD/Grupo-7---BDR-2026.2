@@ -31,11 +31,11 @@ function Objeto({ grupo, destaque, rotulo, children }: {
         <span className="t-h3 block">{grupo.titulo}</span>
         <span className="tabular block text-[0.82rem] text-tinta-3">{grupo.total}</span>
       </figcaption>
-      <div ref={ref} className="mt-3 flex flex-1 items-end" role="img" aria-label={`${grupo.titulo}: de cada 100, ${n} com ${rotulo.toLowerCase()}`}>
+      <div ref={ref} className="mt-2.5 flex flex-1 items-end" role="img" aria-label={`${grupo.titulo}: de cada 100, ${n} com ${rotulo.toLowerCase()}`}>
         {largura > 0 && children(largura)}
       </div>
-      <p className="mt-3 flex items-baseline gap-1.5">
-        <span className="t-numero tabular text-[2.4rem]">{n}</span>
+      <p className="mt-2 flex items-baseline gap-1.5">
+        <span className="t-numero tabular text-[2.1rem]">{n}</span>
         <span className="text-[0.86rem] text-tinta-2">de 100 com {rotulo.toLowerCase()}</span>
       </p>
     </figure>
@@ -57,8 +57,8 @@ export function DoCadernoAoPlenario({ grupos, rotulos, chance, destaque, aoDesta
   const partes = grupos.map((g) => porCento(g.valores))
   const r = rotulos[destaque - 1]
   return (
-    <div>
-      <div role="radiogroup" aria-label="Grau de escolaridade em destaque" className="-mx-4 mb-5 flex snap-x gap-x-1 gap-y-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+    <div className="grid gap-y-5 lg:grid-cols-[max-content_minmax(0,1fr)] lg:gap-x-10">
+      <div role="radiogroup" aria-label="Grau de escolaridade em destaque" className="-mx-4 flex snap-x gap-x-1 gap-y-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 lg:flex-col lg:gap-y-1 lg:self-start lg:pt-[3.25rem]">
         {GRAUS.map((n) => (
           <button
             key={n}
@@ -66,7 +66,7 @@ export function DoCadernoAoPlenario({ grupos, rotulos, chance, destaque, aoDesta
             role="radio"
             aria-checked={n === destaque}
             onClick={() => aoDestacar(n)}
-            className={`inline-flex h-8 shrink-0 snap-start items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 text-[0.8rem] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-acao ${n === destaque ? 'border-tinta bg-folha font-bold text-tinta' : 'border-transparent text-tinta-2 hover:text-tinta'}`}
+            className={`inline-flex h-8 shrink-0 snap-start lg:h-7 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 text-[0.8rem] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-acao ${n === destaque ? 'border-tinta bg-folha font-bold text-tinta' : 'border-transparent text-tinta-2 hover:text-tinta'}`}
           >
             <span className="size-3 shrink-0 rounded-[3px] border border-tinta/20" style={{ background: cor(n) }} aria-hidden />
             {rotulos[n - 1]}
@@ -74,19 +74,19 @@ export function DoCadernoAoPlenario({ grupos, rotulos, chance, destaque, aoDesta
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-y-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.7fr)_minmax(0,1.45fr)] lg:gap-x-12">
+      <div className="grid grid-cols-1 gap-y-8 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.7fr)] lg:grid-cols-[minmax(0,1fr)_minmax(0,0.7fr)_minmax(0,1.45fr)] sm:gap-x-8 lg:gap-x-12 sm:[&>figure:last-child]:col-span-2 lg:[&>figure:last-child]:col-span-1">
         <Objeto grupo={votou} destaque={destaque} rotulo={r}>
-          {(l) => <Caderno graus={u[0]} destaque={destaque} largura={Math.min(l, 290)} aoDestacar={aoDestacar} />}
+          {(l) => <Caderno graus={u[0]} destaque={destaque} largura={Math.min(l, 260)} aoDestacar={aoDestacar} />}
         </Objeto>
         <Objeto grupo={candidatos} destaque={destaque} rotulo={r}>
-          {(l) => <Santinhos graus={u[1]} destaque={destaque} largura={Math.min(l, 176)} aoDestacar={aoDestacar} />}
+          {(l) => <Santinhos graus={u[1]} destaque={destaque} largura={Math.min(l, 144)} aoDestacar={aoDestacar} />}
         </Objeto>
         <Objeto grupo={eleitos} destaque={destaque} rotulo={r}>
           {(l) => (
             <Plenario
               key={chave}
               sentar
-              largura={Math.min(l, 420)}
+              largura={Math.min(l, 380)}
               cores={u[2].map(cor)}
               opacidades={u[2].map((g) => alfa(g, destaque))}
               ativas={u[2].map((g) => g === destaque)}
@@ -96,7 +96,7 @@ export function DoCadernoAoPlenario({ grupos, rotulos, chance, destaque, aoDesta
         </Objeto>
       </div>
 
-      <p aria-live="polite" className="mt-6 max-w-[78ch] text-[0.98rem] leading-relaxed text-tinta-2">
+      <p aria-live="polite" className="max-w-[78ch] text-[0.98rem] leading-relaxed text-tinta-2 lg:col-start-2">
         <b className="text-tinta">{r}:</b> {pct(partes[0][destaque - 1])} de quem votou, {pct(partes[1][destaque - 1])} dos candidatos e{' '}
         {pct(partes[2][destaque - 1])} dos eleitos.
         {chance[destaque - 1] != null && (

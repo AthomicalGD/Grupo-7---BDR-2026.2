@@ -20,7 +20,7 @@ const GRAUS = [8, 7, 6, 5, 4, 3, 2, 1]
 const Linha = ({ i, children, className = '' }: { i: number; children: ReactNode; className?: string }) => (
   <div className={`boletim-linha ${className}`} style={{ '--i': i } as CSSProperties}>{children}</div>
 )
-const Picote = () => <div className="my-5 border-t-[1.5px] border-dashed border-linha-2" aria-hidden />
+const Picote = () => <div className="my-3.5 border-t-[1.5px] border-dashed border-linha-2" aria-hidden />
 
 function Camara({ eleitos, rotulos, foco, aoFocar }: {
   eleitos: EleitoEscola[]
@@ -33,7 +33,7 @@ function Camara({ eleitos, rotulos, foco, aoFocar }: {
   const vereadores = eleitos.filter((e) => e.cargo !== PREFEITO).sort((a, b) => (b.nivel ?? 0) - (a.nivel ?? 0))
   const prefeito = eleitos.find((e) => e.cargo === PREFEITO)
   const { lugares, diametro } = hemiciclo(vereadores.length)
-  const R = 150, cx = 162, cy = 166
+  const R = 118, cx = 128, cy = 132
   const d = diametro * R
   const rotulo = (e: EleitoEscola) =>
     `${nomeProprio(e.nome_urna ?? e.nome)}, ${e.cargo === PREFEITO ? 'prefeito' : 'vereador'}${e.partido ? `, ${e.partido}` : ''}: ${e.nivel ? rotulos[e.nivel - 1].toLowerCase() : 'escolaridade não divulgada'}`
@@ -70,7 +70,7 @@ function Camara({ eleitos, rotulos, foco, aoFocar }: {
         const l = lugares[i]
         return cadeira(e, cx + l.x * R, cy - l.y * R, 90 - (l.ang * 180) / Math.PI, d, `v${e.id}`)
       })}
-      {prefeito && cadeira(prefeito, cx, cy - 16, 0, Math.max(d * 1.45, 22), `p${prefeito.id}`)}
+      {prefeito && cadeira(prefeito, cx, cy - 14, 0, Math.max(d * 1.45, 20), `p${prefeito.id}`)}
     </svg>
   )
 }
@@ -120,13 +120,13 @@ function BoletimEscola({ d, quintil, rotulos, carregando }: { d: EscolaLugar; qu
   const grau = (n: number | null) => (n ? rotulos[n - 1].toLowerCase() : 'escolaridade não divulgada')
 
   return (
-    <div className={`relative mt-5 transition-opacity ${carregando ? 'opacity-60' : ''}`} aria-busy={carregando}>
+    <div className={`relative mt-4 transition-opacity ${carregando ? 'opacity-60' : ''}`} aria-busy={carregando}>
       <div className="h-3 rounded-full bg-tinta shadow-[inset_0_-2px_0_rgb(255_255_255/0.08)]" aria-hidden />
       <div className="mx-3 -mt-1.5 [filter:drop-shadow(0_14px_22px_rgb(42_53_80/0.16))_drop-shadow(0_1px_1px_rgb(42_53_80/0.08))]">
-        <article aria-label={`Boletim da escolaridade de ${d.nome}`} className="boletim-papel relative bg-folha px-5 pb-12 pt-6 sm:px-7">
+        <article aria-label={`Boletim da escolaridade de ${d.nome}`} className="boletim-papel relative bg-folha px-5 pb-10 pt-5 sm:px-7">
           <Linha i={0}>
             <p className="t-mono text-[0.74rem] tracking-[0.2em] text-tinta-2">BOLETIM DA ESCOLARIDADE</p>
-            <h3 className="t-h1 mt-1.5">{d.nome}</h3>
+            <h3 className="t-h1 mt-1">{d.nome}</h3>
             <p className="t-mono mt-1 text-[0.72rem] uppercase tracking-[0.06em] text-tinta-3">
               {d.uf} · {d.ano} · {municipal ? 'prefeito e vereadores' : 'deputados federal e estadual'}
               {quintil ? ` · ${quintil}º quinto` : ''}
@@ -147,14 +147,14 @@ function BoletimEscola({ d, quintil, rotulos, carregando }: { d: EscolaLugar; qu
                   const camara = vereadores.filter((e) => e.nivel === n).length
                   return (
                     <tr key={n} className={n === SUPERIOR ? 'font-bold text-tinta' : 'text-tinta-2'}>
-                      <th scope="row" className="py-[3px] text-left font-[inherit]">
+                      <th scope="row" className="py-[1.5px] text-left font-[inherit]">
                         <span className="flex items-center gap-1.5">
                           <span className="size-2.5 shrink-0 rounded-[2px] border border-tinta/20" style={{ background: cor(n) }} aria-hidden />
                           {rotulos[n - 1]}
                         </span>
                       </th>
-                      <td className="t-mono tabular py-[3px] text-right">{votou[n - 1]}</td>
-                      <td className="t-mono tabular py-[3px] text-right">{municipal ? camara : votos[n - 1]}</td>
+                      <td className="t-mono tabular py-[1.5px] text-right">{votou[n - 1]}</td>
+                      <td className="t-mono tabular py-[1.5px] text-right">{municipal ? camara : votos[n - 1]}</td>
                     </tr>
                   )
                 })}
@@ -165,27 +165,29 @@ function BoletimEscola({ d, quintil, rotulos, carregando }: { d: EscolaLugar; qu
           {municipal ? (
             <Linha i={2}>
               <p className="t-mono text-[0.68rem] tracking-[0.12em] text-tinta-3">A CÂMARA ELEITA</p>
-              <div className="mt-2 flex justify-center">
+              <div className="mt-1 flex justify-center">
                 <Camara eleitos={d.eleitos} rotulos={rotulos} foco={foco} aoFocar={setFoco} />
               </div>
               <p aria-live="polite" className="mt-1 min-h-[2.6em] text-center text-[0.8rem] text-tinta-2">
                 {foco ? (
                   <><b className="text-tinta">{nomeProprio(foco.nome_urna ?? foco.nome)}</b>{foco.partido ? ` (${foco.partido})` : ''}, {foco.cargo === PREFEITO ? 'prefeito' : 'vereador'}: {grau(foco.nivel)}. Clique de novo para ver a carreira.</>
                 ) : (
-                  'Toque ou passe o mouse pelas cadeiras; o prefeito senta no meio.'
+                  <>
+                    <b className="tabular text-tinta">{supVer} de {vereadores.length}</b> vereadores com superior completo{prefeito ? `; prefeito: ${grau(prefeito.nivel)}` : ''}.
+                    <span className="block text-tinta-3">Toque ou passe o mouse pelas cadeiras; o prefeito senta no meio.</span>
+                  </>
                 )}
               </p>
             </Linha>
-          ) : null}
-          <Linha i={3}>
-            <p className="t-mono text-[0.76rem] uppercase leading-relaxed tracking-[0.04em] text-tinta">
-              {votou[SUPERIOR - 1]} de 100 que votaram com superior completo
-              <br />
-              {municipal
-                ? <>{supVer} de {vereadores.length} vereadores com superior completo{prefeito ? <><br />prefeito: {grau(prefeito.nivel)}</> : null}</>
-                : <>{votos[SUPERIOR - 1]} de 100 votos para deputado em candidatos com superior</>}
-            </p>
-          </Linha>
+          ) : (
+            <Linha i={2}>
+              <p className="t-mono text-[0.76rem] uppercase leading-relaxed tracking-[0.04em] text-tinta">
+                {votou[SUPERIOR - 1]} de 100 que votaram com superior completo
+                <br />
+                {votos[SUPERIOR - 1]} de 100 votos para deputado em candidatos com superior
+              </p>
+            </Linha>
+          )}
         </article>
       </div>
       <TabelaAlternavel
