@@ -4,10 +4,11 @@ Uso (da pasta do projeto): python -m api.test_api
 """
 import json
 from collections import defaultdict
+from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from api.app import IBGE, app
+from api.app import IBGE, app, consultar
 
 cliente = TestClient(app)
 
@@ -132,6 +133,10 @@ def main() -> None:
     assert len([e for e in the["eleitos"] if e["cargo"] == 13]) == 29 and the["quintil"] == 5
     assert not [k for k in chaves(the) if "cpf" in k or "titulo" in k]
     assert cliente.get("/api/escola?ano=2020").status_code == 404
+
+    # as consultas mostradas na metodologia do site continuam válidas no esquema atual
+    for arquivo in sorted((Path(__file__).parent.parent / "web/src/paginas/consultas").glob("*.sql")):
+        consultar("EXPLAIN " + arquivo.read_text(encoding="utf-8"))
 
     geo = get("/api/geo/uf/PI")
     assert len(geo["features"]) == 224
