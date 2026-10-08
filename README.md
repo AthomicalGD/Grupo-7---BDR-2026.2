@@ -85,6 +85,11 @@ python -m loader SP RJ MG
 - A migração `013_numero_e_nome_de_urna.sql` guarda o número na urna e o nome de urna de cada candidatura
   (`politico_eleicao.nr_candidato`, `nm_urna`), usados nos santinhos. Cargas novas já gravam; num banco carregado
   antes dela, rode `python -m loader.partidos` uma vez (~2 min).
+- A migração `014_escolaridade.sql` (P4) guarda a escolaridade e a situação final de cada candidatura
+  (`politico_eleicao.ds_grau_instrucao`, `ds_sit_tot_turno`; antes só existia a da candidatura mais recente, em
+  `politico`) e cria a tabela `escolaridade`, que põe os 8 graus do TSE em ordem para candidato e eleitor. Num banco
+  carregado antes dela, rode `python -m loader.partidos` uma vez. A resposta sai com
+  `python scripts/04_escolaridade.py` em `respostas/04_escolaridade.txt`.
 - Não são carregados: votos do exterior (`ZZ`), `VIES_MUNICIPIO` (métrica ainda por calcular), `MALHA_MUNICIPIO` e `idade_media_populacao` (o crawler não baixa esses dados).
 
 ### Fotos dos candidatos

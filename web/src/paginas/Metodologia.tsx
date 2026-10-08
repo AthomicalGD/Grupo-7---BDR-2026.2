@@ -59,6 +59,26 @@ export function Metodologia() {
         </ul>
       </Secao>
 
+      <Secao id="m-escolaridade" titulo="Escolaridade de quem é eleito e de quem vota (P4)">
+        <p>
+          Duas perguntas, para 2022 e 2024: a <b>escolaridade do candidato</b> muda a chance de ser eleito? E os lugares
+          em que <b>quem vota</b> estudou menos elegem pessoas que estudaram menos? O TSE descreve candidato e eleitor
+          com os mesmos oito graus, de analfabeto a superior completo, o que permite pôr os dois na mesma régua.
+        </p>
+        <p className="rounded-xl border border-linha bg-folha px-5 py-4 text-tinta">
+          chance de ser eleito = eleitos ÷ candidaturas aptas, para cada grau de escolaridade e cargo
+        </p>
+        <ul className="list-disc space-y-2 pl-5">
+          <li><b>Escolaridade do candidato:</b> a declarada naquela candidatura, não a de hoje; quem concorreu em 2022 e 2024 pode ter estudado entre as duas.</li>
+          <li><b>Candidaturas aptas:</b> saem as indeferidas, renunciadas e cassadas antes da eleição. Ficam os titulares de eleições ordinárias, sem presidente, vices e suplentes.</li>
+          <li><b>Quem vota:</b> o comparecimento do 1º turno por zona eleitoral, não o eleitorado apto inteiro.</li>
+          <li><b>Comparar lugares:</b> em 2024 cada município elege prefeito e vereadores, então se compara quem votou ali com quem foi eleito ali. Em 2022 deputados são eleitos pelo estado; aí se mede em quem o município votou: a parcela dos votos nominais dados a candidatos com superior completo.</li>
+          <li><b>Quintis:</b> os municípios em cinco grupos de mesmo tamanho, do eleitorado menos ao mais escolarizado.</li>
+          <li><b>Força da relação:</b> V de Cramér para a chance de ser eleito (0 = nenhuma, 1 = total) e correlação de Pearson e de Spearman entre os municípios.</li>
+          <li><b>Controle:</b> o eleitor declara a escolaridade ao tirar o título e quase nunca a atualiza, por isso o TSE fica abaixo da realidade. O Censo 2022 (pessoas de 18 anos ou mais) ordena os municípios quase igual (correlação 0,89) e dá as mesmas conclusões.</li>
+        </ul>
+      </Secao>
+
       <Secao id="m-vies" titulo="Viés político (P7)" resposta={{ para: '/', rotulo: 'Ver a resposta no mapa' }}>
         <p>
           Cada partido tem um viés de <b>−100 (esquerda)</b> a <b>+100 (direita)</b>, a partir da classificação de
@@ -96,7 +116,7 @@ export function Metodologia() {
         <ul className="space-y-2">
           <li><b>TSE, Portal de Dados Abertos:</b> candidaturas, votação por município e zona, comparecimento, prestação de contas, fotos.</li>
           <li><b>IBGE, SIDRA:</b> IPCA (número-índice de outubro), para corrigir os valores de campanha.</li>
-          <li><b>IBGE:</b> malhas municipais (GeoJSON), PIB municipal, estimativas de população e Censo 2022.</li>
+          <li><b>IBGE:</b> malhas municipais (GeoJSON), PIB municipal, estimativas de população e Censo 2022 (nível de instrução das pessoas de 18 anos ou mais, tabela 10061).</li>
           <li><b>Atlas Brasil (PNUD, Ipea, FJP):</b> IDHM; o mais recente é o do Censo 2010.</li>
           <li><b>Harvard Dataverse:</b> classificação ideológica dos partidos.</li>
         </ul>
@@ -106,6 +126,7 @@ export function Metodologia() {
         <ul className="list-disc space-y-2 pl-5">
           <li>Só os estados carregados no banco têm viés; os demais aparecem hachurados como <i>sem dados carregados</i>.</li>
           <li>O viés mede o voto em partidos, não a opinião dos eleitores.</li>
+          <li>A escolaridade do eleitor é a declarada no alistamento eleitoral e subestima a real; a do candidato é a que ele declarou ao registrar a candidatura.</li>
           <li>Nomes vêm do registro civil no TSE, em maiúsculas e às vezes sem acento.</li>
           <li>Este é um projeto acadêmico; não é um site oficial da Justiça Eleitoral.</li>
         </ul>
