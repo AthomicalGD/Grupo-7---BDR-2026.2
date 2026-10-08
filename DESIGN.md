@@ -276,6 +276,21 @@ Os municípios em cinco quintos pela % de quem votou com superior completo; cada
 ### Boletim da escolaridade (P4)
 O município no papel térmico do boletim de urna: fenda escura, borda serrilhada, cabeçalho em mono, picotes e linhas impressas em cascata. Uma tabela por grau (de 100 que votaram; cadeiras da câmara em 2024 ou votos para deputado de 100 em 2022), a câmara eleita no plenário com a cadeira do sistema e o prefeito no miolo, e o fecho em mono. Toque mostra a cadeira, o segundo toque abre a carreira.
 
+### Filtro por estado (P4)
+No cabeçalho, sob a cédula de anos: "Todos" e uma pílula por estado carregado com a silhueta (as mesmas da Cadeira), em grade de 4 no largo e numa linha que rola de lado no celular. Recorta a página inteira: a frase de abertura diz "na Bahia", os quintos dividem os municípios do estado e o boletim abre na capital. Com filtro, os atos mostram sob o título a pílula "Recorte: 2022 · Bahia" com um x para tirar o filtro.
+
+### Cada cadeira, cada estado (P4)
+2022 ao lado de 2024, em duas colunas com o ano em número grande. Cada linha é uma faixa de composição (os 8 graus em fila, do analfabeto ao superior completo, na escala da bandeira) com o "de 100 com superior" à direita: primeiro a faixa de quem votou (mais fina e clara, a régua), depois um cargo por linha e um estado por linha. Clicar num estado aplica o filtro; o estado filtrado leva o anel do marcador.
+
+### Os partidos e o diploma (P4)
+O espectro da P7 contado em diploma: cada partido é uma coluna, da esquerda para a direita na ordem do viés e na cor do viés (a cor do partido é o seu viés), com a largura pelos eleitos e a altura pelos eleitos com superior completo; o traço em tinta é a mesma conta entre os candidatos e o tracejado, a média. A escala vai até o maior valor arredondado (não até 100), para as diferenças aparecerem. Cada coluna tem na base uma tira na cor do seu viés (a posição não é o viés: o eixo é a soma dos eleitos); os dois extremos citados no texto ganham chamada com sigla e valor, por cima de tudo. Cartão com os números ao passar o mouse. No celular vira uma linha por partido (sigla, barra na cor do viés, traço dos candidatos).
+
+### Mapa e dispersão da escolaridade (P4)
+Um alternador troca as duas vistas dos municípios. O mapa pinta cada município na escala da bandeira (de 0 a 100, 12,5 pontos por tom) pelos eleitos com superior (2024) ou pelos votos para deputado em candidatos com superior (2022), sobre o Brasil hachurado como no mapa do viés; o município do boletim leva contorno no amarelo do marcador. A dispersão põe cada município como ponto (quem votou × eleitos, tamanho por quem votou) com a diagonal pontilhada "eleito = eleitor" e a tendência tracejada. Clicar em qualquer município abre o boletim.
+
+### Ranking dos municípios (P4)
+Três listas impressas como linhas do boletim (cabeçalho em mono, picote, posição e valor em mono com pontilhado até o número): mais diploma, menos diploma e maior distância do eleitor. Só entram câmaras com ao menos 5 eleitos; quando o extremo empata em mais municípios do que a lista mostra, ela diz quantos ("63 empatam em 0 de 100; os maiores:"). Cada linha abre o boletim. Em 2022 a seção das cinco câmaras se chama "Cinco cédulas".
+
 ### Filtros da busca (fichas)
 Uma linha discreta de fichas sob o campo do nome: Cargo, Eleição, Estado, Partido, Resultado. Cada ficha abre um menu pequeno só quando clicada (fecha com Esc ou clique fora, abre para o lado com espaço). A escolhida fica em tinta, com o valor e um x para tirar, como os alternadores. Dentro dos menus continuam os sinais do sistema: eleições gerais e municipais em duas colunas, estado com a silhueta, partidos da esquerda para a direita com a cor do viés.
 

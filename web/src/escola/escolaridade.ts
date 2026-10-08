@@ -11,6 +11,9 @@ export const tintaSobreGrau = (nivel: number) => (nivel <= 4 ? 'var(--color-tint
 
 export const cor = (nivel: number) => TINTA_ESCOLA[nivel - 1]
 
+/** De 0 a 100 nos 8 tons da escala (o mapa): cada tom cobre 12,5 pontos. */
+export const corDe100 = (v: number | null | undefined) => (v == null ? null : cor(Math.min(8, Math.floor(v / 12.5) + 1)))
+
 export const SUPERIOR = 8
 
 /** As 100 unidades em ordem de leitura, do superior completo (primeiro) ao analfabeto. */

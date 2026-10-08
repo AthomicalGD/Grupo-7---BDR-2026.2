@@ -133,6 +133,18 @@ def main() -> None:
     assert len([e for e in the["eleitos"] if e["cargo"] == 13]) == 29 and the["quintil"] == 5
     assert not [k for k in chaves(the) if "cpf" in k or "titulo" in k]
     assert cliente.get("/api/escola?ano=2020").status_code == 404
+    # filtro por estado: os quintos dividem só os municípios da UF; UF sem dados é 404
+    pi = get("/api/escola?ano=2024&uf=PI")
+    assert pi["uf"] == "PI" and sum(q["municipios"] for q in pi["quintis"]) == 224, pi["quintis"]
+    assert cliente.get("/api/escola?ano=2024&uf=SP").status_code == 404
+    municipios = get("/api/escola/municipios?ano=2024&uf=PI")
+    assert len(municipios) == 224 and {m["uf"] for m in municipios} == {"PI"}
+    partidos = get("/api/escola/partidos?ano=2022")
+    vieses = [p["vies"] or 0 for p in partidos]
+    assert vieses == sorted(vieses)   # na ordem do viés, da esquerda para a direita
+    assert sum(p["eleitos"] for p in partidos) == sum(sum(c["eleitos"]) for c in get("/api/escola?ano=2022")["cargos"])
+    comp = get("/api/escola/comparar")
+    assert sum(comp["anos"]["2024"]["PI"]["cargos"]["13"]["eleitos"]) == sum(v["eleitos"][i] for v in [next(c for c in pi["cargos"] if c["cod"] == 13)] for i in range(8))
 
     # as consultas mostradas na metodologia do site continuam válidas no esquema atual
     for arquivo in sorted((Path(__file__).parent.parent / "web/src/paginas/consultas").glob("*.sql")):

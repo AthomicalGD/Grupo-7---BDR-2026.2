@@ -295,6 +295,38 @@ export interface EscolaLugar {
   pct: { votantes: number | null; candidatos: number | null; eleitos: number | null; votados: number | null }
 }
 
+/** Um município no recorte da P4: % com superior completo de cada grupo (de 0 a 100). */
+export interface MunicipioEscola {
+  ibge: number
+  nome: string
+  uf: string
+  comparecimento: number
+  /** quantos se elegeram no município (2024: prefeito e vereadores) */
+  eleitos_n: number | null
+  quintil: number
+  votantes: number
+  candidatos: number | null
+  eleitos: number | null
+  votados: number | null
+}
+
+export interface PartidoEscola {
+  sigla: string
+  nome: string
+  vies: number | null
+  candidatos: number
+  candidatos_superior: number
+  eleitos: number
+  eleitos_superior: number
+}
+
+/** 2022 e 2024 lado a lado: por ano e UF, quem votou e, por cargo, candidatos e eleitos (8 graus). */
+export interface EscolaComparar {
+  ufs: { sigla: string; nome: string }[]
+  cargos: Record<string, { cod: number; nome: string }[]>
+  anos: Record<string, Record<string, { votantes: number[]; cargos: Record<string, { candidatos: number[]; eleitos: number[] }> }>>
+}
+
 export const ANOS_ESCOLA = [2022, 2024] as const
 
 async function get<T>(caminho: string, signal?: AbortSignal): Promise<T> {
@@ -362,6 +394,20 @@ export const consultas = {
     }),
   escola: (ano: number, uf = '') =>
     queryOptions({ queryKey: ['escola', ano, uf], queryFn: ({ signal }) => get<Escola>(`/api/escola?ano=${ano}&uf=${uf}`, signal), ...sempre }),
+  escolaMunicipios: (ano: number, uf = '') =>
+    queryOptions({
+      queryKey: ['escola-municipios', ano, uf],
+      queryFn: ({ signal }) => get<MunicipioEscola[]>(`/api/escola/municipios?ano=${ano}&uf=${uf}`, signal),
+      ...sempre,
+    }),
+  escolaPartidos: (ano: number, uf = '') =>
+    queryOptions({
+      queryKey: ['escola-partidos', ano, uf],
+      queryFn: ({ signal }) => get<PartidoEscola[]>(`/api/escola/partidos?ano=${ano}&uf=${uf}`, signal),
+      ...sempre,
+    }),
+  escolaComparar: () =>
+    queryOptions({ queryKey: ['escola-comparar'], queryFn: ({ signal }) => get<EscolaComparar>('/api/escola/comparar', signal), ...sempre }),
   escolaLugar: (ibge: number, ano: number) =>
     queryOptions({
       queryKey: ['escola-lugar', ibge, ano],

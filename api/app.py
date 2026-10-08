@@ -931,7 +931,7 @@ GROUP BY 1
 
 SQL_ESCOLA_MUNICIPIOS = """
 WITH votantes AS (
-    SELECT z.cd_municipio,
+    SELECT z.cd_municipio, sum(p.qtd_comparecimento) AS comparecimento,
            100.0 * sum(p.qtd_comparecimento) FILTER (WHERE es.nivel = 8) / sum(p.qtd_comparecimento) AS votantes
     FROM perfil_eleitorado_munzona p
     JOIN zona_eleitoral z USING (id_zona)
@@ -942,7 +942,8 @@ WITH votantes AS (
 disputa AS (
     SELECT e.cd_municipio,
            100.0 * avg((es.nivel = 8)::int)                                         AS candidatos,
-           100.0 * avg((es.nivel = 8)::int) FILTER (WHERE m.id_mandato IS NOT NULL) AS eleitos
+           100.0 * avg((es.nivel = 8)::int) FILTER (WHERE m.id_mandato IS NOT NULL) AS eleitos,
+           count(m.id_mandato)                                                      AS eleitos_n
     FROM politico_eleicao pe
     JOIN eleicao e       USING (id_eleicao)
     JOIN escolaridade es ON es.ds_grau = pe.ds_grau_instrucao
@@ -962,7 +963,8 @@ votos AS (
     WHERE e.ano = %(ano)s AND e.turno = 1 AND e.tipo = 2 AND e.cod_cargo = ANY(%(voto)s) AND es.nivel IS NOT NULL
     GROUP BY 1
 )
-SELECT mu.cd_ibge AS ibge, mu.cd_uf, vt.votantes::float, d.candidatos::float, d.eleitos::float, vo.votados::float
+SELECT mu.cd_ibge AS ibge, mu.cd_uf, vt.comparecimento::int, vt.votantes::float, d.candidatos::float, d.eleitos::float,
+       d.eleitos_n::int, vo.votados::float
 FROM votantes vt
 JOIN municipio mu   USING (cd_municipio)
 LEFT JOIN disputa d USING (cd_municipio)
@@ -1039,10 +1041,7 @@ def escola_ano(ano: int, uf: str = "") -> dict:
         c = por_cargo.setdefault(r["cargo"], {"cod": r["cargo"], "nome": r["nome"], "candidatos": [0] * 8, "eleitos": [0] * 8})
         c["candidatos"][r["nivel"] - 1] = r["candidatos"]
         c["eleitos"][r["nivel"] - 1] = r["eleitos"]
-    mun = [m for m in municipios_escola(ano).values() if cd_uf is None or m["cd_uf"] == cd_uf]
-    if cd_uf is not None:   # quintos dentro da UF (cortes nos quantis, como no conjunto)
-        cortes = statistics.quantiles([m["votantes"] for m in mun], n=5, method="inclusive")
-        mun = [{**m, "quintil": bisect.bisect_left(cortes, m["votantes"]) + 1} for m in mun]
+    mun = municipios_recorte(ano, uf)   # com UF, os quintos dividem os municípios dela
     medida = "eleitos" if ano == 2024 else "votados"   # 2022: deputado é eleito pelo estado
 
     def resumo(grupo: list[dict]) -> dict:
@@ -1063,11 +1062,7 @@ def escola_ano(ano: int, uf: str = "") -> dict:
 
 @app.get("/api/escola")
 def escola(ano: int = 2024, uf: str = ""):
-    if uf:
-        uf = uf_de(uf)["sigla"]
-        if uf not in carregadas():
-            raise HTTPException(404, f"UF sem dados: {uf}")
-    return escola_ano(_ano_escola(ano), uf)
+    return escola_ano(_ano_escola(ano), _uf_escola(uf))
 
 
 @lru_cache(maxsize=256)
@@ -1098,6 +1093,116 @@ def escola_municipio(ibge: int, ano: int = 2024):
     if ibge not in MUNICIPIOS:
         raise HTTPException(404, f"Município desconhecido: {ibge}")
     return escola_lugar(ibge, _ano_escola(ano))
+
+
+SQL_ESCOLA_PARTIDOS = """
+SELECT pa.sigla, pa.nome, pa.vies_politico::float AS vies,
+       count(*)                                            AS candidatos,
+       count(*) FILTER (WHERE es.nivel = 8)                AS candidatos_superior,
+       count(m.id_mandato)                                 AS eleitos,
+       count(m.id_mandato) FILTER (WHERE es.nivel = 8)     AS eleitos_superior
+FROM politico_eleicao pe
+JOIN eleicao e         USING (id_eleicao)
+JOIN escolaridade es   ON es.ds_grau = pe.ds_grau_instrucao
+JOIN partido pa        ON pa.id_partido = pe.id_partido
+LEFT JOIN mandato m    USING (id_politico_eleicao)
+LEFT JOIN municipio mu ON mu.cd_municipio = e.cd_municipio
+WHERE e.ano = %(ano)s AND e.tipo = 2 AND e.cod_cargo = ANY(%(cargos)s)
+  AND pe.ds_sit_tot_turno IS NOT NULL AND es.nivel IS NOT NULL
+  AND (%(cd_uf)s::int IS NULL OR COALESCE(mu.cd_uf, e.cd_uf) = %(cd_uf)s)
+GROUP BY pa.id_partido, 1, 2, 3
+"""
+
+SQL_ESCOLA_COMPARAR_CARGOS = """
+SELECT e.ano, COALESCE(mu.cd_uf, e.cd_uf) AS cd_uf, e.cod_cargo AS cargo, es.nivel,
+       count(*) AS candidatos, count(m.id_mandato) AS eleitos
+FROM politico_eleicao pe
+JOIN eleicao e         USING (id_eleicao)
+JOIN escolaridade es   ON es.ds_grau = pe.ds_grau_instrucao
+LEFT JOIN mandato m    USING (id_politico_eleicao)
+LEFT JOIN municipio mu ON mu.cd_municipio = e.cd_municipio
+WHERE e.ano IN (2022, 2024) AND e.tipo = 2 AND e.cod_cargo IN (3, 5, 6, 7, 11, 13)
+  AND pe.ds_sit_tot_turno IS NOT NULL AND es.nivel IS NOT NULL
+GROUP BY 1, 2, 3, 4
+"""
+
+SQL_ESCOLA_COMPARAR_VOTANTES = """
+SELECT p.ano_eleicao AS ano, mu.cd_uf, es.nivel, sum(p.qtd_comparecimento)::bigint AS votantes
+FROM perfil_eleitorado_munzona p
+JOIN zona_eleitoral z USING (id_zona)
+JOIN municipio mu     USING (cd_municipio)
+JOIN escolaridade es  ON es.ds_grau = p.ds_grau_escolaridade
+WHERE p.ano_eleicao IN (2022, 2024) AND es.nivel IS NOT NULL
+GROUP BY 1, 2, 3
+"""
+
+
+def _uf_escola(uf: str) -> str:
+    if not uf:
+        return ""
+    uf = uf_de(uf)["sigla"]
+    if uf not in carregadas():
+        raise HTTPException(404, f"UF sem dados: {uf}")
+    return uf
+
+
+@lru_cache(maxsize=16)
+def municipios_recorte(ano: int, uf: str = "") -> list[dict]:
+    """Os municípios do recorte com o quinto calculado dentro dele (todas as UFs ou só uma)."""
+    cd_uf = UFS[uf]["cd_ibge"] if uf else None
+    mun = [m for m in municipios_escola(ano).values() if cd_uf is None or m["cd_uf"] == cd_uf]
+    if cd_uf is not None:
+        cortes = statistics.quantiles([m["votantes"] for m in mun], n=5, method="inclusive")
+        mun = [{**m, "quintil": bisect.bisect_left(cortes, m["votantes"]) + 1} for m in mun]
+    return mun
+
+
+@app.get("/api/escola/municipios")
+def escola_municipios(ano: int = 2024, uf: str = ""):
+    """Cada município do recorte: % com superior de quem votou, dos candidatos, dos eleitos e dos votos."""
+    ano, uf = _ano_escola(ano), _uf_escola(uf)
+    return [{"ibge": m["ibge"], "nome": MUNICIPIOS[m["ibge"]]["municipio"], "uf": MUNICIPIOS[m["ibge"]]["sg_uf"],
+             "comparecimento": m["comparecimento"], "eleitos_n": m["eleitos_n"], "quintil": m["quintil"],
+             **{k: (round(m[k], 1) if m[k] is not None else None) for k in ("votantes", "candidatos", "eleitos", "votados")}}
+            for m in municipios_recorte(ano, uf) if m["ibge"] in MUNICIPIOS]
+
+
+@lru_cache(maxsize=16)
+def escola_partidos_ano(ano: int, uf: str = "") -> list[dict]:
+    cd_uf = UFS[uf]["cd_ibge"] if uf else None
+    linhas = consultar(SQL_ESCOLA_PARTIDOS, {"ano": ano, "cargos": CARGOS_ESCOLA[ano], "cd_uf": cd_uf})
+    return sorted(linhas, key=lambda p: (p["vies"] if p["vies"] is not None else 0, p["sigla"]))
+
+
+@app.get("/api/escola/partidos")
+def escola_partidos(ano: int = 2024, uf: str = ""):
+    """Cada partido do recorte, na ordem do viés: candidatos e eleitos, e quantos deles com superior completo."""
+    return escola_partidos_ano(_ano_escola(ano), _uf_escola(uf))
+
+
+@lru_cache(maxsize=1)
+def escola_comparar_tudo() -> dict:
+    sigla = {u["cd_ibge"]: s for s, u in UFS.items()}
+    anos: dict = {str(a): {} for a in ANOS_ESCOLA}
+    for r in consultar(SQL_ESCOLA_COMPARAR_CARGOS):
+        u = anos[str(r["ano"])].setdefault(sigla[r["cd_uf"]], {"votantes": [0] * 8, "cargos": {}})
+        c = u["cargos"].setdefault(str(r["cargo"]), {"candidatos": [0] * 8, "eleitos": [0] * 8})
+        c["candidatos"][r["nivel"] - 1] = r["candidatos"]
+        c["eleitos"][r["nivel"] - 1] = r["eleitos"]
+    for r in consultar(SQL_ESCOLA_COMPARAR_VOTANTES):
+        u = anos[str(r["ano"])].setdefault(sigla[r["cd_uf"]], {"votantes": [0] * 8, "cargos": {}})
+        u["votantes"][r["nivel"] - 1] = int(r["votantes"])
+    ufs = sorted(carregadas() - {"BR"})
+    nomes = {r["cod_cargo"]: r["nome"] for r in consultar("SELECT cod_cargo, nome FROM cargo WHERE cod_cargo IN (3, 5, 6, 7, 11, 13)")}
+    return {"ufs": [{"sigla": s, "nome": UFS[s]["nome"]} for s in ufs],
+            "cargos": {str(a): [{"cod": c, "nome": nomes[c]} for c in CARGOS_ESCOLA[a]] for a in ANOS_ESCOLA},
+            "anos": {a: {s: v for s, v in d.items() if s in ufs} for a, d in anos.items()}}
+
+
+@app.get("/api/escola/comparar")
+def escola_comparar():
+    """2022 e 2024 lado a lado: por ano, UF e cargo, candidatos e eleitos por grau; por ano e UF, quem votou."""
+    return escola_comparar_tudo()
 
 
 @app.get("/api/geo/brasil")

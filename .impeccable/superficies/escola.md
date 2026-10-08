@@ -12,5 +12,8 @@ FIRST VIEWPORT: título Display "Quanto estudou quem senta na cadeira?" com a fr
 FORM: ensaio em três atos (escolha do usuário); cores "A · bandeira" e formas "objetos da eleição" escolhidas pelo usuário na pergunta estruturada. Sem concept-seed: o launcher do impeccable não está instalado; não há seed key.
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance.
 
+## Acréscimos pedidos pelo usuário
+Filtro por estado no topo; mais informação e formas diversificadas (escolhidas por ele): por partido, por cargo e por estado, ranking de municípios, mapa, dispersão e 2022 ao lado de 2024; "capriche, quero que as pessoas se surpreendam": cada ato abre com o achado calculado (o multiplicador do diploma, o cargo com mais e menos diploma, esquerda × direita, a parte dos municípios acima da diagonal, as câmaras sem nenhum diplomado).
+
 ## Decisões em aberto
 - Mapa bivariado (escolaridade de quem votou x de quem foi eleito) fica para depois: competiria com o mapa do viés.

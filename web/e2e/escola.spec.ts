@@ -33,4 +33,27 @@ test('P4: o caderno, os santinhos, o plenário e o boletim respondem com os núm
   await expect(lugar.getByRole('group', { name: 'Câmara eleita' }).getByRole('link')).toHaveCount(30)
   await expect(lugar.getByText(/18 de 29/).first()).toBeVisible()
   await registrar(page, 'escola-lugar')
+
+  // as outras vistas: cargos e estados lado a lado, partidos, mapa, dispersão e ranking
+  await expect(page.getByRole('heading', { name: 'Cada cadeira, cada estado' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Os partidos e o diploma' })).toBeVisible()
+  await expect(lugar.locator('svg[aria-label^="Mapa:"] path[data-ibge]').first()).toBeVisible({ timeout: 30_000 })
+  await lugar.getByRole('radio', { name: 'Dispersão' }).click()
+  await expect(lugar.getByRole('img', { name: /^Dispersão dos/ })).toBeVisible()
+  // o ranking abre o boletim do município escolhido
+  const primeiro = lugar.getByRole('button', { name: /Abrir o boletim/ }).first()
+  const nome = (await primeiro.getAttribute('aria-label'))!.split(' (')[0]
+  await primeiro.click()
+  await expect(lugar.getByRole('article', { name: `Boletim da escolaridade de ${nome}` })).toBeVisible({ timeout: 20_000 })
+})
+
+test('P4: o filtro por estado recorta a página e abre o boletim na capital', async ({ page }) => {
+  await page.goto('/escola')
+  await page.getByRole('radio', { name: 'Bahia' }).click()
+  await expect(page.getByText(/Em 2022, na Bahia, quem se elegeu tinha/)).toBeVisible({ timeout: 20_000 })
+  await expect(page).toHaveURL(/uf=BA/)
+  const lugar = page.locator('section[aria-labelledby="lugar-p4"]')
+  await lugar.scrollIntoViewIfNeeded()
+  await expect(lugar.getByRole('article', { name: 'Boletim da escolaridade de Salvador' })).toBeVisible({ timeout: 20_000 })
+  await expect(lugar.getByText(/417 municípios/).first()).toBeVisible()
 })

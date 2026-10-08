@@ -2,12 +2,13 @@
 // eleição em três atos: do caderno de votação ao plenário (quem votou, quem se candidatou, quem se
 // elegeu, grau a grau), os 100 santinhos (a chance de cada grau virar cadeira) e as cinco câmaras
 // com o boletim do município escolhido. A cor é a escala da bandeira, do amarelo ao azul da marca.
-import { ArrowRight } from '@phosphor-icons/react'
+import { ArrowRight, X } from '@phosphor-icons/react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { consultas, type Ano, type Escola } from '../api'
 import { CedulaAnos } from '../atlas/CedulaAnos'
+import { Alternador } from '../atlas/PainelEstado'
 import { silhueta } from '../atlas/geo'
 import { CirandaTela } from '../componentes/Ciranda'
 import { ErroCarga } from '../componentes/ErroCarga'
@@ -16,11 +17,16 @@ import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { CAPITAIS } from '../lib/capitais'
 import { cargo as fmtCargo, decimal, inteiro, noEstado, pct } from '../lib/formato'
 import type { BuscaEscola } from '../router'
+import { CadaCadeira } from './CadaCadeira'
 import { CemSantinhos } from './CemSantinhos'
 import { porCento, soma, SUPERIOR } from './escolaridade'
 import { CincoCamaras } from './CincoCamaras'
+import { Dispersao } from './Dispersao'
 import { DoCadernoAoPlenario } from './DoCadernoAoPlenario'
 import { Lugar } from './Lugar'
+import { MapaEscola } from './MapaEscola'
+import { Partidos } from './Partidos'
+import { Ranking } from './Ranking'
 
 const ANOS: Ano[] = [2022, 2024]
 const TERESINA = 2211001
@@ -52,7 +58,11 @@ export function EscolaPagina() {
   const ufInfo = carregadas.find((u) => u.sigla === uf)
   const q = useQuery({ ...consultas.escola(ano, uf), placeholderData: keepPreviousData })
   const [destaque, setDestaque] = useState(SUPERIOR)
+  const [vista, setVista] = useState<'mapa' | 'dispersao'>('mapa')
   const d = q.data
+  const { data: municipios } = useQuery({ ...consultas.escolaMunicipios(ano, uf), placeholderData: keepPreviousData })
+  const { data: partidos } = useQuery({ ...consultas.escolaPartidos(ano, uf), placeholderData: keepPreviousData })
+  const { data: comparar } = useQuery(consultas.escolaComparar())
   // o boletim abre na capital do estado escolhido (Teresina sem estado); um município de outra UF não vale
   const ibge = busca.ibge && (!ufInfo || Math.floor(busca.ibge / 100_000) === ufInfo.cd_ibge) ? busca.ibge : uf ? CAPITAIS[uf] : TERESINA
   const { data: lugar } = useQuery({ ...consultas.escolaLugar(ibge, ano), placeholderData: keepPreviousData })
@@ -80,6 +90,17 @@ export function EscolaPagina() {
   const razao = conta(8) && conta(6) ? taxa(8) / Math.max(taxa(6), 0.5) : null
   const veredito = razao == null ? null : razao >= 2 ? 'Existe relação, e forte' : razao >= 1.2 ? 'Existe relação' : 'Aqui a relação quase some'
   const q1 = d.quintis[0], q5 = d.quintis[4]
+  const vezes = sup(todos.eleitos) / Math.max(sup(d.votantes), 0.1)
+  const onde = ufInfo ? ` ${noEstado(ufInfo.sigla, ufInfo.nome)}` : ''
+  // com estado escolhido, cada ato lembra o recorte e deixa tirar o filtro
+  const selo = ufInfo && (
+    <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-linha bg-folha py-0.5 pl-3 pr-1 text-[0.78rem] text-tinta-2">
+      Recorte: {ano} · {ufInfo.nome}
+      <button type="button" onClick={() => mudar({ uf: undefined, ibge: undefined })} aria-label="Tirar o filtro de estado" className="grid size-6 place-items-center rounded-full hover:bg-papel focus-visible:outline-2 focus-visible:outline-acao">
+        <X size={12} weight="bold" aria-hidden />
+      </button>
+    </p>
+  )
   // o quinto do município, entre os quintos que a página mostra (os do estado, se houver filtro)
   const vLugar = lugar?.ano === ano ? lugar.pct.votantes : null
   const quintilDoLugar = vLugar == null ? null : d.quintis.findIndex((x) => vLugar <= x.ate + 0.05) + 1 || 5
@@ -90,7 +111,9 @@ export function EscolaPagina() {
         <div>
           <h1 className="t-display">Quanto estudou quem senta na cadeira?</h1>
           <p className="mt-4 max-w-[56ch] text-[clamp(1.15rem,1rem+0.7vw,1.5rem)] font-medium leading-[1.42] text-tinta-2" style={{ fontStretch: '96%' }}>
-            Em {ano}{ufInfo ? `, ${noEstado(ufInfo.sigla, ufInfo.nome)},` : ''} quem tinha superior completo era <b className="tabular font-bold text-tinta">{pct(sup(d.votantes), 0)}</b> de quem votou,{' '}
+            Em {ano}{ufInfo ? `, ${noEstado(ufInfo.sigla, ufInfo.nome)},` : ''} quem se elegeu tinha{' '}
+            <b className="tabular font-bold text-tinta">{decimal(vezes, vezes >= 5 ? 0 : 1)} vezes</b> mais diploma do que quem votou: superior completo era{' '}
+            <b className="tabular font-bold text-tinta">{pct(sup(d.votantes), 0)}</b> de quem votou,{' '}
             <b className="tabular font-bold text-tinta">{pct(sup(todos.candidatos), 0)}</b> de quem se candidatou e{' '}
             <b className="tabular font-bold text-tinta">{pct(sup(todos.eleitos), 0)}</b> de quem se elegeu.
           </p>
@@ -153,6 +176,7 @@ export function EscolaPagina() {
       {/* ato 2: os 100 santinhos */}
       <section aria-labelledby="santinhos-p4" className="adiar mt-24">
         <h2 id="santinhos-p4" className="t-h1">De cada 100 santinhos, quantos viram cadeira</h2>
+        {selo}
         <p className="mt-3 max-w-[64ch] text-[1.02rem] leading-relaxed text-tinta-2">
           {veredito ? (
             <>
@@ -176,9 +200,29 @@ export function EscolaPagina() {
         <CemSantinhos candidatos={cargo100.candidatos} eleitos={cargo100.eleitos} rotulos={rotulos} destaque={destaque} aoDestacar={setDestaque} />
       </section>
 
-      {/* ato 3: as cinco câmaras e o boletim do município */}
+      {/* ato 3: cada cadeira e cada estado, 2022 ao lado de 2024 */}
+      <section aria-labelledby="cadeiras-p4" className="adiar mt-24">
+        <h2 id="cadeiras-p4" className="t-h1">Cada cadeira, cada estado</h2>
+        <div className="mt-3">
+          {comparar ? (
+            <CadaCadeira dados={comparar} uf={uf} rotulos={rotulos} aoEscolherUf={(s) => mudar({ uf: s || undefined, ibge: undefined })} />
+          ) : (
+            <p className="text-tinta-3">Comparando as eleições...</p>
+          )}
+        </div>
+      </section>
+
+      {/* ato 4: os partidos, na ordem e na cor do viés */}
+      <section aria-labelledby="partidos-p4" className="adiar mt-24">
+        <h2 id="partidos-p4" className="t-h1">Os partidos e o diploma</h2>
+        {selo}
+        <div className="mt-3">{partidos ? <Partidos partidos={partidos} onde={onde} /> : <p className="text-tinta-3">Contando os partidos...</p>}</div>
+      </section>
+
+      {/* ato 5: o lugar: mapa ou dispersão, o boletim, as cinco câmaras e o ranking */}
       <section aria-labelledby="lugar-p4" className="adiar mt-24">
         <h2 id="lugar-p4" className="t-h1">{d.medida === 'eleitos' ? 'O lugar e quem ele elege' : 'O lugar e em quem ele vota'}</h2>
+        {selo}
         <p className="mt-3 max-w-[64ch] text-[1.02rem] leading-relaxed text-tinta-2">
           {d.medida === 'eleitos' ? (
             <>
@@ -196,15 +240,43 @@ export function EscolaPagina() {
         </p>
         <div className="mt-8 grid grid-cols-1 gap-x-12 gap-y-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
           <div className="min-w-0">
-            <CincoCamaras dados={d} quintilDoLugar={quintilDoLugar} />
-            <p className="mt-4 text-[0.86rem] text-tinta-3">
-              Correlação entre os {inteiro(d.todos.municipios)} municípios: <b className="tabular text-tinta-2">{decimal(Math.abs(d.correlacao ?? 0) < 0.005 ? 0 : d.correlacao, 2)}</b>
-              {d.medida === 'eleitos' ? ' (0 seria nenhuma relação, 1 seria a mesma ordem).' : ' (0 seria nenhuma relação).'} O Censo 2022 dá o mesmo resultado.
-            </p>
+            <Alternador
+              rotulo="Vista dos municípios"
+              valor={vista}
+              aoMudar={setVista}
+              opcoes={[{ valor: 'mapa', rotulo: 'Mapa' }, { valor: 'dispersao', rotulo: 'Dispersão' }]}
+            />
+            <div className="mt-4">
+              {!municipios ? (
+                <p className="text-tinta-3">Abrindo os municípios...</p>
+              ) : vista === 'mapa' ? (
+                <MapaEscola municipios={municipios} ufs={d.ufs} medida={d.medida} selecionado={ibge} aoEscolher={(i) => mudar({ ibge: i })} />
+              ) : (
+                <Dispersao municipios={municipios} medida={d.medida} selecionado={ibge} aoEscolher={(i) => mudar({ ibge: i })} />
+              )}
+            </div>
+
           </div>
           <div className="min-w-0">
             <Lugar ibge={ibge} ano={ano} uf={uf} quintil={quintilDoLugar} rotulos={rotulos} aoMudar={(i) => mudar({ ibge: i })} />
           </div>
+        </div>
+
+        <h3 className="t-h2 mt-16">{d.medida === 'eleitos' ? 'Cinco câmaras' : 'Cinco cédulas'}</h3>
+        <p className="mt-2 max-w-[70ch] text-[0.98rem] leading-relaxed text-tinta-2">
+          Os {inteiro(d.todos.municipios)} municípios{ufInfo ? ` ${noEstado(ufInfo.sigla, ufInfo.nome)}` : ''} em cinco grupos do mesmo tamanho, do eleitorado menos ao mais escolarizado.
+        </p>
+        <div className="mt-5">
+          <CincoCamaras dados={d} quintilDoLugar={quintilDoLugar} />
+          <p className="mt-4 text-[0.86rem] text-tinta-3">
+            Correlação entre os {inteiro(d.todos.municipios)} municípios: <b className="tabular text-tinta-2">{decimal(Math.abs(d.correlacao ?? 0) < 0.005 ? 0 : d.correlacao, 2)}</b>
+            {d.medida === 'eleitos' ? ' (0 seria nenhuma relação, 1 seria a mesma ordem).' : ' (0 seria nenhuma relação).'} O Censo 2022 dá o mesmo resultado.
+          </p>
+        </div>
+
+        <h3 className="t-h2 mt-16">O ranking dos municípios</h3>
+        <div className="mt-2">
+          {municipios && <Ranking municipios={municipios} medida={d.medida} selecionado={ibge} aoEscolher={(i) => mudar({ ibge: i })} />}
         </div>
       </section>
 
