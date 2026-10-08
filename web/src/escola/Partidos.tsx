@@ -15,6 +15,12 @@ const ROTULO = 18 // espaço para o número em cima da coluna
 
 const taxa = (n: number, d: number) => (d ? (100 * n) / d : 0)
 
+/** Sigla para o rótulo: sem espaços ("PC do B" vira "PCdoB") e, se comprida, encurtada com ponto. */
+const curta = (sigla: string) => {
+  const s = sigla.replace(/\s+/g, '')
+  return s.length > 7 ? `${s.slice(0, 5)}.` : s
+}
+
 export function Partidos({ partidos, onde }: { partidos: PartidoEscola[]; onde: string }) {
   const [ref, largura] = useLargura<HTMLDivElement>()
   const [foco, setFoco] = useState<PartidoEscola | null>(null)
@@ -43,12 +49,14 @@ export function Partidos({ partidos, onde }: { partidos: PartidoEscola[]; onde: 
   const estreito = largura > 0 && largura < 640
   const extremos = new Set([mais?.sigla, menos?.sigla])
   const cabe = (sigla: string, w: number) => sigla.length * 6.6 + 4 <= w
+  const rotulo = (sigla: string, w: number) => (cabe(sigla, w) ? sigla : cabe(curta(sigla), w) ? curta(sigla) : null)
+  const frase = (g: { eleitos: number; sup: number }, lado: string) =>
+    g.eleitos ? <><b className="tabular text-tinta">{Math.round(g.sup)} de 100</b>{lado === 'esquerda' ? ' têm superior completo' : ''}</> : <>nenhum partido elegeu alguém{onde}</>
 
   return (
     <div>
       <p className="max-w-[70ch] text-[1.02rem] leading-relaxed text-tinta-2">
-        Entre os eleitos dos partidos à esquerda{onde}, <b className="tabular text-tinta">{Math.round(esq.sup)} de 100</b> têm superior completo; à direita,{' '}
-        <b className="tabular text-tinta">{Math.round(dir.sup)}</b>.
+        Entre os eleitos dos partidos à esquerda{onde}, {frase(esq, 'esquerda')}; à direita, {frase(dir, 'direita')}.
         {mais && menos && (
           <> O partido com mais diploma entre os que elegeram ao menos 5 é o <b className="text-tinta">{mais.sigla}</b> ({Math.round(taxa(mais.eleitos_superior, mais.eleitos))} de 100); o com menos, o <b className="text-tinta">{menos.sigla}</b> ({Math.round(taxa(menos.eleitos_superior, menos.eleitos))}).</>
         )}
@@ -61,10 +69,11 @@ export function Partidos({ partidos, onde }: { partidos: PartidoEscola[]; onde: 
               const sup = taxa(p.eleitos_superior, p.eleitos)
               const cand = taxa(p.candidatos_superior, p.candidatos)
               return (
-                <li key={p.sigla} className="grid grid-cols-[3.6rem_minmax(0,1fr)_2.2rem] items-center gap-2 text-[0.8rem]">
-                  <span className="flex items-center gap-1 font-semibold text-tinta">
+                <li key={p.sigla} className={`grid grid-cols-[5.6rem_minmax(0,1fr)_2.2rem] items-center gap-2 text-[0.8rem] ${p.eleitos < 5 ? 'opacity-55' : ''}`}>
+                  <span className="flex min-w-0 items-center gap-1 text-tinta">
                     <span className="size-2 shrink-0 rounded-full" style={{ background: corVies(p.vies) }} aria-hidden />
-                    <span className="truncate">{p.sigla}</span>
+                    <span className="truncate font-semibold">{curta(p.sigla)}</span>
+                    <span className="tabular shrink-0 text-[0.68rem] text-tinta-3">{p.eleitos}</span>
                   </span>
                   <span className="relative h-3.5 rounded-[3px] bg-papel-2" aria-hidden>
                     <span className="absolute inset-y-0 left-0 rounded-[3px]" style={{ width: `${(sup / topo) * 100}%`, background: corVies(p.vies) }} />
@@ -104,9 +113,9 @@ export function Partidos({ partidos, onde }: { partidos: PartidoEscola[]; onde: 
                       {Math.round(sup)}
                     </text>
                   )}
-                  {cabe(p.sigla, w) && (
+                  {rotulo(p.sigla, w) && (
                     <text x={cx + w / 2} y={ALTURA + 22} textAnchor="middle" className={`text-[0.7rem] ${ativo ? 'fill-tinta font-bold' : 'fill-tinta-2'}`}>
-                      {p.sigla}
+                      {rotulo(p.sigla, w)}
                     </text>
                   )}
                 </g>
@@ -119,7 +128,9 @@ export function Partidos({ partidos, onde }: { partidos: PartidoEscola[]; onde: 
               const larg = Math.max(w, 2)
               return (
                 <g key={`chamada-${p.sigla}`} pointerEvents="none">
-                  <line x1={cx + larg / 2} x2={cx + larg / 2} y1={yv(sup) - 2} y2={Math.max(4, yv(sup) - 16)} stroke="var(--color-tinta)" strokeWidth={1} />
+                  {yv(sup) - 2 > Math.max(12, yv(sup) - 20) + 4 && (
+                    <line x1={cx + larg / 2} x2={cx + larg / 2} y1={yv(sup) - 2} y2={Math.max(12, yv(sup) - 20) + 4} stroke="var(--color-tinta)" strokeWidth={1} />
+                  )}
                   <rect x={Math.min(Math.max(cx + larg / 2, 34), largura - 34) - 32} y={Math.max(0, yv(sup) - 33)} width={64} height={17} rx={4} fill="var(--color-folha)" opacity={0.92} />
                   <text x={Math.min(Math.max(cx + larg / 2, 34), largura - 34)} y={Math.max(12, yv(sup) - 20)} textAnchor="middle" className="t-numero tabular fill-tinta text-[0.82rem]">
                     {p.sigla} {Math.round(sup)}
@@ -157,7 +168,7 @@ export function Partidos({ partidos, onde }: { partidos: PartidoEscola[]; onde: 
         <span>{estreito ? 'Barra' : 'Coluna cheia'}: eleitos com superior completo.</span>
         <span className="flex items-center gap-1.5"><span className={estreito ? 'h-3 w-0.5 bg-tinta' : 'h-0.5 w-4 bg-tinta'} aria-hidden />os candidatos do partido</span>
         {!estreito && <span className="flex items-center gap-1.5"><span className="w-5 border-t-[1.5px] border-dashed border-tinta" aria-hidden />média dos eleitos, {Math.round(media)} de 100</span>}
-        <span>Só partidos que elegeram alguém{estreito ? '' : '; passe o mouse para ver os números'}.</span>
+        <span>Só partidos que elegeram alguém{estreito ? '; o número miúdo é quantos, e os com menos de 5 ficam claros' : '; passe o mouse para ver os números'}.</span>
       </p>
       <TabelaAlternavel
         titulo="Partidos na ordem do viés: candidatos e eleitos com superior completo"

@@ -53,7 +53,7 @@ export function CemSantinhos({ candidatos, eleitos, rotulos, destaque, aoDestaca
   const taxa = (n: number) => Math.round((100 * eleitos[n - 1]) / candidatos[n - 1])
 
   // largo: quadros 10x10 lado a lado; estreito: faixas de 25 colunas por 4 fileiras
-  const porLinha = largura >= 900 ? graus.length : 4
+  const porLinha = largura >= 900 ? 7 : 4 // casas fixas: com poucos graus, os quadros ficam à esquerda
   const VAO = largura >= 900 ? 34 : 18
   const quadro = estreito ? largura : Math.min(124, (largura - (porLinha - 1) * VAO) / porLinha)
   const cols = estreito ? 25 : 10
