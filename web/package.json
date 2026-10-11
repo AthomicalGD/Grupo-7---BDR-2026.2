@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:simples": "vite --mode simples",
     "build": "tsc -b && vite build",
+    "build:simples": "tsc -b && vite build --mode simples",
     "lint": "oxlint",
     "preview": "vite preview",
+    "preview:simples": "vite preview --mode simples",
     "marca": "node scripts/gerar-marca.mjs"
   },
   "dependencies": {

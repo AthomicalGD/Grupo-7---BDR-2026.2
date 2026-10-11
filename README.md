@@ -163,9 +163,25 @@ npm run dev
 
 Abra http://localhost:5173. O Vite repassa `/api` para a API em `127.0.0.1:8000`.
 
+### Interface completa e interface simples
+
+O site tem duas interfaces sobre os mesmos dados: a **completa** (mapa, urna, plenário, 3D) e a
+**simples** (páginas lineares com gráficos e fotos, paleta própria, sem logo; em `web/src/simples/`).
+A interface é escolhida **só ao subir o site**: cada uma é um pacote separado, em porta própria, e
+nenhuma tem botão, link ou parâmetro que leve à outra.
+
+| Interface | Desenvolvimento | Produção |
+|---|---|---|
+| Completa | `npm run dev` → http://localhost:5173 | `npm run build` e `npm run preview` → http://localhost:4173 |
+| Simples | `npm run dev:simples` → http://localhost:5174 | `npm run build:simples` e `npm run preview:simples` → http://localhost:4174 |
+
+Por baixo, quem decide é `VITE_INTERFACE` (`completa`, o padrão, ou `simples`), lida pelo
+`vite.config.ts`; `--mode simples` a lê de `web/.env.simples`. Um valor diferente desses dois
+impede o site de subir. As duas podem rodar ao mesmo tempo, cada uma na sua porta.
+
 Para rodar uma segunda API (em outra porta) sem derrubar a primeira, aponte o site para ela com
 `API_ALVO` e escolha a porta do site com `PORTA`, por exemplo `API_ALVO=http://127.0.0.1:8001 PORTA=5180 npm run dev`;
-os testes ponta a ponta usam `SITE=http://localhost:5180`.
+os testes ponta a ponta usam `SITE=http://localhost:5180` (e `SITE_SIMPLES` para a interface simples).
 
 Para só usar ou apresentar o site, a versão de produção é bem mais leve para o computador
 (sem o modo de desenvolvimento do React): `npm run build` e depois `npx vite preview`,

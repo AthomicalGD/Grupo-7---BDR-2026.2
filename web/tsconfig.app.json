@@ -6,6 +6,8 @@
     "module": "esnext",
     "types": ["vite/client"],
     "allowArbitraryExtensions": true,
+    /* a interface real é escolhida pelo vite.config; para os tipos, as duas exportam App */
+    "paths": { "@interface": ["./src/AppCompleta.tsx"] },
     "skipLibCheck": true,
 
     /* Bundler mode */

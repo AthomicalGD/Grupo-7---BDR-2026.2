@@ -97,6 +97,21 @@
   html[data-fonte="1"] { font-size: 112.5%; }
   html[data-fonte="2"] { font-size: 125%; }
 
+  /* Interface simples: petróleo e âmbar (só existe no pacote dela; ver src/simples/cores.ts) */
+  .tema-simples {
+    --color-papel: #eef3f2;
+    --color-papel-2: #dfe8e6;
+    --color-folha: #fafcfc;
+    --color-tinta: #10272a;
+    --color-tinta-2: #3f5457;
+    --color-tinta-3: #56696c;
+    --color-linha: #d3dddc;
+    --color-linha-2: #a3b3b2;
+    --color-acao: #0a6b6f;
+    --color-marcador: #f2a33a;
+    --color-eleito: #0a6b6f;
+  }
+
   html[data-contraste="alto"] {
     --color-papel: #ffffff;
     --color-papel-2: #e9ecef;
