@@ -77,7 +77,7 @@ test('reeleição: taxa por cargo e eleição a eleição', async ({ page, erros
   // PI, respostas/10a_taxa_reeleicao.txt: deputado estadual 126 de 164
   await expect(page.getByText('126 de 164 que tentaram', { exact: false })).toBeVisible({ timeout: 30_000 })
   await page.getByRole('button', { name: 'Prefeito', exact: true }).click()
-  await expect(page.getByText('1996 → 2000')).toBeVisible()
+  await expect(page.getByText('2000 (eleitos em 1996)')).toBeVisible()
   const largura = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(largura).toBeLessThanOrEqual(0)
   await registrar(page, 'simples-reeleicao')

@@ -40,7 +40,7 @@ export function Reeleicao() {
         <div className={`transition-opacity ${isPlaceholderData ? 'opacity-60' : ''}`}>
           <Secao
             titulo={`Por cargo, ${noEstado(uf.sigla, uf.nome)}`}
-            nota="A barra são todos os eleitos do cargo, de 1994 a 2020: os que voltaram, os que tentaram e perderam e os que não tentaram. O número é a taxa de reeleição: dos que tentaram, quantos voltaram."
+            nota="A barra são todos os eleitos do cargo que chegaram a uma disputa de reeleição (de 1998 a 2024): os que voltaram, os que tentaram e perderam e os que não tentaram. O número é a taxa de reeleição: dos que tentaram, quantos voltaram."
           >
             <div className="mb-4 flex flex-wrap gap-x-5 gap-y-1 text-[0.88rem] text-tinta-2">
               {ROTULOS.map((r, i) => (
@@ -65,15 +65,15 @@ export function Reeleicao() {
             </ul>
           </Secao>
 
-          <Secao titulo="Eleição a eleição" nota="Taxa de reeleição dos eleitos em cada ano: dos que tentaram na eleição seguinte, quantos voltaram.">
+          <Secao titulo="Eleição a eleição" nota="Cada barra é uma eleição: dos que estavam no cargo e tentaram se reeleger nela, quantos venceram. Entre parênteses, o ano em que eles tinham se elegido.">
             <div className="mb-5">
               <Opcoes rotulo="Cargo" valor={cargo.cod} opcoes={data.cargos.map((c) => ({ valor: c.cod, rotulo: c.nome }))} aoMudar={(v) => mudar({ cargo: v })} />
             </div>
             <BarrasH
               larguraRotulo="7.5rem"
               barras={cargo.ciclos.map((c) => ({
-                chave: String(c.eleitos_em),
-                rotulo: `${c.eleitos_em} → ${c.disputa}`,
+                chave: String(c.disputa),
+                rotulo: `${c.disputa} (eleitos em ${c.eleitos_em})`,
                 valor: c.taxa ?? 0,
                 cor: 'var(--color-reeleito)',
                 texto: taxa(c),
@@ -83,8 +83,8 @@ export function Reeleicao() {
               <table className={tabela}>
                 <thead>
                   <tr>
-                    <th className={th}>Eleitos em</th>
                     <th className={th}>Disputa</th>
+                    <th className={th}>Eleitos em</th>
                     <th className={`${th} text-right`}>Eleitos</th>
                     <th className={`${th} text-right`}>Tentaram</th>
                     <th className={`${th} text-right`}>Reeleitos</th>
@@ -93,10 +93,10 @@ export function Reeleicao() {
                   </tr>
                 </thead>
                 <tbody>
-                  {[...cargo.ciclos.map((c) => ({ ...c, rot: String(c.eleitos_em), disputa: String(c.disputa) })), { ...cargo.total, rot: 'Total', disputa: '' }].map((c) => (
+                  {[...cargo.ciclos.map((c) => ({ ...c, rot: String(c.disputa), origem: String(c.eleitos_em) })), { ...cargo.total, rot: 'Total', origem: '' }].map((c) => (
                     <tr key={c.rot}>
                       <td className={`${td} font-semibold`}>{c.rot}</td>
-                      <td className={td}>{c.disputa}</td>
+                      <td className={td}>{c.origem}</td>
                       <td className={`${td} text-right tabular-nums`}>{inteiro(c.eleitos)}</td>
                       <td className={`${td} text-right tabular-nums`}>{inteiro(c.tentaram)}</td>
                       <td className={`${td} text-right tabular-nums`}>{inteiro(c.reeleitos)}</td>

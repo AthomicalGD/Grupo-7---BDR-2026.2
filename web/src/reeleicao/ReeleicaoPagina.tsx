@@ -28,7 +28,8 @@ const POUCOS = 10
 
 const partes = (c: ContaReeleicao) => [c.reeleitos, c.tentaram - c.reeleitos, c.eleitos - c.tentaram]
 const taxa = (n: number | null) => (n == null ? '-' : `${inteiro(Math.round(n))}%`)
-const anos = (c: Cargo) => `${c.ciclos[0].eleitos_em} a ${c.ciclos.at(-1)!.eleitos_em}`
+// o ano que se lê é o da disputa da reeleição; o da eleição de origem vem miúdo
+const anos = (c: Cargo) => `disputas de ${c.ciclos[0].disputa} a ${c.ciclos.at(-1)!.disputa}`
 
 function Lede({ dados, nome }: { dados: Reeleicao; nome: string }) {
   const b = (t: string) => <b className="tabular font-bold text-tinta">{t}</b>
@@ -151,7 +152,7 @@ function Ciclos({ cargo }: { cargo: Cargo }) {
         {cargo.ciclos.map((c) => (
           <li
             key={c.eleitos_em}
-            aria-label={`Eleitos em ${c.eleitos_em}, disputa em ${c.disputa}: ${
+            aria-label={`Disputa de ${c.disputa}, eleitos em ${c.eleitos_em}: ${
               c.tentaram ? `${inteiro(c.reeleitos)} de ${inteiro(c.tentaram)} que tentaram voltaram (${pct(c.taxa)})` : 'nenhum eleito tentou'
             }${c.media_municipios != null ? `; média dos municípios ${pct(c.media_municipios)}` : ''}.`}
           >
@@ -177,11 +178,11 @@ function Ciclos({ cargo }: { cargo: Cargo }) {
                 {c.taxa == null ? 'ninguém' : taxa(c.taxa)}
               </span>
             </div>
-            <p className="mt-2 text-center t-rotulo tabular">{c.eleitos_em}</p>
+            <p className="mt-2 text-center t-rotulo tabular">{c.disputa}</p>
             <p className="text-center text-[0.72rem] text-tinta-3 tabular">
-              <span className="hidden sm:inline">disputa em </span>
-              <span className="sm:hidden">→ </span>
-              {c.disputa}
+              <span className="hidden sm:inline">eleitos em </span>
+              <span className="sm:hidden">de </span>
+              {c.eleitos_em}
             </p>
             <p className="mt-1 text-center text-[0.72rem] text-tinta-3 tabular">
               {inteiro(c.reeleitos)}/{inteiro(c.tentaram)}
@@ -205,9 +206,9 @@ function Ciclos({ cargo }: { cargo: Cargo }) {
 }
 
 function tabelaCiclos(cargo: Cargo) {
-  const linha = (rot: string, disputa: string, c: ContaReeleicao) => [
-    rot,
+  const linha = (disputa: string, origem: string, c: ContaReeleicao) => [
     disputa,
+    origem,
     inteiro(c.eleitos),
     inteiro(c.tentaram),
     pct(c.eleitos ? (100 * c.tentaram) / c.eleitos : null),
@@ -216,8 +217,8 @@ function tabelaCiclos(cargo: Cargo) {
     ...(cargo.municipal ? [pct(c.media_municipios)] : []),
   ]
   return {
-    colunas: ['Eleitos em', 'Disputa', 'Eleitos', 'Tentaram', '% dos eleitos', 'Reeleitos', 'Taxa', ...(cargo.municipal ? ['Média municípios'] : [])],
-    linhas: () => [...cargo.ciclos.map((c) => linha(String(c.eleitos_em), String(c.disputa), c)), linha('Total', '', cargo.total)],
+    colunas: ['Disputa', 'Eleitos em', 'Eleitos', 'Tentaram', '% dos eleitos', 'Reeleitos', 'Taxa', ...(cargo.municipal ? ['Média municípios'] : [])],
+    linhas: () => [...cargo.ciclos.map((c) => linha(String(c.disputa), String(c.eleitos_em), c)), linha('Total', '', cargo.total)],
   }
 }
 
@@ -326,8 +327,8 @@ function Resposta({ dados, uf, carregadas, cargoPedido, mudar, erro, trocando }:
       <section aria-labelledby="ciclos" className="mt-16 max-w-[1180px] scroll-mt-24">
         <h2 id="ciclos" className="t-h2 scroll-mt-24">Eleição a eleição</h2>
         <p className="mt-1 max-w-[64ch] text-[0.9rem] text-tinta-2">
-          Cada coluna são os {cargoPlural(cargo.nome)} eleitos num ano {noEstado(ufDados.sigla, ufDados.nome)}
-          {cargo.municipal ? ', somando todos os municípios,' : ''} e a parte dos que tentaram que venceu {cargo.cod === 5 ? 'oito anos depois, no fim do mandato' : 'quatro anos depois'}.
+          Cada coluna é uma eleição {noEstado(ufDados.sigla, ufDados.nome)}: a parte dos {cargoPlural(cargo.nome)} que estavam no cargo, tentaram se reeleger nela e venceram
+          {cargo.municipal ? ' (somando todos os municípios)' : ''}. Embaixo, o ano em que eles tinham se elegido{cargo.cod === 5 ? ' (oito anos antes, porque o mandato de senador é de oito anos)' : ''}.
         </p>
         <div role="radiogroup" aria-label="Cargo" className="mt-4 flex flex-wrap gap-2">
           {dados.cargos.map((c) => (
@@ -360,7 +361,7 @@ function Resposta({ dados, uf, carregadas, cargoPedido, mudar, erro, trocando }:
           </li>
           {dados.fora.length > 0 && (
             <li>
-              <b>Ainda sem a eleição seguinte:</b> {dados.fora.map((f) => `${f.cargo.toLowerCase()} ${f.eleitos_em}`).join(', ')}.
+              <b>Ainda sem a eleição seguinte:</b> {dados.fora.map((f) => `${f.cargo.toLowerCase()} eleito em ${f.eleitos_em}`).join(', ')}.
             </li>
           )}
         </ul>
