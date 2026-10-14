@@ -314,6 +314,10 @@ export function Metodologia() {
           <li><b>Privacidade:</b> CPF, título eleitoral e data completa de nascimento nunca aparecem; só o ano.</li>
           <li><b>Fotos:</b> as fotos de registro que o TSE publica desde 2004.</li>
         </ul>
+        <p>
+          A taxa de reeleição de cada cargo, eleição a eleição e estado a estado (P10a), está na página{' '}
+          <Link to="/reeleicao" className="font-semibold text-acao underline underline-offset-4">Reeleição</Link>.
+        </p>
         <Detalhe titulo="De onde vêm os dados">
           <Origens
             linhas={[

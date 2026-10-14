@@ -146,6 +146,19 @@ def main() -> None:
     comp = get("/api/escola/comparar")
     assert sum(comp["anos"]["2024"]["PI"]["cargos"]["13"]["eleitos"]) == sum(v["eleitos"][i] for v in [next(c for c in pi["cargos"] if c["cod"] == 13)] for i in range(8))
 
+    # P10a: o resumo do PI em respostas/10a_taxa_reeleicao.txt
+    ree = get("/api/reeleicao?uf=PI")
+    totais = {c["nome"]: c["total"] for c in ree["cargos"]}
+    assert [(t["eleitos"], t["tentaram"], t["reeleitos"]) for t in totais.values()] == [
+        (7, 4, 2), (9, 4, 1), (70, 51, 38), (210, 164, 126), (1558, 825, 562), (14709, 10934, 7070)], totais
+    assert (totais["Prefeito"]["media_municipios"], totais["Vereador"]["media_municipios"]) == (71.8, 64.8)
+    assert ree["municipais"]["taxa"] == 64.9 and ree["ligados_por_nome"] == 617
+    vere = next(c for c in ree["cargos"] if c["cod"] == 13)
+    assert sum(x["eleitos"] for x in vere["ciclos"]) == vere["total"]["eleitos"] and vere["ciclos"][-1]["eleitos_em"] == 2020
+    assert {"cod": 13, "cargo": "Vereador", "eleitos_em": 2024} in ree["fora"]
+    for uf in ("SP", "BR", "XX"):
+        assert cliente.get(f"/api/reeleicao?uf={uf}").status_code == 404
+
     # as consultas mostradas na metodologia do site continuam válidas no esquema atual
     for arquivo in sorted((Path(__file__).parent.parent / "web/src/paginas/consultas").glob("*.sql")):
         consultar("EXPLAIN " + arquivo.read_text(encoding="utf-8"))

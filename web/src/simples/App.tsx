@@ -8,12 +8,14 @@ import { Inicio } from './paginas/Inicio'
 import { Municipio } from './paginas/Municipio'
 import { Politico } from './paginas/Politico'
 import { Politicos } from './paginas/Politicos'
+import { Reeleicao } from './paginas/Reeleicao'
 
 const NAV = [
   { para: '/', rotulo: 'Estados', ativo: (p: string) => p === '/' || p.startsWith('/uf') },
   { para: '/urna', rotulo: 'Políticos', ativo: (p: string) => p.startsWith('/urna') || p.startsWith('/politico') },
   { para: '/cadeira', rotulo: 'Cadeira', ativo: (p: string) => p.startsWith('/cadeira') },
   { para: '/escola', rotulo: 'Escola', ativo: (p: string) => p.startsWith('/escola') },
+  { para: '/reeleicao', rotulo: 'Reeleição', ativo: (p: string) => p.startsWith('/reeleicao') },
 ] as const
 
 function Moldura() {
@@ -98,6 +100,12 @@ const arvore = raiz.addChildren([
     path: '/escola',
     component: Escola,
     validateSearch: (s: Record<string, unknown>) => ({ ano: numero(s.ano), uf: sigla(s.uf) }),
+  }),
+  createRoute({
+    getParentRoute: () => raiz,
+    path: '/reeleicao',
+    component: Reeleicao,
+    validateSearch: (s: Record<string, unknown>) => ({ uf: sigla(s.uf), cargo: numero(s.cargo) }),
   }),
 ])
 
