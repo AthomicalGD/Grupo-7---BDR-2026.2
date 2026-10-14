@@ -125,7 +125,7 @@ export function Boletim({ m, ano, aoFechar }: { m: Municipio; ano: Ano; aoFechar
                   <Picote />
                   <Linha i={4}>
                     <h3 className="t-h3">Quanto custou cada cadeira</h3>
-                    <p className="mb-4 text-[0.85rem] text-tinta-3">Gasto de todos os candidatos dividido pelas vagas, em reais de 2024</p>
+                    <p className="mb-4 text-[0.85rem] text-tinta-3">Gasto médio dos eleitos, em reais de 2024</p>
                     <table className="w-full text-[0.88rem] tabular">
                       <caption className="sr-only">Custo da cadeira de prefeito e de vereador em {m.nome}</caption>
                       <thead>

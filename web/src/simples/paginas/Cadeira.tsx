@@ -38,7 +38,7 @@ export function Cadeira() {
 
   return (
     <>
-      <Titulo sub="Tudo o que os candidatos declararam gastar, dividido pelas vagas em disputa. Valores em reais de outubro de 2024, corrigidos pelo IPCA.">
+      <Titulo sub="Quanto gastou, em média, a campanha de quem se elegeu. Valores em reais de outubro de 2024, corrigidos pelo IPCA.">
         Quanto custa uma cadeira
       </Titulo>
 
@@ -59,8 +59,8 @@ export function Cadeira() {
           <div className="mt-10">
             <Fatos
               itens={[
-                { rotulo: 'Custo por cadeira', valor: reaisCurto((data.resumo.custo_cadeira ?? 0) * f), detalhe: reais((data.resumo.custo_cadeira ?? 0) * f) },
-                { rotulo: 'Gasto total', valor: reaisCurto(data.resumo.gasto_total * f), detalhe: `${inteiro(data.resumo.candidatos)} candidatos` },
+                { rotulo: 'Custo por cadeira', valor: reaisCurto((data.resumo.custo_cadeira ?? 0) * f), detalhe: 'gasto médio de quem venceu' },
+                { rotulo: 'Gasto total', valor: reaisCurto(data.resumo.gasto_total * f), detalhe: `${inteiro(data.resumo.candidatos)} candidatos, ${reaisCurto((data.resumo.gasto_por_cadeira ?? 0) * f)} por cadeira` },
                 { rotulo: 'Mediana de quem venceu', valor: reaisCurto((data.resumo.mediana_eleito ?? 0) * f) },
                 { rotulo: 'Mediana de quem perdeu', valor: reaisCurto((data.resumo.mediana_nao_eleito ?? 0) * f) },
               ]}

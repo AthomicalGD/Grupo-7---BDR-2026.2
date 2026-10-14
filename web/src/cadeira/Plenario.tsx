@@ -173,7 +173,7 @@ interface Props {
   fator: number
   ordem: Ordem
   custo: number | null
-  legenda: string // "por cadeira de deputado federal"
+  legenda: string // "gasto médio de cada deputado federal eleito"
   aoAbrir: (id: number) => void
   /** eleito procurado pelo nome (id do político): a cadeira fica destacada até limpar a busca */
   destaque?: number | null

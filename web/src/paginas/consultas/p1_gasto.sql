@@ -1,5 +1,6 @@
 -- Gasto de cada candidato a deputado federal no Piauí, na época e em reais de outubro de 2024,
--- e se foi eleito. O script soma o gasto de todos e divide pelas cadeiras (scripts/01_custo_cadeira.py).
+-- e se foi eleito. O custo da cadeira é a média do gasto dos eleitos; a prestação de contas soma o
+-- gasto de todos e divide pelas cadeiras (scripts/01_custo_cadeira.py).
 SELECT e.ano, e.cod_cargo, c.despesa,
        c.despesa * (SELECT indice FROM ipca_outubro WHERE ano = 2024) / i.indice AS despesa_2024,
        ma.id_mandato IS NOT NULL AS eleito
