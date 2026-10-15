@@ -2,13 +2,16 @@ import { Shuffle, SpeakerHigh, SpeakerSlash } from '@phosphor-icons/react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
-import { consultas, filtrando, politicoAleatorio, type FiltrosBusca, type PoliticoBusca } from '../api'
+import { consultas, filtrando, LIMITE_BUSCA, politicoAleatorio, type FiltrosBusca, type PoliticoBusca } from '../api'
 import { Retrato } from '../componentes/Retrato'
-import { nomeProprio, plural } from '../lib/formato'
+import { inteiro, nomeProprio, plural } from '../lib/formato'
 import { alternarSom, somLigado, tocarConfirma, tocarCorrige, tocarTecla } from './som'
 import { Urna, type IdTecla } from './Urna'
 import { FiltroCandidatura } from './FiltroCandidatura'
 import { desenharVisor, filtroNoVisor, VISOR } from './visor'
+
+// o visor da urna tem 6 linhas; o "mais" traz 6 de cada vez
+const POR_PAGINA = 6
 
 function useAtrasado<T>(valor: T, ms = 220) {
   const [v, setV] = useState(valor)
@@ -40,9 +43,34 @@ export function UrnaPagina() {
     void navegar({ to: '/urna', search: f, replace: true, resetScroll: false })
   }
   const q = useAtrasado(texto.trim())
-  const busca = useQuery({ ...consultas.buscaPoliticos(q, filtros), placeholderData: (anterior) => anterior })
-  const resultados: PoliticoBusca[] = q.length >= 3 || comFiltro ? (busca.data ?? []).slice(0, 6) : []
+  // "mais" pede a mesma busca com 6 a mais (a API não tem deslocamento, só limite); volta a 6 quando a busca muda
+  const chave = `${q}|${JSON.stringify(filtros)}`
+  const [pedido, setPedido] = useState({ chave, quantos: POR_PAGINA })
+  const quantos = pedido.chave === chave ? pedido.quantos : POR_PAGINA
+  const busca = useQuery({ ...consultas.buscaPoliticos(q, filtros, quantos), placeholderData: (anterior) => anterior })
+  // a API não garante a ordem entre empates: quem já estava na lista fica onde estava e os novos entram no fim
+  const ordem = useRef({ chave: '', pos: new Map<number, number>() })
+  const lista = useMemo(() => {
+    const dados = busca.data ?? []
+    if (busca.isPlaceholderData) return dados
+    if (ordem.current.chave !== chave) ordem.current = { chave, pos: new Map() }
+    const pos = ordem.current.pos
+    const vistos = dados.filter((r) => pos.has(r.id)).sort((a, b) => pos.get(a.id)! - pos.get(b.id)!)
+    const fila = [...vistos, ...dados.filter((r) => !pos.has(r.id))]
+    fila.forEach((r, i) => pos.has(r.id) || pos.set(r.id, i))
+    return fila
+  }, [busca.data, busca.isPlaceholderData, chave])
+  const resultados: PoliticoBusca[] = q.length >= 3 || comFiltro ? lista : []
   const escolhido = resultados[Math.min(selecionado, resultados.length - 1)]
+  // o visor mostra 6 por vez: a página em que está o selecionado
+  const inicio = Math.floor(Math.max(0, Math.min(selecionado, resultados.length - 1)) / POR_PAGINA) * POR_PAGINA
+  const pagina = resultados.slice(inicio, inicio + POR_PAGINA)
+  const podeMais = !busca.isPlaceholderData && resultados.length === quantos && quantos < LIMITE_BUSCA
+  const noTeto = !busca.isPlaceholderData && resultados.length >= LIMITE_BUSCA
+  const maisSeis = () => {
+    setPedido({ chave, quantos: Math.min(quantos + POR_PAGINA, LIMITE_BUSCA) })
+    setSelecionado(resultados.length) // o visor vai para os novos assim que chegarem
+  }
 
   useEffect(() => {
     document.title = 'Urna de consulta · Voto Aberto'
@@ -62,7 +90,7 @@ export function UrnaPagina() {
 
   // redesenha o visor a cada mudança (e quando as fontes terminam de carregar)
   useEffect(() => {
-    desenharVisor(canvas, { texto, resultados, selecionado, buscando: busca.isFetching, fim, cursor, filtro: filtroNoVisor(filtros) }, foto)
+    desenharVisor(canvas, { texto, resultados: pagina, selecionado: Math.max(0, Math.min(selecionado, resultados.length - 1)) - inicio, inicio, buscando: busca.isFetching, fim, cursor, filtro: filtroNoVisor(filtros) }, foto)
     setVersao((v) => v + 1)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvas, texto, busca.data, busca.isFetching, selecionado, fim, cursor, foto, q, filtros])
@@ -97,12 +125,13 @@ export function UrnaPagina() {
           setSelecionado(0)
         }
       } else {
-        const n = Number(t) - 1
-        if (n >= 0 && n < resultados.length) setSelecionado(n)
+        // as teclas 1 a 6 escolhem entre os 6 que estão no visor
+        const n = inicio + Number(t) - 1
+        if (Number(t) >= 1 && n < resultados.length) setSelecionado(n)
       }
       campo.current?.focus({ preventScroll: true })
     },
-    [confirmar, fim, resultados.length],
+    [confirmar, fim, inicio, resultados.length],
   )
 
   const aoApertar = useCallback((t: IdTecla) => void apertar(t), [apertar])
@@ -178,7 +207,7 @@ export function UrnaPagina() {
               aria-selected={i === selecionado}
               onClick={() => {
                 setSelecionado(i)
-                pulsar(String(i + 1) as IdTecla)
+                if (i >= inicio && i < inicio + POR_PAGINA) pulsar(String(i - inicio + 1) as IdTecla)
               }}
               onDoubleClick={confirmar}
               className={`flex cursor-pointer items-center gap-3 rounded-2xl border px-3 py-2 transition-colors ${i === selecionado ? 'border-tinta bg-folha' : 'border-transparent hover:bg-folha/70'}`}
@@ -201,6 +230,28 @@ export function UrnaPagina() {
             </li>
           )}
         </ul>
+        {resultados.length > 0 && (podeMais || noTeto || quantos > POR_PAGINA || busca.isPlaceholderData) && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pl-3" aria-live="polite">
+            <span className="text-[0.85rem] text-tinta-3 tabular">
+              {busca.isPlaceholderData
+                ? 'Procurando mais...'
+                : noTeto
+                  ? `Mostrando os ${inteiro(LIMITE_BUSCA)} primeiros. Para achar os outros, digite o nome ou use mais filtros.`
+                  : podeMais
+                    ? `Mostrando ${inteiro(resultados.length)}.`
+                    : `Todos os ${inteiro(resultados.length)} encontrados.`}
+            </span>
+            {podeMais && (
+              <button
+                type="button"
+                onClick={maisSeis}
+                className="inline-flex h-9 items-center rounded-full border-[1.5px] border-linha-2 bg-folha px-4 text-[0.85rem] font-semibold text-tinta transition hover:border-tinta active:translate-y-px"
+              >
+                Mais {Math.min(POR_PAGINA, LIMITE_BUSCA - quantos)}
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center gap-3 border-t border-linha pt-5">
           <button type="button" onClick={() => void apertar('confirma')} disabled={!escolhido || fim} className="h-11 rounded-full bg-confirma px-6 font-bold tracking-wide text-white shadow-[var(--shadow-cartao)] transition active:translate-y-[2px] disabled:opacity-40">
@@ -217,7 +268,7 @@ export function UrnaPagina() {
           </button>
         </div>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[0.88rem] text-tinta-2">
-          {[['Enter', 'CONFIRMA'], ['Esc', 'CORRIGE'], ['1 a 6', 'escolher na lista'], ['↑ ↓', 'mover na lista']].map(([k, d]) => (
+          {[['Enter', 'CONFIRMA'], ['Esc', 'CORRIGE'], ['1 a 6', 'escolher entre os 6 do visor'], ['↑ ↓', 'mover na lista (o visor acompanha)']].map(([k, d]) => (
             <div key={k} className="contents">
               <dt><kbd className="t-mono inline-block min-w-[52px] rounded-md border border-linha-2 bg-folha px-2 py-0.5 text-center text-[0.8rem] text-tinta">{k}</kbd></dt>
               <dd>{d}</dd>
