@@ -8,8 +8,11 @@ export const VISOR = { largura: 1280, altura: 604 } // proporção da tela do UE
 
 export interface EstadoVisor {
   texto: string
+  /** a página da lista que cabe no visor (até 6) e o selecionado dentro dela */
   resultados: PoliticoBusca[]
   selecionado: number
+  /** posição do primeiro da página na lista inteira (0, 6, 12...): numera as linhas */
+  inicio?: number
   buscando: boolean
   fim: boolean
   cursor: boolean
@@ -106,7 +109,7 @@ export function desenharVisor(canvas: HTMLCanvasElement, e: EstadoVisor, foto: H
       }
       c.fillStyle = ativo ? '#ffffff' : TINTA
       c.font = `800 28px ${SANS}`
-      c.fillText(String(i + 1), M + 4, y + 37)
+      c.fillText(String((e.inicio ?? 0) + i + 1), M + 4, y + 37)
       c.font = `700 26px ${SANS}`
       c.fillText(cortar(c, r.nome, larguraLista - 60), M + 44, y + 26)
       c.fillStyle = ativo ? '#c9cdd1' : APAGADO

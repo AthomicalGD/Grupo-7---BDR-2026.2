@@ -141,6 +141,9 @@ export const CARGOS_BUSCA = [
   { cod: 11, nome: 'prefeito' },
   { cod: 13, nome: 'vereador' },
 ] as const
+/** Teto de `limite` em /api/politicos (Query(le=50) em api/app.py). */
+export const LIMITE_BUSCA = 50
+
 export const ANOS_ELEICAO = [2024, 2022, 2020, 2018, 2016, 2014, 2012, 2010, 2008, 2006, 2004, 2002, 2000, 1998, 1996, 1994] as const
 
 export interface Candidatura {
@@ -405,11 +408,12 @@ export const consultas = {
       enabled: q.trim().length >= 2,
       ...sempre,
     }),
-  buscaPoliticos: (q: string, f: FiltrosBusca = {}) =>
+  /** `limite` cresce de 6 em 6 com o "mais" da urna; a API aceita até LIMITE_BUSCA. */
+  buscaPoliticos: (q: string, f: FiltrosBusca = {}, limite = 6) =>
     queryOptions({
-      queryKey: ['busca-politicos', q, f],
+      queryKey: ['busca-politicos', q, f, limite],
       queryFn: ({ signal }) => {
-        const p = new URLSearchParams({ q, limite: '6' })
+        const p = new URLSearchParams({ q, limite: String(limite) })
         for (const [k, v] of Object.entries(f)) if (v != null && v !== '') p.set(k === 'eleicao' ? 'ano' : k, String(v))
         return get<PoliticoBusca[]>(`/api/politicos?${p}`, signal)
       },
