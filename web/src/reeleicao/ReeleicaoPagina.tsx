@@ -304,12 +304,12 @@ function Resposta({ dados, uf, carregadas, cargoPedido, mudar, erro, trocando }:
   return (
     <>
       {erro && (
-        <p role="alert" className="mt-4 max-w-[1180px] rounded-xl border border-corrige/40 bg-folha px-4 py-3 text-[0.9rem]">
+        <p role="alert" className="mt-4 max-w-[var(--miolo-max)] rounded-xl border border-corrige/40 bg-folha px-4 py-3 text-[0.9rem]">
           Não foi possível abrir {uf.nome} ({erro.message}). Abaixo, o estado anterior.
         </p>
       )}
 
-      <section aria-labelledby="por-cargo" aria-busy={trocando} className={`relative mt-8 max-w-[1180px] transition-opacity duration-300 ${trocando ? 'opacity-55' : ''}`}>
+      <section aria-labelledby="por-cargo" aria-busy={trocando} className={`relative mt-8 max-w-[var(--miolo-max)] transition-opacity duration-300 ${trocando ? 'opacity-55' : ''}`}>
         {trocando && <div className="absolute right-0 top-0"><Ciranda rotulo="Contando..." tamanho={56} /></div>}
         <Lede dados={dados} nome={noEstado(ufDados.sigla, ufDados.nome)} />
         <div className="mt-8 flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
@@ -324,7 +324,7 @@ function Resposta({ dados, uf, carregadas, cargoPedido, mudar, erro, trocando }:
         </div>
       </section>
 
-      <section aria-labelledby="ciclos" className="mt-16 max-w-[1180px] scroll-mt-24">
+      <section aria-labelledby="ciclos" className="mt-16 max-w-[var(--miolo-max)] scroll-mt-24">
         <h2 id="ciclos" className="t-h2 scroll-mt-24">Eleição a eleição</h2>
         <p className="mt-1 max-w-[64ch] text-[0.9rem] text-tinta-2">
           Cada coluna é uma eleição {noEstado(ufDados.sigla, ufDados.nome)}: a parte dos {cargoPlural(cargo.nome)} que estavam no cargo, tentaram se reeleger nela e venceram
@@ -343,7 +343,7 @@ function Resposta({ dados, uf, carregadas, cargoPedido, mudar, erro, trocando }:
         <TabelaAlternavel titulo={`Reeleição de ${cargoPlural(cargo.nome)} ${noEstado(ufDados.sigla, ufDados.nome)}, eleição a eleição`} colunas={tab.colunas} linhas={tab.linhas} />
       </section>
 
-      <section aria-labelledby="estados" className="adiar mt-16 max-w-[1180px]">
+      <section aria-labelledby="estados" className="adiar mt-16 max-w-[var(--miolo-max)]">
         <h2 id="estados" className="t-h2">Estado a estado</h2>
         <p className="mb-5 mt-1 max-w-[64ch] text-[0.9rem] text-tinta-2">
           A taxa de cada cargo somando todas as eleições, nos {carregadas.length} estados carregados no banco. Em cinza, cargos com menos de {POUCOS} tentativas: poucos casos mudam muito a taxa.
@@ -351,7 +351,7 @@ function Resposta({ dados, uf, carregadas, cargoPedido, mudar, erro, trocando }:
         <Estados siglas={carregadas.map((u) => u.sigla)} uf={uf.sigla} aoEscolher={(s) => mudar({ uf: s })} />
       </section>
 
-      <section aria-labelledby="conta" className="adiar mt-16 max-w-[1180px]">
+      <section aria-labelledby="conta" className="adiar mt-16 max-w-[var(--miolo-max)]">
         <h2 id="conta" className="t-h2">Como a conta é feita</h2>
         <ul className="mt-3 max-w-[72ch] list-disc space-y-2 pl-5 text-[0.95rem] leading-relaxed text-tinta-2 [&_b]:text-tinta">
           <li><b>Tentou a reeleição:</b> foi candidato ao mesmo cargo, na mesma UF ou município, na eleição ordinária seguinte (senador, oito anos depois). O banco não guarda a marca de reeleição do TSE, então candidaturas indeferidas ou renunciadas também contam.</li>
@@ -394,7 +394,7 @@ export function ReeleicaoPagina() {
   if (!uf) return <CirandaTela rotulo="Abrindo a página..." />
 
   return (
-    <div className="mx-auto max-w-[1440px] px-4 pb-12 pt-6 md:px-[72px] md:pt-7">
+    <div className="mx-auto max-w-[var(--casca-max)] px-4 pb-12 pt-6 md:px-[var(--casca-margem)] md:pt-7">
       <header>
         <h1 className="t-display">Quem tenta a reeleição, volta?</h1>
         <p className="mt-3 max-w-[60ch] text-[1.06rem] text-tinta-2">

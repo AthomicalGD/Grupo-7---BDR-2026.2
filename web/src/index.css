@@ -97,6 +97,14 @@
   html[data-fonte="1"] { font-size: 112.5%; }
   html[data-fonte="2"] { font-size: 125%; }
 
+  /* Margens laterais (botões Margem −/+): casca = contêiner da página, miolo = blocos de leitura dentro dela.
+     1 é o padrão; de 2 em diante a página ocupa a tela toda e só a margem diminui. */
+  html { --casca-max: 1440px; --casca-margem: 72px; --miolo-max: 1180px; }
+  html[data-margem="0"] { --casca-max: 1280px; --casca-margem: 120px; }
+  html[data-margem="2"] { --casca-max: 100%; --miolo-max: 100%; }
+  html[data-margem="3"] { --casca-max: 100%; --miolo-max: 100%; --casca-margem: 40px; }
+  html[data-margem="4"] { --casca-max: 100%; --miolo-max: 100%; --casca-margem: 16px; }
+
   /* Interface simples: petróleo e âmbar (só existe no pacote dela; ver src/simples/cores.ts) */
   .tema-simples {
     --color-papel: #eef3f2;

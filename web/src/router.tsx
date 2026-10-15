@@ -41,7 +41,7 @@ const numero = (v: unknown) => (Number.isFinite(Number(v)) && v !== '' && v != n
 const raiz = createRootRoute({
   component: Moldura,
   notFoundComponent: () => (
-    <div className="mx-auto max-w-[1440px] px-4 py-24 md:px-[72px]">
+    <div className="mx-auto max-w-[var(--casca-max)] px-4 py-24 md:px-[var(--casca-margem)]">
       <h1 className="t-h1">Página não encontrada</h1>
       <p className="mt-3 text-tinta-2">
         O endereço não existe. <Link to="/" className="font-semibold text-acao underline">Voltar ao mapa</Link>.

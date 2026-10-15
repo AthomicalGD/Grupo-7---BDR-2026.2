@@ -95,7 +95,7 @@ export function CadeiraPagina() {
   const abrir = (id: number) => navegar({ to: '/politico/$id', params: { id: String(id) } })
 
   return (
-    <div className="mx-auto max-w-[1440px] px-4 pb-12 pt-6 md:px-[72px] md:pt-7">
+    <div className="mx-auto max-w-[var(--casca-max)] px-4 pb-12 pt-6 md:px-[var(--casca-margem)] md:pt-7">
       <header className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <div>
           <h1 className="t-display">Quanto custa uma cadeira?</h1>
@@ -182,14 +182,14 @@ export function CadeiraPagina() {
 
       <section aria-label="Plenário" className="mt-6" aria-busy={q.isPlaceholderData}>
         {q.error && (
-          <p role="alert" className="mx-auto mb-4 max-w-[1180px] rounded-xl border border-corrige/40 bg-folha px-4 py-3 text-[0.9rem]">
+          <p role="alert" className="mx-auto mb-4 max-w-[var(--miolo-max)] rounded-xl border border-corrige/40 bg-folha px-4 py-3 text-[0.9rem]">
             Não foi possível abrir esta seleção ({q.error.message}). O plenário abaixo é o da seleção anterior.
           </p>
         )}
         {dados.cadeiras.length === 0 && (
-          <p className="mx-auto max-w-[1180px] text-tinta-2">Nenhum eleito com prestação de contas nesta seleção.</p>
+          <p className="mx-auto max-w-[var(--miolo-max)] text-tinta-2">Nenhum eleito com prestação de contas nesta seleção.</p>
         )}
-        <div className={`relative mx-auto max-w-[min(1180px,calc((100dvh-120px)*1.92))] transition-opacity duration-300 ${q.isPlaceholderData ? 'opacity-55' : ''}`}>
+        <div className={`relative mx-auto max-w-[min(var(--miolo-max),calc((100dvh-120px)*1.92))] transition-opacity duration-300 ${q.isPlaceholderData ? 'opacity-55' : ''}`}>
           {busca.pe ? (
             <div className="relative aspect-[16/10] overflow-hidden rounded-[20px] bg-[radial-gradient(ellipse_at_50%_30%,#ffffff,#e6eaed_78%)] sm:aspect-[16/8.5]">
               <Suspense fallback={<div className="grid h-full place-items-center"><Ciranda rotulo="Levantando as cadeiras..." /></div>}>
@@ -216,7 +216,7 @@ export function CadeiraPagina() {
           {q.isPlaceholderData && <div className="absolute right-2 top-2"><Ciranda rotulo="Contando..." tamanho={56} /></div>}
         </div>
 
-        <div className="mx-auto mt-6 flex max-w-[1180px] flex-wrap items-center justify-between gap-x-8 gap-y-4">
+        <div className="mx-auto mt-6 flex max-w-[var(--miolo-max)] flex-wrap items-center justify-between gap-x-8 gap-y-4">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.8rem] text-tinta-2">
             <span className="font-semibold text-tinta">Gasto da campanha do eleito</span>
             <span className="inline-flex items-center gap-2">
@@ -249,12 +249,12 @@ export function CadeiraPagina() {
           </div>
         </div>
         {busca.ordem === 'partido' && (
-          <p className="mx-auto mt-3 max-w-[1180px] text-[0.8rem] text-tinta-3">
+          <p className="mx-auto mt-3 max-w-[var(--miolo-max)] text-[0.8rem] text-tinta-3">
             Partidos da esquerda para a direita pela escala de viés da P7; a cor continua sendo o gasto.
           </p>
         )}
 
-        <div className="mx-auto mt-8 max-w-[1180px]">
+        <div className="mx-auto mt-8 max-w-[var(--miolo-max)]">
           <Lede dados={dados} ano={dados.ano} outro={anos.find((a) => a !== dados.ano)!} cargo={dados.cargo.nome} lugar={lugarFrase} />
           <p className="mt-4 text-[0.8rem] text-tinta-3">
             {busca.epoca ? 'Valores da época.' : 'Valores em reais de outubro de 2024, corrigidos pelo IPCA.'} Passe o mouse ou toque numa cadeira para ver quem é; clique para abrir a carreira.
@@ -262,7 +262,7 @@ export function CadeiraPagina() {
         </div>
       </section>
 
-      <section aria-labelledby="curva" className="adiar mx-auto mt-16 grid max-w-[1180px] grid-cols-1 gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,2fr)] lg:items-end">
+      <section aria-labelledby="curva" className="adiar mx-auto mt-16 grid max-w-[var(--miolo-max)] grid-cols-1 gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,2fr)] lg:items-end">
         <div>
           <h2 id="curva" className="t-h2">A partir de quanto se ganha?</h2>
           <p className="mt-3 text-tinta-2">
@@ -280,7 +280,7 @@ export function CadeiraPagina() {
         <CurvaVitoria curva={dados.curva} escala={escala} fator={fator} />
       </section>
 
-      <section aria-labelledby="partidos" className="adiar mx-auto mt-16 max-w-[1180px]">
+      <section aria-labelledby="partidos" className="adiar mx-auto mt-16 max-w-[var(--miolo-max)]">
         <h2 id="partidos" className="t-h2">Quanto cada partido pagou por cadeira</h2>
         <p className="mb-6 mt-3 max-w-[64ch] text-tinta-2">
           Tudo o que os candidatos do partido gastaram, dividido pelas cadeiras que ele levou. A cor é a posição do partido na escala de viés.
@@ -288,7 +288,7 @@ export function CadeiraPagina() {
         <PrecoPartidos partidos={dados.partidos} fator={fator} />
       </section>
 
-      <section aria-labelledby="dinheiro" className="adiar mx-auto mt-16 max-w-[1180px]">
+      <section aria-labelledby="dinheiro" className="adiar mx-auto mt-16 max-w-[var(--miolo-max)]">
         <h2 id="dinheiro" className="t-h2">Para onde vai e de onde vem o dinheiro</h2>
         <div className="mt-8 grid grid-cols-1 gap-12 lg:grid-cols-2 lg:items-start">
           <Recibo dados={dados} fator={fator} titulo={titulo} />
@@ -296,7 +296,7 @@ export function CadeiraPagina() {
         </div>
       </section>
 
-      <section aria-labelledby="voto" className="adiar mx-auto mt-16 max-w-[1180px]">
+      <section aria-labelledby="voto" className="adiar mx-auto mt-16 max-w-[var(--miolo-max)]">
         <h2 id="voto" className="t-h2">Quanto custou cada voto</h2>
         <div className="mt-4">
           <CustoVoto cadeiras={dados.cadeiras} fator={fator} />

@@ -187,7 +187,7 @@ function Santinhos({ recentes, nome }: { recentes: Candidatura[]; nome: string }
       <ol
         ref={trilho}
         onScroll={medir}
-        className="-mx-4 mt-5 flex snap-x snap-mandatory scroll-pl-4 items-stretch gap-5 overflow-x-auto px-4 pb-8 pt-3 md:-mx-[72px] md:scroll-pl-[72px] md:px-[72px]"
+        className="-mx-4 mt-5 flex snap-x snap-mandatory scroll-pl-4 items-stretch gap-5 overflow-x-auto px-4 pb-8 pt-3 md:-mx-[var(--casca-margem)] md:scroll-pl-[var(--casca-margem)] md:px-[var(--casca-margem)]"
       >
         {recentes.map((c, i) => (
           <li key={`${c.ano}-${c.cod_cargo}-${i}`} id={idSantinho(c)} className="flex scroll-mt-20 list-none">
@@ -219,7 +219,7 @@ export function PoliticoPagina() {
   const local = p.ufs.length ? p.ufs.join(', ') : 'Brasil'
 
   return (
-    <div className="mx-auto max-w-[1440px] px-4 pb-16 pt-6 md:px-[72px]">
+    <div className="mx-auto max-w-[var(--casca-max)] px-4 pb-16 pt-6 md:px-[var(--casca-margem)]">
       <Link to="/urna" className="inline-flex items-center gap-1.5 text-[0.88rem] font-semibold text-acao hover:underline">
         <ArrowLeft size={14} weight="bold" aria-hidden /> Nova consulta na urna
       </Link>

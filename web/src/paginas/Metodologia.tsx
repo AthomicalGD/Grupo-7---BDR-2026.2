@@ -121,7 +121,7 @@ const INDICE = [
 
 export function Metodologia() {
   return (
-    <article className="mx-auto max-w-[1440px] px-4 pb-12 pt-7 md:px-[72px]">
+    <article className="mx-auto max-w-[var(--casca-max)] px-4 pb-12 pt-7 md:px-[var(--casca-margem)]">
       <header className="pb-10">
         <h1 className="t-display">Como os números são feitos</h1>
         <p className="mt-4 max-w-[64ch] text-[1.05rem] leading-relaxed text-tinta-2">

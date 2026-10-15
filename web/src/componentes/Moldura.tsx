@@ -8,7 +8,7 @@ import letreiroNegativo from '../assets/marca/letreiro-horizontal-negativo.svg'
 import simbolo from '../assets/marca/simbolo.svg'
 import { Fita } from './Fita'
 
-// Preferências de leitura (alto contraste e tamanho da fonte), guardadas só neste navegador.
+// Preferências de leitura (alto contraste, tamanho da fonte e margens), guardadas só neste navegador.
 function usePreferencia(chave: string, atributo: string, inicial: string) {
   const [valor, setValor] = useState(() => {
     try {
@@ -40,9 +40,11 @@ const NAV = [
 function BarraUtilitaria() {
   const [contraste, setContraste] = usePreferencia('va-contraste', 'data-contraste', 'normal')
   const [fonte, setFonte] = usePreferencia('va-fonte', 'data-fonte', '0')
+  const [margem, setMargem] = usePreferencia('va-margem', 'data-margem', '1')
   const botao = 'rounded px-2 py-0.5 hover:bg-folha/70 disabled:opacity-40 disabled:hover:bg-transparent'
   return (
     <div className="bg-papel-2 text-tinta-2">
+      {/* largura fixa, fora das margens ajustáveis: assim os botões não fogem do cursor ao clicar */}
       <div className="mx-auto flex h-7 max-w-[1440px] items-center justify-between gap-4 px-4 text-[0.76rem] md:px-[72px]">
         <p className="truncate">Projeto acadêmico de Banco de Dados · Grupo 7 · 2026.2</p>
         <div className="flex shrink-0 items-center gap-1 font-semibold">
@@ -61,6 +63,17 @@ function BarraUtilitaria() {
           <button type="button" className={botao} aria-label="Aumentar o texto" disabled={fonte === '2'} onClick={() => setFonte(String(Math.min(2, +fonte + 1)))}>
             A+
           </button>
+          <span aria-hidden className="mx-1 hidden h-3 w-px bg-linha-2 md:block" />
+          {/* só faz efeito do tablet para cima: no celular a margem já é mínima */}
+          <span className="hidden items-center md:flex">
+            <span className="px-1 font-normal">Margens</span>
+            <button type="button" className={botao} aria-label="Diminuir as margens (página mais larga)" disabled={margem === '4'} onClick={() => setMargem(String(Math.min(4, +margem + 1)))}>
+              −
+            </button>
+            <button type="button" className={botao} aria-label="Aumentar as margens (página mais estreita)" disabled={margem === '0'} onClick={() => setMargem(String(Math.max(0, +margem - 1)))}>
+              +
+            </button>
+          </span>
         </div>
       </div>
     </div>
@@ -71,7 +84,7 @@ function Cabecalho() {
   const caminho = useRouterState({ select: (s) => s.location.pathname })
   return (
     <header className="sticky top-0 z-30 bg-folha">
-      <div className="mx-auto flex h-14 max-w-[1440px] items-center justify-between gap-3 px-4 sm:gap-6 md:px-[72px]">
+      <div className="mx-auto flex h-14 max-w-[var(--casca-max)] items-center justify-between gap-3 px-4 sm:gap-6 md:px-[var(--casca-margem)]">
         <Link to="/" className="shrink-0" aria-label="Voto Aberto, página inicial">
           <img src={letreiro} alt="Voto Aberto" className="hidden h-9 w-auto lg:block" />
           <img src={simbolo} alt="Voto Aberto" className="h-8 w-auto lg:hidden" />
@@ -121,7 +134,7 @@ function Rodape() {
   return (
     <footer className="mt-16 bg-tinta text-[#c9d0d8]">
       <Fita altura={7} />
-      <div className="mx-auto grid max-w-[1440px] gap-10 px-4 py-10 md:grid-cols-[1.2fr_1fr_1fr] md:px-[72px]">
+      <div className="mx-auto grid max-w-[var(--casca-max)] gap-10 px-4 py-10 md:grid-cols-[1.2fr_1fr_1fr] md:px-[var(--casca-margem)]">
         <div className="space-y-4">
           <img src={letreiroNegativo} alt="Voto Aberto" className="-ml-2 h-12 w-auto" />
           <p className="max-w-[46ch] text-sm leading-relaxed">

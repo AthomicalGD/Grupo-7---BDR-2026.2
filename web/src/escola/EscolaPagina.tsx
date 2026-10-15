@@ -106,7 +106,7 @@ export function EscolaPagina() {
   const quintilDoLugar = vLugar == null ? null : d.quintis.findIndex((x) => vLugar <= x.ate + 0.05) + 1 || 5
 
   return (
-    <div className="mx-auto max-w-[1440px] px-4 pb-12 pt-6 md:px-[72px] md:pt-7" aria-busy={q.isPlaceholderData}>
+    <div className="mx-auto max-w-[var(--casca-max)] px-4 pb-12 pt-6 md:px-[var(--casca-margem)] md:pt-7" aria-busy={q.isPlaceholderData}>
       <header className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <div>
           <h1 className="t-display">Quanto estudou quem senta na cadeira?</h1>
