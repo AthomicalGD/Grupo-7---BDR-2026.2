@@ -314,6 +314,10 @@ export function Metodologia() {
           <li><b>Privacidade:</b> CPF, título eleitoral e data completa de nascimento nunca aparecem; só o ano.</li>
           <li><b>Fotos:</b> as fotos de registro que o TSE publica desde 2004.</li>
         </ul>
+        <p>
+          A taxa de reeleição de cada cargo, eleição a eleição e estado a estado (P10a), está na página{' '}
+          <Link to="/reeleicao" className="font-semibold text-acao underline underline-offset-4">Reeleição</Link>.
+        </p>
         <Detalhe titulo="De onde vêm os dados">
           <Origens
             linhas={[
@@ -329,6 +333,17 @@ export function Metodologia() {
           <ul className="list-disc space-y-2 pl-5">
             <li><b>Ligar a mesma pessoa:</b> em 1994 e 1996 metade das candidaturas não tem título eleitoral, e em 2024 o CPF vem mascarado. Para a reeleição, quem não tem título também é ligado pelo nome normalizado (sem acento, Z = S, Y = I) ou pela mesma data de nascimento com o mesmo primeiro nome.</li>
             <li><b>Quem tentou a reeleição:</b> o banco não guarda essa marca do TSE, então a tentativa é deduzida: candidato ao mesmo cargo, no mesmo lugar, na eleição seguinte.</li>
+            <li>
+              <b>Eleito cassado depois da eleição:</b> quem venceu é quem a tabela de candidatos do TSE marca como eleito. Quando o
+              eleito perde o diploma, o TSE registra a cassação na candidatura dele e passa o <code>ELEITO</code> para quem assumiu,
+              e seguimos essa tabela. É o caso de Mão Santa, no Piauí: eleito governador em 1994, venceu o 2º turno de 1998 e
+              governou até ter o diploma cassado pelo TSE em 2001. Na tabela de 1998 ele aparece como{' '}
+              <code>RENÚNCIA/FALECIMENTO/CASSAÇÃO APÓS A ELEIÇÃO</code>, e Hugo Napoleão, o segundo colocado, como{' '}
+              <code>ELEITO</code>. Por isso, na taxa de reeleição, Mão Santa conta como quem tentou e não voltou, e na carreira o
+              mandato de 1998 é de Hugo Napoleão. Não corrigimos casos à mão: as cerca de 150 candidaturas com registro negado
+              ou cassação depois da eleição (2000 a 2010, quase todas de vereador) não podem ser conferidas, porque os votos por
+              candidato só estão no banco de 2018 em diante, e corrigir só o caso conhecido criaria uma exceção.
+            </li>
             <li><b>Vices e suplentes:</b> o TSE só os marca como eleitos a partir de 2012 (municipais) e 2014 (gerais), então ficam fora da taxa de reeleição.</li>
             <li><b>Nome de urna cortado:</b> nos anos 90 o TSE cortava o nome de urna em 30 letras; o santinho termina na última palavra inteira.</li>
             <li><b>Busca pelo nome:</b> sem diferenciar acento e tolerante a erros de digitação, com índice de trigramas (<code>pg_trgm</code>) sobre o nome sem acentos (migração 010).</li>

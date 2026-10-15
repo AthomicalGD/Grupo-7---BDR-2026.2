@@ -249,7 +249,7 @@ Grupo de rádio com quatro casas; a casa marcada desenha um X em dois traços (1
 - **Busca:** pílula de 52px, borda 1,5px Linha 2, que vira Tinta no foco; combobox ARIA com lista em cartão de papel.
 
 ### Navegação
-Logo à esquerda, cinco itens à direita (Mapa, Urna, Cadeira, Escola, Metodologia); o ativo em semibold com um marcador amarelo de 4px que desliza entre os itens (mola). Abaixo de 420px, o logo vira só o símbolo.
+Logo à esquerda, seis itens à direita (Mapa, Urna, Cadeira, Escola, Reeleição, Metodologia); o ativo em semibold com um marcador amarelo de 4px que desliza entre os itens (mola). Abaixo de 1024px, o logo vira só o símbolo e Metodologia vira "Método"; abaixo de 640px, os itens ficam compactos (0,8rem), para os seis caberem em 360px sem rolagem lateral.
 
 ### Mapa
 SVG com a malha do IBGE, câmera `d3-zoom` com transição suave (van Wijk) entre Brasil, estado e município; contornos que não engrossam com o zoom; estados navegáveis por Tab e Enter.
@@ -301,6 +301,9 @@ A balança: uma barra divergente a partir do zero em que cada partido é um trec
 
 ### Busca no plenário
 Campo "Procurar eleito" acima do plenário; Enter destaca a cadeira: as outras escurecem (papel a 72%), a achada ganha o anel amarelo do marcador, pulsa duas vezes, e um cartão fixo ao lado leva à carreira. Em tela estreita o cartão desce para baixo do desenho.
+
+### De cada 100 eleitos (P10a)
+Um cargo por linha: a barra são todos os eleitos do cargo no estado, dividida no que aconteceu na eleição seguinte (voltaram no azul de reeleito, tentaram e perderam em Linha 2, não tentaram em folha com contorno), com os três "de 100" escritos embaixo; à direita, a taxa de reeleição (voltaram ÷ tentaram) em número grande. Tocar num cargo abre as eleições dele: uma coluna por ciclo (eleitos em, disputa em) com a taxa na altura, o pontilhado da média das taxas dos municípios em prefeito e vereador, e hachura quando ninguém tentou. Embaixo, a tabela estado a estado (cargo × UF), com os cargos de menos de 10 tentativas em cinza.
 
 ### Ficha da carreira
 Retrato 3x4 com borda de papel e o carimbo da situação (em mandato até, sem mandato desde, nunca eleito) na tinta dos carimbos dos santinhos; a fita da carreira (uma casa por eleição, cheia quando venceu, levando ao santinho); a resposta em texto com o contexto da reeleição do cargo na UF; trajetória com a faixa dos partidos na cor do viés.

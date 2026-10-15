@@ -16,6 +16,8 @@ import { cargo as fmtCargo, cargoPlural, inteiro, nomeProprio, plural, reaisCurt
 import { Santinho } from './Santinho'
 
 const ANO_ATUAL = 2026
+// cargo do contexto da reeleição (nome do TSE) -> código, para abrir a página da P10a nele
+const COD_CARGO_P10: Record<string, number> = { GOVERNADOR: 3, SENADOR: 5, 'DEPUTADO FEDERAL': 6, 'DEPUTADO ESTADUAL': 7, PREFEITO: 11, VEREADOR: 13 }
 const idSantinho = (c: Candidatura) => `santinho-${c.ano}-${c.cod_cargo}`
 
 interface Leitura {
@@ -111,7 +113,14 @@ function Resposta({ p, l }: { p: Politico; l: Leitura }) {
       {ctx && (
         <p className="text-[0.95em]">
           Para comparar: {ctx.uf === 'BR' ? 'no país' : `no ${ctx.uf}`}, dos {cargoPlural(ctx.cargo)} eleitos que tentaram a reeleição,{' '}
-          {b(`${inteiro(ctx.reeleitos)} de ${inteiro(ctx.tentaram)}`)} {ctx.reeleitos === 1 ? 'conseguiu' : 'conseguiram'} ({b(`${inteiro(Math.round(ctx.taxa))}%`)}).
+          {b(`${inteiro(ctx.reeleitos)} de ${inteiro(ctx.tentaram)}`)} {ctx.reeleitos === 1 ? 'conseguiu' : 'conseguiram'} ({b(`${inteiro(Math.round(ctx.taxa))}%`)}).{' '}
+          <Link
+            to="/reeleicao"
+            search={{ uf: ctx.uf, cargo: COD_CARGO_P10[ctx.cargo] }}
+            className="inline-flex items-center gap-1 font-semibold text-acao hover:underline"
+          >
+            Reeleição por cargo e estado <ArrowRight size={13} weight="bold" aria-hidden />
+          </Link>
         </p>
       )}
     </div>
