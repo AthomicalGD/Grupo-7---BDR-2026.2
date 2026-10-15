@@ -70,6 +70,19 @@ test('escola: superior completo por grupo', async ({ page, erros: _ }) => {
   await registrar(page, 'simples-escola')
 })
 
+test('reeleição: taxa por cargo e eleição a eleição', async ({ page, erros: _ }) => {
+  test.setTimeout(90_000)
+  await page.goto('/reeleicao?uf=PI')
+  await expect(page.getByRole('heading', { level: 1, name: 'Quem tenta a reeleição, volta?' })).toBeVisible()
+  // PI, respostas/10a_taxa_reeleicao.txt: deputado estadual 126 de 164
+  await expect(page.getByText('126 de 164 que tentaram', { exact: false })).toBeVisible({ timeout: 30_000 })
+  await page.getByRole('button', { name: 'Prefeito', exact: true }).click()
+  await expect(page.getByText('2000 (eleitos em 1996)')).toBeVisible()
+  const largura = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+  expect(largura).toBeLessThanOrEqual(0)
+  await registrar(page, 'simples-reeleicao')
+})
+
 test('as interfaces não se comunicam: nenhuma leva à outra nem troca pelo endereço', async ({ page, erros: _ }) => {
   const completa = process.env.SITE ?? 'http://localhost:5173'
 

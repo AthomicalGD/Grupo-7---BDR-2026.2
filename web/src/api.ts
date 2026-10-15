@@ -237,6 +237,38 @@ export interface Cadeira {
   receitas: Record<'fundo_eleitoral' | 'fundo_partidario' | 'pessoas_fisicas' | 'proprios' | 'outros', number>
 }
 
+// ───────── P10a: taxa de reeleição ─────────
+
+/** Dos eleitos, quantos tentaram a reeleição (mesmo cargo e lugar, eleição seguinte) e quantos voltaram. */
+export interface ContaReeleicao {
+  eleitos: number
+  tentaram: number
+  reeleitos: number
+  /** reeleitos ÷ tentaram, em %; nulo quando ninguém tentou */
+  taxa: number | null
+  /** prefeito e vereador: média simples das taxas dos municípios em que alguém tentou */
+  media_municipios: number | null
+}
+
+export interface Reeleicao {
+  uf: string
+  nome: string
+  cargos: {
+    cod: number
+    nome: string
+    municipal: boolean
+    /** um por eleição de origem: eleitos em `eleitos_em`, disputa em `disputa` (senador: 8 anos depois) */
+    ciclos: (ContaReeleicao & { eleitos_em: number; disputa: number })[]
+    total: ContaReeleicao
+  }[]
+  /** prefeito e vereador somados */
+  municipais: Omit<ContaReeleicao, 'media_municipios'> | null
+  /** eleições cuja seguinte ainda não está no banco */
+  fora: { cod: number; cargo: string; eleitos_em: number }[]
+  /** tentativas achadas pelo nome ou nascimento (eleito sem título em 1994-1996) */
+  ligados_por_nome: number
+}
+
 export type Malha = FeatureCollection<Polygon | MultiPolygon, { codarea: number }>
 
 export class ErroApi extends Error {
@@ -417,6 +449,8 @@ export const consultas = {
       queryFn: ({ signal }) => get<EscolaLugar>(`/api/escola/municipio/${ibge}?ano=${ano}`, signal),
       ...sempre,
     }),
+  reeleicao: (uf: string) =>
+    queryOptions({ queryKey: ['reeleicao', uf], queryFn: ({ signal }) => get<Reeleicao>(`/api/reeleicao?uf=${uf}`, signal), ...sempre }),
   malhaBrasil: () =>
     queryOptions({ queryKey: ['malha', 'BR'], queryFn: ({ signal }) => get<Malha>('/api/geo/brasil', signal), ...sempre }),
   malhaUF: (sigla: string) =>

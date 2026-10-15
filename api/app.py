@@ -636,6 +636,107 @@ def taxa_reeleicao(cod_cargo: int, sigla: str) -> dict | None:
     return {"tentaram": r["tentaram"], "reeleitos": r["reeleitos"], "taxa": round(100 * r["reeleitos"] / r["tentaram"], 1)}
 
 
+# P10a completa, igual a scripts/10a_taxa_reeleicao.py (respostas/10a_taxa_reeleicao.txt): por cargo e
+# ciclo (eleitos em Y, disputa em Y+4; senador, Y+8), quantos eleitos tentaram e quantos voltaram.
+# Em 1994 e 1996 metade das candidaturas não tem título: o eleito sem título também se liga, na
+# eleição seguinte, ao candidato do mesmo cargo e lugar com o mesmo nome normalizado ou com a mesma
+# data de nascimento e o mesmo primeiro nome. Somado por município, para a média das taxas municipais.
+CARGOS_P10 = {3: "Governador", 5: "Senador", 6: "Deputado federal", 7: "Deputado estadual", 11: "Prefeito", 13: "Vereador"}
+MUNICIPAIS_P10 = {PREFEITO, 13}
+NOME_P10 = ("regexp_replace(translate(upper(p.nome), 'ÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇÑZY', "
+            "'AAAAAEEEEIIIIOOOOOUUUUCNSI'), '[^A-Z]', '', 'g')")
+SQL_REELEICAO_UF = f"""
+WITH cand AS (
+    SELECT pe.id_politico, e.ano, e.cod_cargo, e.cd_municipio,
+           COALESCE(e.cd_municipio, -e.cd_uf) AS unidade,
+           p.nr_titulo_eleitoral IS NULL AS sem_titulo, p.dt_nascimento,
+           {NOME_P10} AS nome, split_part(upper(p.nome), ' ', 1) AS primeiro_nome,
+           bool_or(ma.id_mandato IS NOT NULL) AS eleito
+    FROM politico_eleicao pe
+    JOIN politico p ON p.id_politico = pe.id_politico
+    JOIN eleicao e ON e.id_eleicao = pe.id_eleicao
+    LEFT JOIN municipio m ON m.cd_municipio = e.cd_municipio
+    LEFT JOIN mandato ma ON ma.id_politico_eleicao = pe.id_politico_eleicao
+    WHERE e.tipo <> 1 AND e.cod_cargo = ANY(%(cargos)s) AND COALESCE(m.cd_uf, e.cd_uf) = %(cd_uf)s
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9
+),
+proximo AS (
+    SELECT DISTINCT cod_cargo, ano FROM cand
+),
+eleito AS (
+    SELECT a.cod_cargo, a.ano AS ano_eleito, a.cd_municipio,
+           a.ano + CASE WHEN a.cod_cargo = 5 THEN 8 ELSE 4 END AS ano_disputa,
+           bool_or(b.id_politico IS NOT NULL) AS tentou, COALESCE(bool_or(b.eleito), false) AS reeleito,
+           COALESCE(bool_or(b.id_politico <> a.id_politico), false) AS ligado_por_nome,
+           EXISTS (SELECT 1 FROM proximo x WHERE x.cod_cargo = a.cod_cargo
+                     AND x.ano = a.ano + CASE WHEN a.cod_cargo = 5 THEN 8 ELSE 4 END) AS ha_proxima
+    FROM cand a
+    LEFT JOIN cand b ON b.cod_cargo = a.cod_cargo AND b.unidade = a.unidade
+                    AND b.ano = a.ano + CASE WHEN a.cod_cargo = 5 THEN 8 ELSE 4 END
+                    AND (b.id_politico = a.id_politico
+                         OR (a.sem_titulo AND (b.nome = a.nome
+                             OR (b.dt_nascimento = a.dt_nascimento AND b.primeiro_nome = a.primeiro_nome))))
+    WHERE a.eleito
+    GROUP BY a.id_politico, a.cod_cargo, a.ano, a.cd_municipio, a.unidade
+)
+SELECT cod_cargo, ano_eleito, ano_disputa, cd_municipio, ha_proxima,
+       count(*) AS eleitos, count(*) FILTER (WHERE tentou) AS tentaram,
+       count(*) FILTER (WHERE reeleito) AS reeleitos, count(*) FILTER (WHERE ligado_por_nome) AS ligados
+FROM eleito
+GROUP BY 1, 2, 3, 4, 5
+"""
+
+
+def _soma_reeleicao(linhas: list[dict]) -> dict:
+    eleitos, tentaram, reeleitos = (sum(r[k] for r in linhas) for k in ("eleitos", "tentaram", "reeleitos"))
+    return {"eleitos": eleitos, "tentaram": tentaram, "reeleitos": reeleitos,
+            "taxa": round(100 * reeleitos / tentaram, 1) if tentaram else None}
+
+
+def _media_municipal(linhas: list[dict]) -> float | None:
+    """Média simples das taxas dos municípios (só os municípios em que alguém tentou a reeleição)."""
+    por = defaultdict(lambda: [0, 0])
+    for r in linhas:
+        por[r["cd_municipio"]][0] += r["tentaram"]
+        por[r["cd_municipio"]][1] += r["reeleitos"]
+    taxas = [re / te for te, re in por.values() if te]
+    return round(100 * sum(taxas) / len(taxas), 1) if taxas else None
+
+
+@lru_cache(maxsize=32)
+def reeleicao_uf(sigla: str) -> dict:
+    linhas = consultar(SQL_REELEICAO_UF, {"cargos": list(CARGOS_P10), "cd_uf": UFS[sigla]["cd_ibge"]})
+    validas = [r for r in linhas if r["ha_proxima"]]   # fora: a eleição seguinte ainda não está no banco
+    cargos = []
+    for cod, nome in CARGOS_P10.items():
+        d = [r for r in validas if r["cod_cargo"] == cod]
+        if not d:
+            continue
+        municipal = cod in MUNICIPAIS_P10
+        ciclos = []
+        for ano in sorted({r["ano_eleito"] for r in d}):
+            c = [r for r in d if r["ano_eleito"] == ano]
+            ciclos.append({"eleitos_em": ano, "disputa": c[0]["ano_disputa"], **_soma_reeleicao(c),
+                           "media_municipios": _media_municipal(c) if municipal else None})
+        cargos.append({"cod": cod, "nome": nome, "municipal": municipal, "ciclos": ciclos,
+                       "total": {**_soma_reeleicao(d), "media_municipios": _media_municipal(d) if municipal else None}})
+    municipais = [r for r in validas if r["cod_cargo"] in MUNICIPAIS_P10]
+    fora = sorted({(r["cod_cargo"], r["ano_eleito"]) for r in linhas if not r["ha_proxima"]})
+    return {"uf": sigla, "nome": UFS[sigla]["nome"], "cargos": cargos,
+            "municipais": _soma_reeleicao(municipais) if municipais else None,
+            "fora": [{"cod": c, "cargo": CARGOS_P10[c], "eleitos_em": a} for c, a in fora],
+            "ligados_por_nome": sum(r["ligados"] for r in validas)}
+
+
+@app.get("/api/reeleicao")
+def reeleicao(uf: str):
+    """P10a: taxa de reeleição por cargo na UF, ciclo a ciclo e somada (leva alguns segundos na 1ª vez)."""
+    sigla = uf_de(uf)["sigla"]
+    if sigla not in carregadas() or sigla == "BR":
+        raise HTTPException(404, f"UF sem dados: {sigla}")
+    return reeleicao_uf(sigla)
+
+
 @app.get("/api/politicos/{id_politico}")
 def detalhar_politico(id_politico: int):
     p = consultar("SELECT id_politico AS id, nome, extract(year FROM dt_nascimento)::int AS nascimento_ano "

@@ -33,7 +33,8 @@ const NAV = [
   { para: '/urna', rotulo: 'Urna', ativo: (p: string) => p.startsWith('/urna') || p.startsWith('/politico') },
   { para: '/cadeira', rotulo: 'Cadeira', ativo: (p: string) => p.startsWith('/cadeira') },
   { para: '/escola', rotulo: 'Escola', ativo: (p: string) => p.startsWith('/escola') },
-  { para: '/metodologia', rotulo: 'Metodologia', ativo: (p: string) => p.startsWith('/metodologia') },
+  { para: '/reeleicao', rotulo: 'Reeleição', ativo: (p: string) => p.startsWith('/reeleicao') },
+  { para: '/metodologia', rotulo: 'Metodologia', curto: 'Método', ativo: (p: string) => p.startsWith('/metodologia') },
 ] as const
 
 function BarraUtilitaria() {
@@ -72,8 +73,8 @@ function Cabecalho() {
     <header className="sticky top-0 z-30 bg-folha">
       <div className="mx-auto flex h-14 max-w-[1440px] items-center justify-between gap-3 px-4 sm:gap-6 md:px-[72px]">
         <Link to="/" className="shrink-0" aria-label="Voto Aberto, página inicial">
-          <img src={letreiro} alt="Voto Aberto" className="hidden h-8 w-auto min-[420px]:block md:h-9" />
-          <img src={simbolo} alt="Voto Aberto" className="h-8 w-auto min-[420px]:hidden" />
+          <img src={letreiro} alt="Voto Aberto" className="hidden h-9 w-auto lg:block" />
+          <img src={simbolo} alt="Voto Aberto" className="h-8 w-auto lg:hidden" />
         </Link>
         <nav aria-label="Principal">
           <ul className="flex items-center gap-0 sm:gap-3">
@@ -83,15 +84,23 @@ function Cabecalho() {
                 <li key={item.para} className="relative">
                   <Link
                     to={item.para}
-                    className={`block rounded-md px-1.5 py-2 text-[0.88rem] transition-colors min-[420px]:px-2 min-[420px]:text-[0.95rem] sm:px-3 sm:text-[0.97rem] ${ativo ? 'font-semibold text-tinta' : 'text-tinta-2 hover:text-tinta'}`}
+                    className={`block rounded-md px-[3px] py-2 text-[0.8rem] transition-colors sm:px-3 sm:text-[0.97rem] ${ativo ? 'font-semibold text-tinta' : 'text-tinta-2 hover:text-tinta'}`}
                     aria-current={ativo ? 'page' : undefined}
+                    aria-label={'curto' in item ? item.rotulo : undefined}
                   >
-                    {item.rotulo}
+                    {'curto' in item ? (
+                      <>
+                        <span aria-hidden className="lg:hidden">{item.curto}</span>
+                        <span aria-hidden className="hidden lg:inline">{item.rotulo}</span>
+                      </>
+                    ) : (
+                      item.rotulo
+                    )}
                   </Link>
                   {ativo && (
                     <motion.span
                       layoutId="nav-marcador"
-                      className="absolute inset-x-1.5 -bottom-[10px] h-1 rounded-full bg-marcador min-[420px]:inset-x-2 sm:inset-x-3"
+                      className="absolute inset-x-[3px] -bottom-[10px] h-1 rounded-full bg-marcador sm:inset-x-3"
                       transition={{ type: 'spring', stiffness: 420, damping: 36 }}
                     />
                   )}
