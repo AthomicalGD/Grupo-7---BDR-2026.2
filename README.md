@@ -142,7 +142,7 @@ python -m uvicorn api.app:app --port 8000
 | `GET /api/politicos/aleatorio` | Um político com 5+ candidaturas e 2+ vitórias |
 | `GET /api/politicos/{id}` | Candidaturas, resultados, votos e reeleições do político (sem CPF, título ou data de nascimento) |
 | `GET /api/reeleicao?uf=` | P10a: por cargo, eleitos, quantos tentaram a reeleição e quantos voltaram, ciclo a ciclo e somados (média das taxas municipais para prefeito e vereador), como em `respostas/10a_taxa_reeleicao.txt`; alguns segundos na primeira vez de cada UF |
-| `GET /api/cadeira?ano=&cargo=&uf=&municipio=` | P1: custo da cadeira (gasto de todos os candidatos ÷ eleitos), cada eleito com gasto e votos, chance de vitória por faixa de gasto, preço por partido, despesas por tipo, receitas por fonte e o fator do IPCA |
+| `GET /api/cadeira?ano=&cargo=&uf=&municipio=` | P1: custo da cadeira (gasto médio dos eleitos) e gasto da disputa por cadeira (gasto de todos os candidatos ÷ eleitos), cada eleito com gasto e votos, chance de vitória por faixa de gasto, preço por partido, despesas por tipo, receitas por fonte e o fator do IPCA |
 | `GET /api/fotos/{ano}/{uf}/{sq}` | Foto da candidatura, lida do zip do TSE (candidaturas, busca e prefeitos já trazem a URL em `foto`) |
 | `GET /api/geo/brasil`, `GET /api/geo/uf/{sigla}` | Malhas do IBGE em GeoJSON, com os anéis no sentido que o d3-geo espera |
 

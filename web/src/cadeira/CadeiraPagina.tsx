@@ -100,7 +100,7 @@ export function CadeiraPagina() {
         <div>
           <h1 className="t-display">Quanto custa uma cadeira?</h1>
           <p className="mt-3 max-w-[52ch] text-[1.06rem] text-tinta-2">
-            Tudo o que os candidatos declararam gastar, dividido pelas vagas em disputa. Cada cadeira abaixo é um eleito.
+            Quanto gastou, em média, a campanha de quem se elegeu. Cada cadeira abaixo é um eleito.
           </p>
         </div>
         <Alternador
@@ -197,7 +197,7 @@ export function CadeiraPagina() {
               </Suspense>
               <div className="pointer-events-none absolute inset-x-0 bottom-4 text-center">
                 <p className="t-numero text-[clamp(1.8rem,1.2rem+2.4vw,3.4rem)] leading-none">{reaisCurto((dados.resumo.custo_cadeira ?? 0) * fator)}</p>
-                <p className="mt-1 text-[0.85rem] font-semibold text-tinta-2">por cadeira de {dados.cargo.nome.toLowerCase()}</p>
+                <p className="mt-1 text-[0.85rem] font-semibold text-tinta-2">gasto médio de cada {dados.cargo.nome.toLowerCase()} eleito</p>
               </div>
             </div>
           ) : (
@@ -208,7 +208,7 @@ export function CadeiraPagina() {
               fator={fator}
               ordem={busca.ordem ?? 'gasto'}
               custo={dados.resumo.custo_cadeira}
-              legenda={`por cadeira de ${dados.cargo.nome.toLowerCase()}`}
+              legenda={`gasto médio de cada ${dados.cargo.nome.toLowerCase()} eleito`}
               aoAbrir={abrir}
               destaque={destaque?.chave === chave ? destaque.id : null}
             />

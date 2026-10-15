@@ -3,15 +3,16 @@ import { expect, registrar, test } from './base'
 test('P1: o plenário tem uma cadeira por eleito e o custo bate com a resposta', async ({ page }) => {
   await page.goto('/cadeira?cargo=6&ano=2022&uf=PI&epoca=true')
   await expect(page.getByRole('heading', { name: 'Quanto custa uma cadeira?' })).toBeVisible()
-  // PI, deputado federal, 2022: 10 cadeiras, R$ 6,21 mi por cadeira (respostas/01_custo_cadeira.txt)
+  // PI, deputado federal, 2022: 10 cadeiras, custo da cadeira (gasto médio dos eleitos) de R$ 1,82 mi
+  // (respostas/01_custo_cadeira.txt)
   await expect(page.locator('svg [data-i]')).toHaveCount(10)
   const plenario = page.getByRole('region', { name: 'Plenário' })
-  await expect(plenario.getByText('R$ 6,2 mi', { exact: true })).toBeVisible()
+  await expect(plenario.getByText('R$ 1,8 mi', { exact: true })).toBeVisible()
   await registrar(page, 'cadeira')
 
   // corrigido pela inflação, a mesma cadeira vale mais
   await page.getByRole('radio', { name: 'Em reais de 2024' }).click()
-  await expect(plenario.getByText('R$ 6,8 mi', { exact: true })).toBeVisible()
+  await expect(plenario.getByText('R$ 2,0 mi', { exact: true })).toBeVisible()
 
   // o cartão de cada cadeira leva à carreira
   await page.locator('svg [data-i]').first().hover()

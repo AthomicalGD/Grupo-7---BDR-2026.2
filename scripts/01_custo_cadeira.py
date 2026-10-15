@@ -1,8 +1,9 @@
 """P1) Quanto custa uma cadeira?
 
-Custo da cadeira = despesa contratada de todos os candidatos ao cargo ÷ cadeiras preenchidas
-(eleitos). Mede quanto a disputa inteira gastou por vaga; ao lado, quanto gastou o eleito típico
-(mediana) e o não eleito típico.
+Custo da cadeira = despesa contratada dos eleitos ÷ cadeiras preenchidas, o gasto médio de quem
+se elegeu. Ao lado, o gasto da disputa por cadeira (despesa de todos os candidatos, eleitos ou
+não, ÷ cadeiras: quanto a disputa inteira gastou por vaga), o eleito típico (mediana) e o não
+eleito típico.
 
 Contas por candidatura na view campanha (banco/migracoes/011_custo_da_cadeira.sql): despesa
 contratada sem as doações a outras campanhas (seriam contadas duas vezes). Valores também em
@@ -51,21 +52,22 @@ def linha_ano(d: pd.DataFrame) -> dict:
     eleitos = d[d["eleito"]]
     n = len(eleitos)
     return {"candidatos": len(d), "cadeiras": n, "total": d["despesa"].sum(),
-            "custo": d["despesa"].sum() / n if n else float("nan"),
-            "custo_2024": d["despesa_2024"].sum() / n if n else float("nan"),
+            "custo": eleitos["despesa"].sum() / n if n else float("nan"),
+            "custo_2024": eleitos["despesa_2024"].sum() / n if n else float("nan"),
+            "disputa": d["despesa"].sum() / n if n else float("nan"),
             "med_eleito": eleitos["despesa"].median(), "med_nao": d.loc[~d["eleito"], "despesa"].median()}
 
 
 def secao_cargo(d: pd.DataFrame, cargo: int) -> list[str]:
-    cab = (f"  {'Ano':>4}  {'Candidatos':>10}  {'Cadeiras':>8}  {'Gasto total':>16}  {'Custo da cadeira':>16}"
-           f"  {'Em R$ de 2024':>15}  {'Eleito (mediana)':>16}  {'Não eleito (med.)':>17}")
+    cab = (f"  {'Ano':>4}  {'Candidatos':>10}  {'Cadeiras':>8}  {'Custo da cadeira':>16}  {'Em R$ de 2024':>15}"
+           f"  {'Gasto total':>16}  {'Total ÷ cadeiras':>16}  {'Eleito (mediana)':>16}  {'Não eleito (med.)':>17}")
     out = [CARGOS[cargo], cab, "  " + "-" * (len(cab) - 2)]
     anos = {}
     for ano, g in d.groupby("ano"):
         r = anos[ano] = linha_ano(g)
-        out.append(f"  {ano:>4}  {inteiro(r['candidatos']):>10}  {inteiro(r['cadeiras']):>8}  {reais(r['total']):>16}"
-                   f"  {reais(r['custo']):>16}  {reais(r['custo_2024']):>15}  {reais(r['med_eleito']):>16}"
-                   f"  {reais(r['med_nao']):>17}")
+        out.append(f"  {ano:>4}  {inteiro(r['candidatos']):>10}  {inteiro(r['cadeiras']):>8}  {reais(r['custo']):>16}"
+                   f"  {reais(r['custo_2024']):>15}  {reais(r['total']):>16}  {reais(r['disputa']):>16}"
+                   f"  {reais(r['med_eleito']):>16}  {reais(r['med_nao']):>17}")
     if len(anos) == 2:
         a, b = sorted(anos)
         real = anos[b]["custo_2024"] / anos[a]["custo_2024"] - 1
@@ -80,18 +82,19 @@ def secao_cargo(d: pd.DataFrame, cargo: int) -> list[str]:
 
 CABECALHO = """\
 P1) Quanto custa uma cadeira?
-Custo da cadeira = soma da despesa contratada de todos os candidatos ao cargo ÷ cadeiras
-preenchidas. Mostra quanto a disputa inteira gastou para preencher cada vaga.
+Custo da cadeira = soma da despesa contratada dos eleitos ÷ cadeiras preenchidas. É o gasto
+médio de quem se elegeu: quanto custou, em média, a campanha que levou cada vaga.
 
-Colunas: Gasto total = despesa de todos os candidatos; Custo da cadeira = Gasto total ÷ Cadeiras
-(em reais da época e em reais de outubro de 2024, pelo IPCA); Eleito / Não eleito = despesa
-mediana de cada grupo.
+Colunas: Custo da cadeira = despesa dos eleitos ÷ Cadeiras (em reais da época e em reais de
+outubro de 2024, pelo IPCA); Gasto total = despesa de todos os candidatos, eleitos ou não;
+Total ÷ cadeiras = quanto a disputa inteira gastou por vaga (o da prestação de contas no site);
+Eleito / Não eleito = despesa mediana de cada grupo.
 
 Observações:
 - Despesa contratada declarada ao TSE, sem "Doações financeiras a outros candidatos/partidos"
   (o dinheiro reaparece como despesa de quem recebeu).
-- Prefeito e vereador: o custo da UF soma todos os municípios; ao lado, a distribuição do
-  custo da cadeira entre os municípios.
+- Prefeito e vereador: o custo da UF junta os eleitos de todos os municípios; ao lado, a
+  distribuição do custo da cadeira entre os municípios.
 - Excluídos: eleições suplementares, Presidente (disputa nacional), vices e suplentes
   (R$ 0,2 mi em quatro eleições).
 """
@@ -103,7 +106,7 @@ def main(argv: list[str]) -> None:
         texto = [CABECALHO]
         for sigla, cd_uf in ufs:
             df = consultar(conn, SQL, {"cargos": list(CARGOS), "cd_uf": cd_uf})
-            texto += ["=" * 112, f"UF: {sigla}", "=" * 112, ""]
+            texto += ["=" * 138, f"UF: {sigla}", "=" * 138, ""]
             for cargo in CARGOS:
                 d = df[df["cod_cargo"] == cargo]
                 if not d.empty:

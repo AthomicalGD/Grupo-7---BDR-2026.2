@@ -120,7 +120,7 @@ export function Municipio() {
       )}
 
       {m.cadeiras.length > 0 && (
-        <Secao titulo="Quanto custou cada cadeira" nota="Gasto declarado pelos candidatos dividido pelas vagas, em reais da época.">
+        <Secao titulo="Quanto custou cada cadeira" nota="Gasto médio declarado pelos eleitos, em reais da época.">
           <div className="overflow-x-auto">
             <table className={tabela}>
               <thead>

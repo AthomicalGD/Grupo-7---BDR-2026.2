@@ -202,7 +202,10 @@ export interface ResumoCadeira {
   candidatos: number
   cadeiras: number
   gasto_total: number
+  /** Gasto médio dos eleitos. */
   custo_cadeira: number | null
+  /** Gasto de todos os candidatos ÷ cadeiras (o da prestação de contas). */
+  gasto_por_cadeira: number | null
   mediana_eleito: number | null
   mediana_nao_eleito: number | null
 }

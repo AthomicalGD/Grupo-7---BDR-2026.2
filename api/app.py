@@ -820,10 +820,13 @@ def mediana(valores: list[float]) -> float | None:
 
 
 def resumo_cadeira(linhas: list[dict]) -> dict:
+    """Custo da cadeira: gasto médio dos eleitos. Gasto por cadeira: o da disputa inteira (todos os
+    candidatos, eleitos ou não) ÷ cadeiras, o da prestação de contas."""
     eleitos = [r for r in linhas if r["eleito"]]
     total = sum(r["despesa"] for r in linhas)
     return {"candidatos": len(linhas), "cadeiras": len(eleitos), "gasto_total": round(total, 2),
-            "custo_cadeira": round(total / len(eleitos), 2) if eleitos else None,
+            "custo_cadeira": round(sum(r["despesa"] for r in eleitos) / len(eleitos), 2) if eleitos else None,
+            "gasto_por_cadeira": round(total / len(eleitos), 2) if eleitos else None,
             "mediana_eleito": mediana([r["despesa"] for r in eleitos]),
             "mediana_nao_eleito": mediana([r["despesa"] for r in linhas if not r["eleito"]])}
 

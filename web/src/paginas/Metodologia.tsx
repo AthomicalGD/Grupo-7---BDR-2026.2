@@ -172,13 +172,14 @@ export function Metodologia() {
 
       <Secao id="m-cadeira" titulo="Custo da cadeira (P1)" resposta={{ para: '/cadeira', rotulo: 'Ver a resposta no plenário' }}>
         <p>
-          O custo de uma cadeira é tudo o que <b>os candidatos ao cargo</b> declararam ter contratado de despesa de
-          campanha, eleitos ou não, dividido pelas <b>cadeiras preenchidas</b>. Mede quanto a disputa inteira gastou por vaga.
+          O custo de uma cadeira é tudo o que <b>os eleitos</b> declararam ter contratado de despesa de
+          campanha, dividido pelas <b>cadeiras preenchidas</b>. Mede quanto gastou, em média, quem levou a vaga.
         </p>
         <p className="rounded-xl border border-linha bg-folha px-5 py-4 text-tinta">
-          custo da cadeira = Σ despesa contratada dos candidatos ÷ número de eleitos
+          custo da cadeira = Σ despesa contratada dos eleitos ÷ número de eleitos
         </p>
         <ul className="list-disc space-y-2 pl-5">
+          <li><b>Gasto da disputa por cadeira:</b> despesa de todos os candidatos, eleitos ou não, ÷ cadeiras preenchidas. Mede quanto a disputa inteira gastou por vaga e é o total da prestação de contas.</li>
           <li><b>Despesa:</b> a contratada declarada ao TSE (2018 a 2024), sem as doações a outras campanhas, que reaparecem como despesa de quem recebeu.</li>
           <li><b>Inflação:</b> os valores são levados a reais de outubro de 2024 pelo IPCA de outubro de cada ano (IBGE, tabela 1737). O alternador mostra os valores da época.</li>
           <li><b>Preço de entrada:</b> a primeira faixa de gasto em que metade ou mais dos candidatos se elegeu (faixas com menos de 5 candidatos não contam).</li>

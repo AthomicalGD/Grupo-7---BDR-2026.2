@@ -86,9 +86,13 @@ def main() -> None:
     assert get("/api/politicos?q=wellington barroso")[0]["foto"]
     assert cliente.get("/api/fotos/2022/PI/1").status_code == 404
 
-    # P1: deputado federal no PI em 2022, como em respostas/01_custo_cadeira.txt (R$ 6,21 mi por cadeira)
+    # P1: deputado federal no PI em 2022, como em respostas/01_custo_cadeira.txt (custo da cadeira de
+    # R$ 1,82 mi, o gasto médio dos eleitos; R$ 6,21 mi de todos os candidatos por cadeira)
     cad = get("/api/cadeira?ano=2022&cargo=6&uf=PI")
-    assert cad["resumo"]["cadeiras"] == 10 and round(cad["resumo"]["custo_cadeira"]) == 6212110, cad["resumo"]
+    assert cad["resumo"]["cadeiras"] == 10 and round(cad["resumo"]["custo_cadeira"]) == 1818535, cad["resumo"]
+    assert round(cad["resumo"]["gasto_por_cadeira"]) == 6212110, cad["resumo"]
+    gastos = [a["gasto"] for a in cad["cadeiras"]]
+    assert min(gastos) <= cad["resumo"]["custo_cadeira"] <= max(gastos)
     assert len(cad["cadeiras"]) == 10 and cad["cadeiras"][0]["gasto"] >= cad["cadeiras"][-1]["gasto"]
     assert abs(sum(p["gasto"] for p in cad["partidos"]) - cad["resumo"]["gasto_total"]) < 1
     assert sum(f["candidatos"] for f in cad["curva"]) == cad["resumo"]["candidatos"]
