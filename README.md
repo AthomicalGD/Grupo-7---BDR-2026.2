@@ -8,7 +8,16 @@ Tamanho total, medido nos servidores em 11/09/2026: **6,0 GB de download e ~33 G
 
 ## Uso
 
-Requer Python 3.10+ e rodar a partir desta pasta.
+Requer Python 3.10+ e rodar a partir desta pasta. As dependências ficam no ambiente virtual `.venv`;
+todos os comandos `python` deste README supõem o `.venv` ativo (sem ele, o Python do sistema não acha
+`fastapi`, `pandas` etc.).
+
+```bash
+python -m venv .venv
+```
+
+Ative o ambiente (uma vez por terminal): `.venv\Scripts\activate` no Windows ou `source .venv/bin/activate`
+no Linux/macOS. Depois:
 
 ```bash
 pip install -r requirements.txt
@@ -90,6 +99,22 @@ python -m loader SP RJ MG
   `politico`) e cria a tabela `escolaridade`, que põe os 8 graus do TSE em ordem para candidato e eleitor. Num banco
   carregado antes dela, rode `python -m loader.partidos` uma vez. A resposta sai com
   `python scripts/04_escolaridade.py` em `respostas/04_escolaridade.txt`.
+Para tirar UFs do banco (ex.: liberar espaço ou recarregar do zero):
+
+```bash
+python -m loader.remover AC RS --simular
+```
+
+```bash
+python -m loader.remover AC RS
+```
+
+- `--simular` mostra quantas linhas sairiam de cada tabela e desfaz tudo no fim; `--banco` funciona como no loader.
+- Cada UF sai numa única transação: municípios, zonas, disputas, candidaturas, votação, contas, indicadores, o
+  registro em `carga_uf` e os políticos e fornecedores que ficaram sem candidatura. Partidos e cargos ficam.
+- `BR` (candidaturas a Presidente) só sai junto com a última UF, porque a votação de toda UF depende dela.
+- Depois, a UF pode ser carregada de novo com `python -m loader` e é preciso **reiniciar a API**.
+
 - Não são carregados: votos do exterior (`ZZ`), `VIES_MUNICIPIO` (métrica ainda por calcular), `MALHA_MUNICIPIO` e `idade_media_populacao` (o crawler não baixa esses dados).
 
 ### Fotos dos candidatos
@@ -118,7 +143,8 @@ python -m crawler --fotos --ufs AC BA GO PE PI PR BR
 
 ## API (Voto Aberto)
 
-API em FastAPI sobre o banco carregado, consumida pelo front-end. Com o banco no ar:
+API em FastAPI sobre o banco carregado, consumida pelo front-end. Com o banco no ar (Docker Desktop aberto e
+`docker compose up -d`) e o `.venv` ativo:
 
 ```bash
 python -m uvicorn api.app:app --port 8000
