@@ -42,7 +42,7 @@ export function Caderno({ graus, destaque, largura, aoDestacar }: Unidades) {
         const y = PAD + 10 + Math.floor(i / COLS) * (ALT + ENTRE)
         const ativo = g === destaque
         return (
-          <g key={i} opacity={alfa(g, destaque)} className="transition-opacity duration-300" onPointerEnter={() => aoDestacar?.(g)}>
+          <g key={i} opacity={alfa(g, destaque)} className={`transition-opacity duration-300 ${aoDestacar ? 'cursor-pointer' : ''}`} onClick={() => aoDestacar?.(g)}>
             <rect x={x} y={y} width={w} height={ALT} rx={2} fill={cor(g)} stroke={ativo ? DESTAQUE : BORDA} strokeWidth={ativo ? 1.2 : 0.6} />
             <path d={RABISCOS[i % 3](x, y, w, ALT)} fill="none" stroke={tracoSobre(g)} strokeOpacity={0.7} strokeWidth={1.1} strokeLinecap="round" />
           </g>
@@ -74,7 +74,7 @@ export function Santinhos({ graus, destaque, largura, aoDestacar }: Unidades) {
   return (
     <svg width={largura} height={10 * (h + VAO)} aria-hidden>
       {graus.map((g, i) => (
-        <g key={i} onPointerEnter={() => aoDestacar?.(g)}>
+        <g key={i} className={aoDestacar ? 'cursor-pointer' : undefined} onClick={() => aoDestacar?.(g)}>
           <MiniSantinho x={(i % 10) * (w + VAO)} y={Math.floor(i / 10) * (h + VAO)} w={w} fundo={cor(g)} opacidade={alfa(g, destaque)} ativo={g === destaque} />
         </g>
       ))}
@@ -100,7 +100,7 @@ export function Cadeira({ fundo, contorno }: { fundo: string; contorno?: string 
  * Um plenário de `cores.length` cadeiras, da esquerda para a direita. Pequenas demais, as cadeiras
  * viram pontos (como no plenário da P1); `sentar` faz as cadeiras se sentarem em varredura.
  */
-export function Plenario({ cores, largura, opacidades, ativas, contorno, sentar = false, aoPassar }: {
+export function Plenario({ cores, largura, opacidades, ativas, contorno, sentar = false, aoClicar }: {
   cores: string[]
   largura: number
   opacidades?: number[]
@@ -109,7 +109,7 @@ export function Plenario({ cores, largura, opacidades, ativas, contorno, sentar 
   /** contorno de todas as cadeiras (as unidades vazias dos quintos) */
   contorno?: string
   sentar?: boolean
-  aoPassar?: (i: number) => void
+  aoClicar?: (i: number) => void
 }) {
   const { lugares, diametro } = hemiciclo(cores.length)
   const R = largura / 2 - 6
@@ -126,8 +126,8 @@ export function Plenario({ cores, largura, opacidades, ativas, contorno, sentar 
             key={i}
             transform={`translate(${x} ${y}) rotate(${giro}) scale(${d})`}
             opacity={opacidades?.[i] ?? 1}
-            className="transition-opacity duration-300"
-            onPointerEnter={aoPassar ? () => aoPassar(i) : undefined}
+            className={`transition-opacity duration-300 ${aoClicar ? 'cursor-pointer' : ''}`}
+            onClick={aoClicar ? () => aoClicar(i) : undefined}
           >
             <g className={sentar ? 'cadeira-senta' : undefined} style={sentar ? { animationDelay: `${Math.round((i / cores.length) * 650)}ms` } : undefined}>
               {d >= 11 ? (

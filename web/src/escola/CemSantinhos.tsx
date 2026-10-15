@@ -106,11 +106,10 @@ export function CemSantinhos({ candidatos, eleitos, rotulos, destaque, aoDestaca
               </svg>
             )
             return (
-              <li key={n} onPointerEnter={() => aoDestacar(n)}>
+              <li key={n}>
                 <button
                   type="button"
                   onClick={() => aoDestacar(n)}
-                  onFocus={() => aoDestacar(n)}
                   aria-label={`${rotulos[n - 1]}: ${k} de cada 100 candidatos se elegeram (${inteiro(eleitos[n - 1])} de ${inteiro(candidatos[n - 1])})`}
                   className="block w-full rounded text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-acao"
                 >

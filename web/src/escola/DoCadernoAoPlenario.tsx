@@ -90,7 +90,7 @@ export function DoCadernoAoPlenario({ grupos, rotulos, chance, destaque, aoDesta
               cores={u[2].map(cor)}
               opacidades={u[2].map((g) => alfa(g, destaque))}
               ativas={u[2].map((g) => g === destaque)}
-              aoPassar={(i) => aoDestacar(u[2][i])}
+              aoClicar={(i) => aoDestacar(u[2][i])}
             />
           )}
         </Objeto>
