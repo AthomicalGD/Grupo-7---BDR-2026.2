@@ -5,11 +5,12 @@
 import type { ReactNode } from 'react'
 import type { EscolaComparar } from '../api'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
-import { cargo as fmtCargo, inteiro, pct } from '../lib/formato'
+import { cargo as fmtCargo, inteiro, pct, plural } from '../lib/formato'
 import { cem, cor, porCento, soma, SUPERIOR } from './escolaridade'
 
 const ANOS = ['2022', '2024'] as const
 const TIPO: Record<string, string> = { '2022': 'eleições gerais', '2024': 'eleições municipais' }
+const PRESIDENTE = 1
 
 const somar = (vs: number[][]) => Array.from({ length: 8 }, (_, i) => soma(vs.map((v) => v[i])))
 
@@ -75,11 +76,15 @@ export function CadaCadeira({ dados, uf, rotulos, aoEscolherUf }: {
   const ufs = dados.ufs.map((u) => u.sigla)
   const recorte = uf ? [uf] : ufs
   const quemVotou = (a: string) => somar(recorte.map((s) => dados.anos[a][s]?.votantes ?? Array(8).fill(0)))
-  const eleitosCargo = (a: string, cod: number) => somar(recorte.map((s) => dados.anos[a][s]?.cargos[cod]?.eleitos ?? Array(8).fill(0)))
+  // Presidente é nacional: vem sob "BR", o mesmo em qualquer estado
+  const eleitosCargo = (a: string, cod: number) =>
+    somar((cod === PRESIDENTE ? ['BR'] : recorte).map((s) => dados.anos[a][s]?.cargos[cod]?.eleitos ?? Array(8).fill(0)))
   const eleitosUf = (a: string, s: string) => somar(Object.values(dados.anos[a][s]?.cargos ?? {}).map((c) => c.eleitos))
 
-  // o achado: o cargo com mais e com menos diploma entre os seis
-  const todos = ANOS.flatMap((a) => dados.cargos[a].map((c) => ({ a, c, sup: porCento(eleitosCargo(a, c.cod))[SUPERIOR - 1] })))
+  // o achado: o cargo com mais e com menos diploma (presidente fica de fora: um eleito só não é taxa)
+  const todos = ANOS.flatMap((a) =>
+    dados.cargos[a].filter((c) => c.cod !== PRESIDENTE).map((c) => ({ a, c, sup: porCento(eleitosCargo(a, c.cod))[SUPERIOR - 1] })),
+  )
   const mais = todos.reduce((x, y) => (y.sup > x.sup ? y : x))
   const menos = todos.reduce((x, y) => (y.sup < x.sup ? y : x))
   const votou22 = Math.round(porCento(quemVotou('2022'))[SUPERIOR - 1])
@@ -104,7 +109,7 @@ export function CadaCadeira({ dados, uf, rotulos, aoEscolherUf }: {
               <Linha rotulo="Quem votou" sub={`${inteiro(soma(quemVotou(a)))} pessoas`} valores={quemVotou(a)} rotulos={rotulos} />
               {dados.cargos[a].map((c) => {
                 const e = eleitosCargo(a, c.cod)
-                return <Linha key={c.cod} forte rotulo={fmtCargo(c.nome)} sub={`${inteiro(soma(e))} eleitos`} valores={e} rotulos={rotulos} />
+                return <Linha key={c.cod} forte rotulo={fmtCargo(c.nome)} sub={plural(soma(e), 'eleito', 'eleitos')} valores={e} rotulos={rotulos} />
               })}
             </div>
           </section>

@@ -1003,7 +1003,8 @@ def geojson(arquivo: str, request: Request) -> Response:
 ANOS_ESCOLA = (2022, 2024)
 # Titulares, do cargo com mais candidatos ao com menos. Em 2022 o lugar é medido pelo voto em deputados
 # (eleitos pelo estado); em 2024, pelos eleitos do próprio município (prefeito e vereadores).
-CARGOS_ESCOLA = {2022: [7, 6, 5, 3], 2024: [13, 11]}
+# Presidente (1) é nacional: entra no recorte de qualquer UF e, no comparativo, fica sob "BR".
+CARGOS_ESCOLA = {2022: [7, 6, 5, 3, 1], 2024: [13, 11]}
 VOTO_ESCOLA = {2022: [6, 7], 2024: [13]}
 
 SQL_ESCOLA_NIVEIS = "SELECT nivel, rotulo FROM escolaridade WHERE nivel IS NOT NULL ORDER BY nivel"
@@ -1018,7 +1019,7 @@ LEFT JOIN mandato m  USING (id_politico_eleicao)
 LEFT JOIN municipio mu ON mu.cd_municipio = e.cd_municipio
 WHERE e.ano = %(ano)s AND e.tipo = 2 AND e.cod_cargo = ANY(%(cargos)s)
   AND pe.ds_sit_tot_turno IS NOT NULL AND es.nivel IS NOT NULL
-  AND (%(cd_uf)s::int IS NULL OR COALESCE(mu.cd_uf, e.cd_uf) = %(cd_uf)s)
+  AND (%(cd_uf)s::int IS NULL OR COALESCE(mu.cd_uf, e.cd_uf, %(cd_uf)s) = %(cd_uf)s)
 GROUP BY 1, 2, 3
 """
 
@@ -1213,7 +1214,7 @@ LEFT JOIN mandato m    USING (id_politico_eleicao)
 LEFT JOIN municipio mu ON mu.cd_municipio = e.cd_municipio
 WHERE e.ano = %(ano)s AND e.tipo = 2 AND e.cod_cargo = ANY(%(cargos)s)
   AND pe.ds_sit_tot_turno IS NOT NULL AND es.nivel IS NOT NULL
-  AND (%(cd_uf)s::int IS NULL OR COALESCE(mu.cd_uf, e.cd_uf) = %(cd_uf)s)
+  AND (%(cd_uf)s::int IS NULL OR COALESCE(mu.cd_uf, e.cd_uf, %(cd_uf)s) = %(cd_uf)s)
 GROUP BY pa.id_partido, 1, 2, 3
 """
 
@@ -1225,7 +1226,7 @@ JOIN eleicao e         USING (id_eleicao)
 JOIN escolaridade es   ON es.ds_grau = pe.ds_grau_instrucao
 LEFT JOIN mandato m    USING (id_politico_eleicao)
 LEFT JOIN municipio mu ON mu.cd_municipio = e.cd_municipio
-WHERE e.ano IN (2022, 2024) AND e.tipo = 2 AND e.cod_cargo IN (3, 5, 6, 7, 11, 13)
+WHERE e.ano IN (2022, 2024) AND e.tipo = 2 AND e.cod_cargo IN (1, 3, 5, 6, 7, 11, 13)
   AND pe.ds_sit_tot_turno IS NOT NULL AND es.nivel IS NOT NULL
 GROUP BY 1, 2, 3, 4
 """
@@ -1289,7 +1290,7 @@ def escola_comparar_tudo() -> dict:
     sigla = {u["cd_ibge"]: s for s, u in UFS.items()}
     anos: dict = {str(a): {} for a in ANOS_ESCOLA}
     for r in consultar(SQL_ESCOLA_COMPARAR_CARGOS):
-        u = anos[str(r["ano"])].setdefault(sigla[r["cd_uf"]], {"votantes": [0] * 8, "cargos": {}})
+        u = anos[str(r["ano"])].setdefault(sigla.get(r["cd_uf"], "BR"), {"votantes": [0] * 8, "cargos": {}})
         c = u["cargos"].setdefault(str(r["cargo"]), {"candidatos": [0] * 8, "eleitos": [0] * 8})
         c["candidatos"][r["nivel"] - 1] = r["candidatos"]
         c["eleitos"][r["nivel"] - 1] = r["eleitos"]
@@ -1297,10 +1298,10 @@ def escola_comparar_tudo() -> dict:
         u = anos[str(r["ano"])].setdefault(sigla[r["cd_uf"]], {"votantes": [0] * 8, "cargos": {}})
         u["votantes"][r["nivel"] - 1] = int(r["votantes"])
     ufs = sorted(carregadas() - {"BR"})
-    nomes = {r["cod_cargo"]: r["nome"] for r in consultar("SELECT cod_cargo, nome FROM cargo WHERE cod_cargo IN (3, 5, 6, 7, 11, 13)")}
+    nomes = {r["cod_cargo"]: r["nome"] for r in consultar("SELECT cod_cargo, nome FROM cargo WHERE cod_cargo IN (1, 3, 5, 6, 7, 11, 13)")}
     return {"ufs": [{"sigla": s, "nome": UFS[s]["nome"]} for s in ufs],
             "cargos": {str(a): [{"cod": c, "nome": nomes[c]} for c in CARGOS_ESCOLA[a]] for a in ANOS_ESCOLA},
-            "anos": {a: {s: v for s, v in d.items() if s in ufs} for a, d in anos.items()}}
+            "anos": {a: {s: v for s, v in d.items() if s in ufs or s == "BR"} for a, d in anos.items()}}
 
 
 @app.get("/api/escola/comparar")
