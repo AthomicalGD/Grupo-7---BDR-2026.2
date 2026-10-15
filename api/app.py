@@ -422,8 +422,10 @@ def foto(ano: int, uf: str, chave: str):
 # ───────── Políticos (nunca expõe CPF, título eleitoral nem data de nascimento completa) ─────────
 
 # Filtra pelos trigramas do nome sem acento (índice politico_nome_trgm, migração 010) e ordena por
-# word_similarity: quem contém o texto buscado vem primeiro, e entre eles quem tem mais candidaturas.
-# ponytail: nomes genéricos ("jose", "maria") casam dezenas de milhares de linhas e levam ~0,5 s.
+# word_similarity: quem contém o texto buscado vem primeiro; entre eles, quem disputou o cargo mais alto
+# (menor código: presidente, governador, senador...) e depois quem tem mais candidaturas. Sem o cargo,
+# "dilma" punha a Dilma Rousseff (2 candidaturas a presidente) atrás de vereadoras com 3 a 6.
+# ponytail: nomes genéricos ("jose", "maria") casam dezenas de milhares de linhas e levam ~0,7-0,9 s.
 SQL_RESUMO_ACHADOS = """
 SELECT a.id_politico AS id, a.nome, extract(year FROM a.dt_nascimento)::int AS nascimento_ano,
        array_remove(array_agg(DISTINCT COALESCE(u.sigla, um.sigla)), NULL) AS ufs,
@@ -439,20 +441,22 @@ LEFT JOIN municipio m ON m.cd_municipio = e.cd_municipio
 LEFT JOIN uf um ON um.cd_ibge = m.cd_uf
 LEFT JOIN uf u ON u.cd_ibge = e.cd_uf
 LEFT JOIN mandato ma ON ma.id_politico_eleicao = pe.id_politico_eleicao
-GROUP BY a.id_politico, a.nome, a.dt_nascimento, a.ws, a.n, a.sim
-ORDER BY a.ws DESC, a.n DESC, a.sim DESC
+GROUP BY a.id_politico, a.nome, a.dt_nascimento, a.ws, a.topo, a.n, a.sim
+ORDER BY a.ws DESC, a.topo, a.n DESC, a.sim DESC
 """
 
 SQL_BUSCA_POLITICOS = """
 WITH achados AS (
     SELECT id_politico, nome, dt_nascimento,
            word_similarity(f_unaccent(upper(%(q)s)), f_unaccent(upper(nome))) AS ws,
-           similarity(f_unaccent(upper(nome)), f_unaccent(upper(%(q)s))) AS sim,
-           (SELECT count(*) FROM politico_eleicao pe WHERE pe.id_politico = politico.id_politico) AS n
+           similarity(f_unaccent(upper(nome)), f_unaccent(upper(%(q)s))) AS sim, c.topo, c.n
     FROM politico
+    CROSS JOIN LATERAL (SELECT count(*) AS n, min(e.cod_cargo) AS topo
+                        FROM politico_eleicao pe JOIN eleicao e USING (id_eleicao)
+                        WHERE pe.id_politico = politico.id_politico) c
     WHERE f_unaccent(upper(nome)) %% f_unaccent(upper(%(q)s))
        OR f_unaccent(upper(nome)) LIKE '%%' || f_unaccent(upper(%(q)s)) || '%%'
-    ORDER BY ws DESC, n DESC, sim DESC
+    ORDER BY ws DESC, c.topo, n DESC, sim DESC
     LIMIT %(limite)s
 )
 """ + SQL_RESUMO_ACHADOS
@@ -484,7 +488,7 @@ WITH cand AS (
     GROUP BY pe.id_politico
 ),
 achados AS (
-    SELECT p.id_politico, p.nome, p.dt_nascimento, {ws} AS ws, c.n, 0 AS sim
+    SELECT p.id_politico, p.nome, p.dt_nascimento, {ws} AS ws, 0 AS topo, c.n, 0 AS sim
     FROM cand c
     JOIN politico p ON p.id_politico = c.id_politico
     {nome}
