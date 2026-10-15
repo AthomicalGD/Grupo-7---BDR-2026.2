@@ -132,6 +132,15 @@ export interface FiltrosBusca {
 }
 export const filtrando = (f: FiltrosBusca) => Object.values(f).some((v) => v != null && v !== '')
 
+/** Ordem da lista de políticos (`ordem` em /api/politicos). Não é filtro: sozinha não dispara a busca. */
+export const ORDENS_BUSCA = [
+  { valor: 'relevancia', rotulo: 'Relevância' },
+  { valor: 'nome', rotulo: 'Nome (A–Z)' },
+  { valor: 'eleicao', rotulo: 'Eleição mais recente' },
+  { valor: 'cargo', rotulo: 'Cargo mais alto' },
+] as const
+export type OrdemBusca = (typeof ORDENS_BUSCA)[number]['valor']
+
 export const CARGOS_BUSCA = [
   { cod: 1, nome: 'presidente' },
   { cod: 3, nome: 'governador' },
@@ -409,11 +418,11 @@ export const consultas = {
       ...sempre,
     }),
   /** `limite` cresce de 6 em 6 com o "mais" da urna; a API aceita até LIMITE_BUSCA. */
-  buscaPoliticos: (q: string, f: FiltrosBusca = {}, limite = 6) =>
+  buscaPoliticos: (q: string, f: FiltrosBusca = {}, limite = 6, ordem: OrdemBusca = 'relevancia') =>
     queryOptions({
-      queryKey: ['busca-politicos', q, f, limite],
+      queryKey: ['busca-politicos', q, f, limite, ordem],
       queryFn: ({ signal }) => {
-        const p = new URLSearchParams({ q, limite: String(limite) })
+        const p = new URLSearchParams({ q, limite: String(limite), ordem })
         for (const [k, v] of Object.entries(f)) if (v != null && v !== '') p.set(k === 'eleicao' ? 'ano' : k, String(v))
         return get<PoliticoBusca[]>(`/api/politicos?${p}`, signal)
       },

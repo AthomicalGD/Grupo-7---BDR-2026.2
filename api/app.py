@@ -421,10 +421,11 @@ def foto(ano: int, uf: str, chave: str):
 
 # ───────── Políticos (nunca expõe CPF, título eleitoral nem data de nascimento completa) ─────────
 
-# Filtra pelos trigramas do nome sem acento (índice politico_nome_trgm, migração 010) e ordena por
-# word_similarity: quem contém o texto buscado vem primeiro; entre eles, quem disputou o cargo mais alto
-# (menor código: presidente, governador, senador...) e depois quem tem mais candidaturas. Sem o cargo,
-# "dilma" punha a Dilma Rousseff (2 candidaturas a presidente) atrás de vereadoras com 3 a 6.
+# Filtra pelos trigramas do nome sem acento (índice politico_nome_trgm, migração 010). A ordem vem de
+# `ordem` (ORDENS): por relevância, word_similarity primeiro; entre os empatados, quem disputou o cargo mais
+# alto (menor código: presidente, governador, senador...) e depois quem tem mais candidaturas. Sem o cargo,
+# "dilma" punha a Dilma Rousseff (2 candidaturas a presidente) atrás de vereadoras com 3 a 6. As outras
+# ordens põem antes quem tem uma palavra começando pelo texto buscado ("dilma" acha DILMA, não ADILMA).
 # ponytail: nomes genéricos ("jose", "maria") casam dezenas de milhares de linhas e levam ~0,7-0,9 s.
 SQL_RESUMO_ACHADOS = """
 SELECT a.id_politico AS id, a.nome, extract(year FROM a.dt_nascimento)::int AS nascimento_ano,
@@ -441,29 +442,45 @@ LEFT JOIN municipio m ON m.cd_municipio = e.cd_municipio
 LEFT JOIN uf um ON um.cd_ibge = m.cd_uf
 LEFT JOIN uf u ON u.cd_ibge = e.cd_uf
 LEFT JOIN mandato ma ON ma.id_politico_eleicao = pe.id_politico_eleicao
-GROUP BY a.id_politico, a.nome, a.dt_nascimento, a.ws, a.topo, a.n, a.sim
-ORDER BY a.ws DESC, a.topo, a.n DESC, a.sim DESC
+GROUP BY a.id_politico, a.nome, a.dt_nascimento, a.pos
+ORDER BY a.pos
+"""
+
+# Colunas de `base` usadas aqui: contem, nome, ws, sim, topo (menor cod_cargo), ultimo (ano mais recente),
+# n (candidaturas) e v (vitórias; só na busca com filtros, onde a relevância sem nome é "quem mais venceu").
+ORDENS = {
+    "nome": "contem DESC, nome, id_politico",
+    "eleicao": "contem DESC, ultimo DESC, ws DESC, topo, n DESC, id_politico",
+    "cargo": "contem DESC, topo, ultimo DESC, n DESC, id_politico",
+}
+RELEVANCIA = "ws DESC, topo, n DESC, sim DESC, id_politico"
+RELEVANCIA_FILTRADA = "ws DESC, v DESC, n DESC, nome, id_politico"
+
+ACHADOS = """
+achados AS (
+    SELECT id_politico, nome, dt_nascimento, row_number() OVER (ORDER BY {ordem}) AS pos
+    FROM base ORDER BY pos LIMIT %(limite)s
+)
 """
 
 SQL_BUSCA_POLITICOS = """
-WITH achados AS (
-    SELECT id_politico, nome, dt_nascimento,
+WITH base AS (
+    SELECT id_politico, nome, dt_nascimento, c.topo, c.n, c.ultimo,
            word_similarity(f_unaccent(upper(%(q)s)), f_unaccent(upper(nome))) AS ws,
-           similarity(f_unaccent(upper(nome)), f_unaccent(upper(%(q)s))) AS sim, c.topo, c.n
+           similarity(f_unaccent(upper(nome)), f_unaccent(upper(%(q)s))) AS sim,
+           ' ' || f_unaccent(upper(nome)) LIKE '%% ' || f_unaccent(upper(%(q)s)) || '%%' AS contem
     FROM politico
-    CROSS JOIN LATERAL (SELECT count(*) AS n, min(e.cod_cargo) AS topo
+    CROSS JOIN LATERAL (SELECT count(*) AS n, min(e.cod_cargo) AS topo, max(e.ano) AS ultimo
                         FROM politico_eleicao pe JOIN eleicao e USING (id_eleicao)
                         WHERE pe.id_politico = politico.id_politico) c
     WHERE f_unaccent(upper(nome)) %% f_unaccent(upper(%(q)s))
        OR f_unaccent(upper(nome)) LIKE '%%' || f_unaccent(upper(%(q)s)) || '%%'
-    ORDER BY ws DESC, c.topo, n DESC, sim DESC
-    LIMIT %(limite)s
-)
-""" + SQL_RESUMO_ACHADOS
+),""" + ACHADOS + SQL_RESUMO_ACHADOS
 
 # Busca com filtros (P10): a pessoa entra se tiver ao menos uma candidatura que bata com todos os
 # filtros ao mesmo tempo ("candidatou-se a senador, em 2022, no PI, pelo PT, e foi eleita"). O nome
-# é opcional; sem ele, vêm primeiro os que mais venceram nas candidaturas que batem com os filtros.
+# é opcional; sem ele, por relevância vêm primeiro os que mais venceram nas candidaturas que batem.
+# Cargo e eleição, aqui, olham só as candidaturas que batem com os filtros.
 FILTROS_CANDIDATURA = {
     "uf": "COALESCE(u.sigla, um.sigla) = %(uf)s",
     "cargo": "e.cod_cargo = %(cargo)s",
@@ -476,7 +493,7 @@ CARGOS_BUSCA = {1: "Presidente", 3: "Governador", 5: "Senador", 6: "Deputado fed
 
 SQL_BUSCA_FILTRADA = """
 WITH cand AS (
-    SELECT pe.id_politico, count(*) AS n, count(ma.id_mandato) AS v
+    SELECT pe.id_politico, count(*) AS n, count(ma.id_mandato) AS v, min(e.cod_cargo) AS topo, max(e.ano) AS ultimo
     FROM politico_eleicao pe
     JOIN eleicao e        ON e.id_eleicao = pe.id_eleicao
     LEFT JOIN municipio m ON m.cd_municipio = e.cd_municipio
@@ -487,30 +504,32 @@ WITH cand AS (
     WHERE e.tipo <> 1 AND {condicoes}
     GROUP BY pe.id_politico
 ),
-achados AS (
-    SELECT p.id_politico, p.nome, p.dt_nascimento, {ws} AS ws, 0 AS topo, c.n, 0 AS sim
+base AS (
+    SELECT p.id_politico, p.nome, p.dt_nascimento, {ws} AS ws, {contem} AS contem, c.n, c.v, c.topo, c.ultimo
     FROM cand c
     JOIN politico p ON p.id_politico = c.id_politico
     {nome}
-    ORDER BY ws DESC, c.v DESC, c.n DESC, p.nome
-    LIMIT %(limite)s
-)
-""" + SQL_RESUMO_ACHADOS
+),""" + ACHADOS + SQL_RESUMO_ACHADOS
 NOME_FILTRO = """WHERE f_unaccent(upper(p.nome)) %% f_unaccent(upper(%(q)s))
        OR f_unaccent(upper(p.nome)) LIKE '%%' || f_unaccent(upper(%(q)s)) || '%%'"""
 NOME_WS = "word_similarity(f_unaccent(upper(%(q)s)), f_unaccent(upper(p.nome)))"
+NOME_CONTEM = "' ' || f_unaccent(upper(p.nome)) LIKE '%% ' || f_unaccent(upper(%(q)s)) || '%%'"
+
+
+def _com_foto(achados: list[dict]) -> list[dict]:
+    for r in achados:
+        r["foto"] = foto_url(*r.pop("ultima").split("|"))   # foto da candidatura mais recente
+    return achados
 
 
 @lru_cache(maxsize=512)
-def busca_filtrada(q: str, filtros: tuple, limite: int) -> list[dict]:
+def busca_filtrada(q: str, filtros: tuple, limite: int, ordem: str) -> list[dict]:
     f = dict(filtros)
     sql = SQL_BUSCA_FILTRADA.format(
         condicoes=" AND ".join(FILTROS_CANDIDATURA[k] for k in f),
-        ws=NOME_WS if q else "0", nome=NOME_FILTRO if q else "")
-    achados = consultar(sql, {**f, "q": q, "limite": limite})
-    for r in achados:
-        r["foto"] = foto_url(*r.pop("ultima").split("|"))
-    return achados
+        ws=NOME_WS if q else "0", contem=NOME_CONTEM if q else "true", nome=NOME_FILTRO if q else "",
+        ordem=ORDENS.get(ordem, RELEVANCIA_FILTRADA))
+    return _com_foto(consultar(sql, {**f, "q": q, "limite": limite}))
 
 
 @lru_cache(maxsize=1)
@@ -561,7 +580,8 @@ ORDER BY ano, suplementar, cod_cargo
 
 @app.get("/api/politicos")
 def buscar_politicos(q: str = "", uf: str = "", cargo: int | None = None, ano: int | None = None,
-                     partido: str = "", resultado: str = "", limite: int = Query(8, ge=1, le=50)):
+                     partido: str = "", resultado: str = "", limite: int = Query(8, ge=1, le=50),
+                     ordem: str = "relevancia"):
     q = q.strip()
     filtros = {}
     if uf:
@@ -580,14 +600,14 @@ def buscar_politicos(q: str = "", uf: str = "", cargo: int | None = None, ano: i
         if resultado not in ("eleito", "nao_eleito"):
             raise HTTPException(422, "resultado: eleito ou nao_eleito")
         filtros["resultado"] = resultado == "eleito"
+    if ordem not in ("relevancia", *ORDENS):
+        raise HTTPException(422, f"ordem: relevancia, {', '.join(ORDENS)}")
     if filtros:
-        return busca_filtrada(q if len(q) >= 3 else "", tuple(sorted(filtros.items())), limite)
+        return busca_filtrada(q if len(q) >= 3 else "", tuple(sorted(filtros.items())), limite, ordem)
     if len(q) < 3:
         return []
-    achados = consultar(SQL_BUSCA_POLITICOS, {"q": q, "limite": limite})
-    for r in achados:
-        r["foto"] = foto_url(*r.pop("ultima").split("|"))   # foto da candidatura mais recente
-    return achados
+    sql = SQL_BUSCA_POLITICOS.format(ordem=ORDENS.get(ordem, RELEVANCIA))
+    return _com_foto(consultar(sql, {"q": q, "limite": limite}))
 
 
 @lru_cache(maxsize=1)

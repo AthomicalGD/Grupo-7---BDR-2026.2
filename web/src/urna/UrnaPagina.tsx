@@ -2,7 +2,8 @@ import { Shuffle, SpeakerHigh, SpeakerSlash } from '@phosphor-icons/react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
-import { consultas, filtrando, LIMITE_BUSCA, politicoAleatorio, type FiltrosBusca, type PoliticoBusca } from '../api'
+import { consultas, filtrando, LIMITE_BUSCA, ORDENS_BUSCA, politicoAleatorio, type FiltrosBusca, type OrdemBusca, type PoliticoBusca } from '../api'
+import { Escolha } from '../componentes/Escolha'
 import { Retrato } from '../componentes/Retrato'
 import { inteiro, nomeProprio, plural } from '../lib/formato'
 import { alternarSom, somLigado, tocarConfirma, tocarCorrige, tocarTecla } from './som'
@@ -36,25 +37,33 @@ export function UrnaPagina() {
   const [foto, setFoto] = useState<HTMLImageElement | null>(null)
   const canvas = useMemo(() => Object.assign(document.createElement('canvas'), { width: VISOR.largura, height: VISOR.altura }), [])
 
-  const filtros = useSearch({ from: '/urna' })
+  // a ordem mora no endereço junto dos filtros, mas não é filtro (não dispara busca sem nome)
+  const endereco = useSearch({ from: '/urna' })
+  const ordem = endereco.ordem ?? 'relevancia'
+  // objeto estável: os efeitos do visor dependem de `filtros`
+  const filtros = useMemo(() => {
+    const { ordem: _, ...f } = endereco
+    return f
+  }, [endereco])
   const comFiltro = filtrando(filtros)
-  const mudarFiltros = (f: FiltrosBusca) => {
+  const navegarBusca = (f: FiltrosBusca, o: OrdemBusca) => {
     setSelecionado(0)
-    void navegar({ to: '/urna', search: f, replace: true, resetScroll: false })
+    void navegar({ to: '/urna', search: { ...f, ordem: o === 'relevancia' ? undefined : o }, replace: true, resetScroll: false })
   }
+  const mudarFiltros = (f: FiltrosBusca) => navegarBusca(f, ordem)
   const q = useAtrasado(texto.trim())
   // "mais" pede a mesma busca com 6 a mais (a API não tem deslocamento, só limite); volta a 6 quando a busca muda
-  const chave = `${q}|${JSON.stringify(filtros)}`
+  const chave = `${q}|${JSON.stringify(filtros)}|${ordem}`
   const [pedido, setPedido] = useState({ chave, quantos: POR_PAGINA })
   const quantos = pedido.chave === chave ? pedido.quantos : POR_PAGINA
-  const busca = useQuery({ ...consultas.buscaPoliticos(q, filtros, quantos), placeholderData: (anterior) => anterior })
+  const busca = useQuery({ ...consultas.buscaPoliticos(q, filtros, quantos, ordem), placeholderData: (anterior) => anterior })
   // a API não garante a ordem entre empates: quem já estava na lista fica onde estava e os novos entram no fim
-  const ordem = useRef({ chave: '', pos: new Map<number, number>() })
+  const fixos = useRef({ chave: '', pos: new Map<number, number>() })
   const lista = useMemo(() => {
     const dados = busca.data ?? []
     if (busca.isPlaceholderData) return dados
-    if (ordem.current.chave !== chave) ordem.current = { chave, pos: new Map() }
-    const pos = ordem.current.pos
+    if (fixos.current.chave !== chave) fixos.current = { chave, pos: new Map() }
+    const pos = fixos.current.pos
     const vistos = dados.filter((r) => pos.has(r.id)).sort((a, b) => pos.get(a.id)! - pos.get(b.id)!)
     const fila = [...vistos, ...dados.filter((r) => !pos.has(r.id))]
     fila.forEach((r, i) => pos.has(r.id) || pos.set(r.id, i))
@@ -194,7 +203,15 @@ export function UrnaPagina() {
         </div>
 
         <FiltroCandidatura filtros={filtros} aoMudar={mudarFiltros} />
-        {comFiltro && q.length < 3 && resultados.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span id={`${id}-ordem`} className="t-rotulo mr-1 text-tinta-2">Ordenar por</span>
+          <div role="radiogroup" aria-labelledby={`${id}-ordem`} className="flex flex-wrap gap-2">
+            {ORDENS_BUSCA.map((o) => (
+              <Escolha key={o.valor} ativo={o.valor === ordem} aoClicar={() => navegarBusca(filtros, o.valor)}>{o.rotulo}</Escolha>
+            ))}
+          </div>
+        </div>
+        {comFiltro && q.length < 3 && resultados.length > 0 && ordem === 'relevancia' && (
           <p className="text-[0.85rem] text-tinta-3">Sem nome digitado: primeiro quem mais se elegeu nessas candidaturas.</p>
         )}
 
