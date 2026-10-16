@@ -282,13 +282,25 @@
 .estado-forma { transition: opacity 600ms ease, fill 400ms ease; }
 .estado-forma:hover { filter: brightness(1.06); }
 .estado-rotulo { transition: opacity 300ms ease; }
+/* Escola: os municípios do estado acendem quando a câmera pousa nele. */
+.municipios-escola { opacity: 0; transition: opacity 120ms ease; }
+.municipios-escola.acesos { opacity: 1; transition: opacity 520ms var(--ease-saida); }
 
 /* A página entra subindo 6px ao trocar de módulo. */
 @keyframes pagina-entra { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .pagina-entra { animation: pagina-entra 360ms var(--ease-saida) both; }
 .revela { animation: pagina-entra 420ms var(--ease-saida) both; }
 
+/* Escola: os gráficos entram uma vez quando aparecem: as barras se revelam da esquerda, as fitas surgem depois. */
+@keyframes revela-esquerda { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.revela-esquerda { animation: revela-esquerda 900ms var(--ease-saida) both; }
+@keyframes cresce-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.cresce-x { transform-origin: left center; animation: cresce-x 800ms var(--ease-saida) both; }
+@keyframes surge { from { opacity: 0; } to { opacity: 1; } }
+.surge { animation: surge 600ms ease both; }
+
 @media (prefers-reduced-motion: reduce) {
+  .revela-esquerda, .cresce-x, .surge { animation: none; }
   [role="radio"][aria-checked="true"], .pagina-entra, .revela, .faixa-presidencial { animation: none; }
   main h1.t-display::after, main :is(h2.t-h1, h2.t-h2)::after { animation: none; transform: none; }
   .botao-vivo, .botao-contorno { transition: none; }

@@ -65,7 +65,7 @@ export async function gerarLetreiro() {
   }
 
   const out = {}
-  for (const [sufixo, simbolo, tinta, fundo] of [['', 'cor', COR.tinta, null], ['-negativo', 'negativo', COR.branco, COR.tinta]]) {
+  for (const [sufixo, simbolo, tinta, fundo] of [['', 'cor', COR.tinta, null], ['-negativo', 'negativo', COR.branco, null]]) {
     // horizontal: símbolo à esquerda, texto centrado na altura do símbolo
     const t = texto(0, 0)
     const gap = 30, W = 304 + gap + t.w, topo = (H - t.h) / 2 + 4

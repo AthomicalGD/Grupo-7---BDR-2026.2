@@ -16,13 +16,6 @@ export const corDe100 = (v: number | null | undefined) => (v == null ? null : co
 
 export const SUPERIOR = 8
 
-/** As 100 unidades em ordem de leitura, do superior completo (primeiro) ao analfabeto. */
-export function unidades(cem: number[]): number[] {
-  const u: number[] = []
-  for (let g = 8; g >= 1; g--) for (let k = 0; k < cem[g - 1]; k++) u.push(g)
-  return u
-}
-
 /** Opacidade de uma unidade: cheia no grau em destaque, recuada nos outros. */
 export const alfa = (g: number, destaque: number | null) => (destaque == null || g === destaque ? 1 : 0.3)
 

@@ -138,21 +138,16 @@ function BoletimEscola({ d, quintil, rotulos, carregando }: { d: EscolaLugar; qu
               <thead>
                 <tr className="t-mono text-left text-[0.66rem] tracking-[0.08em] text-tinta-3">
                   <th scope="col" className="pb-1.5 font-medium">GRAU</th>
-                  <th scope="col" className="pb-1.5 text-right font-medium">VOTOU<span className="block">DE 100</span></th>
-                  <th scope="col" className="pb-1.5 text-right font-medium">{municipal ? <>CÂMARA<span className="block">CADEIRAS</span></> : <>VOTOS<span className="block">DE 100</span></>}</th>
+                  <th scope="col" className="pb-1.5 text-right font-medium">VOTOU<span className="block">(%)</span></th>
+                  <th scope="col" className="pb-1.5 text-right font-medium">{municipal ? <>CÂMARA<span className="block">CADEIRAS</span></> : <>VOTOS<span className="block">(%)</span></>}</th>
                 </tr>
               </thead>
               <tbody>
                 {GRAUS.map((n) => {
                   const camara = vereadores.filter((e) => e.nivel === n).length
                   return (
-                    <tr key={n} className={n === SUPERIOR ? 'font-bold text-tinta' : 'text-tinta-2'}>
-                      <th scope="row" className="py-[1.5px] text-left font-[inherit]">
-                        <span className="flex items-center gap-1.5">
-                          <span className="size-2.5 shrink-0 rounded-[2px] border border-tinta/20" style={{ background: cor(n) }} aria-hidden />
-                          {rotulos[n - 1]}
-                        </span>
-                      </th>
+                    <tr key={n} className={n === SUPERIOR ? 'border-y border-linha font-bold text-tinta' : 'text-tinta-2'}>
+                      <th scope="row" className={`py-[2px] text-left ${n === SUPERIOR ? 'font-bold' : 'font-normal'}`}>{rotulos[n - 1]}</th>
                       <td className="t-mono tabular py-[1.5px] text-right">{votou[n - 1]}</td>
                       <td className="t-mono tabular py-[1.5px] text-right">{municipal ? camara : votos[n - 1]}</td>
                     </tr>
@@ -161,8 +156,9 @@ function BoletimEscola({ d, quintil, rotulos, carregando }: { d: EscolaLugar; qu
               </tbody>
             </table>
           </Linha>
-          <Picote />
-          {municipal ? (
+          {municipal && (
+            <>
+              <Picote />
             <Linha i={2}>
               <p className="t-mono text-[0.68rem] tracking-[0.12em] text-tinta-3">A CÂMARA ELEITA</p>
               <div className="mt-1 flex justify-center">
@@ -179,20 +175,13 @@ function BoletimEscola({ d, quintil, rotulos, carregando }: { d: EscolaLugar; qu
                 )}
               </p>
             </Linha>
-          ) : (
-            <Linha i={2}>
-              <p className="t-mono text-[0.76rem] uppercase leading-relaxed tracking-[0.04em] text-tinta">
-                {votou[SUPERIOR - 1]} de 100 que votaram com superior completo
-                <br />
-                {votos[SUPERIOR - 1]} de 100 votos para deputado em candidatos com superior
-              </p>
-            </Linha>
+            </>
           )}
         </article>
       </div>
       <TabelaAlternavel
         titulo={`${d.nome}: escolaridade de quem votou e de ${municipal ? 'quem foi eleito' : 'quem recebeu os votos para deputado'}`}
-        colunas={municipal ? ['Escolaridade', 'Quem votou (de 100)', 'Vereadores', 'Prefeito'] : ['Escolaridade', 'Quem votou (de 100)', 'Votos para deputado (de 100)']}
+        colunas={municipal ? ['Escolaridade', 'Quem votou (%)', 'Vereadores', 'Prefeito'] : ['Escolaridade', 'Quem votou (%)', 'Votos para deputado (%)']}
         linhas={() =>
           GRAUS.map((n) =>
             municipal

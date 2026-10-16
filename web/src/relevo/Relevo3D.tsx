@@ -14,7 +14,7 @@ const LADO = 100       // o estado cabe num quadrado de 100 unidades
 const ALTURA_MAX = 14
 const PASSO_MIN = 0.22 // descarta vértices mais próximos que isso (o relevo não precisa da malha máxima)
 
-interface Bloco {
+export interface Bloco {
   ibge: number
   geometria: THREE.ExtrudeGeometry
   centro: [number, number]
@@ -33,7 +33,7 @@ function anelParaPontos(anel: number[][], proj: (p: [number, number]) => [number
   return pts
 }
 
-function construir(malha: Malha): Bloco[] {
+export function construir(malha: Malha): Bloco[] {
   const proj = geoConicEqualArea().parallels([-2, -22]).rotate([54, 0]).fitExtent([[-LADO / 2, -LADO / 2], [LADO / 2, LADO / 2]], malha)
   const p = (c: [number, number]) => proj(c) as [number, number] | null
   return malha.features.map((f) => {
@@ -58,7 +58,7 @@ function construir(malha: Malha): Bloco[] {
   })
 }
 
-function Coluna({ bloco, altura, cor, selecionado, aoPassar, aoClicar }: {
+export function Coluna({ bloco, altura, cor, selecionado, aoPassar, aoClicar }: {
   bloco: Bloco
   altura: number
   cor: string
@@ -128,9 +128,9 @@ export default function Relevo3D({ malha, uf, ano, relativo, ibge, aoEscolher }:
   const bSobre = sobre != null ? blocos.find((b) => b.ibge === sobre) : undefined
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-[20px] bg-[radial-gradient(ellipse_at_50%_35%,#ffffff,#e6eaed_75%)]">
+    <div className="relative h-full w-full overflow-hidden rounded-[20px] bg-[radial-gradient(ellipse_70%_55%_at_50%_92%,#fff6d6_0%,transparent_70%),linear-gradient(180deg,#e4edf3_0%,#f1f5f6_48%,#f6f8ef_100%)]">
       <Canvas frameloop="demand" shadows="percentage" dpr={[1, 1.5]} camera={{ position: [0, 78, 92], fov: 38, near: 1, far: 800 }} aria-label={`Relevo 3D dos municípios de ${uf.nome} em ${ano}`}>
-        <hemisphereLight args={['#ffffff', '#c9d0d8', 1.05]} />
+        <hemisphereLight args={['#ffffff', '#cfd6e2', 1.05]} />
         <directionalLight position={[60, 120, 40]} intensity={1.6} castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-70} shadow-camera-right={70} shadow-camera-top={70} shadow-camera-bottom={-70} />
         <Bounds fit clip observe margin={1.08}>
         <group rotation={[-Math.PI / 2, 0, 0]}>

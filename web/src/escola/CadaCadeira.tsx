@@ -44,8 +44,7 @@ function Linha({ rotulo, sub, valores, rotulos, forte = false }: {
       </span>
       <Faixa valores={valores} rotulos={rotulos} altura={forte ? 18 : 12} leve={!forte} />
       <span className="flex items-baseline justify-end gap-1">
-        <span className={`t-numero tabular ${forte ? 'text-[1.35rem] text-tinta' : 'text-[1.05rem] text-tinta-2'}`}>{sup}</span>
-        <span className="text-[0.72rem] text-tinta-3">de 100</span>
+        <span className={`t-numero tabular ${forte ? 'text-[1.35rem] text-tinta' : 'text-[1.05rem] text-tinta-2'}`}>{sup}%</span>
       </span>
     </>
   )
@@ -61,7 +60,7 @@ function Celula({ ano, eleitos, votou, rotulos }: { ano: string; eleitos: number
       <span className="t-numero tabular text-right text-[1.2rem] text-tinta">{cem(eleitos)[SUPERIOR - 1]}</span>
       <span className="tabular text-[0.7rem] leading-tight text-tinta-3">
         {inteiro(soma(eleitos))} eleitos
-        <span className="block">votou: {votou}</span>
+        <span className="block">votou: {votou}%</span>
       </span>
     </span>
   )
@@ -94,8 +93,8 @@ export function CadaCadeira({ dados, uf, rotulos, aoEscolherUf }: {
     <div>
       <p className="max-w-[76ch] text-[1.02rem] leading-relaxed text-tinta-2">
         Quanto mais alta a cadeira, mais diploma: <b className="text-tinta">{fmtCargo(mais.c.nome).toLowerCase()}</b> ({mais.a}) chega a{' '}
-        <b className="tabular text-tinta">{Math.round(mais.sup)} de 100</b> eleitos com superior completo; <b className="text-tinta">{fmtCargo(menos.c.nome).toLowerCase()}</b>{' '}
-        ({menos.a}), a <b className="tabular text-tinta">{Math.round(menos.sup)}</b>. Entre quem votou: {votou22 === votou24 ? <>{votou22} de 100, nos dois anos</> : <>{votou22} em 2022 e {votou24} em 2024</>}.
+        <b className="tabular text-tinta">{Math.round(mais.sup)}%</b> dos eleitos com superior completo; <b className="text-tinta">{fmtCargo(menos.c.nome).toLowerCase()}</b>{' '}
+        ({menos.a}), a <b className="tabular text-tinta">{Math.round(menos.sup)}%</b>. Entre quem votou: {votou22 === votou24 ? <>{votou22}%, nos dois anos</> : <>{votou22}% em 2022 e {votou24}% em 2024</>}.
       </p>
 
       <div className="mt-5 grid grid-cols-1 gap-x-12 gap-y-8 lg:grid-cols-2">
@@ -122,7 +121,7 @@ export function CadaCadeira({ dados, uf, rotulos, aoEscolherUf }: {
           {ANOS.map((a) => (
             <p key={a} className="hidden items-baseline gap-2 lg:flex">
               <span className="t-numero tabular text-[1.1rem]">{a}</span>
-              <span className="text-[0.76rem] text-tinta-3">de 100 eleitos com superior</span>
+              <span className="text-[0.76rem] text-tinta-3">% dos eleitos com superior</span>
             </p>
           ))}
         </div>
@@ -151,11 +150,11 @@ export function CadaCadeira({ dados, uf, rotulos, aoEscolherUf }: {
         <span>{rotulos[0]}</span>
         {rotulos.map((_, i) => <span key={i} className="h-3 w-5 rounded-[2px]" style={{ background: cor(i + 1) }} aria-hidden />)}
         <span>{rotulos[SUPERIOR - 1]}</span>
-        <span className="ml-3">A faixa de quem votou, mais fina e clara, é a régua; "votou" é quantos de cada 100 que votaram no estado têm superior.</span>
+        <span className="ml-3">A faixa de quem votou, mais fina e clara, é a régua; "votou" é o % de quem votou no estado com superior.</span>
       </div>
       <TabelaAlternavel
-        titulo="De cada 100 eleitos, quantos com superior completo, por cargo e por estado"
-        colunas={['Ano', 'Grupo', 'Eleitos', 'Com superior (de 100)']}
+        titulo="% dos eleitos com superior completo, por cargo e por estado"
+        colunas={['Ano', 'Grupo', 'Eleitos', 'Com superior (%)']}
         linhas={() =>
           ANOS.flatMap((a) => [
             ...dados.cargos[a].map((c) => [a, fmtCargo(c.nome), inteiro(soma(eleitosCargo(a, c.cod))), String(cem(eleitosCargo(a, c.cod))[SUPERIOR - 1])]),

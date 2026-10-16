@@ -62,7 +62,7 @@ export function Ranking({ municipios, medida, aoEscolher, selecionado }: {
   const empateMenos = menos.length ? validos.filter((m) => m[medida] === menos[0][medida]).length : 0
   const todos = validos.filter((m) => m[medida] === 100).length
   const alvo = medida === 'eleitos' ? 'na câmara' : 'no voto para deputado'
-  const fmt = (v: number) => `${Math.round(v)} DE 100`
+  const fmt = (v: number) => `${Math.round(v)}%`
 
   return (
     <div>
@@ -80,7 +80,7 @@ export function Ranking({ municipios, medida, aoEscolher, selecionado }: {
         <Lista titulo={`Mais diploma ${alvo}`} linhas={mais} valor={(m) => fmt(m[medida]!)} aoEscolher={aoEscolher} selecionado={selecionado} />
         <Lista
           titulo={`Menos diploma ${alvo}`}
-          nota={empateMenos > TOPO ? `${empateMenos} empatam em ${Math.round(menos[0][medida]!)} de 100; os maiores:` : undefined}
+          nota={empateMenos > TOPO ? `${empateMenos} empatam em ${Math.round(menos[0][medida]!)}%; os maiores:` : undefined}
           linhas={menos}
           valor={(m) => fmt(m[medida]!)} aoEscolher={aoEscolher} selecionado={selecionado} />
         <Lista
