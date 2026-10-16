@@ -1,6 +1,6 @@
 // Relevo do voto: municípios extrudados, altura = eleitorado apto (raiz quadrada, para que a
 // capital não esconda o resto), cor = viés. Orbita com o mouse; clique abre o boletim.
-import { Bounds, Html, OrbitControls } from '@react-three/drei'
+import { AdaptiveDpr, Bounds, Html, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { geoConicEqualArea } from 'd3-geo'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -9,10 +9,11 @@ import type { Ano, Malha, UFDetalhe } from '../api'
 import { inteiro, vies as fmtVies } from '../lib/formato'
 import { corVies } from '../lib/vies'
 import { SATURA_RELATIVO, valorMunicipio } from '../atlas/valores'
+import { SombraAssentada } from './sombra'
 
 const LADO = 100       // o estado cabe num quadrado de 100 unidades
 const ALTURA_MAX = 14
-const PASSO_MIN = 0.22 // descarta vértices mais próximos que isso (o relevo não precisa da malha máxima)
+const PASSO_MIN = 0.4 // descarta vértices mais próximos que isso (o relevo não precisa da malha máxima)
 
 export interface Bloco {
   ibge: number
@@ -33,7 +34,18 @@ function anelParaPontos(anel: number[][], proj: (p: [number, number]) => [number
   return pts
 }
 
+// as formas já montadas de cada malha: reabrir o 3D (ou trocar de ano) não remonta 417 extrusões
+const montadas = new WeakMap<Malha, Bloco[]>()
+
 export function construir(malha: Malha): Bloco[] {
+  const pronta = montadas.get(malha)
+  if (pronta) return pronta
+  const blocos = extrudar(malha)
+  montadas.set(malha, blocos)
+  return blocos
+}
+
+function extrudar(malha: Malha): Bloco[] {
   const proj = geoConicEqualArea().parallels([-2, -22]).rotate([54, 0]).fitExtent([[-LADO / 2, -LADO / 2], [LADO / 2, LADO / 2]], malha)
   const p = (c: [number, number]) => proj(c) as [number, number] | null
   return malha.features.map((f) => {
@@ -87,6 +99,7 @@ export function Coluna({ bloco, altura, cor, selecionado, aoPassar, aoClicar }: 
     <mesh
       ref={ref}
       geometry={bloco.geometria}
+      dispose={null} // a forma fica guardada para a próxima vez (construir); não descartar ao desmontar
       scale={[1, 1, 0.001]}
       castShadow
       receiveShadow
@@ -129,7 +142,9 @@ export default function Relevo3D({ malha, uf, ano, relativo, ibge, aoEscolher }:
 
   return (
     <div className="relative h-full w-full overflow-hidden rounded-[20px] bg-[radial-gradient(ellipse_70%_55%_at_50%_92%,#fff6d6_0%,transparent_70%),linear-gradient(180deg,#e4edf3_0%,#f1f5f6_48%,#f6f8ef_100%)]">
-      <Canvas frameloop="demand" shadows="percentage" dpr={[1, 1.5]} camera={{ position: [0, 78, 92], fov: 38, near: 1, far: 800 }} aria-label={`Relevo 3D dos municípios de ${uf.nome} em ${ano}`}>
+      <Canvas frameloop="demand" shadows="percentage" dpr={[1, 1.5]} performance={{ min: 0.6 }} camera={{ position: [0, 78, 92], fov: 38, near: 1, far: 800 }} aria-label={`Relevo 3D dos municípios de ${uf.nome} em ${ano}`}>
+        <AdaptiveDpr />
+        <SombraAssentada chave={`${uf.sigla}-${ano}-${relativo}`} />
         <hemisphereLight args={['#ffffff', '#cfd6e2', 1.05]} />
         <directionalLight position={[60, 120, 40]} intensity={1.6} castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-70} shadow-camera-right={70} shadow-camera-top={70} shadow-camera-bottom={-70} />
         <Bounds fit clip observe margin={1.08}>
@@ -165,7 +180,7 @@ export default function Relevo3D({ malha, uf, ano, relativo, ibge, aoEscolher }:
           <planeGeometry args={[LADO * 1.6, LADO * 1.6]} />
           <shadowMaterial opacity={0.12} />
         </mesh>
-        <OrbitControls makeDefault enablePan={false} minDistance={50} maxDistance={220} minPolarAngle={0.25} maxPolarAngle={1.25} />
+        <OrbitControls makeDefault regress enablePan={false} minDistance={50} maxDistance={220} minPolarAngle={0.25} maxPolarAngle={1.25} />
       </Canvas>
       <p className="pointer-events-none absolute bottom-3 left-4 rounded-full bg-folha/85 px-3 py-1 text-[0.75rem] font-semibold text-tinta-2">
         Altura: eleitores aptos em {ano} · arraste para girar

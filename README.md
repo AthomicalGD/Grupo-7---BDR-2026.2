@@ -215,18 +215,69 @@ Para só usar ou apresentar o site, a versão de produção é bem mais leve par
 (sem o modo de desenvolvimento do React): `npm run build` e depois `npx vite preview`,
 em http://localhost:4173 (também repassa `/api` para a API).
 
-Para abrir no celular, com o celular no mesmo Wi-Fi do computador: `npx vite preview --host`
-e, no celular, `http://<IP do computador>:4173` (o IP sai no próprio terminal, em "Network", ou no
-`ipconfig`). Só a porta do site precisa ficar aberta: a API continua em `127.0.0.1` e é o Vite que
-repassa `/api`. Na primeira vez o Windows pergunta se o Node.js pode usar a rede: permita em
-redes privadas. Redes de universidade costumam isolar os aparelhos entre si; nesse caso, use o
-roteador do celular.
+### Formas de subir o site
+
+| Para quê | Comando | Endereço |
+|---|---|---|
+| Programar (recarrega ao salvar; pesado) | `npm run dev` | http://localhost:5173 |
+| Apresentar no notebook (versão de produção, leve) | `npm run apresentar` | http://localhost:4173 |
+| Celular na mesma rede privada (casa) | `npm run rede` | `http://<IP da rede>:4173/?chave=...` |
+| Celulares em qualquer Wi-Fi (universidade) | `npm run rede:publico` | `https://<sorteado>.trycloudflare.com/?chave=...` |
+
+Para apresentar, use sempre a versão de produção (`apresentar`, `rede` ou `rede:publico`). Medido
+neste notebook: no `npm run dev` cada página trava de 450 a 800 ms ao abrir e usa de 2 a 3 vezes mais
+memória; na produção, as páginas abrem sem travar e rolam a 60 quadros por segundo.
+
+### Abrir no celular (QR code do boletim)
+
+Com `npm run rede` ou `npm run rede:publico`, o terminal mostra um endereço com `?chave=...`. Abra-o
+no notebook: o QR code de cada boletim de município já leva esse endereço com a chave, e o celular
+que escanear abre a mesma página.
+
+- **`rede`** (casa): o celular fala direto com o notebook, pela rede privada. Na primeira vez o
+  Windows pergunta se o Node.js pode usar a rede: permita só em **Redes privadas**. Para escolher
+  outra rede privada: `REDE_IP=<ip> npm run rede`.
+- **`rede:publico`** (Wi-Fi da universidade, que é rede pública e costuma isolar os aparelhos): o
+  `cloudflared` leva o site até a Cloudflare por uma conexão de saída e devolve um link `https`. Não
+  precisa marcar o Wi-Fi como privado nem mexer no firewall, e não faça isso: numa rede pública,
+  isso exporia o notebook a todo o campus. Usa o `cloudflared` do instalador oficial (`C:\Program Files (x86)\cloudflared`, já instalado
+  neste notebook, versão 2026.9.1 com assinatura válida da Cloudflare); ou o de `web/.ferramentas/`
+  (fora do git), o do PATH ou `CLOUDFLARED=<caminho>`. Não precisa de conta: é um túnel rápido, com
+  endereço sorteado a cada execução.
+
+O que protege o notebook, nos dois:
+
+- Sai do notebook só a versão de produção (`dist`), nunca o servidor de desenvolvimento do Vite.
+- `rede` escuta só no IP privado da rede local (192.168.x, 10.x, 172.16-31.x): adaptadores virtuais
+  e VPNs (WSL, Hyper-V, Docker, ZeroTier, Tailscale) e IPs públicos são recusados, e o terminal lista
+  o que não foi exposto. `rede:publico` escuta só em `127.0.0.1`.
+- Uma chave aleatória nova a cada execução: sem ela, tudo responde 403. Quem não escaneou o QR na
+  sua tela não abre o site.
+- Só leitura (GET e HEAD), cabeçalho Host conferido e `Referrer-Policy: no-referrer`, para a chave
+  não vazar para os sites das fotos.
+- A API (`127.0.0.1:8000`) e o banco (`127.0.0.1:5432`) continuam só no notebook: este servidor
+  repassa `/api` para a API local.
+- Desliga sozinho em 60 minutos (`REDE_MINUTOS=30` muda o tempo); Ctrl+C desliga na hora, e no
+  `rede:publico` o link deixa de existir.
+
+### Para a apresentação não travar
+
+- Suba com `npm run apresentar`, `npm run rede` ou `npm run rede:publico`, não com `npm run dev`.
+- Feche o que não for usar (outros navegadores, editores, abas). O notebook tem 16 GB e, com tudo
+  aberto, sobravam menos de 2 GB livres.
+- O Docker roda numa máquina virtual (o `vmmemWSL` no Gerenciador de Tarefas) que guarda memória.
+  Para a apresentação, o banco pode subir mais leve: `PG_MEMORIA=256MB PG_TRABALHO=16MB docker compose up -d db`
+  (os valores padrão, maiores, são para carregar estados). Para limitar a máquina virtual, crie
+  `C:\Users\<você>\.wslconfig` com `[wsl2]` e `memory=4GB` e rode `wsl --shutdown`; vale para o
+  Docker inteiro.
+- Os 3D (relevo, plenário em pé, mapa em pé) calculam as sombras enquanto as colunas crescem e as
+  congelam quando a cena assenta; ao girar, a resolução baixa um pouco e volta quando a câmera para.
 
 | Tela | Rota | Pergunta |
 |---|---|---|
 | Mapa do Brasil, viés por estado, linha do tempo 2018-2024 | `/` | P7 |
 | Plenário: quanto custa uma cadeira, por cargo, ano e estado (ou câmara municipal), em 2D e 3D | `/cadeira` | P1 |
-| Escola: do caderno de votação ao plenário, de cada 100 santinhos quantos viram cadeira, cada cargo e cada estado (2022 ao lado de 2024), os partidos na ordem do viés, mapa e dispersão dos municípios, cinco câmaras, ranking e o boletim da escolaridade; filtro por estado | `/escola` | P4 |
+| Escola: o diploma ajuda a se eleger (do eleitor ao eleito, a chance de cada grau) e onde se estudou menos se elege menos diploma (cinco grupos de municípios, mapa por estado com 3D, dispersão, ranking e o boletim); cada cargo e cada estado, os partidos; filtro por estado | `/escola` | P4 |
 | Estado: municípios, de onde vem o viés (partidos e candidatos), regiões intermediárias, extremos, relevo 3D | `/uf/PI` | P7 |
 | Boletim do município: viés, espectro do voto, prefeitos, custo da cadeira, indicadores, QR code | `/uf/PI/2211001` | P7, P1, P3 |
 | Urna de consulta (UE2020 em vetor): busca pelo nome e cédula de filtros (cargo, ano, estado, partido, resultado) | `/urna` | P10 |

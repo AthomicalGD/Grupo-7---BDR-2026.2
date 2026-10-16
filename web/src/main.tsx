@@ -1,6 +1,7 @@
 import '@fontsource-variable/archivo/wdth.css'
 import '@fontsource-variable/red-hat-mono'
 import './index.css'
+import './lib/rede' // guarda a chave da rede local antes do roteador limpar o endereço
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MotionConfig } from 'motion/react'
 import { StrictMode } from 'react'

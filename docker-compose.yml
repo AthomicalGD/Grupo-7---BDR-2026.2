@@ -15,18 +15,20 @@ services:
   db:
     image: postgres:17
     environment: *conexao
+    # só no notebook (127.0.0.1): sem isso o Docker publica o banco para toda a rede local
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     shm_size: 1g
-    # Ajustes para carga em massa (dezenas de milhões de linhas por UF grande).
+    # Ajustes para carga em massa (dezenas de milhões de linhas por UF grande). Para apresentar com
+    # pouca memória livre: PG_MEMORIA=256MB PG_TRABALHO=16MB docker compose up -d db
     command: >
       postgres
-      -c shared_buffers=1GB
-      -c work_mem=128MB
-      -c maintenance_work_mem=1GB
-      -c temp_buffers=256MB
+      -c shared_buffers=${PG_MEMORIA:-1GB}
+      -c work_mem=${PG_TRABALHO:-128MB}
+      -c maintenance_work_mem=${PG_MANUTENCAO:-1GB}
+      -c temp_buffers=${PG_TEMP:-256MB}
       -c max_wal_size=8GB
       -c checkpoint_timeout=15min
       -c synchronous_commit=off
