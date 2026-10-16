@@ -16,7 +16,7 @@ import p7VotosPartido from './consultas/p7_votos_partido.sql?raw'
 function Secao({ id, titulo, resposta, children }: {
   id: string
   titulo: string
-  resposta?: { para: '/' | '/cadeira' | '/urna' | '/escola'; rotulo: string }
+  resposta?: { para: '/' | '/cadeira' | '/urna' | '/escola' | '/reeleicao'; rotulo: string }
   children: ReactNode
 }) {
   return (
@@ -26,7 +26,7 @@ function Secao({ id, titulo, resposta, children }: {
         {resposta && (
           <Link
             to={resposta.para}
-            className="inline-flex h-10 items-center gap-2 rounded-full bg-tinta px-4 text-[0.88rem] font-semibold text-white transition hover:bg-[#2a3442] active:translate-y-px"
+            className="botao-vivo h-10 px-4 text-[0.88rem]"
           >
             {resposta.rotulo} <ArrowRight size={15} weight="bold" aria-hidden />
           </Link>
@@ -114,6 +114,7 @@ const INDICE = [
   ['m-escolaridade', 'P4'],
   ['m-vies', 'P7'],
   ['m-carreira', 'P10'],
+  ['m-reeleicao', 'P10a'],
   ['m-fontes', 'Fontes'],
   ['m-limites', 'Limitações'],
   ['m-reproduzir', 'Para reproduzir'],
@@ -317,7 +318,8 @@ export function Metodologia() {
         </ul>
         <p>
           A taxa de reeleição de cada cargo, eleição a eleição e estado a estado (P10a), está na página{' '}
-          <Link to="/reeleicao" className="font-semibold text-acao underline underline-offset-4">Reeleição</Link>.
+          <Link to="/reeleicao" className="font-semibold text-acao underline underline-offset-4">Reeleição</Link>; o método,{' '}
+          <a href="#m-reeleicao" className="font-semibold text-acao underline underline-offset-4">logo abaixo</a>.
         </p>
         <Detalhe titulo="De onde vêm os dados">
           <Origens
@@ -354,6 +356,23 @@ export function Metodologia() {
           <Consulta titulo="A carreira de um político" sql={p10Carreira} />
           <Consulta titulo="Taxa de reeleição por cargo e ano" sql={p10Reeleicao} />
         </Detalhe>
+      </Secao>
+
+      <Secao id="m-reeleicao" titulo="Taxa de reeleição (P10a)" resposta={{ para: '/reeleicao', rotulo: 'Ver a resposta na reeleição' }}>
+        <p>
+          Dos eleitos para um cargo em cada eleição, quantos disputaram o mesmo cargo no mesmo lugar na eleição seguinte e
+          quantos venceram de novo. Por padrão a página soma todos os estados carregados; cada estado pode ser visto sozinho.
+        </p>
+        <ul className="list-disc space-y-2 pl-5">
+          <li><b>Tentou a reeleição:</b> foi candidato ao mesmo cargo, na mesma UF ou município, na eleição ordinária seguinte (senador, oito anos depois). O banco não guarda a marca de reeleição do TSE, então candidaturas indeferidas ou renunciadas também contam.</li>
+          <li><b>Taxa de reeleição:</b> dos que tentaram, quantos venceram. No caminho dos eleitos, a largura de cada fita é a quantidade de pessoas; a tira das fichas de cargo divide os eleitos em 100, pelo maior resto.</li>
+          <li><b>Fora da conta:</b> eleições suplementares, presidente (disputa nacional) e vices e suplentes, que o TSE só marca como eleitos a partir de 2012 e 2014.</li>
+          <li><b>A mesma pessoa:</b> ligada entre eleições pelo título eleitoral. Em 1994 e 1996 metade das candidaturas não tem título; aí a tentativa também é achada pelo nome normalizado ou pela data de nascimento com o mesmo primeiro nome.</li>
+          <li><b>Ainda sem a eleição seguinte:</b> os eleitos da última eleição de cada cargo (2022 nas gerais, 2024 nas municipais, 2018 e 2022 para senador) ficam de fora até a próxima eleição entrar no banco.</li>
+          <li><b>Prefeito e vereador:</b> além da soma, a média simples das taxas dos municípios em que alguém tentou, para cidades grandes não pesarem mais.</li>
+          <li><b>Estado a estado:</b> casas com menos de 10 tentativas ficam hachuradas; poucos casos mudam muito a taxa.</li>
+          <li><b>Quem são:</b> os eleitos de cada eleição, separados pelo que fizeram na seguinte, com os mais votados primeiro (há votos de 2018 em diante).</li>
+        </ul>
       </Secao>
 
       <Secao id="m-fontes" titulo="Fontes">

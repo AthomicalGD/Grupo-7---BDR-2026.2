@@ -7,7 +7,7 @@
 // campanha (a frente e o verso dizem isso).
 import { ArrowCounterClockwise, ArrowRight } from '@phosphor-icons/react'
 import { Link } from '@tanstack/react-router'
-import { useRef, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import type { Candidatura } from '../api'
 import { Retrato } from '../componentes/Retrato'
@@ -113,6 +113,78 @@ function quadrosDoGiro(paraOVerso: boolean): Keyframe[] {
   ]
 }
 
+/** A faixa presidencial sobre a foto de quem se elegeu Presidente, como a faixa de verdade: três faixas
+ * largas de cetim (verde, amarelo, verde), do ombro ao quadril, com dobra de tecido e bordas douradas, e no
+ * peito um emblema redondo com o globo azul da marca (não o brasão: nada aqui imita símbolo oficial).
+ * Cai sobre o peito uma vez, quando o santinho aparece. */
+function FaixaPresidencial() {
+  const id = useId().replace(/:/g, '')
+  const L = 320
+  const A = 46
+  const t = A / 3
+  const url = (n: string) => `url(#${n}-${id})`
+  return (
+    <svg width={161} height={225} viewBox="0 0 161 225" className="faixa-presidencial pointer-events-none absolute inset-0" aria-hidden>
+      <defs>
+        {/* a dobra do cetim: cada faixa escurece nas bordas e clareia no meio */}
+        <linearGradient id={`verde-${id}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#00702b" />
+          <stop offset=".5" stopColor="#00a33f" />
+          <stop offset="1" stopColor="#006627" />
+        </linearGradient>
+        <linearGradient id={`amarelo-${id}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#f2c400" />
+          <stop offset=".5" stopColor="#ffe23a" />
+          <stop offset="1" stopColor="#e6b400" />
+        </linearGradient>
+        <linearGradient id={`cetim-${id}`} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff" stopOpacity="0" />
+          <stop offset=".38" stopColor="#fff" stopOpacity="0" />
+          <stop offset=".46" stopColor="#fff" stopOpacity=".26" />
+          <stop offset=".54" stopColor="#fff" stopOpacity="0" />
+          <stop offset=".8" stopColor="#000" stopOpacity="0" />
+          <stop offset=".9" stopColor="#000" stopOpacity=".16" />
+          <stop offset="1" stopColor="#000" stopOpacity="0" />
+        </linearGradient>
+        <radialGradient id={`ouro-${id}`} cx=".38" cy=".32" r=".75">
+          <stop offset="0" stopColor="#fff3b0" />
+          <stop offset=".5" stopColor="#f0c419" />
+          <stop offset="1" stopColor="#a87800" />
+        </radialGradient>
+        <radialGradient id={`globo-${id}`} cx=".4" cy=".35" r=".7">
+          <stop offset="0" stopColor="#3f68b5" />
+          <stop offset="1" stopColor="#1d3a78" />
+        </radialGradient>
+      </defs>
+      <g transform="translate(94 178) rotate(32)">
+        {/* a sombra que a faixa projeta no paletó */}
+        <rect x={-L / 2} y={-A / 2 + 5} width={L} height={A} fill="rgb(0 0 0 / .3)" style={{ filter: 'blur(3.5px)' }} />
+        <rect x={-L / 2} y={-A / 2} width={L} height={t + 0.5} fill={url('verde')} />
+        <rect x={-L / 2} y={-A / 2 + t} width={L} height={t + 0.5} fill={url('amarelo')} />
+        <rect x={-L / 2} y={-A / 2 + 2 * t} width={L} height={t} fill={url('verde')} />
+        {/* a costura entre as faixas e as bordas douradas */}
+        <rect x={-L / 2} y={-A / 2 + t - 0.4} width={L} height={0.8} fill="#00561f" opacity=".6" />
+        <rect x={-L / 2} y={-A / 2 + 2 * t - 0.4} width={L} height={0.8} fill="#00561f" opacity=".6" />
+        <rect x={-L / 2} y={-A / 2} width={L} height={1.4} fill="#d9a400" />
+        <rect x={-L / 2} y={A / 2 - 1.4} width={L} height={1.4} fill="#d9a400" />
+        <rect x={-L / 2} y={-A / 2} width={L} height={A} fill={url('cetim')} />
+        {/* o emblema no peito */}
+        <g transform="translate(-14 0) rotate(-32)">
+          <circle r={15.5} fill="rgb(0 0 0 / .3)" transform="translate(1 2.5)" style={{ filter: 'blur(1px)' }} />
+          <circle r={15} fill={url('ouro')} stroke="#a87800" strokeWidth={0.8} />
+          <circle r={12.2} fill="none" stroke="#00873a" strokeWidth={2.2} strokeDasharray="2.6 1.4" />
+          <circle r={9.4} fill={url('globo')} stroke="#f0c419" strokeWidth={0.9} />
+          {/* a faixa branca do globo e as estrelas, como no símbolo da marca */}
+          <path d="M-9.2 -1.8 Q0 -5.6 9.2 0.4 L9 2.4 Q0 -3.4 -9.3 0.2 Z" fill="#f4f5f2" />
+          {[[-4.5, 3.2], [-1, 5.6], [2.6, 3.6], [5.2, 6], [0.8, 1.6], [-6.4, -4.6], [4.6, -5]].map(([cx, cy], i) => (
+            <circle key={i} cx={cx} cy={cy} r={i % 2 ? 0.7 : 0.95} fill="#fff" />
+          ))}
+        </g>
+      </g>
+    </svg>
+  )
+}
+
 export function Santinho({ c, nome, inclinacao }: { c: Candidatura; nome: string; inclinacao: number }) {
   const [virado, setVirado] = useState(false)
   const frente = useRef<HTMLButtonElement>(null)
@@ -167,6 +239,7 @@ export function Santinho({ c, nome, inclinacao }: { c: Candidatura; nome: string
                 tamanho={161}
                 className={`!h-full !w-full !rounded-none ${c.foto ? '' : '!bg-transparent !text-[6.5rem] !font-black ![font-stretch:72%] !text-current opacity-25'}`}
               />
+              {c.cod_cargo === 1 && c.eleito && <FaixaPresidencial />}
             </div>
             <span className="absolute bottom-12 left-2"><Carimbo resultado={resultado} /></span>
           </div>

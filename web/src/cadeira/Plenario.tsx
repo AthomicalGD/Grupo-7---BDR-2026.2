@@ -6,6 +6,8 @@ import { memo, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, typ
 import type { Assento } from '../api'
 import { Retrato } from '../componentes/Retrato'
 import { inteiro, nomeProprio, reaisCurto } from '../lib/formato'
+import { interpolateLab } from 'd3-interpolate'
+import { corVies } from '../lib/vies'
 import { hemiciclo, medir, ordenar, posicionar, type EscalaGasto, type Ordem } from './geometria'
 
 const W = 1000, H = 520, S = 468, CX = 500, CY = 500
@@ -28,8 +30,37 @@ function postos(cadeiras: Assento[], ordem: Ordem): Posto[] {
   })
 }
 
-/** Uma cadeira vista de cima: assento na cor do gasto, encosto escuro. Pequena demais, vira um ponto. */
-const Cadeira = memo(function Cadeira({ p, cor, total, leve }: { p: Posto; cor: string; total: number; leve: boolean }) {
+/** Na ordem por partido, o encosto leva a cor do partido (o seu viés), alternando cheia e clara de uma
+ * bancada para a seguinte: vizinhos de viés parecido continuam separados sem linha por cima das cadeiras. */
+function encostosPorPartido(lista: Posto[]): Map<number, string> {
+  const m = new Map<number, string>()
+  let grupo = -1
+  lista.forEach((p, i) => {
+    if (i === 0 || p.a.partido !== lista[i - 1].a.partido) grupo++
+    const cor = corVies(p.a.vies)
+    m.set(p.a.id, grupo % 2 ? interpolateLab(cor, '#ffffff')(0.5) : cor)
+  })
+  return m
+}
+
+/** As fronteiras entre bancadas, marcadas só do lado de fora do arco, como os traços de uma régua. */
+function Fronteiras({ lista }: { lista: Posto[] }) {
+  const ang = (p: Posto) => Math.atan2(CY - p.y, p.x - CX)
+  const cortes = lista.flatMap((p, i) => (i > 0 && p.a.partido !== lista[i - 1].a.partido ? [(ang(lista[i - 1]) + ang(p)) / 2] : []))
+  const r0 = S * 1.02, r1 = S * 1.065
+  return (
+    <g aria-hidden className="pointer-events-none">
+      {cortes.map((a, k) => (
+        <line key={k} x1={CX + Math.cos(a) * r0} y1={CY - Math.sin(a) * r0} x2={CX + Math.cos(a) * r1} y2={CY - Math.sin(a) * r1} stroke="var(--color-tinta-3)" strokeWidth={1.6} strokeLinecap="round" />
+      ))}
+    </g>
+  )
+}
+
+/** Uma cadeira vista de cima: assento na cor do gasto, encosto escuro (na ordem por partido, o encosto leva a
+ * cor do partido, que é o seu viés: cada bancada vira uma fileira de encostos da mesma cor). Pequena demais,
+ * vira um ponto. */
+const Cadeira = memo(function Cadeira({ p, cor, encosto, total, leve }: { p: Posto; cor: string; encosto?: string; total: number; leve: boolean }) {
   const vazio = p.a.gasto <= 0
   // o atraso de "sentar" vale o lugar na montagem; reordenar não reinicia a animação
   const [atraso] = useState(() => `${Math.round((p.i / Math.max(1, total)) * 650)}ms`)
@@ -41,7 +72,7 @@ const Cadeira = memo(function Cadeira({ p, cor, total, leve }: { p: Posto; cor: 
       <g className={leve ? undefined : 'cadeira-senta'} style={leve ? undefined : { animationDelay: atraso }}>
         {p.d >= 11 ? (
           <>
-            <rect x={-0.44} y={-0.5} width={0.88} height={0.22} rx={0.08} fill="var(--color-tinta)" opacity={0.82} />
+            <rect x={-0.44} y={-0.5} width={0.88} height={0.22} rx={0.08} fill={encosto ?? 'var(--color-tinta)'} opacity={encosto ? 1 : 0.82} />
             <rect
               x={-0.37} y={-0.24} width={0.74} height={0.62} rx={0.15}
               fill={vazio ? 'var(--color-folha)' : cor}
@@ -58,9 +89,12 @@ const Cadeira = memo(function Cadeira({ p, cor, total, leve }: { p: Posto; cor: 
 })
 
 /** Todas as cadeiras; memorizado para que o ponteiro (que muda a cada cadeira) não as re-renderize. */
-const Bancada = memo(function Bancada({ lista, cores }: { lista: Posto[]; cores: Map<number, string> }) {
+const Bancada = memo(function Bancada({ lista, cores, porPartido }: { lista: Posto[]; cores: Map<number, string>; porPartido: boolean }) {
   const leve = lista.length > MUITAS
-  const cadeiras = lista.map((p) => <Cadeira key={p.a.id} p={p} cor={cores.get(p.a.id)!} total={lista.length} leve={leve} />)
+  const encostos = porPartido ? encostosPorPartido(lista) : null
+  const cadeiras = lista.map((p) => (
+    <Cadeira key={p.a.id} p={p} cor={cores.get(p.a.id)!} encosto={encostos?.get(p.a.id)} total={lista.length} leve={leve} />
+  ))
   return leve ? <g className="plenario-surge">{cadeiras}</g> : cadeiras
 })
 
@@ -77,9 +111,9 @@ function rotulosPartidos(lista: Posto[]) {
   return grupos.flatMap((g) => {
     const a0 = ang(lista[g.de]), a1 = ang(lista[g.ate])
     const arco = Math.abs(a0 - a1) * S * 1.07
-    if (arco < g.sigla.length * 8 + 10) return []
+    if (arco < g.sigla.length * 6 + 6) return []
     const meio = (a0 + a1) / 2
-    return [{ sigla: g.sigla, x: CX + Math.cos(meio) * S * 1.075, y: CY - Math.sin(meio) * S * 1.075, meio }]
+    return [{ sigla: g.sigla, x: CX + Math.cos(meio) * S * 1.1, y: CY - Math.sin(meio) * S * 1.1, meio }]
   })
 }
 
@@ -262,8 +296,9 @@ export function Plenario({ chave, cadeiras, escala, fator, ordem, custo, legenda
           }}
         >
           <g key={chave}>
-            <Bancada lista={lista} cores={cores} />
+            <Bancada lista={lista} cores={cores} porPartido={ordem === 'partido'} />
           </g>
+          {ordem === 'partido' && <Fronteiras lista={lista} />}
           {rotulos.map((r) => (
             <text
               key={r.sigla + r.x}

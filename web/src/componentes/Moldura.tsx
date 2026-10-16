@@ -1,3 +1,4 @@
+import { Archive, Armchair, ArrowsClockwise, BookOpenText, GraduationCap, MapTrifold, type Icon } from '@phosphor-icons/react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { motion } from 'motion/react'
@@ -28,14 +29,18 @@ function usePreferencia(chave: string, atributo: string, inicial: string) {
   return [valor, setValor] as const
 }
 
-const NAV = [
-  { para: '/', rotulo: 'Mapa', ativo: (p: string) => p === '/' || p.startsWith('/uf') },
-  { para: '/urna', rotulo: 'Urna', ativo: (p: string) => p.startsWith('/urna') || p.startsWith('/politico') },
-  { para: '/cadeira', rotulo: 'Cadeira', ativo: (p: string) => p.startsWith('/cadeira') },
-  { para: '/escola', rotulo: 'Escola', ativo: (p: string) => p.startsWith('/escola') },
-  { para: '/reeleicao', rotulo: 'Reeleição', ativo: (p: string) => p.startsWith('/reeleicao') },
-  { para: '/metodologia', rotulo: 'Metodologia', curto: 'Método', ativo: (p: string) => p.startsWith('/metodologia') },
-] as const
+// Cada módulo tem um ícone; o ativo vira uma pílula no oliva claro da seleção (o mesmo papel em todo o
+// sistema), com o laço das fitas embaixo. A pílula desliza entre os itens (mola) e o ícone pula e fica
+// cheio ao chegar.
+type ItemNav = { para: '/' | '/urna' | '/cadeira' | '/escola' | '/reeleicao' | '/metodologia'; rotulo: string; curto?: string; icone: Icon; ativo: (p: string) => boolean }
+const NAV: ItemNav[] = [
+  { para: '/', rotulo: 'Mapa', icone: MapTrifold, ativo: (p) => p === '/' || p.startsWith('/uf') },
+  { para: '/urna', rotulo: 'Urna', icone: Archive, ativo: (p) => p.startsWith('/urna') || p.startsWith('/politico') },
+  { para: '/cadeira', rotulo: 'Cadeira', icone: Armchair, ativo: (p) => p.startsWith('/cadeira') },
+  { para: '/escola', rotulo: 'Escola', icone: GraduationCap, ativo: (p) => p.startsWith('/escola') },
+  { para: '/reeleicao', rotulo: 'Reeleição', icone: ArrowsClockwise, ativo: (p) => p.startsWith('/reeleicao') },
+  { para: '/metodologia', rotulo: 'Metodologia', curto: 'Método', icone: BookOpenText, ativo: (p) => p.startsWith('/metodologia') },
+]
 
 function BarraUtilitaria() {
   const [contraste, setContraste] = usePreferencia('va-contraste', 'data-contraste', 'normal')
@@ -90,18 +95,41 @@ function Cabecalho() {
           <img src={simbolo} alt="Voto Aberto" className="h-8 w-auto lg:hidden" />
         </Link>
         <nav aria-label="Principal">
-          <ul className="flex items-center gap-0 sm:gap-3">
+          <ul className="flex items-center gap-0 sm:gap-1.5">
             {NAV.map((item) => {
               const ativo = item.ativo(caminho)
+              const Icone = item.icone
               return (
                 <li key={item.para} className="relative">
+                  {ativo && (
+                    <motion.span
+                      layoutId="nav-pilula"
+                      aria-hidden
+                      className="absolute inset-x-0 inset-y-1 rounded-full sm:inset-y-0.5"
+                      style={{ background: 'var(--color-selecao-claro)' }}
+                      transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                    >
+                      <span className="absolute inset-x-3 -bottom-[7px] h-1 rounded-full sm:inset-x-4" style={{ background: 'var(--laco)' }} />
+                    </motion.span>
+                  )}
                   <Link
                     to={item.para}
-                    className={`block rounded-md px-[3px] py-2 text-[0.8rem] transition-colors sm:px-3 sm:text-[0.97rem] ${ativo ? 'font-semibold text-tinta' : 'text-tinta-2 hover:text-tinta'}`}
+                    className={`nav-item relative flex items-center gap-1.5 rounded-full px-[5px] py-2 text-[0.8rem] transition-colors sm:px-3 sm:text-[0.97rem] ${ativo ? 'font-semibold' : 'text-tinta-2 hover:bg-papel hover:text-tinta'}`}
+                    style={ativo ? { color: 'var(--color-selecao-tinta)' } : undefined}
                     aria-current={ativo ? 'page' : undefined}
-                    aria-label={'curto' in item ? item.rotulo : undefined}
+                    aria-label={item.curto ? item.rotulo : undefined}
                   >
-                    {'curto' in item ? (
+                    <motion.span
+                      key={ativo ? 'ativo' : 'parado'}
+                      aria-hidden
+                      className="hidden lg:inline-flex"
+                      initial={ativo ? { scale: 0.6, rotate: -12 } : false}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ type: 'spring', stiffness: 520, damping: 14 }}
+                    >
+                      <Icone size={19} weight={ativo ? 'fill' : 'regular'} />
+                    </motion.span>
+                    {item.curto ? (
                       <>
                         <span aria-hidden className="lg:hidden">{item.curto}</span>
                         <span aria-hidden className="hidden lg:inline">{item.rotulo}</span>
@@ -110,13 +138,6 @@ function Cabecalho() {
                       item.rotulo
                     )}
                   </Link>
-                  {ativo && (
-                    <motion.span
-                      layoutId="nav-marcador"
-                      className="absolute inset-x-[3px] -bottom-[10px] h-1 rounded-full bg-marcador sm:inset-x-3"
-                      transition={{ type: 'spring', stiffness: 420, damping: 36 }}
-                    />
-                  )}
                 </li>
               )
             })}
@@ -165,6 +186,17 @@ function Rodape() {
   )
 }
 
+/** Cada módulo entra com uma subida curta; dentro do mesmo módulo (estado e município do mapa) não remonta. */
+function EntradaDaPagina() {
+  const modulo = useRouterState({ select: (s) => s.location.pathname.split('/')[1] })
+  const chave = modulo === 'uf' ? '' : modulo === 'politico' ? 'urna' : modulo
+  return (
+    <div key={chave} className="pagina-entra">
+      <Outlet />
+    </div>
+  )
+}
+
 export function Moldura() {
   return (
     <div className="flex min-h-[100dvh] flex-col">
@@ -177,7 +209,7 @@ export function Moldura() {
       <BarraUtilitaria />
       <Cabecalho />
       <main id="conteudo" className="flex-1">
-        <Outlet />
+        <EntradaDaPagina />
       </main>
       <Rodape />
     </div>

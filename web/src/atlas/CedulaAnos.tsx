@@ -83,7 +83,7 @@ export function CedulaAnos({ ano, aoMudar, anos = ANOS, linhaDoTempo = true }: {
         type="button"
         onClick={() => setTocando((t) => !t)}
         aria-pressed={tocando}
-        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-full bg-tinta px-4 text-[0.85rem] font-semibold whitespace-nowrap text-white transition-transform hover:bg-[#2a3442] active:scale-[0.97] sm:w-auto"
+        className="botao-vivo h-10 w-full px-4 text-[0.85rem] whitespace-nowrap sm:w-auto"
       >
         {tocando ? <Pause size={14} weight="fill" /> : <Play size={14} weight="fill" />}
         Linha do tempo

@@ -62,7 +62,7 @@ function Ficha({ rotulo, valor, aberto, aoAbrir, aoFechar, aoLimpar, largura = '
   }, [aberto, aoFechar])
   return (
     <div ref={caixa} className="relative">
-      <div className={`inline-flex h-8 items-center rounded-full border text-[0.82rem] font-semibold transition-colors ${valor ? 'border-tinta bg-tinta text-white' : 'border-linha-2 bg-folha text-tinta-2 hover:border-tinta-3 hover:text-tinta'}`}>
+      <div className={`inline-flex h-8 items-center rounded-full border text-[0.82rem] font-semibold transition-colors ${valor ? 'selecionado-fita' : 'border-linha-2 bg-folha text-tinta-2 hover:border-tinta-3 hover:text-tinta'}`}>
         <button type="button" aria-haspopup="menu" aria-expanded={aberto} onClick={aberto ? aoFechar : abrir} className="inline-flex h-full items-center gap-1 rounded-full pl-3 pr-2.5">
           {valor ?? rotulo}
           {!valor && <CaretDown size={11} weight="bold" aria-hidden className={`transition-transform ${aberto ? 'rotate-180' : ''}`} />}

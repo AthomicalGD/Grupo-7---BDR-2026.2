@@ -17,7 +17,7 @@ export function ErroCarga({ erro, compacto = false }: { erro: unknown; compacto?
           Na pasta do projeto: <code className="t-mono">{dica}</code>
         </p>
       )}
-      <button type="button" onClick={() => location.reload()} className="mt-5 rounded-full bg-tinta px-5 py-2.5 text-[0.9rem] font-semibold text-white hover:bg-[#2a3442]">
+      <button type="button" onClick={() => location.reload()} className="botao-vivo mt-5 px-5 py-2.5 text-[0.9rem]">
         Tentar de novo
       </button>
     </div>

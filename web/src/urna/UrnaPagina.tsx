@@ -262,7 +262,7 @@ export function UrnaPagina() {
               <button
                 type="button"
                 onClick={maisSeis}
-                className="inline-flex h-9 items-center rounded-full border-[1.5px] border-linha-2 bg-folha px-4 text-[0.85rem] font-semibold text-tinta transition hover:border-tinta active:translate-y-px"
+                className="botao-contorno h-9 px-4 text-[0.85rem]"
               >
                 Mais {Math.min(POR_PAGINA, LIMITE_BUSCA - quantos)}
               </button>

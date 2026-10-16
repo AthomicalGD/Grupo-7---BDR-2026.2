@@ -10,8 +10,10 @@ colors:
   tinta-3: "#5f6878"
   linha: "#d9dee2"
   linha-2: "#aeb6bf"
-  acao: "#1f5f86"
-  marcador: "#f7c21a"
+  acao: "#46598a"
+  escolha: "#ebb400"
+  selecao: "#5e7a29"
+  marcador: "#ebb400"
   neutro: "#e8eaec"
   fita-verde: "#5e881b"
   fita-lima: "#a2bd31"
@@ -23,8 +25,10 @@ colors:
   confirma: "#3f7f2a"
   corrige: "#e5732a"
   branco-urna: "#f4f5f2"
-  eleito: "#3f7f2a"
-  reeleito: "#1f5f86"
+  eleito: "#5e7a29"
+  eleito-fundo: "#9eb735"
+  nao-eleito: "#eae8e4"
+  reeleito: "#3f5419"
   vies-esquerda: "#a43f00"
   vies-direita: "#235690"
   marca-verde: "#1f9a4e"
@@ -157,8 +161,12 @@ Não imita o portal de resultados que serviu de referência nem se passa por ór
 Fundo frio de papel e tinta ardósia; cor saturada só no dado, nas fitas da marca e nas teclas da urna.
 
 ### Primary
-- **Azul Ação** (#1f5f86): links, foco do teclado, valores de ação. Contraste 6,3:1 sobre o papel.
-- **Amarelo Marcador** (#f7c21a): o sublinhado do item ativo da navegação e a seleção de texto. Nunca texto.
+- **Papéis de cor (como no app de Resultados do TSE, que usa a mesma onda de fitas da marca).** Uma cor por papel, nunca a mesma cor em dois papéis:
+  - **Ouro de escolha** (#ebb400; degrau #cc9e00): botão principal (`.botao-vivo`), texto em tinta, degrau embaixo como tecla. O botão secundário é contorno.
+  - **Oliva de seleção** (#5e7a29; borda #4a6120; claro #eef3df; texto #3f5419): o que está escolhido (`.selecionado-fita`: pílulas, fichas, alternadores) e o item ativo do menu (pílula clara com o laço das fitas).
+  - **Ardósia de ação** (#46598a): links e foco do teclado. Contraste 7:1 sobre o papel.
+  - **Marcador** = o mesmo ouro: um amarelo só no sistema.
+- **Marcador** (#ebb400, o ouro de escolha): seleção de texto e anéis de destaque nos mapas. Nunca texto.
 
 ### Data (escala do viés)
 - **Laranja Esquerda** (#a43f00 no extremo, −60): braço esquerdo da escala divergente.
@@ -240,7 +248,7 @@ Contêineres com 16px de raio, painéis do mapa e do relevo com 20px, controles 
 - **Forma:** pílula.
 - **Primário:** tinta com texto branco, 40px de altura ("Linha do tempo").
 - **Teclas da urna:** CONFIRMA verde (#3f7f2a, texto branco), CORRIGE laranja (#e5732a, texto tinta), BRANCO (#f4f5f2, borda); sombra sólida de 3px embaixo que some no `:active` (a tecla afunda).
-- **Hover / Focus:** foco com contorno de 3px em Azul Ação, deslocado 2px.
+- **Hover / Focus:** foco com contorno de 3px em Ardósia Ação, deslocado 2px.
 
 ### Cédula de anos
 Grupo de rádio com quatro casas; a casa marcada desenha um X em dois traços (180ms cada). Setas mudam o ano; "Linha do tempo" percorre 2018 → 2024 a cada 1,6s.
@@ -249,7 +257,7 @@ Grupo de rádio com quatro casas; a casa marcada desenha um X em dois traços (1
 - **Busca:** pílula de 52px, borda 1,5px Linha 2, que vira Tinta no foco; combobox ARIA com lista em cartão de papel.
 
 ### Navegação
-Logo à esquerda, seis itens à direita (Mapa, Urna, Cadeira, Escola, Reeleição, Metodologia); o ativo em semibold com um marcador amarelo de 4px que desliza entre os itens (mola). Abaixo de 1024px, o logo vira só o símbolo e Metodologia vira "Método"; abaixo de 640px, os itens ficam compactos (0,8rem), para os seis caberem em 360px sem rolagem lateral.
+Logo à esquerda, seis itens à direita (Mapa, Urna, Cadeira, Escola, Reeleição, Metodologia), cada um com um ícone (Phosphor). O ativo vira uma pílula no oliva claro da seleção (#eef3df, texto #3f5419), com o laço das fitas embaixo; a pílula desliza entre os itens (mola) e o ícone chega com um pulo e fica cheio. Os ícones aparecem a partir de 1024px. Abaixo de 1024px, o logo vira só o símbolo e Metodologia vira "Método"; abaixo de 640px, os itens ficam compactos (0,8rem), para os seis caberem em 360px sem rolagem lateral.
 
 ### Mapa
 SVG com a malha do IBGE, câmera `d3-zoom` com transição suave (van Wijk) entre Brasil, estado e município; contornos que não engrossam com o zoom; estados navegáveis por Tab e Enter.
@@ -264,7 +272,7 @@ O impresso de campanha, 236×404px. Frente nas cores do Brasil: a família de co
 Desenhada em vetor, de frente, com as proporções medidas numa foto do terminal do eleitor UE2020 (a versão 3D saiu: o desenho fiel lê melhor e pesa menos). Corpo cinza-claro fosco com grão (textura gerada uma vez, não filtro), visor TFT largo e branco em moldura preta (texto preto em sans, foto à direita, rodapé "Aperte a tecla:"), teclas numéricas grafite com braile e marca tátil no 5, coluna BRANCO (#f2f3f1), CORRIGE (#ee7a21) e CONFIRMA (#2fb46c, mais alta), área gravada no canto. Som sintetizado com os parâmetros medidos da urna real: senoide de ~2.300 Hz na tecla, dois bipes no CORRIGE e o trinado 2.300/2.200 Hz do fim do voto. As teclas são botões (clique, toque, Tab + Enter) e afundam 2,4 px quando apertadas, inclusive pelo teclado do computador. Com filtros, o visor mostra a consulta como a urna mostra o cargo: "CONSULTA PARA SENADOR · PI · 2022".
 
 ### Plenário (assinatura, P1)
-Hemiciclo em que cada cadeira é um eleito, vista de cima (assento na cor do gasto, encosto em tinta), numerada da esquerda para a direita pelo gasto ou pelos partidos na ordem da escala de viés. O custo da cadeira (gasto médio dos eleitos, dentro da faixa de cor) fica no miolo; o gasto de todos os candidatos ÷ cadeiras fica no recibo da prestação de contas; em telas estreitas desce para baixo do arco. As cadeiras "sentam" em varredura (520ms, atraso até 650ms) quando a seleção muda e deslizam quando a ordem muda. Cartão com foto ao passar o mouse, setas do teclado percorrem, Enter abre a carreira; no toque, o primeiro toque mostra e o segundo abre. Vista "Em pé" (3D): colunas com altura linear ao gasto e a cadeira em cima.
+Hemiciclo em que cada cadeira é um eleito (na ordem por partido, o encosto de cada cadeira leva a cor do partido, que é o seu viés, alternando cheia e clara de uma bancada para a seguinte, e as fronteiras são só traços curtos do lado de fora do arco, junto das siglas: nada é desenhado por cima das cadeiras), vista de cima (assento na cor do gasto, encosto em tinta), numerada da esquerda para a direita pelo gasto ou pelos partidos na ordem da escala de viés. O custo da cadeira (gasto médio dos eleitos, dentro da faixa de cor) fica no miolo; o gasto de todos os candidatos ÷ cadeiras fica no recibo da prestação de contas; em telas estreitas desce para baixo do arco. As cadeiras "sentam" em varredura (520ms, atraso até 650ms) quando a seleção muda e deslizam quando a ordem muda. Cartão com foto ao passar o mouse, setas do teclado percorrem, Enter abre a carreira; no toque, o primeiro toque mostra e o segundo abre. Vista "Em pé" (3D): colunas com altura linear ao gasto e a cadeira em cima. O fundo é um céu claro (azul-papel #e4edf3 descendo para #f6f8ef) com um brilho dourado baixo atrás do custo, piso quase branco com borda em ardósia (#c3cce0, para as colunas verdes não se confundirem com o chão) e as sete fitas da marca no rodapé do quadro.
 
 ### Do caderno ao plenário (assinatura, P4)
 A mesma eleição contada por três objetos, cada um com 100 unidades (Isotype) na cor do grau, do superior completo para baixo: o **caderno de votação** (uma folha pautada com 100 linhas de assinatura em 5 colunas, três rabiscos alternados; quem votou assina), os **santinhos** (100 santinhos em miniatura, cartão na cor do grau, janela da foto e linha do nome; quem se candidatou) e o **plenário** (100 cadeiras do sistema, encosto em tinta e assento na cor do grau; quem se elegeu), com título e total em cima, desenho alinhado na base e o "de 100" do grau em destaque embaixo; os três com ~200px de altura. A chave dos 8 graus é uma coluna de botões à esquerda dos objetos, do superior completo para baixo, na ordem em que eles se empilham (no celular, uma linha que rola de lado, como as fichas de cargo); escolher um grau, ou passar o ponteiro por qualquer unidade, acende as unidades dele nos três objetos. As cadeiras se sentam em varredura quando o ano ou o cargo muda.
@@ -294,7 +302,7 @@ Um alternador troca as duas vistas dos municípios. O mapa pinta cada município
 Três listas impressas como linhas do boletim (cabeçalho em mono, picote, posição e valor em mono com pontilhado até o número): mais diploma, menos diploma e maior distância do eleitor. Só entram câmaras com ao menos 5 eleitos; quando o extremo empata em mais municípios do que a lista mostra, ela diz quantos ("63 empatam em 0 de 100; os maiores:"). Cada linha abre o boletim. Em 2022 a seção das cinco câmaras se chama "Cinco cédulas".
 
 ### Filtros da busca (fichas)
-Uma linha discreta de fichas sob o campo do nome: Cargo, Eleição, Estado, Partido, Resultado. Cada ficha abre um menu pequeno só quando clicada (fecha com Esc ou clique fora, abre para o lado com espaço). A escolhida fica em tinta, com o valor e um x para tirar, como os alternadores. Dentro dos menus continuam os sinais do sistema: eleições gerais e municipais em duas colunas, estado com a silhueta, partidos da esquerda para a direita com a cor do viés.
+Uma linha discreta de fichas sob o campo do nome: Cargo, Eleição, Estado, Partido, Resultado. Cada ficha abre um menu pequeno só quando clicada (fecha com Esc ou clique fora, abre para o lado com espaço). A escolhida fica no Ardósia Ação com a borda do marcador, com o valor e um x para tirar, como os alternadores. Dentro dos menus continuam os sinais do sistema: eleições gerais e municipais em duas colunas, estado com a silhueta, partidos da esquerda para a direita com a cor do viés.
 
 ### De onde vem o viés (painel do estado)
 A balança: uma barra divergente a partir do zero em que cada partido é um trecho na cor do seu viés, puxando para a esquerda ou para a direita; o traço marca o resultado, igual ao viés do mapa. Embaixo, os partidos com % dos votos, viés e quanto puxam; cada um abre os candidatos mais votados no estado, com retrato, cargo e votos, levando à carreira.
@@ -302,8 +310,23 @@ A balança: uma barra divergente a partir do zero em que cada partido é um trec
 ### Busca no plenário
 Campo "Procurar eleito" acima do plenário; Enter destaca a cadeira: as outras escurecem (papel a 72%), a achada ganha o anel amarelo do marcador, pulsa duas vezes, e um cartão fixo ao lado leva à carreira. Em tela estreita o cartão desce para baixo do desenho.
 
-### De cada 100 eleitos (P10a)
-Um cargo por linha: a barra são todos os eleitos do cargo no estado, dividida no que aconteceu na eleição seguinte (voltaram no azul de reeleito, tentaram e perderam em Linha 2, não tentaram em folha com contorno), com os três "de 100" escritos embaixo; à direita, a taxa de reeleição (voltaram ÷ tentaram) em número grande. Tocar num cargo abre as eleições dele: uma coluna por ciclo (eleitos em, disputa em) com a taxa na altura, o pontilhado da média das taxas dos municípios em prefeito e vereador, e hachura quando ninguém tentou. Embaixo, a tabela estado a estado (cargo × UF), com os cargos de menos de 10 tentativas em cinza.
+### A urna da reeleição (assinatura, P10a)
+Cores da página, como as situações do TSE Resultados: voltaram no lima de "eleito" (#9eb735, check em tinta; números e rótulos no oliva #55702a, porque lima não tem contraste como texto), perderam no cinza quente de "não eleito" (#c9c2b4), não tentaram em papel. Por padrão a página soma todos os estados carregados ("Todos", sem `uf` no endereço). À esquerda, as fichas de cargo (nome, eleitos, taxa grande e a tira das três partes); a escolhida no oliva de seleção. À direita, a cena: 100 cédulas de papel pautado (cada uma 1% dos eleitos, pelo maior resto) e uma urna de acrílico translúcido em três quartos, com tampo e fenda, reflexo, a faixa das sete fitas e a etiqueta (tarja "REELEIÇÃO", cargo e UF em destaque e uma linha que acompanha a fase). "Colocar na urna" leva as cédulas de quem tentou num arco até a fenda; elas se empilham dentro, à vista. "Apurar" as tira pela fenda: as que voltaram para a pilha da direita, as que perderam logo abaixo. Os rótulos das pilhas dizem a base ("48% dos eleitos voltaram") e abrem quem são; a frase sob a cena dá a taxa (dos que tentaram) e liga as duas contas ("as 48 das 74 cédulas que entraram"). As cédulas são `div` animadas só por transform (Web Animations API); a urna são dois SVG parados.
+
+### Eleição a eleição (P10a)
+Logo abaixo da urna, no mesmo fluxo e do mesmo cargo: uma mini-urna por disputa, o lima sobe até a taxa e o resto é cinza quente; tracejado em tinta na média das taxas dos municípios (prefeito e vereador); hachura quando ninguém tentou. Tocar numa urna abre quem são logo embaixo, sem ter de subir a página.
+
+### Quem são (P10a)
+Subtela (grade de 0fr a 1fr, 420ms) com os eleitos de uma eleição em três colunas: voltaram, tentaram e perderam, não tentaram; a coluna tocada fica em destaque. Busca pelo nome civil ou de urna, sem acento (espera 250ms). Seis por coluna, os mais votados primeiro, com retrato, nome de urna, partido na cor do viés, município, UF (em "Todos") e votos, levando à carreira; "Mostrar mais" traz mais seis (até 60). Servida por `/api/reeleicao/pessoas`.
+
+### Estado a estado (P10a)
+Um mapa do Brasil com câmera, no mesmo espaço do mapa do sistema (`projecaoBrasil`). Em "Todos", o país inteiro: os estados carregados pintados pela taxa (lima, do claro ao fechado, todos os cargos somados), com sigla, taxa e um traço na cor de identidade do estado; os outros em cinza claro. Escolher um estado (pílula ou toque no mapa) move a câmera até a maior parte dele (sem ilhas), que ocupa ~76% do quadro, enquanto os outros esmaecem; trocar de estado viaja de um para o outro (uma única transformação no grupo do SVG, 1s, ease in-out). Ao lado, a ficha fica montada: nome, taxa geral grande, comparação, e uma régua de 0 a 100% por cargo (o ponto é o recorte; o traço em tinta, a média dos estados; em "Todos", um ponto por estado na sua cor de identidade, com a legenda). Cores de identidade dos estados (não são dado): as fitas da marca sem o lima. O mapa não passa da altura da janela.
+
+### Seleção, movimento e laço (todas as páginas)
+O que está escolhido (pílulas, fichas, alternadores) fica no oliva de seleção com texto branco e borda de baixo #4a6120 (3px); ao ser marcado, dá um pulo curto (300ms). Botão principal (`.botao-vivo`): ouro #ebb400 com o degrau #cc9e00 embaixo, sobe 1px no hover e afunda no clique; botão de contorno (`.botao-contorno`) acende no azul. Sob o título de cada página (84×6px) e de cada seção (42×4px), o laço das sete fitas, que se desenha da esquerda quando a seção entra na tela (linha do tempo de rolagem; sem ela, fica inteiro). Cada módulo entra subindo 6px. As superfícies do navegador seguem a paleta: cursor de texto e controles nativos no Ardósia Ação, texto de exemplo em Tinta 3, marcadores de lista na fita ardósia, barras de rolagem finas, "x" da busca desenhado, sem realce de toque. Nada roda em loop.
+
+### Faixa presidencial (santinho)
+No santinho de quem se elegeu Presidente, a faixa cruza o peito da foto, do ombro ao quadril (32°), como a faixa de verdade: três faixas largas de cetim de mesma largura (verde, amarelo, verde), com dobra em degradê em cada uma, costura entre elas, bordas douradas, brilho de cetim e a sombra no paletó. No peito, um emblema redondo: anel dourado, coroa verde pontilhada e o globo azul da marca com a faixa branca e as estrelas. Não usa o brasão: nada imita símbolo oficial. Cai sobre o peito uma vez (700ms) quando o santinho aparece; com movimento reduzido, já está no lugar.
 
 ### Ficha da carreira
 Retrato 3x4 com borda de papel e o carimbo da situação (em mandato até, sem mandato desde, nunca eleito) na tinta dos carimbos dos santinhos; a fita da carreira (uma casa por eleição, cheia quando venceu, levando ao santinho); a resposta em texto com o contexto da reeleição do cargo na UF; trajetória com a faixa dos partidos na cor do viés.

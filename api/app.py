@@ -17,8 +17,10 @@ import math
 import os
 import random
 import statistics
+import threading
 import unicodedata
 from collections import Counter, defaultdict
+from contextlib import asynccontextmanager
 from functools import lru_cache
 from pathlib import Path
 
@@ -129,7 +131,15 @@ def vies_ufs() -> dict:
 
 # ───────── App ─────────
 
-app = FastAPI(title="Voto Aberto")
+@asynccontextmanager
+async def _ciclo_de_vida(_app):
+    # a P10a de todas as UFs é a conta mais lenta (~7 s na primeira vez): começa a ser feita ao subir,
+    # em segundo plano, para a primeira visita à Reeleição já achar o cache pronto
+    threading.Thread(target=_aquecer_reeleicao, daemon=True).start()
+    yield
+
+
+app = FastAPI(title="Voto Aberto", lifespan=_ciclo_de_vida)
 app.add_middleware(GZipMiddleware)
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
                    allow_methods=["GET"])
@@ -728,8 +738,27 @@ def _media_municipal(linhas: list[dict]) -> float | None:
 
 
 @lru_cache(maxsize=32)
+def linhas_reeleicao(sigla: str) -> tuple[dict, ...]:
+    return tuple(consultar(SQL_REELEICAO_UF, {"cargos": list(CARGOS_P10), "cd_uf": UFS[sigla]["cd_ibge"]}))
+
+
+TODOS = "TODOS"   # todas as UFs carregadas, somadas (as linhas de cada uma já ficam em cache)
+
+
+def _ufs_p10(uf: str) -> list[str]:
+    """As UFs de um pedido da P10a: uma sigla, ou todas as carregadas para "" / TODOS."""
+    if uf.strip().upper() in ("", TODOS):
+        return sorted(carregadas() - {"BR"})
+    sigla = uf_de(uf)["sigla"]
+    if sigla not in carregadas() or sigla == "BR":
+        raise HTTPException(404, f"UF sem dados: {sigla}")
+    return [sigla]
+
+
+@lru_cache(maxsize=32)
 def reeleicao_uf(sigla: str) -> dict:
-    linhas = consultar(SQL_REELEICAO_UF, {"cargos": list(CARGOS_P10), "cd_uf": UFS[sigla]["cd_ibge"]})
+    ufs = sorted(carregadas() - {"BR"}) if sigla == TODOS else [sigla]
+    linhas = [r for u in ufs for r in linhas_reeleicao(u)]
     validas = [r for r in linhas if r["ha_proxima"]]   # fora: a eleição seguinte ainda não está no banco
     cargos = []
     for cod, nome in CARGOS_P10.items():
@@ -746,19 +775,108 @@ def reeleicao_uf(sigla: str) -> dict:
                        "total": {**_soma_reeleicao(d), "media_municipios": _media_municipal(d) if municipal else None}})
     municipais = [r for r in validas if r["cod_cargo"] in MUNICIPAIS_P10]
     fora = sorted({(r["cod_cargo"], r["ano_eleito"]) for r in linhas if not r["ha_proxima"]})
-    return {"uf": sigla, "nome": UFS[sigla]["nome"], "cargos": cargos,
+    return {"uf": sigla, "nome": f"{len(ufs)} estados carregados" if sigla == TODOS else UFS[sigla]["nome"], "cargos": cargos,
             "municipais": _soma_reeleicao(municipais) if municipais else None,
             "fora": [{"cod": c, "cargo": CARGOS_P10[c], "eleitos_em": a} for c, a in fora],
             "ligados_por_nome": sum(r["ligados"] for r in validas)}
 
 
+def _aquecer_reeleicao() -> None:
+    try:
+        reeleicao_uf(TODOS)
+    except Exception:  # noqa: BLE001 - banco fora do ar: a conta é feita quando a página pedir
+        pass
+
+
 @app.get("/api/reeleicao")
-def reeleicao(uf: str):
-    """P10a: taxa de reeleição por cargo na UF, ciclo a ciclo e somada (leva alguns segundos na 1ª vez)."""
-    sigla = uf_de(uf)["sigla"]
-    if sigla not in carregadas() or sigla == "BR":
-        raise HTTPException(404, f"UF sem dados: {sigla}")
-    return reeleicao_uf(sigla)
+def reeleicao(uf: str = TODOS):
+    """P10a: taxa de reeleição por cargo na UF (ou em todas as carregadas, uf=TODOS), ciclo a ciclo e somada
+    (leva alguns segundos na 1ª vez de cada UF)."""
+    ufs = _ufs_p10(uf)
+    return reeleicao_uf(TODOS if len(ufs) > 1 or uf.strip().upper() in ("", TODOS) else ufs[0])
+
+
+# Quem são os eleitos de um ciclo da P10a: a mesma ligação de SQL_REELEICAO_UF (título, ou nome/nascimento
+# em 1994-1996), só para um cargo e uma eleição, com o que cada um fez na seguinte. Voltaram e perderam
+# primeiro pelos votos (só 2018-2024 têm votação), depois pelo nome.
+SQL_REELEICAO_PESSOAS = f"""
+WITH cand AS (
+    SELECT pe.id_politico, e.ano, e.cd_municipio, COALESCE(e.cd_municipio, -e.cd_uf) AS unidade,
+           p.nr_titulo_eleitoral IS NULL AS sem_titulo, p.dt_nascimento,
+           {NOME_P10} AS nome, split_part(upper(p.nome), ' ', 1) AS primeiro_nome,
+           bool_or(ma.id_mandato IS NOT NULL) AS eleito
+    FROM politico_eleicao pe
+    JOIN politico p ON p.id_politico = pe.id_politico
+    JOIN eleicao e ON e.id_eleicao = pe.id_eleicao
+    LEFT JOIN municipio m ON m.cd_municipio = e.cd_municipio
+    LEFT JOIN mandato ma ON ma.id_politico_eleicao = pe.id_politico_eleicao
+    WHERE e.tipo <> 1 AND e.cod_cargo = %(cargo)s AND COALESCE(m.cd_uf, e.cd_uf) = %(cd_uf)s
+      AND e.ano IN (%(ano)s, %(prox)s)
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
+),
+eleito AS (
+    SELECT a.id_politico, a.cd_municipio, a.unidade,
+           bool_or(b.id_politico IS NOT NULL) AS tentou, COALESCE(bool_or(b.eleito), false) AS reeleito
+    FROM cand a
+    LEFT JOIN cand b ON b.unidade = a.unidade AND b.ano = %(prox)s
+                    AND (b.id_politico = a.id_politico
+                         OR (a.sem_titulo AND (b.nome = a.nome
+                             OR (b.dt_nascimento = a.dt_nascimento AND b.primeiro_nome = a.primeiro_nome))))
+    WHERE a.eleito AND a.ano = %(ano)s
+    GROUP BY a.id_politico, a.cd_municipio, a.unidade
+)
+SELECT x.id_politico AS id, p.nome, c.nm_urna AS nome_urna, pa.sigla AS partido, pa.vies_politico::float AS vies,
+       mu.nm_municipio AS municipio, c.sq_candidato AS sq, x.cd_municipio,
+       CASE WHEN x.reeleito THEN 'voltaram' WHEN x.tentou THEN 'perderam' ELSE 'nao' END AS grupo,
+       (SELECT sum(v.qtd_votos_nominais) FROM votacao_candidato_munzona v
+        WHERE v.id_politico_eleicao = c.id_politico_eleicao)::bigint AS votos
+FROM eleito x
+JOIN politico p ON p.id_politico = x.id_politico
+LEFT JOIN municipio mu ON mu.cd_municipio = x.cd_municipio
+LEFT JOIN LATERAL (
+    SELECT pe.id_politico_eleicao, pe.sq_candidato, pe.nm_urna, pe.id_partido
+    FROM politico_eleicao pe JOIN eleicao e ON e.id_eleicao = pe.id_eleicao
+    WHERE pe.id_politico = x.id_politico AND e.ano = %(ano)s AND e.cod_cargo = %(cargo)s
+      AND COALESCE(e.cd_municipio, -e.cd_uf) = x.unidade AND e.tipo <> 1
+    ORDER BY e.turno LIMIT 1
+) c ON true
+LEFT JOIN partido pa ON pa.id_partido = c.id_partido
+ORDER BY votos DESC NULLS LAST, p.nome
+"""
+GRUPOS_P10 = ("voltaram", "perderam", "nao")
+
+
+
+@lru_cache(maxsize=48)
+def pessoas_reeleicao(sigla: str, cargo: int, ano: int) -> list[dict]:
+    return consultar(SQL_REELEICAO_PESSOAS, {"cargo": cargo, "cd_uf": UFS[sigla]["cd_ibge"], "ano": ano,
+                                             "prox": ano + (8 if cargo == SENADOR else 4)})
+
+
+@app.get("/api/reeleicao/pessoas")
+def reeleicao_pessoas(cargo: int, eleitos_em: int, uf: str = TODOS, grupo: str = "voltaram", q: str = "",
+                      limite: int = Query(6, ge=1, le=60), desde: int = Query(0, ge=0)):
+    """P10a: os eleitos de um cargo em `eleitos_em` que voltaram, perderam ou não tentaram na eleição seguinte
+    (numa UF ou em todas as carregadas, os mais votados primeiro)."""
+    ufs = _ufs_p10(uf)
+    if cargo not in CARGOS_P10:
+        raise HTTPException(422, f"Cargo fora da P10a: {cargo}")
+    if grupo not in GRUPOS_P10:
+        raise HTTPException(422, f"grupo: {', '.join(GRUPOS_P10)}")
+    todos = [r | {"uf": u} for u in ufs for r in pessoas_reeleicao(u, cargo, eleitos_em)]
+    if len(ufs) > 1:
+        todos.sort(key=lambda r: (r["votos"] is None, -(r["votos"] or 0), r["nome"]))
+    if q.strip():   # busca pelo nome civil ou de urna, sem acento e sem caixa
+        alvo = sem_acento(q.strip())
+        todos = [r for r in todos if alvo in sem_acento(r["nome"]) or alvo in sem_acento(r["nome_urna"] or "")]
+    do_grupo = [r for r in todos if r["grupo"] == grupo]
+    pagina = [{k: v for k, v in r.items() if k not in ("sq", "cd_municipio", "grupo")}
+              | {"foto": foto_url(eleitos_em, r["uf"], r["sq"], r["cd_municipio"])}
+              for r in do_grupo[desde:desde + limite]]
+    return {"uf": ufs[0] if len(ufs) == 1 else TODOS, "cargo": cargo, "eleitos_em": eleitos_em,
+            "disputa": eleitos_em + (8 if cargo == SENADOR else 4), "grupo": grupo,
+            "contagem": {g: sum(r["grupo"] == g for r in todos) for g in GRUPOS_P10},
+            "total": len(do_grupo), "pessoas": pagina}
 
 
 @app.get("/api/politicos/{id_politico}")
