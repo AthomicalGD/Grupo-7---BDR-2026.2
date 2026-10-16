@@ -4,6 +4,7 @@ import { ArrowRight, X } from '@phosphor-icons/react'
 import { Link } from '@tanstack/react-router'
 import { useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import { encode } from 'uqr'
+import { enderecoParaOutroAparelho } from '../lib/rede'
 import type { Ano, Municipio } from '../api'
 import { Retrato } from '../componentes/Retrato'
 import { Espectro } from '../graficos/Espectro'
@@ -55,7 +56,7 @@ function Indicador({ valor, rotulo, fonte }: { valor: string; rotulo: string; fo
 export function Boletim({ m, ano, aoFechar }: { m: Municipio; ano: Ano; aoFechar: () => void }) {
   const ind = m.indicadores
   const [emitido] = useState(() => new Date().toLocaleDateString('pt-BR'))
-  const url = typeof window !== 'undefined' ? window.location.href : ''
+  const url = typeof window !== 'undefined' ? enderecoParaOutroAparelho() : ''
   return (
     <div>
       <Trilha uf={m.uf_nome} municipio={m.nome} />

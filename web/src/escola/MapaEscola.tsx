@@ -87,14 +87,18 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
     proj.translate([proj.translate()[0] + 8, proj.translate()[1] - y0 + 8])
     caminho = geoPath(proj).digits(1)
     const H = Math.ceil(y1 - y0 + 16)
-    const formas: Forma[] = lista.flatMap((m, i) => m.features.map((f) => ({ ibge: f.properties.codarea, uf: ufs[i], d: caminho(f) ?? '' })))
     const caixas = new Map(lista.map((m, i) => [ufs[i], caminho.bounds(m)]))
     const estados = brasil ? brasil.features.map((f) => ({ cd: f.properties.codarea, d: caminho(f) ?? '', centro: caminho.centroid(f) })) : []
-    return { formas, estados, caixas, H, porIbge: new Map(formas.map((f) => [f.ibge, f.d])) }
+    // os caminhos dos municípios só são montados para o estado aberto (a vista do Brasil não os usa)
+    return { estados, caixas, H, caminho, malhaDe: new Map(lista.map((m, i) => [ufs[i], m])) }
   }, [prontas, largura, W, ufs, malhas, brasil])
   const H = desenho?.H ?? Math.round(W * 0.9)
   // a lista estável mantém o memo dos municípios: o hover não redesenha centenas de caminhos
-  const formasFoco = useMemo(() => (desenho && foco ? desenho.formas.filter((f) => f.uf === foco) : []), [desenho, foco])
+  const formasFoco = useMemo<Forma[]>(() => {
+    const m = foco ? desenho?.malhaDe.get(foco) : undefined
+    return m && desenho ? m.features.map((f) => ({ ibge: f.properties.codarea, uf: foco!, d: desenho.caminho(f) ?? '' })) : []
+  }, [desenho, foco])
+  const caminhoDe = useMemo(() => new Map(formasFoco.map((f) => [f.ibge, f.d])), [formasFoco])
 
   const valor = useMemo(() => new Map(municipios.map((m) => [m.ibge, m[campo]])), [municipios, campo])
   // a média de cada estado: municípios pesados pelo comparecimento (ou pelos eleitos, para os eleitos)
@@ -286,11 +290,11 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
               <g ref={municipiosRef} className="municipios-escola">
                 {foco && <Municipios key={foco} formas={formasFoco} valor={valor} quem={quem} />}
               </g>
-              {hm && desenho.porIbge.get(hm.ibge) && (
-                <path d={desenho.porIbge.get(hm.ibge)} fill="none" stroke="var(--color-tinta)" strokeWidth={1.5} vectorEffect="non-scaling-stroke" pointerEvents="none" />
+              {hm && caminhoDe.get(hm.ibge) && (
+                <path d={caminhoDe.get(hm.ibge)} fill="none" stroke="var(--color-tinta)" strokeWidth={1.5} vectorEffect="non-scaling-stroke" pointerEvents="none" />
               )}
-              {foco && desenho.porIbge.get(selecionado) && (
-                <path d={desenho.porIbge.get(selecionado)} fill="none" stroke="var(--color-marcador)" strokeWidth={2.6} vectorEffect="non-scaling-stroke" pointerEvents="none" />
+              {foco && caminhoDe.get(selecionado) && (
+                <path d={caminhoDe.get(selecionado)} fill="none" stroke="var(--color-marcador)" strokeWidth={2.6} vectorEffect="non-scaling-stroke" pointerEvents="none" />
               )}
             </g>
             {/* sigla e média de cada estado, só na vista do Brasil */}

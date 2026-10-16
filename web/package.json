@@ -11,6 +11,9 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "preview:simples": "vite preview --mode simples",
+    "apresentar": "vite build && vite preview --open",
+    "rede": "node scripts/rede.mjs",
+    "rede:publico": "node scripts/rede.mjs --publico",
     "marca": "node scripts/gerar-marca.mjs"
   },
   "dependencies": {
