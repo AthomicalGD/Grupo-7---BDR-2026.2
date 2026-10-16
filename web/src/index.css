@@ -13,9 +13,23 @@
   --color-tinta-3: #5f6878;
   --color-linha: #d9dee2;
   --color-linha-2: #aeb6bf;
-  --color-acao: #1f5f86;
-  --color-acao-2: #174a69;
-  --color-marcador: #f7c21a;
+  /* Papéis de cor, como no app de Resultados do TSE (a mesma onda de fitas): uma cor por papel, nunca a
+     mesma cor em dois papéis.
+     - escolha (ação): o ouro dos botões principais, com texto em tinta e o degrau mais fechado;
+     - selecao: o oliva do que está escolhido (cargo, estado, aba, item do menu);
+     - acao: a ardósia dos links e do foco do teclado;
+     - marcador: o mesmo ouro (um amarelo só no sistema). */
+  --color-escolha: #ebb400;
+  --color-escolha-2: #cc9e00;
+  --color-escolha-claro: #fbf0c4;
+  --color-selecao: #5e7a29;
+  --color-selecao-2: #4a6120;
+  --color-selecao-claro: #eef3df;
+  --color-selecao-tinta: #3f5419;
+  --color-acao: #46598a;
+  --color-acao-2: #34436b;
+  --color-acao-claro: #e6e9f2;
+  --color-marcador: #ebb400;
   --color-neutro: #e8eaec;
 
   --color-fita-verde: #5e881b;
@@ -29,8 +43,11 @@
   --color-confirma: #3f7f2a;
   --color-corrige: #e5732a;
   --color-branco-urna: #f4f5f2;
-  --color-eleito: #3f7f2a;
-  --color-reeleito: #1f5f86;
+  /* situação: eleito no oliva (texto e carimbos) e lima nas pílulas; não eleito em cinza quente */
+  --color-eleito: #5e7a29;
+  --color-eleito-fundo: #9eb735;
+  --color-nao-eleito: #eae8e4;
+  --color-reeleito: #3f5419;
 
   --radius-cartao: 16px;
   --ease-saida: cubic-bezier(0.16, 1, 0.3, 1);
@@ -97,6 +114,24 @@
   html[data-fonte="1"] { font-size: 112.5%; }
   html[data-fonte="2"] { font-size: 125%; }
 
+  /* O laço das sete fitas da marca sob o título de cada página e de cada seção: a cor da marca
+     aparece em toda tela sem carregar dado (as fitas nunca levam informação). */
+  html {
+    --laco: linear-gradient(90deg,
+      var(--color-fita-verde) 0 14.3%, var(--color-fita-lima) 0 28.6%, var(--color-fita-ardosia) 0 42.9%,
+      var(--color-fita-petroleo) 0 57.1%, var(--color-fita-celeste) 0 71.4%, var(--color-fita-laranja) 0 85.7%,
+      var(--color-fita-amarelo) 0);
+  }
+  main h1.t-display::after,
+  main :is(h2.t-h1, h2.t-h2)::after {
+    content: "";
+    display: block;
+    border-radius: 3px;
+    background: var(--laco);
+  }
+  main h1.t-display::after { width: 5.25rem; height: 6px; margin-top: 0.85rem; }
+  main :is(h2.t-h1, h2.t-h2)::after { width: 2.6rem; height: 4px; margin-top: 0.5rem; }
+
   /* Margens laterais (botões Margem −/+): casca = contêiner da página, miolo = blocos de leitura dentro dela.
      1 é o padrão; de 2 em diante a página ocupa a tela toda e só a margem diminui. */
   html { --casca-max: 1440px; --casca-margem: 72px; --miolo-max: 1180px; }
@@ -129,7 +164,12 @@
     --color-tinta-3: #2b3442;
     --color-linha: #6b7480;
     --color-linha-2: #3d4652;
-    --color-acao: #0b3f60;
+    /* a ardósia mais fechada, para o contraste alto, com o mesmo laço */
+    --color-acao: #2f3d66;
+    --color-acao-2: #222d4d;
+    --color-acao-claro: #e2e5ee;
+    --color-selecao: #46601e;
+    --color-selecao-2: #344816;
   }
 
   body {
@@ -160,9 +200,134 @@
   }
 
   button { cursor: pointer; }
+
+  /* O que o navegador desenharia por conta própria também segue a paleta: toque, cursor de texto,
+     controles nativos, texto de exemplo, marcadores de lista, sublinhados e o "x" da busca. */
+  html { -webkit-tap-highlight-color: transparent; }
+  body { caret-color: var(--color-acao); accent-color: var(--color-acao); }
+  ::placeholder { color: var(--color-tinta-3); opacity: 1; }
+  :where(p, li, figcaption, dd) { text-wrap: pretty; }
+  a { text-underline-offset: 0.22em; text-decoration-thickness: 1.5px; }
+  :where(ul) > li::marker { color: var(--color-fita-ardosia); }
+  :where(ol) > li::marker { color: var(--color-tinta-3); font-weight: 700; font-variant-numeric: tabular-nums; }
+  summary::-webkit-details-marker { display: none; }
+  input[type="search"]::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    background: center / contain no-repeat
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M3 3l8 8M11 3l-8 8' stroke='%235f6878' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  }
+  :where(table) { font-variant-numeric: tabular-nums; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--color-linha-2); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background-color: var(--color-tinta-3); }
+  ::-webkit-scrollbar-track { background: transparent; }
+}
+
+/* ---------- botões e vida ---------- */
+/* Botão principal: a ardósia viva de ação, com o degrau laranja embaixo; sobe 1px no hover e afunda no
+   clique, como as teclas da urna. O de contorno acende na ardósia. */
+@layer components {
+  .botao-vivo {
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    border-radius: 9999px; color: var(--color-tinta); font-weight: 800; letter-spacing: .01em;
+    background: var(--color-escolha);
+    box-shadow: 0 3px 0 var(--color-escolha-2), 0 8px 18px -10px rgb(204 158 0 / .7);
+    transition: transform 160ms var(--ease-saida), box-shadow 160ms var(--ease-saida), background-color 160ms;
+  }
+  .botao-vivo:hover { background: #f2c21f; transform: translateY(-1px); box-shadow: 0 4px 0 var(--color-escolha-2), 0 12px 22px -10px rgb(201 148 0 / .75); }
+  .botao-vivo:active { transform: translateY(3px); box-shadow: 0 0 0 var(--color-escolha-2); }
+  /* o escolhido: oliva com texto branco e uma borda de baixo mais fechada (o cargo ativo do TSE) */
+  .selecionado-fita {
+    color: #fff; border-color: var(--color-selecao);
+    background: var(--color-selecao);
+    box-shadow: inset 0 -3px 0 var(--color-selecao-2);
+  }
+  .botao-contorno {
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    border-radius: 9999px; border: 1.5px solid var(--color-linha-2); background: var(--color-folha);
+    color: var(--color-tinta); font-weight: 600;
+    transition: transform 160ms var(--ease-saida), border-color 160ms, color 160ms, background-color 160ms;
+  }
+  .botao-contorno:hover { border-color: var(--color-acao); color: var(--color-acao); background: var(--color-acao-claro); transform: translateY(-1px); }
+  .botao-contorno:active { transform: translateY(1px); }
+}
+
+/* A pílula escolhida dá um pulo curto ao ser marcada (só na troca: a regra começa a valer naquele momento). */
+@keyframes escolhido { 0% { transform: scale(.94); } 55% { transform: scale(1.05); } 100% { transform: scale(1); } }
+[role="radio"][aria-checked="true"] { animation: escolhido 300ms var(--ease-saida); }
+
+/* O laço sob os títulos se desenha da esquerda quando a seção entra na tela (onde houver linha do
+   tempo de rolagem; sem ela, fica parado e inteiro). */
+@supports (animation-timeline: view()) {
+  @keyframes laco-entra { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  main h1.t-display::after, main :is(h2.t-h1, h2.t-h2)::after {
+    transform-origin: left center;
+    animation: laco-entra linear both;
+    animation-timeline: view();
+    animation-range: entry 10% entry 70%;
+  }
+}
+
+/* A faixa presidencial cai sobre o peito uma vez, quando o santinho aparece. */
+@keyframes faixa-cai { from { opacity: 0; transform: translate(-14px, -18px) rotate(-4deg); } to { opacity: 1; transform: none; } }
+.faixa-presidencial { animation: faixa-cai 700ms var(--ease-saida) 250ms both; transform-origin: 20% 60%; }
+
+/* A câmera do Estado a estado: uma única transformação no grupo do mapa (ease in-out, como a do atlas);
+   os outros estados esmaecem e os rótulos somem ao aproximar. */
+.camera-estados { transition: transform 1000ms cubic-bezier(.65, 0, .35, 1); }
+.estado-forma { transition: opacity 600ms ease, fill 400ms ease; }
+.estado-forma:hover { filter: brightness(1.06); }
+.estado-rotulo { transition: opacity 300ms ease; }
+/* Escola: os municípios do estado acendem quando a câmera pousa nele. */
+.municipios-escola { opacity: 0; transition: opacity 120ms ease; }
+.municipios-escola.acesos { opacity: 1; transition: opacity 520ms var(--ease-saida); }
+
+/* A página entra subindo 6px ao trocar de módulo. */
+@keyframes pagina-entra { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.pagina-entra { animation: pagina-entra 360ms var(--ease-saida) both; }
+.revela { animation: pagina-entra 420ms var(--ease-saida) both; }
+
+/* Escola: os gráficos entram uma vez quando aparecem: as barras se revelam da esquerda, as fitas surgem depois. */
+@keyframes revela-esquerda { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.revela-esquerda { animation: revela-esquerda 900ms var(--ease-saida) both; }
+@keyframes cresce-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.cresce-x { transform-origin: left center; animation: cresce-x 800ms var(--ease-saida) both; }
+@keyframes surge { from { opacity: 0; } to { opacity: 1; } }
+.surge { animation: surge 600ms ease both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .revela-esquerda, .cresce-x, .surge { animation: none; }
+  [role="radio"][aria-checked="true"], .pagina-entra, .revela, .faixa-presidencial { animation: none; }
+  main h1.t-display::after, main :is(h2.t-h1, h2.t-h2)::after { animation: none; transform: none; }
+  .botao-vivo, .botao-contorno { transition: none; }
 }
 
 /* ---------- movimento ---------- */
+/* As cédulas da urna da reeleição: papel com três pautas; a cor do destino vem do estilo (verde ou amarelo). */
+.cedula-urna {
+  border-radius: 2px;
+  border: 1px solid #aeb6bf;
+  background:
+    linear-gradient(#c3cad1 0 0) 50% 30% / 64% 1px no-repeat,
+    linear-gradient(#c3cad1 0 0) 50% 48% / 64% 1px no-repeat,
+    linear-gradient(#c3cad1 0 0) 50% 66% / 64% 1px no-repeat,
+    #fcfdfd;
+  box-shadow: 0 1px 0 rgb(42 53 80 / .12);
+  transform-origin: 50% 50%;
+}
+.cedula-voltou, .cedula-perdeu { border-color: transparent; box-shadow: 0 1px 0 rgb(42 53 80 / .2); }
+.urna-rotulo { background: rgb(252 253 253 / .85); }
+/* A subtela "Quem são" abre empurrando o conteúdo (linhas de grade de 0fr a 1fr). */
+.subtela { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 420ms cubic-bezier(.16, 1, .3, 1); }
+.subtela[data-aberta="true"] { grid-template-rows: 1fr; }
+.subtela > * { min-height: 0; overflow: hidden; }
+@media (prefers-reduced-motion: reduce) {
+  .subtela, .camera-estados, .estado-forma, .estado-rotulo { transition: none !important; }
+}
 @keyframes surgir {
   from { opacity: 0; }
   to { opacity: 1; }

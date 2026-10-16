@@ -12,6 +12,7 @@ import { Alternador } from '../atlas/PainelEstado'
 import { Ciranda, CirandaTela } from '../componentes/Ciranda'
 import { ErroCarga } from '../componentes/ErroCarga'
 import { Escolha } from '../componentes/Escolha'
+import { Fita } from '../componentes/Fita'
 import { CAPITAIS } from '../lib/capitais'
 import { inteiro, noEstado as noEstadoUF, plural, reaisCurto } from '../lib/formato'
 import type { BuscaCadeira } from '../router'
@@ -191,7 +192,7 @@ export function CadeiraPagina() {
         )}
         <div className={`relative mx-auto max-w-[min(var(--miolo-max),calc((100dvh-120px)*1.92))] transition-opacity duration-300 ${q.isPlaceholderData ? 'opacity-55' : ''}`}>
           {busca.pe ? (
-            <div className="relative aspect-[16/10] overflow-hidden rounded-[20px] bg-[radial-gradient(ellipse_at_50%_30%,#ffffff,#e6eaed_78%)] sm:aspect-[16/8.5]">
+            <div className="relative aspect-[16/10] overflow-hidden rounded-[20px] bg-[radial-gradient(ellipse_70%_55%_at_50%_92%,#fff6d6_0%,transparent_70%),linear-gradient(180deg,#e4edf3_0%,#f1f5f6_48%,#f6f8ef_100%)] sm:aspect-[16/8.5]">
               <Suspense fallback={<div className="grid h-full place-items-center"><Ciranda rotulo="Levantando as cadeiras..." /></div>}>
                 <Plenario3D chave={chave} cadeiras={dados.cadeiras} escala={escala} fator={fator} ordem={busca.ordem ?? 'gasto'} aoAbrir={abrir} />
               </Suspense>
@@ -199,6 +200,7 @@ export function CadeiraPagina() {
                 <p className="t-numero text-[clamp(1.8rem,1.2rem+2.4vw,3.4rem)] leading-none">{reaisCurto((dados.resumo.custo_cadeira ?? 0) * fator)}</p>
                 <p className="mt-1 text-[0.85rem] font-semibold text-tinta-2">gasto médio de cada {dados.cargo.nome.toLowerCase()} eleito</p>
               </div>
+              <div className="pointer-events-none absolute inset-x-0 bottom-0"><Fita altura={7} /></div>
             </div>
           ) : (
             <Plenario

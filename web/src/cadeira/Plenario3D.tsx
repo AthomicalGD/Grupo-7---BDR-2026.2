@@ -122,7 +122,7 @@ export default function Plenario3D(props: Props) {
     <div className="relative h-full w-full">
       {/* câmera fixa: o Bounds mediria as colunas ainda com altura zero, no começo da animação */}
       <Canvas frameloop="demand" shadows="percentage" dpr={[1, 1.5]} camera={{ position: [0, 13.5, 17.5], fov: 36 }} aria-label="Plenário em 3D: a altura de cada cadeira é o gasto da campanha">
-        <hemisphereLight args={['#ffffff', '#c9d0d8', 1.1]} />
+        <hemisphereLight args={['#ffffff', '#cfd6e2', 1.1]} />
         <directionalLight position={[8, 18, 10]} intensity={1.5} castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-14} shadow-camera-right={14} shadow-camera-top={14} shadow-camera-bottom={-14} />
         <Bancada
           {...props}
@@ -133,9 +133,14 @@ export default function Plenario3D(props: Props) {
             posicionar(cartao.current, x, y)
           }}
         />
+        {/* piso claro com a borda em ardósia (o azul de ação): as colunas verdes não se confundem com o chão */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
+          <circleGeometry args={[R * 1.2, 96, 0, Math.PI]} />
+          <meshStandardMaterial color="#c3cce0" roughness={0.95} />
+        </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
           <circleGeometry args={[R * 1.12, 96, 0, Math.PI]} />
-          <meshStandardMaterial color="#e6eaed" roughness={0.95} />
+          <meshStandardMaterial color="#f3f5f7" roughness={0.95} />
         </mesh>
         <ContactShadows position={[0, 0, 0]} opacity={0.25} scale={30} blur={2.4} far={8} />
         <OrbitControls makeDefault target={[0, 1.6, -4]} enablePan={false} minDistance={10} maxDistance={40} minPolarAngle={0.35} maxPolarAngle={1.32} minAzimuthAngle={-1} maxAzimuthAngle={1} />

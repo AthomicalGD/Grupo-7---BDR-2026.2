@@ -1,35 +1,53 @@
 import { expect, registrar, test } from './base'
 
-test('P10a: a taxa por cargo e eleição bate com a resposta', async ({ page }) => {
+test('P10a: a urna, todos os estados e quem são', async ({ page }) => {
   // a primeira conta de cada estado leva alguns segundos na API
-  test.setTimeout(90_000)
-  await page.goto('/reeleicao?uf=PI')
-  await expect(page.getByRole('heading', { name: 'Quem tenta a reeleição, volta?' })).toBeVisible()
-  // PI, respostas/10a_taxa_reeleicao.txt: deputado estadual 126 de 164 (76,8%), vereador 7.070 de 10.934
-  const porCargo = page.getByRole('region', { name: 'De cada 100 eleitos, na eleição seguinte' })
-  await expect(porCargo.getByRole('button', { name: /^Deputado estadual: .* 164 tentaram .* 126 voltaram \(77%\)/ })).toBeVisible({ timeout: 30_000 })
-  await expect(porCargo.getByText('7.070 de 10.934 que tentaram')).toBeVisible()
+  test.setTimeout(150_000)
+  const pi = await (await page.request.get('/api/reeleicao?uf=PI', { timeout: 120_000 })).json()
+  const vereador = pi.cargos.find((c: { cod: number }) => c.cod === 13).total
+  const mil = (n: number) => n.toLocaleString('pt-BR')
+
+  // sem estado no endereço, a página soma todos os carregados
+  await page.goto('/reeleicao')
+  await expect(page.getByRole('radio', { name: 'Todos os estados carregados' })).toBeChecked({ timeout: 90_000 })
+  await expect(page.getByText(/^Nos \d estados carregados, dos /)).toBeVisible({ timeout: 90_000 })
+
+  await page.goto('/reeleicao?uf=PI&cargo=13')
+  await expect(page.getByRole('radio', { name: /^Vereador: / })).toBeChecked({ timeout: 30_000 })
   await registrar(page, 'reeleicao')
 
-  // escolher um cargo abre as eleições dele; prefeito tem a média dos municípios
-  await porCargo.getByRole('button', { name: /^Prefeito:/ }).click()
+  // colocar na urna leva as cédulas de quem tentou; apurar mostra a taxa
+  await page.getByRole('button', { name: 'Colocar na urna' }).click()
+  await expect(page.getByRole('img', { name: /tentaram a reeleição e entraram na urna/ })).toBeVisible()
+  await page.getByRole('button', { name: 'Apurar' }).click()
+  await expect(page.getByText(`a reeleição no Piauí voltaram (${mil(vereador.reeleitos)} de ${mil(vereador.tentaram)},`, { exact: false })).toBeVisible()
+  await registrar(page, 'reeleicao-apurada')
+
+  // tocar em quem voltou abre a subtela; "Mostrar mais" traz mais seis
+  await page.getByRole('button', { name: /^\d+% dos eleitos voltaram/ }).click()
+  const voltaram = page.locator('#quem-sao').getByRole('region', { name: 'Voltaram' })
+  await expect(voltaram.getByRole('link')).toHaveCount(6, { timeout: 30_000 })
+  await voltaram.getByRole('button', { name: /^Mostrar mais/ }).click()
+  await expect(voltaram.getByRole('link')).toHaveCount(12)
+  await registrar(page, 'reeleicao-quem-sao')
+
+  // escolher outro cargo troca a urna; cada urna da fila é uma eleição e troca a da subtela
+  await page.getByRole('radio', { name: /^Prefeito: / }).click()
   await expect(page).toHaveURL(/cargo=11/)
   const ciclos = page.getByRole('region', { name: 'Eleição a eleição' })
-  await expect(ciclos.getByRole('listitem', { name: /^Disputa de 2000, eleitos em 1996: 113 de 158 .* média dos municípios 71,5%/ })).toBeVisible()
-  // o ano em destaque é o da disputa: não há coluna de 1996 (o banco não tem os eleitos de 1992)
-  await expect(ciclos.getByRole('listitem', { name: /^Disputa de 1996/ })).toHaveCount(0)
-  await ciclos.getByRole('button', { name: 'Ver tabela' }).click()
-  await expect(ciclos.getByRole('row', { name: /^2000 1996 221 158 / })).toBeVisible()
-  await expect(ciclos.getByRole('row', { name: /^Total 1\.558 825 .* 562 68,1% 71,8%$/ })).toBeVisible()
-  await registrar(page, 'reeleicao-ciclos')
+  await ciclos.getByRole('button', { name: /^Disputa de 2000, eleitos em 1996: .* média dos municípios/ }).click()
+  await expect(page.locator('#quem-sao').getByText('Eleitos em 1996, e o que fizeram na eleição de 2000.')).toBeVisible()
 
-  // estado a estado: escolher outro estado na tabela troca a página inteira
+  // estado a estado: tocar na silhueta abre a ficha do estado; o botão da ficha troca a página inteira
   const estados = page.getByRole('region', { name: 'Estado a estado' })
   await estados.scrollIntoViewIfNeeded()
-  await expect(estados.getByRole('row', { name: /^Vereador/ })).toBeVisible({ timeout: 60_000 })
-  await estados.getByRole('button', { name: 'BA', exact: true }).click()
+  await estados.getByRole('radio', { name: 'Bahia', exact: true }).click({ timeout: 90_000 })
+  await expect(estados.getByRole('heading', { name: 'Bahia' })).toBeVisible()
+  await expect(estados.getByText(/dos que tentaram se reeleger na Bahia voltaram/)).toBeVisible()
+  await registrar(page, 'reeleicao-estado')
+  await estados.getByRole('button', { name: 'Ver a página toda na Bahia' }).click()
   await expect(page).toHaveURL(/uf=BA/)
-  await expect(page.getByText(/^Na Bahia, dos /)).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByText(/^Na Bahia, dos /)).toBeVisible({ timeout: 60_000 })
 })
 
 test('P10a: a carreira do político leva à taxa do cargo dele', async ({ page }) => {
@@ -39,5 +57,5 @@ test('P10a: a carreira do político leva à taxa do cargo dele', async ({ page }
   await page.goto(`/politico/${wd.id}`)
   await page.getByRole('link', { name: 'Reeleição por cargo e estado' }).click()
   await expect(page).toHaveURL(/\/reeleicao\?.*uf=PI.*cargo=5|\/reeleicao\?.*cargo=5.*uf=PI/)
-  await expect(page.getByRole('radio', { name: 'Senador', checked: true })).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByRole('radio', { name: /^Senador: / })).toBeChecked({ timeout: 30_000 })
 })

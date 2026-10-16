@@ -35,7 +35,7 @@ export function Alternador<T extends string>({ rotulo, opcoes, valor, aoMudar }:
           role="radio"
           aria-checked={valor === o.valor}
           onClick={() => aoMudar(o.valor)}
-          className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[0.82rem] font-semibold transition-colors ${valor === o.valor ? 'bg-tinta text-white' : 'text-tinta-2 hover:text-tinta'}`}
+          className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[0.82rem] font-semibold transition-colors ${valor === o.valor ? 'selecionado-fita' : 'text-tinta-2 hover:text-tinta'}`}
         >
           {o.icone}
           {o.rotulo}

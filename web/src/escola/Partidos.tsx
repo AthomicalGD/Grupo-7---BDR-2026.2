@@ -51,14 +51,14 @@ export function Partidos({ partidos, onde }: { partidos: PartidoEscola[]; onde: 
   const cabe = (sigla: string, w: number) => sigla.length * 6.6 + 4 <= w
   const rotulo = (sigla: string, w: number) => (cabe(sigla, w) ? sigla : cabe(curta(sigla), w) ? curta(sigla) : null)
   const frase = (g: { eleitos: number; sup: number }, lado: string) =>
-    g.eleitos ? <><b className="tabular text-tinta">{Math.round(g.sup)} de 100</b>{lado === 'esquerda' ? ' têm superior completo' : ''}</> : <>nenhum partido elegeu alguém{onde}</>
+    g.eleitos ? <><b className="tabular text-tinta">{Math.round(g.sup)}%</b>{lado === 'esquerda' ? ' têm superior completo' : ''}</> : <>nenhum partido elegeu alguém{onde}</>
 
   return (
     <div>
       <p className="max-w-[76ch] text-[1.02rem] leading-relaxed text-tinta-2">
         Entre os eleitos dos partidos à esquerda{onde}, {frase(esq, 'esquerda')}; à direita, {frase(dir, 'direita')}.
         {mais && menos && (
-          <> O partido com mais diploma entre os que elegeram ao menos 5 é o <b className="text-tinta">{mais.sigla}</b> ({Math.round(taxa(mais.eleitos_superior, mais.eleitos))} de 100); o com menos, o <b className="text-tinta">{menos.sigla}</b> ({Math.round(taxa(menos.eleitos_superior, menos.eleitos))}).</>
+          <> O partido com mais diploma entre os que elegeram ao menos 5 é o <b className="text-tinta">{mais.sigla}</b> ({Math.round(taxa(mais.eleitos_superior, mais.eleitos))}%); o com menos, o <b className="text-tinta">{menos.sigla}</b> ({Math.round(taxa(menos.eleitos_superior, menos.eleitos))}).</>
         )}
       </p>
 
@@ -152,9 +152,9 @@ export function Partidos({ partidos, onde }: { partidos: PartidoEscola[]; onde: 
             <p className="text-[0.74rem] text-tinta-3">{nomeProprio(f.p.nome)}</p>
             <dl className="tabular mt-2 grid grid-cols-[1fr_auto] gap-x-3 gap-y-0.5">
               <dt className="text-tinta-2">Eleitos</dt><dd className="text-right font-semibold">{inteiro(f.p.eleitos)}</dd>
-              <dt className="text-tinta-2">com superior</dt><dd className="text-right font-semibold">{Math.round(taxa(f.p.eleitos_superior, f.p.eleitos))} de 100</dd>
+              <dt className="text-tinta-2">com superior</dt><dd className="text-right font-semibold">{Math.round(taxa(f.p.eleitos_superior, f.p.eleitos))}%</dd>
               <dt className="text-tinta-2">Candidatos</dt><dd className="text-right font-semibold">{inteiro(f.p.candidatos)}</dd>
-              <dt className="text-tinta-2">com superior</dt><dd className="text-right font-semibold">{Math.round(taxa(f.p.candidatos_superior, f.p.candidatos))} de 100</dd>
+              <dt className="text-tinta-2">com superior</dt><dd className="text-right font-semibold">{Math.round(taxa(f.p.candidatos_superior, f.p.candidatos))}%</dd>
             </dl>
           </div>
         )}
@@ -167,7 +167,7 @@ export function Partidos({ partidos, onde }: { partidos: PartidoEscola[]; onde: 
         </span>
         <span>{estreito ? 'Barra' : 'Coluna cheia'}: eleitos com superior completo.</span>
         <span className="flex items-center gap-1.5"><span className={estreito ? 'h-3 w-0.5 bg-tinta' : 'h-0.5 w-4 bg-tinta'} aria-hidden />os candidatos do partido</span>
-        {!estreito && <span className="flex items-center gap-1.5"><span className="w-5 border-t-[1.5px] border-dashed border-tinta" aria-hidden />média dos eleitos, {Math.round(media)} de 100</span>}
+        {!estreito && <span className="flex items-center gap-1.5"><span className="w-5 border-t-[1.5px] border-dashed border-tinta" aria-hidden />média dos eleitos, {Math.round(media)}%</span>}
         <span>Só partidos que elegeram alguém{estreito ? '; o número miúdo é quantos, e os com menos de 5 ficam claros' : '; passe o mouse para ver os números'}.</span>
       </p>
       <TabelaAlternavel

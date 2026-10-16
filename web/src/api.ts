@@ -135,8 +135,8 @@ export const filtrando = (f: FiltrosBusca) => Object.values(f).some((v) => v != 
 /** Ordem da lista de políticos (`ordem` em /api/politicos). Não é filtro: sozinha não dispara a busca. */
 export const ORDENS_BUSCA = [
   { valor: 'relevancia', rotulo: 'Relevância' },
-  { valor: 'nome', rotulo: 'Nome (A–Z)' },
-  { valor: 'eleicao', rotulo: 'Eleição mais recente' },
+  { valor: 'nome', rotulo: 'Nome' },
+  { valor: 'eleicao', rotulo: 'Mais recente' },
   { valor: 'cargo', rotulo: 'Cargo mais alto' },
 ] as const
 export type OrdemBusca = (typeof ORDENS_BUSCA)[number]['valor']
@@ -279,6 +279,19 @@ export interface Reeleicao {
   fora: { cod: number; cargo: string; eleitos_em: number }[]
   /** tentativas achadas pelo nome ou nascimento (eleito sem título em 1994-1996) */
   ligados_por_nome: number
+}
+
+/** P10a: os eleitos de um cargo e ciclo, num dos três destinos da eleição seguinte. */
+export type GrupoReeleicao = 'voltaram' | 'perderam' | 'nao'
+export interface PessoasReeleicao {
+  uf: string
+  cargo: number
+  eleitos_em: number
+  disputa: number
+  grupo: GrupoReeleicao
+  contagem: Record<GrupoReeleicao, number>
+  total: number
+  pessoas: { id: number; uf: string; nome: string; nome_urna: string | null; partido: string | null; vies: number | null; municipio: string | null; votos: number | null; foto: string | null }[]
 }
 
 export type Malha = FeatureCollection<Polygon | MultiPolygon, { codarea: number }>
@@ -464,6 +477,16 @@ export const consultas = {
     }),
   reeleicao: (uf: string) =>
     queryOptions({ queryKey: ['reeleicao', uf], queryFn: ({ signal }) => get<Reeleicao>(`/api/reeleicao?uf=${uf}`, signal), ...sempre }),
+  pessoasReeleicao: (uf: string, cargo: number, eleitosEm: number, grupo: GrupoReeleicao, limite: number, busca = '') =>
+    queryOptions({
+      queryKey: ['reeleicao-pessoas', uf, cargo, eleitosEm, grupo, limite, busca],
+      queryFn: ({ signal }) =>
+        get<PessoasReeleicao>(
+          `/api/reeleicao/pessoas?uf=${uf}&cargo=${cargo}&eleitos_em=${eleitosEm}&grupo=${grupo}&limite=${limite}&q=${encodeURIComponent(busca)}`,
+          signal,
+        ),
+      ...sempre,
+    }),
   malhaBrasil: () =>
     queryOptions({ queryKey: ['malha', 'BR'], queryFn: ({ signal }) => get<Malha>('/api/geo/brasil', signal), ...sempre }),
   malhaUF: (sigla: string) =>

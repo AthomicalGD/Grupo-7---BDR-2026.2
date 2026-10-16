@@ -1,6 +1,7 @@
 // Espectro do voto: para cada ano, uma barra 100% com os partidos ordenados do mais à
 // esquerda ao mais à direita, cada um na cor do próprio viés. Pequenos múltiplos por ano:
 // o deslocamento da barra no tempo é a resposta visual da P7.
+import { ArrowLeft, ArrowRight } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { ANOS, type Ano, type Partido, type PorAno } from '../api'
 import { inteiro, pct, vies as fmtVies } from '../lib/formato'
@@ -57,8 +58,8 @@ export function Espectro({ espectro, anoAtivo }: { espectro: PorAno<Partido[]>; 
         <div className="grid grid-cols-[44px_1fr] gap-3 text-[0.72rem] text-tinta-3">
           <span />
           <span className="flex justify-between">
-            <span>← esquerda</span>
-            <span>direita →</span>
+            <span className="inline-flex items-center gap-1"><ArrowLeft size={12} weight="bold" aria-hidden /> esquerda</span>
+            <span className="inline-flex items-center gap-1">direita <ArrowRight size={12} weight="bold" aria-hidden /></span>
           </span>
         </div>
         {foco && (

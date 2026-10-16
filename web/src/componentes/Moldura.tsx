@@ -1,7 +1,8 @@
+import { Archive, Armchair, ArrowsClockwise, BookOpenText, GraduationCap, MapTrifold, type Icon } from '@phosphor-icons/react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { motion } from 'motion/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { consultas } from '../api'
 import letreiro from '../assets/marca/letreiro-horizontal.svg'
 import letreiroNegativo from '../assets/marca/letreiro-horizontal-negativo.svg'
@@ -28,14 +29,18 @@ function usePreferencia(chave: string, atributo: string, inicial: string) {
   return [valor, setValor] as const
 }
 
-const NAV = [
-  { para: '/', rotulo: 'Mapa', ativo: (p: string) => p === '/' || p.startsWith('/uf') },
-  { para: '/urna', rotulo: 'Urna', ativo: (p: string) => p.startsWith('/urna') || p.startsWith('/politico') },
-  { para: '/cadeira', rotulo: 'Cadeira', ativo: (p: string) => p.startsWith('/cadeira') },
-  { para: '/escola', rotulo: 'Escola', ativo: (p: string) => p.startsWith('/escola') },
-  { para: '/reeleicao', rotulo: 'Reeleição', ativo: (p: string) => p.startsWith('/reeleicao') },
-  { para: '/metodologia', rotulo: 'Metodologia', curto: 'Método', ativo: (p: string) => p.startsWith('/metodologia') },
-] as const
+// Cada módulo tem um ícone; o ativo vira uma pílula no oliva claro da seleção (o mesmo papel em todo o
+// sistema), com o laço das fitas embaixo. A pílula desliza entre os itens (mola) e o ícone pula e fica
+// cheio ao chegar.
+type ItemNav = { para: '/' | '/urna' | '/cadeira' | '/escola' | '/reeleicao' | '/metodologia'; rotulo: string; curto?: string; icone: Icon; ativo: (p: string) => boolean }
+const NAV: ItemNav[] = [
+  { para: '/', rotulo: 'Mapa', icone: MapTrifold, ativo: (p) => p === '/' || p.startsWith('/uf') },
+  { para: '/urna', rotulo: 'Urna', icone: Archive, ativo: (p) => p.startsWith('/urna') || p.startsWith('/politico') },
+  { para: '/cadeira', rotulo: 'Cadeira', icone: Armchair, ativo: (p) => p.startsWith('/cadeira') },
+  { para: '/escola', rotulo: 'Escola', icone: GraduationCap, ativo: (p) => p.startsWith('/escola') },
+  { para: '/reeleicao', rotulo: 'Reeleição', icone: ArrowsClockwise, ativo: (p) => p.startsWith('/reeleicao') },
+  { para: '/metodologia', rotulo: 'Metodologia', curto: 'Método', icone: BookOpenText, ativo: (p) => p.startsWith('/metodologia') },
+]
 
 function BarraUtilitaria() {
   const [contraste, setContraste] = usePreferencia('va-contraste', 'data-contraste', 'normal')
@@ -90,18 +95,41 @@ function Cabecalho() {
           <img src={simbolo} alt="Voto Aberto" className="h-8 w-auto lg:hidden" />
         </Link>
         <nav aria-label="Principal">
-          <ul className="flex items-center gap-0 sm:gap-3">
+          <ul className="flex items-center gap-0 sm:gap-1.5">
             {NAV.map((item) => {
               const ativo = item.ativo(caminho)
+              const Icone = item.icone
               return (
                 <li key={item.para} className="relative">
+                  {ativo && (
+                    <motion.span
+                      layoutId="nav-pilula"
+                      aria-hidden
+                      className="absolute inset-x-0 inset-y-1 rounded-full sm:inset-y-0.5"
+                      style={{ background: 'var(--color-selecao-claro)' }}
+                      transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                    >
+                      <span className="absolute inset-x-3 -bottom-[7px] h-1 rounded-full sm:inset-x-4" style={{ background: 'var(--laco)' }} />
+                    </motion.span>
+                  )}
                   <Link
                     to={item.para}
-                    className={`block rounded-md px-[3px] py-2 text-[0.8rem] transition-colors sm:px-3 sm:text-[0.97rem] ${ativo ? 'font-semibold text-tinta' : 'text-tinta-2 hover:text-tinta'}`}
+                    className={`nav-item relative flex items-center gap-1.5 rounded-full px-[5px] py-2 text-[0.8rem] transition-colors sm:px-3 sm:text-[0.97rem] ${ativo ? 'font-semibold' : 'text-tinta-2 hover:bg-papel hover:text-tinta'}`}
+                    style={ativo ? { color: 'var(--color-selecao-tinta)' } : undefined}
                     aria-current={ativo ? 'page' : undefined}
-                    aria-label={'curto' in item ? item.rotulo : undefined}
+                    aria-label={item.curto ? item.rotulo : undefined}
                   >
-                    {'curto' in item ? (
+                    <motion.span
+                      key={ativo ? 'ativo' : 'parado'}
+                      aria-hidden
+                      className="hidden lg:inline-flex"
+                      initial={ativo ? { scale: 0.6, rotate: -12 } : false}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ type: 'spring', stiffness: 520, damping: 14 }}
+                    >
+                      <Icone size={19} weight={ativo ? 'fill' : 'regular'} />
+                    </motion.span>
+                    {item.curto ? (
                       <>
                         <span aria-hidden className="lg:hidden">{item.curto}</span>
                         <span aria-hidden className="hidden lg:inline">{item.rotulo}</span>
@@ -110,13 +138,6 @@ function Cabecalho() {
                       item.rotulo
                     )}
                   </Link>
-                  {ativo && (
-                    <motion.span
-                      layoutId="nav-marcador"
-                      className="absolute inset-x-[3px] -bottom-[10px] h-1 rounded-full bg-marcador sm:inset-x-3"
-                      transition={{ type: 'spring', stiffness: 420, damping: 36 }}
-                    />
-                  )}
                 </li>
               )
             })}
@@ -128,40 +149,96 @@ function Cabecalho() {
   )
 }
 
+/** Um título de coluna do rodapé, com o traço curto na cor de uma fita (enfeite, não informação). */
+const TituloRodape = ({ cor, children }: { cor: string; children: ReactNode }) => (
+  <h2 className="t-rotulo mb-4 flex items-center gap-2.5 text-white">
+    <span className="h-1 w-5 rounded-full" style={{ background: cor }} aria-hidden />
+    {children}
+  </h2>
+)
+
+/** As sete fitas da marca em diagonal, saindo do canto inferior direito do rodapé (como as faixas do TSE). */
+const FITAS_RODAPE = ['#5E881B', '#A2BD31', '#5D6B94', '#468BAF', '#76ACD0', '#F19929', '#FBC700']
+function FitasDiagonais() {
+  const W = 420, H = 260, LARGURA = 15, VAO = 5, INCLINA = 0.62
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} aria-hidden className="pointer-events-none absolute bottom-0 right-0 h-[110px] w-auto sm:h-[230px]">
+      {FITAS_RODAPE.map((cor, i) => {
+        // faixa paralela: começa na base e sobe até a borda direita
+        const a = 150 + i * (LARGURA + VAO)
+        const b = a + LARGURA
+        return <polygon key={cor} points={`${a},${H} ${b},${H} ${W},${H - (W - b) * INCLINA} ${W},${H - (W - a) * INCLINA}`} fill={cor} />
+      })}
+    </svg>
+  )
+}
+
+// O rodapé: a ardósia funda da marca, como o rodapé institucional do TSE, mas com a nossa assinatura:
+// as sete fitas da marca cruzam o canto inferior direito em diagonal.
 function Rodape() {
   const { data: ufs } = useQuery(consultas.ufs())
-  const carregadas = ufs?.filter((u) => u.carregada).map((u) => u.sigla) ?? []
+  const carregadas = ufs?.filter((u) => u.carregada && u.sigla !== 'BR') ?? []
   return (
-    <footer className="mt-16 bg-tinta text-[#c9d0d8]">
+    <footer className="relative mt-16 overflow-hidden bg-[linear-gradient(180deg,#1d2b4b_0%,#162139_100%)] text-[#cdd5e1]">
       <Fita altura={7} />
-      <div className="mx-auto grid max-w-[var(--casca-max)] gap-10 px-4 py-10 md:grid-cols-[1.2fr_1fr_1fr] md:px-[var(--casca-margem)]">
+      <FitasDiagonais />
+      <div className="relative mx-auto grid max-w-[var(--casca-max)] gap-10 px-4 pb-10 pt-12 md:grid-cols-[1.25fr_1fr_1fr] md:px-[var(--casca-margem)]">
         <div className="space-y-4">
-          <img src={letreiroNegativo} alt="Voto Aberto" className="-ml-2 h-12 w-auto" />
+          <img src={letreiroNegativo} alt="Voto Aberto" className="h-11 w-auto" />
           <p className="max-w-[46ch] text-sm leading-relaxed">
             Viés político de estados e municípios, o custo de cada cadeira e a carreira de cada político desde
             1994, com dados abertos coletados, modelados e carregados pelo Grupo 7.
           </p>
-          <p className="text-sm font-semibold text-white">Este não é um site oficial da Justiça Eleitoral.</p>
+          <p className="inline-flex items-center gap-2 rounded-full bg-white/8 px-3 py-1.5 text-[0.82rem] font-semibold text-white ring-1 ring-white/15">
+            <span className="size-2 rounded-full bg-[#fbc700]" aria-hidden />
+            Este não é um site oficial da Justiça Eleitoral.
+          </p>
         </div>
         <div>
-          <h2 className="t-rotulo mb-3 text-white">Fontes dos dados</h2>
-          <ul className="space-y-1.5 text-sm">
-            <li>TSE, Portal de Dados Abertos: candidaturas, votação, contas de campanha, fotos</li>
-            <li>IBGE: malhas municipais, PIB, população, Censo 2022, IPCA</li>
-            <li>Atlas Brasil (PNUD, Ipea, FJP): IDHM</li>
-            <li>Harvard Dataverse: ideologia dos partidos</li>
+          <TituloRodape cor="#a2bd31">Fontes dos dados</TituloRodape>
+          <ul className="space-y-2.5 text-sm leading-snug">
+            <li><b className="font-semibold text-white">TSE</b>, Portal de Dados Abertos: candidaturas, votação, contas de campanha, fotos</li>
+            <li><b className="font-semibold text-white">IBGE</b>: malhas municipais, PIB, população, Censo 2022, IPCA</li>
+            <li><b className="font-semibold text-white">Atlas Brasil</b> (PNUD, Ipea, FJP): IDHM</li>
+            <li><b className="font-semibold text-white">Harvard Dataverse</b>: ideologia dos partidos</li>
           </ul>
         </div>
         <div>
-          <h2 className="t-rotulo mb-3 text-white">Estados carregados no banco</h2>
-          <p className="t-mono text-sm tracking-wider">{carregadas.length ? carregadas.join('  ') : '...'}</p>
-          <p className="mt-4 text-sm">
+          <TituloRodape cor="#76acd0">Estados carregados no banco</TituloRodape>
+          <ul className="flex flex-wrap gap-1.5" aria-label="Estados carregados">
+            {carregadas.length ? (
+              carregadas.map((u) => (
+                <li key={u.sigla} title={u.nome} className="t-mono rounded-md bg-white/8 px-2 py-1 text-[0.82rem] font-semibold tracking-wider text-white ring-1 ring-white/15">
+                  {u.sigla}
+                </li>
+              ))
+            ) : (
+              <li className="t-mono text-sm">...</li>
+            )}
+          </ul>
+          <p className="mt-4 text-sm leading-relaxed">
             Os demais aparecem como <em>sem dados carregados</em>. Para incluir um estado:{' '}
-            <code className="t-mono text-white">python -m loader SP</code>
+            <code className="t-mono whitespace-nowrap rounded bg-black/25 px-1.5 py-0.5 text-white">python -m loader SP</code>
           </p>
         </div>
       </div>
+      <div className="relative border-t border-white/10">
+        <p className="mx-auto max-w-[var(--casca-max)] py-4 pl-4 pr-36 text-[0.78rem] text-[#9fabbf] sm:pr-4 md:px-[var(--casca-margem)]">
+          Projeto acadêmico de Banco de Dados · Grupo 7 · 2026.2
+        </p>
+      </div>
     </footer>
+  )
+}
+
+/** Cada módulo entra com uma subida curta; dentro do mesmo módulo (estado e município do mapa) não remonta. */
+function EntradaDaPagina() {
+  const modulo = useRouterState({ select: (s) => s.location.pathname.split('/')[1] })
+  const chave = modulo === 'uf' ? '' : modulo === 'politico' ? 'urna' : modulo
+  return (
+    <div key={chave} className="pagina-entra">
+      <Outlet />
+    </div>
   )
 }
 
@@ -177,7 +254,7 @@ export function Moldura() {
       <BarraUtilitaria />
       <Cabecalho />
       <main id="conteudo" className="flex-1">
-        <Outlet />
+        <EntradaDaPagina />
       </main>
       <Rodape />
     </div>
