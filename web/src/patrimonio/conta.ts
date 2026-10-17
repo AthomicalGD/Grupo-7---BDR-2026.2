@@ -59,4 +59,12 @@ export const POUCOS = 30
 export const moedas = (taxa: number) => (taxa > 0 ? Math.max(1, Math.round(taxa)) : 0)
 
 /** Taxa curta para frase: "27%", "0,9%". */
-export const taxaCurta = (t: number) => (t >= 10 || t === 0 ? `${Math.round(t)}%` : `${t.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`)
+export const taxaCurta = (t: number) => `${t.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`
+
+/** O grupo em que um valor cairia: o primeiro cujo teto o alcança (ou o de mais bens). */
+export function grupoDoValor(dados: Patrimonio, valor: number | null) {
+  if (valor == null) return null
+  if (valor <= 0) return dados.grupos.find((g) => g.tipo === 'sem_bens') ?? null
+  const qs = quartis(dados.grupos)
+  return qs.find((g) => g.ate != null && valor <= g.ate) ?? qs.at(-1) ?? null
+}

@@ -2,10 +2,10 @@
 // um porquinho que se quebra para separá-los em sacolas por faixa de patrimônio e empilhar as moedas dos
 // eleitos), "Vale para todos os cargos?" (uma escadinha por cargo e ano) e o que a conta não diz.
 // Conta de scripts/02_patrimonio.py, servida por /api/patrimonio e /api/patrimonio/panorama.
-import { ArrowRight, ArrowSquareOut, Coins } from '@phosphor-icons/react'
+import { ArrowRight, ArrowSquareOut, Scissors } from '@phosphor-icons/react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CARGOS_P2, consultas, type Ano, type PanoramaPatrimonio, type Patrimonio } from '../api'
 import { CedulaAnos } from '../atlas/CedulaAnos'
 import { silhueta } from '../atlas/geo'
@@ -16,8 +16,9 @@ import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { cargoPlural, inteiro, noEstado, pct, reais } from '../lib/formato'
 import type { BuscaPatrimonio } from '../router'
 import { BotaoSom, Cofrinho, Passos, type Fase } from './Cofrinho'
-import { COR, nomeFaixa, POUCOS, quartis, reaisFaixa, taxaCurta, tetoDe } from './conta'
+import { COR, grupoDoValor, nomeFaixa, POUCOS, quartis, reaisFaixa, taxaCurta, tetoDe } from './conta'
 import { Degraus, Escadas } from './Escadas'
+import { Voce } from './Voce'
 
 const ANOS_GERAIS: Ano[] = [2018, 2022]
 const ANOS_MUNICIPAIS: Ano[] = [2020, 2024]
@@ -47,7 +48,7 @@ function Lede({ panorama, noLugar }: { panorama: PanoramaPatrimonio; noLugar: st
 }
 
 /** As fichas de cargo: escolher uma troca o cofrinho. A escadinha mostra a mesma conta em miniatura. */
-function FichasCargo({ panorama, ano, ativo, aoEscolher }: { panorama: PanoramaPatrimonio | undefined; ano: Ano; ativo: number; aoEscolher: (cod: number) => void }) {
+const FichasCargo = memo(function FichasCargo({ panorama, ano, ativo, aoEscolher }: { panorama: PanoramaPatrimonio | undefined; ano: Ano; ativo: number; aoEscolher: (cod: number) => void }) {
   const teto = panorama ? tetoDe(panorama.recortes) : 50
   // no celular as fichas rolam de lado: a escolhida entra na tela (só a fileira rola, a página não)
   const fileira = useRef<HTMLDivElement>(null)
@@ -87,7 +88,7 @@ function FichasCargo({ panorama, ano, ativo, aoEscolher }: { panorama: PanoramaP
               >
                 <span className="min-w-0">
                   <span className="block truncate font-bold leading-tight">{c.nome}</span>
-                  <span className={`tabular block text-[0.75rem] ${marcada ? 'text-white/85' : 'text-tinta-3'}`}>
+                  <span className={`tabular block text-[0.75rem] ${marcada ? 'text-white' : 'text-tinta-3'}`}>
                     {r && qs.length ? `${taxaCurta(qs[0].taxa)} → ${taxaCurta(qs.at(-1)!.taxa)} · ${a}` : a}
                   </span>
                 </span>
@@ -99,48 +100,64 @@ function FichasCargo({ panorama, ano, ativo, aoEscolher }: { panorama: PanoramaP
       ))}
     </div>
   )
-}
+})
 
 /** O que a cena acabou de mostrar, em frase, com o próximo passo. */
-function Legenda({ dados, fase, aoMudarFase, rotulo }: { dados: Patrimonio; fase: Fase; aoMudarFase: (f: Fase) => void; rotulo: string }) {
+function Legenda({ dados, fase, aoMudarFase, rotulo, palpite }: { dados: Patrimonio; fase: Fase; aoMudarFase: (f: Fase) => void; rotulo: string; palpite: string | null }) {
   const qs = quartis(dados.grupos)
   const sem = dados.grupos.find((g) => g.tipo === 'sem_bens')
   const media = dados.resumo.candidatos ? (100 * dados.resumo.eleitos) / dados.resumo.candidatos : 0
+  const iguais = qs.length === 4
   if (fase === 0)
     return (
       <p className="max-w-[64ch] text-[0.92rem] text-tinta-2">
-        Cada cofrinho guarda os {rotulo}. São três passos: quebrar, separar pelos bens declarados e ver quem se elegeu.
+        Quatro passos: quebrar o cofrinho, ver a fila, dar o seu palpite e descobrir quem se elegeu. Dá para voltar a qualquer passo pelos números acima.
       </p>
     )
-  if (fase === 1) {
-    const iguais = qs.length === 4
-    const medio = qs.length ? Math.round(qs.reduce((s, g) => s + g.candidatos, 0) / qs.length) : 0
+  if (fase === 1)
     return (
       <div className="revela flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
         <p className="max-w-[62ch] text-[1rem] leading-relaxed text-tinta-2">
-          {iguais ? (
-            <>
-              <b className="font-bold text-tinta">Quatro sacolas com o mesmo número de candidatos</b> (cerca de {inteiro(medio)} cada), em fila do que
-              declarou menos ao que declarou mais. O candidato do meio de cada sacola declarou{' '}
-              {qs.map((g, i) => <span key={g.id}>{b(reaisFaixa(g.mediana))}{i < qs.length - 2 ? ', ' : i === qs.length - 2 ? ' e ' : ''}</span>)}.
-            </>
-          ) : (
-            <>
-              <b className="font-bold text-tinta">{qs.length} sacolas</b>: com tantos valores repetidos, não deu para cortar em quatro partes iguais.
-            </>
-          )}
-          {sem && <> A sacola vazia é de quem não registrou nenhum bem: {b(inteiro(sem.candidatos))} candidatos ({pct(100 - dados.resumo.cobertura_pct, 0)}).</>}
+          <b className="font-bold text-tinta">Esta é a fila dos {rotulo} que declararam bens</b>, do menor valor ao maior. Cada barrinha representa 1 em cada
+          100 deles; quanto mais alta, mais bens. Agora vamos cortá-la em {iguais ? 'quatro grupos com o mesmo número de pessoas' : `${qs.length} grupos`}.
         </p>
         <button type="button" onClick={() => aoMudarFase(2)} className="botao-vivo h-12 shrink-0 px-6 text-[1rem]">
-          <Coins size={20} weight="fill" aria-hidden /> Ver quem se elegeu
+          <Scissors size={20} weight="fill" aria-hidden /> Cortar a fila
         </button>
       </div>
     )
-  }
+  if (fase === 2)
+    return (
+      <div className="revela flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
+        <div className="max-w-[62ch] text-[1rem] leading-relaxed text-tinta-2">
+          <p>
+            {iguais ? (
+              <><b className="font-bold text-tinta">Quatro grupos do mesmo tamanho</b>, 25 de cada 100 candidatos em cada um. O que muda é quanto declararam: o
+              candidato do meio de cada grupo tem {qs.map((g, i) => <span key={g.id}>{b(reaisFaixa(g.mediana))}{i < qs.length - 2 ? ', ' : i === qs.length - 2 ? ' e ' : ''}</span>)}.</>
+            ) : (
+              <><b className="font-bold text-tinta">{qs.length} grupos</b>: com tantos valores repetidos, não deu para cortar em quatro partes iguais.</>
+            )}
+          </p>
+          <p className="mt-2 text-[1.08rem] font-semibold text-tinta">Seu palpite: qual grupo você acha que elegeu mais gente? Toque nele.</p>
+        </div>
+        <button type="button" onClick={() => aoMudarFase(3)} className="botao-contorno h-11 shrink-0 px-5 text-[0.92rem]">
+          Pular o palpite
+        </button>
+      </div>
+    )
   const [q1, q4] = [qs[0], qs.at(-1)]
+  const maior = qs.toSorted((x, y) => y.taxa - x.taxa)[0]
+  const chutado = qs.find((g) => g.id === palpite)
   return (
     <div className="revela flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
       <div className="max-w-[64ch]">
+        {chutado && maior && (
+          <p className={`mb-3 inline-flex rounded-full px-3.5 py-1.5 text-[0.9rem] font-semibold ${chutado.id === maior.id ? 'bg-selecao text-white' : 'bg-papel-2 text-tinta'}`}>
+            {chutado.id === maior.id
+              ? 'Você acertou o palpite!'
+              : `Seu palpite foi ${nomeFaixa(chutado, qs.indexOf(chutado), qs.length).nome.toLowerCase()}; quem mais elegeu foi ${nomeFaixa(maior, qs.indexOf(maior), qs.length).nome.toLowerCase()}.`}
+          </p>
+        )}
         {q1 && q4 && (
           <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <span className="t-numero tabular text-[clamp(2.4rem,1.8rem+1.6vw,3.4rem)]" style={{ color: COR.texto }}>{taxaCurta(q4.taxa)}</span>
@@ -158,13 +175,13 @@ function Legenda({ dados, fase, aoMudarFase, rotulo }: { dados: Patrimonio; fase
         )}
         {qs.some((g) => g.candidatos < POUCOS) && (
           <p className="mt-3 rounded-xl border border-escolha/50 bg-escolha-claro px-3.5 py-2 text-[0.88rem] text-tinta">
-            <b>Poucos candidatos:</b> {qs.length === 4 ? 'cada sacola tem' : 'as sacolas têm'} de {inteiro(Math.min(...qs.map((g) => g.candidatos)))} a{' '}
-            {inteiro(Math.max(...qs.map((g) => g.candidatos)))}. Um eleito a mais ou a menos muda muito a porcentagem; olhe também as outras disputas abaixo.
+            <b>Poucos candidatos:</b> os grupos têm de {inteiro(Math.min(...qs.map((g) => g.candidatos)))} a {inteiro(Math.max(...qs.map((g) => g.candidatos)))} pessoas, então a
+            cena mostra as pessoas de verdade. Um eleito a mais ou a menos muda muito a porcentagem; compare com as outras disputas abaixo.
           </p>
         )}
         <p className="mt-2 text-[0.88rem] text-tinta-3">
-          Cada moeda é 1 eleito em cada 100 candidatos da sacola; o tracejado é a média de todos ({taxaCurta(media)}).
-          {sem && <> Quem não registrou bens: {taxaCurta(sem.taxa)}.</>}
+          Cada bonequinho é 1 em cada 100 candidatos do grupo; os verdes se elegeram. Na média de todos, {taxaCurta(media)}.
+          {sem && <> Fora da fila, quem não registrou nenhum bem ({inteiro(sem.candidatos)}): {taxaCurta(sem.taxa)} se elegeram.</>}
         </p>
       </div>
       <button type="button" onClick={() => aoMudarFase(0)} className="botao-contorno h-11 shrink-0 px-5 text-[0.92rem]">
@@ -192,12 +209,20 @@ function tabela(dados: Patrimonio) {
 export function PatrimonioPagina() {
   const busca = useSearch({ from: '/patrimonio' })
   const navegar = useNavigate({ from: '/patrimonio' })
-  const mudar = (s: Partial<BuscaPatrimonio>) => navegar({ search: (a) => ({ ...a, ...s }), replace: true, resetScroll: false })
+  // funções estáveis: as fichas, as escadinhas e o "E você?" são memo e não se redesenham a cada passo do cofrinho
+  const mudar = useCallback((s: Partial<BuscaPatrimonio>) => navegar({ search: (a) => ({ ...a, ...s }), replace: true, resetScroll: false }), [navegar])
+  const escolherCargo = useCallback((c: number) => mudar({ cargo: c, ano: undefined }), [mudar])
   const { data: ufs } = useQuery(consultas.ufs())
   const { data: malha } = useQuery(consultas.malhaBrasil())
   const carregadas = useMemo(() => (ufs ?? []).filter((u) => u.carregada && u.sigla !== 'BR'), [ufs])
   const silhuetas = useMemo(() => new Map(malha ? carregadas.map((u) => [u.sigla, silhueta(malha, u.cd_ibge, 22)]) : []), [malha, carregadas])
   const [fase, setFase] = useState<Fase>(0)
+  const [palpite, setPalpite] = useState<string | null>(null)
+  const [valor, setValor] = useState<number | null>(null)
+  const palpitar = useCallback((id: string) => {
+    setPalpite(id)
+    setFase(3)
+  }, [])
 
   const cargo = CARGOS_P2.find((c) => c.cod === busca.cargo) ?? CARGOS_P2[CARGOS_P2.length - 1]
   const anos = cargo.municipal ? ANOS_MUNICIPAIS : ANOS_GERAIS
@@ -210,14 +235,23 @@ export function PatrimonioPagina() {
   const dados = q.data
   const rotulo = `candidatos a ${cargo.nome.toLowerCase()} em ${ano} ${cargo.nacional ? 'no Brasil' : noLugar}`
 
+  // o palpite vale para um recorte: trocar cargo, ano ou estado o apaga
+  const recorte = `${ano}-${cargo.cod}-${uf}`
+  const [recorteVisto, setRecorteVisto] = useState(recorte)
+  if (recorteVisto !== recorte) {
+    setRecorteVisto(recorte)
+    setPalpite(null)
+  }
+
   useEffect(() => {
     document.title = 'Quem declara mais bens se elege mais? · Voto Aberto'
   }, [])
 
-  const abrir = (a: number, c: number) => {
+  const abrir = useCallback((a: number, c: number) => {
     mudar({ ano: a as Ano, cargo: c })
     document.getElementById('cofrinho')?.scrollIntoView({ behavior: suave(), block: 'start' })
-  }
+  }, [mudar])
+  const ativo = useMemo(() => ({ ano, cargo: cargo.cod }), [ano, cargo.cod])
 
   if (!ufs) return <CirandaTela rotulo="Abrindo a página..." />
 
@@ -229,8 +263,8 @@ export function PatrimonioPagina() {
       <div className="mt-4 grid gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div>
           <p className="max-w-[60ch] text-[1.06rem] text-tinta-2">
-            Todo candidato entrega ao TSE a lista do que tem: casa, carro, terreno, dinheiro guardado. Aqui os candidatos de cada disputa são
-            postos em fila pelo valor total dessa lista e cortados em quatro grupos do mesmo tamanho. Depois, conta-se quantos de cada grupo se elegeram.
+            Todo candidato entrega ao TSE a lista do que tem: casa, carro, terreno, dinheiro guardado. Quebre o cofrinho e veja se quem declarou
+            mais se elegeu mais.
           </p>
           <fieldset className="mt-5 min-w-0">
             <legend className="t-rotulo mb-2 text-tinta-2">Estado</legend>
@@ -256,16 +290,13 @@ export function PatrimonioPagina() {
       </div>
 
       <div>
-        <section id="cofrinho" aria-labelledby="cofrinho-titulo" className="mt-12 max-w-[var(--miolo-max)] scroll-mt-24">
+        <section id="cofrinho" aria-labelledby="cofrinho-titulo" className="mt-9 max-w-[var(--miolo-max)] scroll-mt-24">
           <h2 id="cofrinho-titulo" className="t-h2">O cofrinho dos candidatos</h2>
-          <p className="mt-1 max-w-[88ch] text-[0.95rem] text-tinta-2">
-            Escolha um cargo e quebre o cofrinho. As moedas vão para quatro sacolas, da faixa que declarou menos bens à que declarou mais, e
-            depois as moedas de quem se elegeu se empilham.
-          </p>
+          <p className="mt-1 max-w-[88ch] text-[0.95rem] text-tinta-2">Escolha um cargo ao lado e siga os quatro passos.</p>
           <div className="mt-6 grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-10">
-            <FichasCargo panorama={qp.data} ano={ano} ativo={cargo.cod} aoEscolher={(c) => mudar({ cargo: c, ano: undefined })} />
+            <FichasCargo panorama={qp.data} ano={ano} ativo={cargo.cod} aoEscolher={escolherCargo} />
             <div className="min-w-0">
-              <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
                 <Passos fase={fase} aoMudar={setFase} />
                 <div className="flex items-center gap-3">
                   <fieldset>
@@ -284,7 +315,15 @@ export function PatrimonioPagina() {
                 {q.isPlaceholderData && <div className="absolute right-12 top-0 z-10"><Ciranda rotulo="Somando os bens..." tamanho={56} /></div>}
                 {dados ? (
                   <>
-                    <Cofrinho dados={dados} rotulo={rotulo} fase={fase} aoMudarFase={setFase} />
+                    <Cofrinho
+                      dados={dados}
+                      rotulo={rotulo}
+                      fase={fase}
+                      aoMudarFase={setFase}
+                      palpite={palpite}
+                      aoPalpitar={palpitar}
+                      voce={grupoDoValor(dados, valor)?.id ?? null}
+                    />
                     <p className="sr-only" aria-live="polite">
                       {fase === 2 ? quartis(dados.grupos).map((g, i, t) => `${nomeFaixa(g, i, t.length).nome}: ${pct(g.taxa)} se elegeram.`).join(' ') : ''}
                     </p>
@@ -297,12 +336,13 @@ export function PatrimonioPagina() {
               </div>
               {dados && (
                 <div className="mt-6 border-t border-linha pt-5">
-                  <Legenda dados={dados} fase={fase} aoMudarFase={setFase} rotulo={rotulo} />
+                  <Legenda dados={dados} fase={fase} aoMudarFase={setFase} rotulo={rotulo} palpite={palpite} />
                   <TabelaAlternavel
                     titulo={`Patrimônio declarado e eleição: ${cargo.nome.toLowerCase()}, ${ano}`}
                     colunas={['Faixa', 'Valores declarados', 'Candidato do meio', 'Candidatos', 'Eleitos', 'Se elegeram']}
                     linhas={() => tabela(dados)}
                   />
+                  <Voce dados={dados} rotulo={rotulo} valor={valor} aoMudar={setValor} />
                 </div>
               )}
             </div>
@@ -316,7 +356,7 @@ export function PatrimonioPagina() {
             sobem, quem declarou mais bens se elegeu mais. Toque numa escadinha para abri-la no cofrinho.
           </p>
           {qp.data ? (
-            <Escadas panorama={qp.data} ativo={{ ano, cargo: cargo.cod }} aoAbrir={abrir} />
+            <Escadas panorama={qp.data} ativo={ativo} aoAbrir={abrir} />
           ) : qp.error ? (
             <ErroCarga erro={qp.error} compacto />
           ) : (

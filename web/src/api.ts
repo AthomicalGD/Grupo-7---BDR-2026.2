@@ -280,6 +280,8 @@ export interface Patrimonio {
   escopo: { uf: string | null; ufs: string[]; nacional: boolean }
   resumo: { candidatos: number; eleitos: number; sem_bens: number; zero_declarado: number; com_bens: number; cobertura_pct: number }
   grupos: GrupoPatrimonio[]
+  /** a fila dos que declararam bens em 100 passos: o valor de quem está em cada 1% (do menor ao maior) */
+  fila: number[]
   sintese: { quartis: number; maior_supera_menor: boolean; diferenca_pp: number | null }
 }
 

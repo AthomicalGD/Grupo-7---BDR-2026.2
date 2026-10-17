@@ -1,6 +1,7 @@
 // "Vale para todos os cargos?": cada disputa (cargo e ano) é uma escadinha de quatro degraus, a taxa de
 // eleição das quatro faixas de patrimônio, da que declarou menos à que declarou mais, todas na mesma régua.
 // Quando o último degrau não passa do primeiro, a escadinha leva o aviso "não sobe". Tocar abre o cofrinho.
+import { memo } from 'react'
 import type { PanoramaPatrimonio } from '../api'
 import { inteiro } from '../lib/formato'
 import { COR, quartis, taxaCurta, tetoDe } from './conta'
@@ -47,7 +48,7 @@ function Celula({ r, teto, ativa, aoAbrir }: { r: Recorte; teto: number; ativa: 
     >
       <span className="flex items-end justify-between gap-2">
         <Degraus r={r} teto={teto} />
-        {!sobe && <span className="rounded-full bg-papel-2 px-2 py-0.5 text-[0.68rem] font-bold text-tinta-2">não sobe</span>}
+        {!sobe && <span className="rounded-full bg-papel-2 px-2 py-0.5 text-[0.75rem] font-bold text-tinta-2">não sobe</span>}
       </span>
       <span className="tabular text-[0.8rem] leading-tight text-tinta-2">
         <b className="font-bold text-tinta">{q1 ? taxaCurta(q1.taxa) : '-'}</b> → <b className="font-bold" style={{ color: COR.texto }}>{q4 ? taxaCurta(q4.taxa) : '-'}</b>
@@ -95,7 +96,7 @@ function Bloco({ titulo, cargos, anos, recortes, teto, ativo, aoAbrir }: {
   )
 }
 
-export function Escadas({ panorama, ativo, aoAbrir }: { panorama: PanoramaPatrimonio; ativo: { ano: number; cargo: number }; aoAbrir: (ano: number, cargo: number) => void }) {
+export const Escadas = memo(function Escadas({ panorama, ativo, aoAbrir }: { panorama: PanoramaPatrimonio; ativo: { ano: number; cargo: number }; aoAbrir: (ano: number, cargo: number) => void }) {
   const teto = tetoDe(panorama.recortes)
   const excecoes = panorama.recortes.filter((r) => r.sintese.quartis === 4 && !r.sintese.maior_supera_menor)
   return (
@@ -124,4 +125,4 @@ export function Escadas({ panorama, ativo, aoAbrir }: { panorama: PanoramaPatrim
       </div>
     </div>
   )
-}
+})

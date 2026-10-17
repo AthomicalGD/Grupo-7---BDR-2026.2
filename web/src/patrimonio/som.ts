@@ -57,3 +57,36 @@ export function tocarPilhas(colunas: number) {
   const c = ctx()
   for (let i = 0; i < colunas; i++) plim(c, c.currentTime + 0.05 + i * 0.12, 3200 + i * 180, 0.045)
 }
+
+/** Cada martelada: um toque seco na porcelana, mais forte a cada vez. */
+export function tocarGolpe(vez: number) {
+  if (!somLigado()) return
+  const c = ctx()
+  estalo(c, c.currentTime + 0.01, 0.18 + vez * 0.1)
+  plim(c, c.currentTime + 0.02, 1700 + vez * 220, 0.03)
+}
+
+/** A tesoura fecha: um estalo curto e agudo. */
+export function tocarCorte() {
+  if (!somLigado()) return
+  const c = ctx()
+  estalo(c, c.currentTime, 0.14)
+  plim(c, c.currentTime + 0.015, 4200, 0.025)
+}
+
+/** O carimbo bate no papel: um baque grave. */
+export function tocarCarimbo() {
+  if (!somLigado()) return
+  const c = ctx()
+  const osc = c.createOscillator()
+  const ganho = c.createGain()
+  osc.type = 'sine'
+  osc.frequency.setValueAtTime(180, c.currentTime)
+  osc.frequency.exponentialRampToValueAtTime(60, c.currentTime + 0.12)
+  ganho.gain.setValueAtTime(0.25, c.currentTime)
+  ganho.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 0.18)
+  osc.connect(ganho).connect(c.destination)
+  osc.start()
+  osc.stop(c.currentTime + 0.2)
+  estalo(c, c.currentTime, 0.12)
+}
