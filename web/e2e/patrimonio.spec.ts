@@ -10,7 +10,7 @@ test('P2: martelar o cofrinho, cortar a fila, dar o palpite e ver quem se elegeu
   // sem nada no endereço: vereador em 2024, todos os estados carregados
   await page.goto('/patrimonio')
   await expect(page.getByRole('radio', { name: /^Vereador, 2024: / })).toBeChecked({ timeout: 30_000 })
-  await expect(page.getByText(/^Sim, em quase todas as disputas\./)).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByText('disputas em que quem declarou mais bens se elegeu mais')).toBeVisible({ timeout: 30_000 })
   await expect(page.getByText(mil(vereador.resumo.candidatos), { exact: true })).toBeVisible()
   await registrar(page, 'patrimonio')
 
@@ -21,12 +21,12 @@ test('P2: martelar o cofrinho, cortar a fila, dar o palpite e ver quem se elegeu
   await porquinho.click()
   await porquinho.click()
   await expect(page.getByRole('button', { name: 'A fila', exact: true })).toHaveAttribute('aria-current', 'step')
-  await expect(page.getByText(/Esta é a fila dos candidatos a vereador/)).toBeVisible()
+  await expect(page.getByText(/A fila dos candidatos a vereador/)).toBeVisible()
   await registrar(page, 'patrimonio-fila')
 
   // a tesoura corta em quatro grupos; o palpite é tocar num deles
   await page.getByRole('button', { name: 'Cortar a fila' }).click()
-  await expect(page.getByText('Quatro grupos do mesmo tamanho')).toBeVisible()
+  await expect(page.getByText('4 grupos com o mesmo número de pessoas.')).toBeVisible()
   await page.getByRole('button', { name: /^Palpite: Os 25% com mais bens/ }).click()
   await expect(page.getByText('Você acertou o palpite!')).toBeVisible()
   await expect(page.getByText(`(${mil(q4.eleitos)} de ${mil(q4.candidatos)})`, { exact: false })).toBeVisible()
@@ -35,6 +35,12 @@ test('P2: martelar o cofrinho, cortar a fila, dar o palpite e ver quem se elegeu
   // "E você?": um exemplo mostra o grupo e a chance dele
   await page.getByRole('radio', { name: /^Uma fazenda/ }).click()
   await expect(page.getByText(/você estaria entre os 25% com mais bens/)).toBeVisible()
+
+  // o minimapa escolhe o estado; tocar de novo volta a todos
+  await page.getByRole('radio', { name: 'Bahia', exact: true }).click()
+  await expect(page).toHaveURL(/uf=BA/)
+  await page.getByRole('radio', { name: 'Bahia', exact: true }).click()
+  await expect(page).not.toHaveURL(/uf=BA/)
 
   // outro cargo apaga o palpite; montar de novo volta ao cofrinho inteiro
   await page.getByRole('radio', { name: /^Prefeito, 2024: / }).click()
