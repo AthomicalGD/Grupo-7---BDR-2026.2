@@ -1,10 +1,11 @@
 import { expect, registrar, test } from './base'
 
-test('P2: quebrar o cofrinho, separar pelos bens e ver quem se elegeu', async ({ page }) => {
+test('P2: martelar o cofrinho, cortar a fila, dar o palpite e ver quem se elegeu', async ({ page }) => {
   test.setTimeout(90_000)
   const vereador = await (await page.request.get('/api/patrimonio?ano=2024&cargo=13')).json()
   const q4 = vereador.grupos.find((g: { id: string }) => g.id === 'q4')
   const mil = (n: number) => n.toLocaleString('pt-BR')
+  expect(vereador.fila).toHaveLength(100)
 
   // sem nada no endereço: vereador em 2024, todos os estados carregados
   await page.goto('/patrimonio')
@@ -13,29 +14,43 @@ test('P2: quebrar o cofrinho, separar pelos bens e ver quem se elegeu', async ({
   await expect(page.getByText(mil(vereador.resumo.candidatos), { exact: true })).toBeVisible()
   await registrar(page, 'patrimonio')
 
-  // o porquinho é um botão: quebrar mostra as sacolas; o passo seguinte empilha as moedas dos eleitos
-  await page.getByRole('button', { name: /^Quebrar o cofrinho e separar/ }).click()
-  await expect(page.getByText('Quatro sacolas com o mesmo número de candidatos')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Separar pelos bens' })).toHaveAttribute('aria-current', 'step')
-  await registrar(page, 'patrimonio-sacolas')
-  await page.getByRole('button', { name: 'Ver quem se elegeu' }).last().click()
+  // três marteladas no porquinho: as duas primeiras racham, a terceira quebra e a fila aparece
+  const porquinho = page.getByRole('button', { name: /^Martelar o cofrinho/ })
+  await porquinho.click()
+  await expect(page.getByText('1 de 3 marteladas')).toBeVisible()
+  await porquinho.click()
+  await porquinho.click()
+  await expect(page.getByRole('button', { name: 'A fila', exact: true })).toHaveAttribute('aria-current', 'step')
+  await expect(page.getByText(/Esta é a fila dos candidatos a vereador/)).toBeVisible()
+  await registrar(page, 'patrimonio-fila')
+
+  // a tesoura corta em quatro grupos; o palpite é tocar num deles
+  await page.getByRole('button', { name: 'Cortar a fila' }).click()
+  await expect(page.getByText('Quatro grupos do mesmo tamanho')).toBeVisible()
+  await page.getByRole('button', { name: /^Palpite: Os 25% com mais bens/ }).click()
+  await expect(page.getByText('Você acertou o palpite!')).toBeVisible()
   await expect(page.getByText(`(${mil(q4.eleitos)} de ${mil(q4.candidatos)})`, { exact: false })).toBeVisible()
   await registrar(page, 'patrimonio-eleitos')
 
-  // outro cargo mantém o passo; montar de novo volta ao cofrinho inteiro
+  // "E você?": um exemplo mostra o grupo e a chance dele
+  await page.getByRole('radio', { name: /^Uma fazenda/ }).click()
+  await expect(page.getByText(/você estaria entre os 25% com mais bens/)).toBeVisible()
+
+  // outro cargo apaga o palpite; montar de novo volta ao cofrinho inteiro
   await page.getByRole('radio', { name: /^Prefeito, 2024: / }).click()
   await expect(page).toHaveURL(/cargo=11/)
+  await expect(page.getByText('Você acertou o palpite!')).toHaveCount(0)
   await page.getByRole('button', { name: 'Montar o cofrinho de novo' }).click()
-  await expect(page.getByRole('button', { name: /^Quebrar o cofrinho e separar/ })).toBeVisible()
+  await expect(porquinho).toBeVisible()
 
-  // cada escadinha abre a sua disputa no cofrinho; Presidente 2018 avisa que são poucos candidatos
+  // cada escadinha abre a sua disputa; com poucos candidatos, a cena mostra as pessoas de verdade
   const todos = page.getByRole('region', { name: 'Vale para todos os cargos?' })
   await todos.scrollIntoViewIfNeeded()
   await todos.getByRole('button', { name: /^Presidente, 2018: / }).click()
   await expect(page).toHaveURL(/ano=2018/)
-  await expect(page.getByRole('radio', { name: /^Presidente, 2018: / })).toBeChecked()
-  await page.getByRole('button', { name: /^Quebrar o cofrinho e separar/ }).click()
-  await page.getByRole('button', { name: 'Ver quem se elegeu' }).last().click()
+  await page.getByRole('button', { name: 'Quebrar o cofrinho', exact: true }).click()
+  await page.getByRole('button', { name: 'Cortar a fila' }).click()
+  await page.getByRole('button', { name: 'Pular o palpite' }).click()
   await expect(page.getByText('Poucos candidatos:')).toBeVisible()
   await registrar(page, 'patrimonio-presidente')
 })
