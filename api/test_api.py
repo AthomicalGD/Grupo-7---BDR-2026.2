@@ -118,6 +118,7 @@ def main() -> None:
     assert cliente.get("/api/patrimonio?ano=2024&cargo=1").status_code == 404
     assert cliente.get("/api/patrimonio?ano=2018&cargo=1&uf=PI").status_code == 422
     assert qs[0]["mediana"] <= qs[-1]["mediana"]
+    assert len(pat["fila"]) == 100 and pat["fila"] == sorted(pat["fila"]), pat["fila"][:5]
     panorama = get("/api/patrimonio/panorama")
     assert panorama["com_quartis"] == 14 and panorama["maior_supera"] == 13, panorama
     assert {(r["ano"], r["cargo"]["cod"]) for r in panorama["recortes"]} >= {(2018, 1), (2024, 13)}

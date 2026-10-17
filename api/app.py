@@ -1139,6 +1139,9 @@ def patrimonio(ano: int, cargo: int, uf: str) -> dict:
     total = len(linhas)
     eleitos = sum(bool(l["eleito"]) for l in linhas)
     sem_count = sum(l["patrimonio"] is None for l in linhas)
+    # a fila dos que declararam bens, em 100 passos: o valor de quem está em cada 1% da fila (para desenhá-la)
+    positivos = sorted(l["patrimonio"] for l in linhas if l["patrimonio"] is not None and l["patrimonio"] > 0)
+    fila = [round(_quantil(positivos, (i + 0.5) / 100), 2) for i in range(100)] if positivos else []
     return {
         "ano": ano, "cargo": {"cod": cargo, "nome": CARGOS_P2[cargo]},
         "escopo": {"uf": None if nacional else (uf or None), "ufs": list(ufs), "nacional": nacional},
@@ -1148,6 +1151,7 @@ def patrimonio(ano: int, cargo: int, uf: str) -> dict:
                    "com_bens": total - (sem["candidatos"] if sem else 0),
                    "cobertura_pct": round(100 * (total - (sem["candidatos"] if sem else 0)) / total, 1) if total else 0},
         "grupos": grupos,
+        "fila": fila,
         "sintese": {"quartis": len(quartis),
                     "maior_supera_menor": bool(primeiro and ultimo and ultimo["taxa"] > primeiro["taxa"]),
                     "diferenca_pp": round(ultimo["taxa"] - primeiro["taxa"], 1) if primeiro and ultimo else None},
