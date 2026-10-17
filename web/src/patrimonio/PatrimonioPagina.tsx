@@ -1,23 +1,23 @@
-// P2: quem declara mais bens se elege mais? A resposta em número grande e o minimapa dos estados no topo;
-// depois o cofrinho em quatro passos, "Vale para todos os cargos?" (uma escadinha por cargo e ano) e três
-// lembretes do que a conta não diz. Conta de scripts/02_patrimonio.py, servida por /api/patrimonio e
-// /api/patrimonio/panorama.
-import { ArrowDown, ArrowRight, ArrowSquareOut, ArrowsLeftRight, Receipt, Scissors, ShoppingBagOpen } from '@phosphor-icons/react'
+// P2: quem declara mais bens se elege mais? A página é uma sequência de atos, cada um com uma função:
+// (1) a pergunta e o recorte numa frase ("Candidatos a vereador em 2024, nos 6 estados"), cujas palavras abrem
+// as opções; (2) o cofrinho, o protagonista, com uma ação por passo; (3) "E você?", a régua para a pessoa se
+// achar na fila; (4) "Vale para todos os cargos?", a resposta geral em número grande e as escadinhas; (5) o que
+// a conta não diz. Conta de scripts/02_patrimonio.py, servida por /api/patrimonio e /api/patrimonio/panorama.
+import { ArrowRight, ArrowSquareOut, ArrowsLeftRight, Receipt, Scissors, ShoppingBagOpen } from '@phosphor-icons/react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { animate } from 'motion'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CARGOS_P2, consultas, type Ano, type PanoramaPatrimonio, type Patrimonio } from '../api'
-import { CedulaAnos } from '../atlas/CedulaAnos'
 import { Ciranda, CirandaTela } from '../componentes/Ciranda'
 import { ErroCarga } from '../componentes/ErroCarga'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { inteiro, noEstado, pct, reais } from '../lib/formato'
 import type { BuscaPatrimonio } from '../router'
 import { BotaoSom, Cofrinho, Passos, type Fase } from './Cofrinho'
-import { COR, grupoDoValor, nomeFaixa, POUCOS, quartis, taxaCurta, tetoDe } from './conta'
-import { Degraus, Escadas } from './Escadas'
-import { MapaEstados } from './MapaEstados'
+import { COR, grupoDoValor, nomeFaixa, POUCOS, quartis, taxaCurta } from './conta'
+import { Escadas } from './Escadas'
+import { Recorte } from './Recorte'
 import { Voce } from './Voce'
 
 const ANOS_GERAIS: Ano[] = [2018, 2022]
@@ -27,7 +27,7 @@ const suave = (): ScrollBehavior => (matchMedia('(prefers-reduced-motion: reduce
 const b = (t: string) => <b className="tabular font-bold text-tinta">{t}</b>
 const vezes = (a: number, z: number) => (a / z).toLocaleString('pt-BR', { maximumFractionDigits: 1 })
 
-/** A resposta geral em número grande: em quantas disputas a faixa de mais bens se elegeu mais. */
+/** A resposta geral em número grande: em quantas disputas a faixa de mais bens se elegeu mais (conta ao aparecer). */
 function Resposta({ panorama }: { panorama: PanoramaPatrimonio }) {
   const numero = useRef<HTMLSpanElement>(null)
   useEffect(() => {
@@ -37,74 +37,14 @@ function Resposta({ panorama }: { panorama: PanoramaPatrimonio }) {
     return () => ctrl.stop()
   }, [panorama.maior_supera])
   return (
-    <div className="revela mt-5 flex flex-wrap items-end gap-x-4 gap-y-2">
-      <p className="t-numero tabular text-[clamp(3.2rem,2.4rem+2.6vw,4.6rem)] leading-none" style={{ color: COR.texto }}>
-        <span ref={numero}>{inteiro(panorama.maior_supera)}</span><span className="text-[0.5em] text-tinta-3"> de {inteiro(panorama.com_quartis)}</span>
-      </p>
-      <div className="pb-1">
-        <p className="max-w-[30ch] text-[1.05rem] font-semibold leading-snug text-tinta">disputas em que quem declarou mais bens se elegeu mais</p>
-        <a href="#todos" className="mt-1 inline-flex items-center gap-1 text-[0.86rem] font-semibold text-acao hover:underline">
-          Ver as {inteiro(panorama.recortes.length)} disputas <ArrowDown size={14} weight="bold" aria-hidden />
-        </a>
-      </div>
-    </div>
+    <p className="flex items-end gap-3">
+      <span className="t-numero tabular text-[clamp(3.6rem,2.6rem+3vw,5.4rem)] leading-[.85]" style={{ color: COR.texto }}>
+        <span ref={numero}>{inteiro(panorama.maior_supera)}</span><span className="text-[0.45em] text-tinta-3"> de {inteiro(panorama.com_quartis)}</span>
+      </span>
+      <span className="max-w-[18ch] pb-1 text-[0.95rem] font-semibold leading-snug text-tinta-2">disputas em que quem declarou mais bens se elegeu mais</span>
+    </p>
   )
 }
-
-/** As fichas de cargo: escolher uma troca o cofrinho. A escadinha mostra a mesma conta em miniatura. */
-const FichasCargo = memo(function FichasCargo({ panorama, ano, ativo, aoEscolher }: { panorama: PanoramaPatrimonio | undefined; ano: Ano; ativo: number; aoEscolher: (cod: number) => void }) {
-  const teto = panorama ? tetoDe(panorama.recortes) : 50
-  // no celular as fichas rolam de lado: a escolhida entra na tela (só a fileira rola, a página não)
-  const fileira = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const el = fileira.current
-    const marcada = el?.querySelector<HTMLElement>('[aria-checked="true"]')
-    if (!el || !marcada || el.scrollWidth <= el.clientWidth) return
-    el.scrollLeft = marcada.offsetLeft - el.offsetLeft - 16
-  }, [ativo])
-  const grupos = [
-    { titulo: 'Eleições gerais', cargos: CARGOS_P2.filter((c) => !c.municipal) },
-    { titulo: 'Municipais', cargos: CARGOS_P2.filter((c) => c.municipal) },
-  ]
-  return (
-    <div ref={fileira} role="radiogroup" aria-label="Cargo" className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:flex-col lg:gap-4 lg:overflow-visible lg:px-0">
-      {grupos.map((grupo) => (
-        <div key={grupo.titulo} className="flex gap-2 lg:flex-col lg:gap-1.5">
-          <p className="t-rotulo hidden text-tinta-3 lg:block">{grupo.titulo}</p>
-          {grupo.cargos.map((c) => {
-            const marcada = c.cod === ativo
-            // o ano desta ficha: o escolhido, se for do mesmo tipo de eleição; senão o mais recente dela
-            const anos = c.municipal ? ANOS_MUNICIPAIS : ANOS_GERAIS
-            const a = anos.includes(ano) ? ano : anos[1]
-            const r = panorama?.recortes.find((x) => x.ano === a && x.cargo.cod === c.cod)
-            const qs = r ? quartis(r.grupos) : []
-            return (
-              <button
-                key={c.cod}
-                type="button"
-                role="radio"
-                aria-checked={marcada}
-                aria-label={r && qs.length ? `${c.nome}, ${a}: de ${taxaCurta(qs[0].taxa)} na faixa de menos bens a ${taxaCurta(qs.at(-1)!.taxa)} na de mais bens` : c.nome}
-                onClick={() => aoEscolher(c.cod)}
-                className={`flex w-[11.5rem] shrink-0 snap-start items-center justify-between gap-3 rounded-2xl border px-3.5 py-2.5 text-left transition-[background-color,border-color,transform] active:scale-[0.985] lg:w-full ${
-                  marcada ? 'selecionado-fita' : 'border-linha bg-folha text-tinta hover:border-linha-2'
-                }`}
-              >
-                <span className="min-w-0">
-                  <span className="block truncate font-bold leading-tight">{c.nome}</span>
-                  <span className={`tabular block text-[0.75rem] ${marcada ? 'text-white' : 'text-tinta-3'}`}>
-                    {r && qs.length ? `${taxaCurta(qs[0].taxa)} → ${taxaCurta(qs.at(-1)!.taxa)}` : a}
-                  </span>
-                </span>
-                {r && <Degraus r={r} teto={teto} altura={26} largura={6} claro={marcada} />}
-              </button>
-            )
-          })}
-        </div>
-      ))}
-    </div>
-  )
-})
 
 /** O que a cena acabou de mostrar, em frase, com o próximo passo. */
 function Legenda({ dados, fase, aoMudarFase, rotulo, palpite }: { dados: Patrimonio; fase: Fase; aoMudarFase: (f: Fase) => void; rotulo: string; palpite: string | null }) {
@@ -201,6 +141,7 @@ export function PatrimonioPagina() {
   const mudar = useCallback((s: Partial<BuscaPatrimonio>) => navegar({ search: (a) => ({ ...a, ...s }), replace: true, resetScroll: false }), [navegar])
   const escolherUf = useCallback((sigla: string | undefined) => mudar({ uf: sigla }), [mudar])
   const escolherCargo = useCallback((c: number) => mudar({ cargo: c, ano: undefined }), [mudar])
+  const escolherAno = useCallback((a: Ano) => mudar({ ano: a }), [mudar])
   const { data: ufs } = useQuery(consultas.ufs())
   const { data: malha } = useQuery(consultas.malhaBrasil())
   const carregadas = useMemo(() => (ufs ?? []).filter((u) => u.carregada && u.sigla !== 'BR'), [ufs])
@@ -244,90 +185,81 @@ export function PatrimonioPagina() {
   if (!ufs) return <CirandaTela rotulo="Abrindo a página..." />
 
   return (
-    <div className="mx-auto max-w-[var(--casca-max)] px-4 pb-12 pt-6 md:px-[var(--casca-margem)] md:pt-7">
-      <div className="grid items-start gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1fr)_auto]">
+    <div className="mx-auto max-w-[var(--casca-max)] px-4 pb-20 pt-8 md:px-[var(--casca-margem)] md:pt-12">
+      <div className="mx-auto max-w-[var(--miolo-max)]">
+        {/* 1. a pergunta e o recorte */}
         <header>
-          <h1 className="t-display">Quem declara mais bens se elege mais?</h1>
-          <p className="mt-3 max-w-[52ch] text-[1.06rem] text-tinta-2">O que cada candidato declarou ao TSE (casa, carro, terreno) e quem se elegeu.</p>
-          {qp.data ? <Resposta panorama={qp.data} /> : <div className="mt-5 h-[74px]" />}
-        </header>
-        <MapaEstados malha={malha} ufs={carregadas} escolhida={uf} aoEscolher={escolherUf} nacional={cargo.nacional} />
-      </div>
-
-      <div>
-        <section id="cofrinho" aria-labelledby="cofrinho-titulo" className="mt-7 max-w-[var(--miolo-max)] scroll-mt-24">
-          <h2 id="cofrinho-titulo" className="t-h2">O cofrinho dos candidatos</h2>
-          <div className="mt-6 grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-10">
-            <FichasCargo panorama={qp.data} ano={ano} ativo={cargo.cod} aoEscolher={escolherCargo} />
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-                <Passos fase={fase} aoMudar={setFase} />
-                <div className="flex items-center gap-3">
-                  <fieldset>
-                    <legend className="sr-only">Eleição</legend>
-                    <CedulaAnos ano={ano} anos={anos} linhaDoTempo={false} aoMudar={(a) => mudar({ ano: a })} />
-                  </fieldset>
-                  <BotaoSom />
-                </div>
-              </div>
-              {q.error && dados && (
-                <p role="alert" className="mt-4 rounded-xl border border-corrige/40 bg-folha px-4 py-3 text-[0.9rem]">
-                  Não foi possível abrir este recorte ({q.error.message}). Abaixo, o anterior.
-                </p>
-              )}
-              <div aria-busy={q.isPlaceholderData} className={`relative mt-4 transition-opacity duration-300 ${q.isPlaceholderData ? 'opacity-55' : ''}`}>
-                {q.isPlaceholderData && <div className="absolute right-12 top-0 z-10"><Ciranda rotulo="Somando os bens..." tamanho={56} /></div>}
-                {dados ? (
-                  <>
-                    <Cofrinho
-                      dados={dados}
-                      rotulo={rotulo}
-                      fase={fase}
-                      aoMudarFase={setFase}
-                      palpite={palpite}
-                      aoPalpitar={palpitar}
-                      voce={grupoDoValor(dados, valor)?.id ?? null}
-                    />
-                    <p className="sr-only" aria-live="polite">
-                      {fase === 2 ? quartis(dados.grupos).map((g, i, t) => `${nomeFaixa(g, i, t.length).nome}: ${pct(g.taxa)} se elegeram.`).join(' ') : ''}
-                    </p>
-                  </>
-                ) : q.error ? (
-                  <ErroCarga erro={q.error} compacto />
-                ) : (
-                  <div className="grid min-h-[420px] place-items-center"><Ciranda rotulo="Somando os bens..." /></div>
-                )}
-              </div>
-              {dados && (
-                <div className="mt-6 border-t border-linha pt-5">
-                  <Legenda dados={dados} fase={fase} aoMudarFase={setFase} rotulo={rotulo} palpite={palpite} />
-                  <TabelaAlternavel
-                    titulo={`Patrimônio declarado e eleição: ${cargo.nome.toLowerCase()}, ${ano}`}
-                    colunas={['Faixa', 'Valores declarados', 'Candidato do meio', 'Candidatos', 'Eleitos', 'Se elegeram']}
-                    linhas={() => tabela(dados)}
-                  />
-                  <Voce dados={dados} rotulo={rotulo} valor={valor} aoMudar={setValor} />
-                </div>
-              )}
-            </div>
+          <h1 className="t-display titulo-p2">Quem declara mais bens se elege mais?</h1>
+          <div className="mt-5">
+            <Recorte cargo={cargo} ano={ano} anos={anos} uf={uf} ufs={carregadas} malha={malha} panorama={qp.data} aoCargo={escolherCargo} aoAno={escolherAno} aoUf={escolherUf} />
           </div>
-        </section>
+        </header>
 
-        <section aria-labelledby="todos" className="adiar mt-16 max-w-[var(--miolo-max)]">
-          <h2 id="todos" className="t-h2">Vale para todos os cargos?</h2>
-          <p className="mb-6 mt-1 max-w-[64ch] text-[0.95rem] text-tinta-2">Degraus subindo: quem declarou mais bens se elegeu mais. Toque para abrir no cofrinho.</p>
-          {qp.data ? (
-            <Escadas panorama={qp.data} ativo={ativo} aoAbrir={abrir} />
-          ) : qp.error ? (
-            <ErroCarga erro={qp.error} compacto />
-          ) : (
-            <div className="grid min-h-[240px] place-items-center"><Ciranda rotulo="Juntando as disputas..." tamanho={72} /></div>
+        {/* 2. o cofrinho */}
+        <section id="cofrinho" aria-label="O cofrinho" className="mt-8 scroll-mt-24">
+          <div className="flex items-center justify-between gap-4">
+            <Passos fase={fase} aoMudar={setFase} />
+            <BotaoSom />
+          </div>
+          {q.error && dados && (
+            <p role="alert" className="mt-4 rounded-xl border border-corrige/40 bg-folha px-4 py-3 text-[0.9rem]">
+              Não foi possível abrir este recorte ({q.error.message}). Abaixo, o anterior.
+            </p>
+          )}
+          <div aria-busy={q.isPlaceholderData} className={`relative mt-4 transition-opacity duration-300 ${q.isPlaceholderData ? 'opacity-55' : ''}`}>
+            {q.isPlaceholderData && <div className="absolute right-12 top-0 z-10"><Ciranda rotulo="Somando os bens..." tamanho={56} /></div>}
+            {dados ? (
+              <>
+                <Cofrinho dados={dados} rotulo={rotulo} fase={fase} aoMudarFase={setFase} palpite={palpite} aoPalpitar={palpitar} voce={grupoDoValor(dados, valor)?.id ?? null} />
+                <p className="sr-only" aria-live="polite">
+                  {fase === 2 ? quartis(dados.grupos).map((g, i, t) => `${nomeFaixa(g, i, t.length).nome}: ${pct(g.taxa)} se elegeram.`).join(' ') : ''}
+                </p>
+              </>
+            ) : q.error ? (
+              <ErroCarga erro={q.error} compacto />
+            ) : (
+              <div className="grid min-h-[420px] place-items-center"><Ciranda rotulo="Somando os bens..." /></div>
+            )}
+          </div>
+          {dados && fase > 0 && (
+            <div className="mt-6 border-t border-linha pt-6">
+              <Legenda dados={dados} fase={fase} aoMudarFase={setFase} rotulo={rotulo} palpite={palpite} />
+              <TabelaAlternavel
+                titulo={`Patrimônio declarado e eleição: ${cargo.nome.toLowerCase()}, ${ano}`}
+                colunas={['Faixa', 'Valores declarados', 'Candidato do meio', 'Candidatos', 'Eleitos', 'Se elegeram']}
+                linhas={() => tabela(dados)}
+              />
+            </div>
           )}
         </section>
 
-        <section aria-labelledby="nao-diz" className="adiar mt-16 max-w-[var(--miolo-max)]">
-          <h2 id="nao-diz" className="t-h2">O que a conta não diz</h2>
-          <ul className="mt-5 grid gap-x-10 gap-y-5 md:grid-cols-3">
+        {/* 3. e você? */}
+        {dados && <Voce dados={dados} rotulo={rotulo} valor={valor} aoMudar={setValor} />}
+
+        {/* 4. vale para todos os cargos? */}
+        <section aria-labelledby="todos" className="adiar mt-28 scroll-mt-24">
+          <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-6">
+            <div>
+              <h2 id="todos" className="t-h1">Vale para todos os cargos?</h2>
+              <p className="mt-3 max-w-[46ch] text-[1rem] text-tinta-2">Cada escadinha é uma disputa. Degraus subindo: quem declarou mais bens se elegeu mais. Toque para abrir no cofrinho.</p>
+            </div>
+            {qp.data && <Resposta panorama={qp.data} />}
+          </div>
+          <div className="mt-10">
+            {qp.data ? (
+              <Escadas panorama={qp.data} ativo={ativo} aoAbrir={abrir} />
+            ) : qp.error ? (
+              <ErroCarga erro={qp.error} compacto />
+            ) : (
+              <div className="grid min-h-[240px] place-items-center"><Ciranda rotulo="Juntando as disputas..." tamanho={72} /></div>
+            )}
+          </div>
+        </section>
+
+        {/* 5. o que a conta não diz */}
+        <section aria-labelledby="nao-diz" className="adiar mt-28">
+          <h2 id="nao-diz" className="t-h1">O que a conta não diz</h2>
+          <ul className="mt-8 grid gap-x-10 gap-y-6 md:grid-cols-3">
             {[
               { Icone: Receipt, titulo: 'É o que foi declarado', texto: 'Ninguém confere, e há erros de digitação.' },
               { Icone: ShoppingBagOpen, titulo: 'Sem bens não é pobreza', texto: dados ? `${pct(100 - dados.resumo.cobertura_pct, 0)} não declararam nada e ficam fora da fila.` : 'Quem não declarou nada fica fora da fila.' },
@@ -342,7 +274,7 @@ export function PatrimonioPagina() {
               </li>
             ))}
           </ul>
-          <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 border-t border-linha pt-4 text-[0.88rem]">
+          <div className="mt-10 flex flex-wrap gap-x-6 gap-y-2 border-t border-linha pt-4 text-[0.88rem]">
             <Link to="/metodologia" hash="m-patrimonio" className="inline-flex items-center gap-1.5 font-semibold text-acao hover:underline">
               Como a conta é feita <ArrowRight size={14} weight="bold" aria-hidden />
             </Link>

@@ -41,12 +41,12 @@ function Celula({ r, teto, ativa, aoAbrir }: { r: Recorte; teto: number; ativa: 
       onClick={aoAbrir}
       aria-pressed={ativa}
       aria-label={`${r.cargo.nome}, ${r.ano}: dos 25% com menos bens, ${q1 ? taxaCurta(q1.taxa) : '-'} se elegeram; dos 25% com mais bens, ${q4 ? taxaCurta(q4.taxa) : '-'}. Abrir no cofrinho.`}
-      className={`group flex min-w-0 flex-col justify-between gap-2 rounded-xl border px-3 pb-2.5 pt-3 text-left transition-[border-color,background-color,transform] active:scale-[0.98] ${
+      className={`group flex min-w-0 flex-col justify-between gap-1.5 rounded-xl border px-2.5 pb-2 pt-2.5 text-left transition-[border-color,background-color,transform] active:scale-[0.98] ${
         ativa ? 'border-selecao bg-selecao-claro shadow-[inset_0_-3px_0_var(--color-selecao)]' : 'border-linha bg-folha hover:border-linha-2'
       }`}
     >
       <span className="flex items-end justify-between gap-2">
-        <Degraus r={r} teto={teto} animar />
+        <Degraus r={r} teto={teto} altura={30} largura={9} animar />
         {!sobe && <span className="rounded-full bg-papel-2 px-2 py-0.5 text-[0.75rem] font-bold text-tinta-2">não sobe</span>}
       </span>
       <span className="tabular text-[0.8rem] leading-tight text-tinta-2">
@@ -71,7 +71,7 @@ function Bloco({ titulo, cargos, anos, recortes, teto, ativo, aoAbrir }: {
   return (
     <div className="min-w-0">
       <h3 className="t-h3">{titulo}</h3>
-      <div className="mt-3 grid grid-cols-[minmax(6.5rem,8.5rem)_repeat(2,minmax(0,8.5rem))] items-stretch gap-2">
+      <div className="mt-3 grid grid-cols-[minmax(6.5rem,8rem)_repeat(2,minmax(0,7.75rem))] items-stretch gap-2">
         <span />
         {anos.map((a) => <span key={a} className="t-numero tabular text-[1.35rem] text-tinta-2">{a}</span>)}
         {linhas.map((c) => {

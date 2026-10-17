@@ -542,3 +542,25 @@
   .degrau:nth-child(4) { animation-range: entry 40% cover 30%; }
 }
 @media (prefers-reduced-motion: reduce) { .degrau { animation: none !important; } }
+
+/* P2: hierarquia da página. O título é a maior voz do sistema (a pergunta mais difícil merece); a frase do
+   recorte é o subtítulo e o filtro, com as palavras escolhidas sublinhadas por um traço do oliva. */
+.titulo-p2 { font-size: clamp(2.4rem, 1.3rem + 3vw, 4.2rem); line-height: .96; letter-spacing: -0.022em; max-width: 19ch; }
+.recorte-palavra {
+  text-decoration: underline; text-decoration-color: color-mix(in oklab, var(--color-selecao) 55%, transparent);
+  text-decoration-thickness: 3px; text-underline-offset: 6px; transition: background-color 160ms, text-decoration-color 160ms;
+}
+.recorte-palavra:hover { background: var(--color-selecao-claro); text-decoration-color: var(--color-selecao); }
+@keyframes gaveta-abre { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: none; } }
+.gaveta { animation: gaveta-abre 220ms var(--ease-saida) both; transform-origin: top left; }
+/* a régua do "E você?": trilho em degradê do papel ao oliva (mais bens à direita), botão grande no oliva */
+.regua-voce { -webkit-appearance: none; appearance: none; height: 28px; background: transparent; cursor: pointer; }
+.regua-voce::-webkit-slider-runnable-track { height: 8px; border-radius: 999px; background: linear-gradient(90deg, #e6eaed, #b9cd80 60%, var(--color-selecao)); }
+.regua-voce::-moz-range-track { height: 8px; border-radius: 999px; background: linear-gradient(90deg, #e6eaed, #b9cd80 60%, var(--color-selecao)); }
+.regua-voce::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; margin-top: -10px; border-radius: 50%; background: var(--color-folha); border: 4px solid var(--color-selecao); box-shadow: 0 3px 8px -2px rgb(42 53 80 / .35); transition: transform 160ms var(--ease-saida); }
+.regua-voce::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--color-folha); border: 4px solid var(--color-selecao); }
+.regua-voce:active::-webkit-slider-thumb { transform: scale(1.15); }
+.exemplo-regua::before { content: ""; position: absolute; top: -8px; left: 50%; width: 2px; height: 8px; border-radius: 1px; background: var(--color-linha-2); }
+.exemplo-regua[aria-pressed="true"]::before { background: var(--color-selecao); height: 10px; }
+@media (prefers-reduced-motion: reduce) { .gaveta { animation: none; } }
+

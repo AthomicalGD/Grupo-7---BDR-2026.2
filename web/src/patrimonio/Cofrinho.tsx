@@ -21,8 +21,8 @@ export type Fase = 0 | 1 | 2 | 3
 
 // base: a linha de chão da fila; pitch: o passo de cada barrinha; vao: o espaço entre os grupos cortados
 const PLANTAS = {
-  largo: { W: 940, H: 440, chao: 314, porco: { x: 46, s: 1, grande: 1.3 }, fila: { x: 334, w: 606 }, base: 300, pitch: 5.4, vao: 22, alto: 150, slot: 150, texto: 450 },
-  estreito: { W: 358, H: 950, chao: 214, porco: { x: 63, s: 0.89, grande: 1.15 }, fila: { x: 4, w: 350 }, base: 550, pitch: 3.5, vao: 0, alto: 150, slot: 176, texto: 8 },
+  largo: { W: 940, H: 440, alturaInicial: 322, subida: 50, chao: 314, porco: { x: 46, s: 1, grande: 1.3 }, fila: { x: 334, w: 606 }, base: 300, pitch: 5.4, vao: 22, alto: 150, slot: 150, texto: 450 },
+  estreito: { W: 358, H: 950, alturaInicial: 560, subida: 0, chao: 214, porco: { x: 63, s: 0.89, grande: 1.15 }, fila: { x: 4, w: 350 }, base: 550, pitch: 3.5, vao: 0, alto: 150, slot: 176, texto: 8 },
 } as const
 type Planta = (typeof PLANTAS)[keyof typeof PLANTAS]
 const CELULA = 14 // cada bonequinho na grade de 10 por 10
@@ -203,7 +203,8 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
       setImagem(null)
     }
   }, [fase])
-  const escala = largura ? Math.min(1, largura / p.W) : 1
+  // o palco encolhe para caber e, em telas largas, cresce até 1,2x: o cofrinho é o protagonista da página
+  const escala = largura ? Math.min(estreito ? 1 : 1.2, largura / p.W) : 1
 
   useEffect(() => {
     const el = caixa.current
@@ -456,11 +457,11 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
   })
 
   return (
-    <div ref={caixa} className="relative w-full" style={{ height: p.H * escala }}>
+    <div ref={caixa} className="palco relative w-full" style={{ height: (fase === 0 ? p.alturaInicial : p.H) * escala }}>
       <div
         ref={cena}
-        className="absolute left-0 top-0 origin-top-left select-none"
-        style={{ width: p.W, height: p.H, transform: escala < 1 ? `scale(${escala})` : undefined, left: escala < 1 ? 0 : Math.max(0, (largura - p.W) / 2) }}
+        className="cena absolute left-0 top-0 origin-top-left select-none transition-transform duration-500"
+        style={{ width: p.W, height: p.H, transform: `translateY(${fase === 0 ? -p.subida * escala : 0}px) scale(${escala})`, left: Math.max(0, (largura - p.W * escala) / 2) }}
       >
         <svg ref={defs} width={0} height={0} className="absolute" aria-hidden>
           <defs>
@@ -541,7 +542,7 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
         </div>
 
         {fase === 0 && (
-          <div className="revela absolute" style={estreito ? { left: 8, right: 8, top: 236 } : { left: p.texto, right: 0, top: 40 }}>
+          <div className="revela absolute" style={estreito ? { left: 8, right: 8, top: 236 } : { left: p.texto, right: 0, top: 90 }}>
             <p className="t-numero tabular text-[clamp(2.8rem,2rem+2vw,4rem)] text-tinta">{inteiro(dados.resumo.candidatos)}</p>
             <p className="mt-1 max-w-[30ch] text-[1.08rem] font-semibold leading-snug text-tinta">{rotulo} dentro do cofrinho</p>
             <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3">

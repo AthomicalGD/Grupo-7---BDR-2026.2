@@ -1,20 +1,20 @@
-// "E você?": a pessoa escolhe quanto valem as coisas que tem (exemplos ou a régua) e vê em qual grupo da fila
-// cairia e quantos desse grupo se elegeram. A régua é logarítmica, como as barrinhas: cada trecho vale 10 vezes
-// o anterior. Os exemplos são valores redondos de referência, não dados do TSE.
+// "E você?": uma régua só. A pessoa arrasta (ou toca num exemplo marcado na própria régua: moto, carro, casa,
+// fazenda) e vê, em letra grande ao lado, em qual grupo da fila cairia e quantos desse grupo se elegeram.
+// A régua é logarítmica, como as barrinhas: cada trecho vale 10 vezes o anterior. Os exemplos são valores
+// redondos de referência, não dados do TSE.
 import { memo } from 'react'
 import type { Patrimonio } from '../api'
-import { grupoDoValor, nomeFaixa, quartis, reaisFaixa, taxaCurta } from './conta'
+import { COR, grupoDoValor, nomeFaixa, quartis, reaisFaixa, taxaCurta } from './conta'
 
 const EXEMPLOS = [
-  { nome: 'Nada a declarar', valor: 0 },
-  { nome: 'Uma moto', valor: 12_000 },
-  { nome: 'Um carro popular', valor: 60_000 },
-  { nome: 'Uma casa simples', valor: 200_000 },
-  { nome: 'Casa e carro', valor: 450_000 },
-  { nome: 'Uma fazenda', valor: 3_000_000 },
+  { nome: 'Moto', valor: 12_000 },
+  { nome: 'Carro', valor: 60_000 },
+  { nome: 'Casa', valor: 250_000 },
+  { nome: 'Fazenda', valor: 3_000_000 },
 ]
 const MIN = 3 // 10^3 = R$ 1 mil
 const MAX = 8 // 10^8 = R$ 100 mi
+const posicaoDe = (v: number) => ((Math.log10(v) - MIN) / (MAX - MIN)) * 100
 
 export const Voce = memo(function Voce({ dados, rotulo, valor, aoMudar }: { dados: Patrimonio; rotulo: string; valor: number | null; aoMudar: (v: number | null) => void }) {
   const qs = quartis(dados.grupos)
@@ -23,60 +23,66 @@ export const Voce = memo(function Voce({ dados, rotulo, valor, aoMudar }: { dado
   const media = dados.resumo.candidatos ? (100 * dados.resumo.eleitos) / dados.resumo.candidatos : 0
   const posicao = valor && valor > 0 ? Math.min(MAX, Math.max(MIN, Math.log10(valor))) : MIN
   const comparacao = g ? (g.taxa > media * 1.1 ? 'acima da média' : g.taxa < media * 0.9 ? 'abaixo da média' : 'perto da média') : ''
+  const nomeGrupo = g ? (g.tipo === 'sem_bens' ? 'quem não declarou nada' : nomeFaixa(g, i, qs.length).nome.toLowerCase()) : ''
+
   return (
-    <section aria-labelledby="voce-titulo" className="mt-8 rounded-[20px] border border-linha bg-folha p-5 sm:p-6">
-      <h3 id="voce-titulo" className="t-h2">E você, em que grupo cairia?</h3>
-      <div role="radiogroup" aria-label="Exemplos de patrimônio" className="mt-4 flex flex-wrap gap-2">
-        {EXEMPLOS.map((e) => {
-          const ativo = valor === e.valor
-          return (
-            <button
-              key={e.nome}
-              type="button"
-              role="radio"
-              aria-checked={ativo}
-              onClick={() => aoMudar(e.valor)}
-              className={`inline-flex h-11 items-center gap-2 rounded-full border px-4 text-[0.88rem] font-semibold transition-[background-color,color,transform] active:scale-[0.97] ${
-                ativo ? 'selecionado-fita' : 'border-linha bg-papel text-tinta-2 hover:border-linha-2 hover:text-tinta'
-              }`}
-            >
-              {e.nome}
-              <span className={`tabular text-[0.78rem] font-medium ${ativo ? 'text-white' : 'text-tinta-3'}`}>{e.valor ? reaisFaixa(e.valor) : 'R$ 0'}</span>
-            </button>
-          )
-        })}
+    <section aria-labelledby="voce-titulo" className="mt-28 grid items-end gap-x-14 gap-y-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+      <div>
+        <h2 id="voce-titulo" className="t-h1">E você, em que grupo cairia?</h2>
+        <p className="mt-3 text-[1rem] text-tinta-2">Quanto valem as coisas que você tem?</p>
+        <div className="mt-8">
+          <input
+            type="range"
+            min={MIN}
+            max={MAX}
+            step={0.01}
+            value={posicao}
+            onChange={(e) => aoMudar(Math.round(10 ** Number(e.target.value) / 100) * 100)}
+            aria-label="Valor dos seus bens"
+            aria-valuetext={valor ? reaisFaixa(valor) : 'nenhum valor'}
+            className="regua-voce w-full"
+          />
+          {/* os exemplos marcados na régua, no lugar do valor deles */}
+          <div className="relative mt-2 h-12">
+            {EXEMPLOS.map((e) => {
+              const ativo = valor === e.valor
+              return (
+                <button
+                  key={e.nome}
+                  type="button"
+                  aria-pressed={ativo}
+                  onClick={() => aoMudar(e.valor)}
+                  className={`exemplo-regua absolute flex -translate-x-1/2 flex-col items-center rounded-lg px-2 py-1 leading-tight ${ativo ? 'text-selecao-tinta' : 'text-tinta-2 hover:text-tinta'}`}
+                  style={{ left: `${posicaoDe(e.valor)}%` }}
+                >
+                  <span className="text-[0.86rem] font-bold">{e.nome}</span>
+                  <span className="tabular text-[0.75rem] text-tinta-3">{reaisFaixa(e.valor)}</span>
+                </button>
+              )
+            })}
+          </div>
+          <button type="button" aria-pressed={valor === 0} onClick={() => aoMudar(0)} className={`mt-3 text-[0.86rem] font-semibold underline-offset-4 hover:underline ${valor === 0 ? 'text-selecao-tinta underline' : 'text-acao'}`}>
+            Não tenho nada a declarar
+          </button>
+        </div>
       </div>
-      <label className="mt-5 block max-w-[640px]">
-        <span className="t-rotulo text-tinta-2">Ou arraste: {valor != null && valor > 0 ? <b className="tabular text-tinta">{reaisFaixa(valor)}</b> : 'de R$ 1 mil a R$ 100 mi'}</span>
-        <input
-          type="range"
-          min={MIN}
-          max={MAX}
-          step={0.01}
-          value={posicao}
-          onChange={(e) => aoMudar(Math.round(10 ** Number(e.target.value) / 100) * 100)}
-          aria-valuetext={valor ? reaisFaixa(valor) : 'nenhum valor'}
-          className="regua-voce mt-2 w-full"
-        />
-        <span aria-hidden className="tabular mt-1 flex justify-between text-[0.75rem] text-tinta-3">
-          <span>R$ 1 mil</span><span>R$ 10 mil</span><span>R$ 100 mil</span><span>R$ 1 mi</span><span>R$ 10 mi</span><span>R$ 100 mi</span>
-        </span>
-      </label>
-      <p className="mt-5 min-h-[3.2em] max-w-[64ch] text-[1.05rem] leading-relaxed text-tinta-2" aria-live="polite">
-        {!g || valor == null ? (
-          'Escolha um exemplo para ver o resultado.'
-        ) : g.tipo === 'sem_bens' ? (
-          <>
-            Quem não declara nenhum bem fica fora da fila. Entre os {rotulo} nessa situação, <b className="tabular text-tinta">{taxaCurta(g.taxa)}</b> se elegeram,{' '}
-            {comparacao} ({taxaCurta(media)}).
-          </>
+
+      <div aria-live="polite" className="min-h-[9.5rem]">
+        {g && valor != null ? (
+          <div key={g.id} className="revela">
+            <p className="text-[1.05rem] text-tinta-2">
+              {valor > 0 ? <>Com <b className="tabular text-tinta">{reaisFaixa(valor)}</b>, você estaria entre</> : 'Você estaria entre'}{' '}
+              <b className="text-tinta">{nomeGrupo}</b>. Desses {rotulo},
+            </p>
+            <p className="mt-2 flex items-end gap-3">
+              <span className="t-numero tabular text-[clamp(3.4rem,2.6rem+2.4vw,4.8rem)] leading-[.85]" style={{ color: COR.texto }}>{taxaCurta(g.taxa)}</span>
+              <span className="pb-1 text-[1rem] font-semibold leading-snug text-tinta-2">se elegeram,<br />{comparacao} ({taxaCurta(media)})</span>
+            </p>
+          </div>
         ) : (
-          <>
-            Com <b className="tabular text-tinta">{reaisFaixa(valor)}</b> você estaria entre <b className="text-tinta">{nomeFaixa(g, i, qs.length).nome.toLowerCase()}</b>.
-            Nesse grupo, <b className="tabular text-tinta">{taxaCurta(g.taxa)}</b> se elegeram, {comparacao} ({taxaCurta(media)}).
-          </>
+          <p className="text-[1.05rem] text-tinta-3">Arraste a régua ou toque num exemplo para ver a sua chance.</p>
         )}
-      </p>
+      </div>
     </section>
   )
 })
