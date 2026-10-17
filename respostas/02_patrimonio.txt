@@ -1,0 +1,138 @@
+P2) Qual a taxa de sucesso eleitoral por patrimônio declarado?
+
+Abrangência: AC, BA, GO, PA, PE, PI (UFs carregadas, não o Brasil inteiro).
+Síntese: em 12 de 12 recortes ano/cargo com quatro quartis, a taxa de eleição do quartil de maior patrimônio supera a do menor.
+Cobertura: 94.281 de 219.042 candidaturas aptas (43.0%) não têm bens registrados.
+Fonte: TSE, candidaturas e bens declarados; eleições ordinárias de 2018, 2020, 2022 e 2024.
+Taxa = candidaturas eleitas / candidaturas aptas em cada faixa, por ano e cargo.
+Patrimônio = soma dos bens registrados para a candidatura; não é receita de campanha.
+Quartis calculados só entre valores positivos de cada ano/cargo; empates não são separados.
+Sem registro de bens ≠ patrimônio declarado igual a zero: ambos ficam fora dos quartis.
+A situação de eleição considera o resultado final, inclusive o 2º turno, sem duplicar a candidatura.
+Vices, suplentes, presidente e eleições suplementares não entram na análise.
+Valores de cada faixa são nominais do ano da eleição; taxas não precisam de correção pelo IPCA.
+As diferenças são associações observadas, não efeito causal do patrimônio sobre a eleição.
+
+2018 · Governador — 41 candidaturas aptas, 6 eleitos; bens informados: 87.8%
+  Faixa patrimonial                            Candidatos   Eleitos    Taxa
+  ---------------------------------------------------------------------------
+  Sem registro de bens                                  5         0    0.0%
+  Q1: R$ 5.000,00 a R$ 268.919,50                       9         0    0.0%
+  Q2: R$ 272.879,91 a R$ 653.761,00                     9         1   11.1%
+  Q3: R$ 674.317,43 a R$ 1.823.426,57                   9         2   22.2%
+  Q4: R$ 2.110.905,72 a R$ 16.754.720,50                9         3   33.3%
+  Maior faixa menos menor faixa: +33.3 p.p.
+
+2018 · Senador — 73 candidaturas aptas, 12 eleitos; bens informados: 83.6%
+  Faixa patrimonial                            Candidatos   Eleitos    Taxa
+  ---------------------------------------------------------------------------
+  Sem registro de bens                                 12         0    0.0%
+  Q1: R$ 950,78 a R$ 157.974,15                        16         1    6.2%
+  Q2: R$ 184.500,00 a R$ 964.851,76                    15         2   13.3%
+  Q3: R$ 1.068.661,98 a R$ 4.274.271,54                15         4   26.7%
+  Q4: R$ 5.205.211,18 a R$ 32.633.410,83               15         5   33.3%
+  Maior faixa menos menor faixa: +27.1 p.p.
+
+2018 · Deputado Federal — 1.364 candidaturas aptas, 116 eleitos; bens informados: 60.3%
+  Faixa patrimonial                            Candidatos   Eleitos    Taxa
+  ---------------------------------------------------------------------------
+  Sem registro de bens                                542         5    0.9%
+  Q1: R$ 1,00 a R$ 72.569,29                          206         3    1.5%
+  Q2: R$ 74.000,00 a R$ 250.727,30                    205         9    4.4%
+  Q3: R$ 253.086,44 a R$ 768.480,00                   205        27   13.2%
+  Q4: R$ 773.410,97 a R$ 32.860.739,67                206        72   35.0%
+  Maior faixa menos menor faixa: +33.5 p.p.
+
+2018 · Deputado Estadual — 3.382 candidaturas aptas, 248 eleitos; bens informados: 59.3%
+  Faixa patrimonial                            Candidatos   Eleitos    Taxa
+  ---------------------------------------------------------------------------
+  Sem registro de bens                              1.375        17    1.2%
+  Q1: R$ 10,00 a R$ 53.500,00                         504        11    2.2%
+  Q2: R$ 54.000,00 a R$ 185.000,00                    503        21    4.2%
+  Q3: R$ 186.000,00 a R$ 535.000,00                   498        53   10.6%
+  Q4: R$ 535.324,40 a R$ 22.697.056,00                502       146   29.1%
+  Maior faixa menos menor faixa: +26.9 p.p.
+
+2020 · Prefeito — 4.123 candidaturas aptas, 1.227 eleitos; bens informados: 88.1%
+  Faixa patrimonial                            Candidatos   Eleitos    Taxa
+  ---------------------------------------------------------------------------
+  Sem registro de bens                                492        81   16.5%
+  Q1: R$ 34,71 a R$ 139.442,94                        908       233   25.7%
+  Q2: R$ 140.000,00 a R$ 360.000,00                   912       269   29.5%
+  Q3: R$ 361.000,00 a R$ 865.000,00                   903       305   33.8%
+  Q4: R$ 865.247,58 a R$ 341.286.567,60               908       339   37.3%
+  Maior faixa menos menor faixa: +11.7 p.p.
+
+2020 · Vereador — 112.605 candidaturas aptas, 13.427 eleitos; bens informados: 54.7%
+  Faixa patrimonial                            Candidatos   Eleitos    Taxa
+  ---------------------------------------------------------------------------
+  Sem registro de bens                             51.048     3.197    6.3%
+  Total declarado igual a zero                         60         2    3.3%
+  Q1: R$ 0,01 a R$ 20.000,00                       15.806     1.628   10.3%
+  Q2: R$ 20.000,13 a R$ 67.000,00                  14.993     2.376   15.8%
+  Q3: R$ 67.000,10 a R$ 170.000,00                 15.486     2.870   18.5%
+  Q4: R$ 170.000,01 a R$ 1.000.000.000,00          15.212     3.354   22.0%
+  Maior faixa menos menor faixa: +11.7 p.p.
+
+2022 · Governador — 50 candidaturas aptas, 6 eleitos; bens informados: 90.0%
+  Faixa patrimonial                            Candidatos   Eleitos    Taxa
+  ---------------------------------------------------------------------------
+  Sem registro de bens                                  5         0    0.0%
+  Q1: R$ 12.500,00 a R$ 210.000,00                     12         0    0.0%
+  Q2: R$ 284.236,49 a R$ 520.000,00                    11         2   18.2%
+  Q3: R$ 561.000,00 a R$ 1.936.413,26                  11         1    9.1%
+  Q4: R$ 1.966.870,43 a R$ 41.718.572,69               11         3   27.3%
+  Maior faixa menos menor faixa: +27.3 p.p.
+
+2022 · Senador — 49 candidaturas aptas, 6 eleitos; bens informados: 83.7%
+  Faixa patrimonial                            Candidatos   Eleitos    Taxa
+  ---------------------------------------------------------------------------
+  Sem registro de bens                                  8         0    0.0%
+  Q1: R$ 10.135,80 a R$ 340.000,00                     11         1    9.1%
+  Q2: R$ 350.000,00 a R$ 1.001.900,75                  10         1   10.0%
+  Q3: R$ 1.104.283,79 a R$ 2.121.474,30                10         2   20.0%
+  Q4: R$ 2.476.199,08 a R$ 41.485.046,02               10         2   20.0%
+  Maior faixa menos menor faixa: +10.9 p.p.
+
+2022 · Deputado Federal — 2.085 candidaturas aptas, 116 eleitos; bens informados: 60.2%
+  Faixa patrimonial                            Candidatos   Eleitos    Taxa
+  ---------------------------------------------------------------------------
+  Sem registro de bens                                829         4    0.5%
+  Total declarado igual a zero                          2         0    0.0%
+  Q1: R$ 0,37 a R$ 74.839,13                          314         4    1.3%
+  Q2: R$ 75.000,00 a R$ 285.477,46                    313         8    2.6%
+  Q3: R$ 285.597,86 a R$ 790.431,38                   313        23    7.3%
+  Q4: R$ 794.000,00 a R$ 107.545.780,55               314        77   24.5%
+  Maior faixa menos menor faixa: +23.2 p.p.
+
+2022 · Deputado Estadual — 3.320 candidaturas aptas, 248 eleitos; bens informados: 55.6%
+  Faixa patrimonial                            Candidatos   Eleitos    Taxa
+  ---------------------------------------------------------------------------
+  Sem registro de bens                              1.474        18    1.2%
+  Total declarado igual a zero                          2         0    0.0%
+  Q1: R$ 0,01 a R$ 71.000,00                          463        10    2.2%
+  Q2: R$ 74.000,00 a R$ 230.000,00                    460        18    3.9%
+  Q3: R$ 230.149,60 a R$ 712.000,00                   460        58   12.6%
+  Q4: R$ 715.249,84 a R$ 448.447.364,52               461       144   31.2%
+  Maior faixa menos menor faixa: +29.1 p.p.
+
+2024 · Prefeito — 3.243 candidaturas aptas, 1.232 eleitos; bens informados: 89.3%
+  Faixa patrimonial                            Candidatos   Eleitos    Taxa
+  ---------------------------------------------------------------------------
+  Sem registro de bens                                346        69   19.9%
+  Q1: R$ 31,14 a R$ 184.589,42                        725       252   34.8%
+  Q2: R$ 185.000,00 a R$ 473.455,20                   724       279   38.5%
+  Q3: R$ 474.338,50 a R$ 1.137.040,46                 724       322   44.5%
+  Q4: R$ 1.140.000,00 a R$ 1.401.171.000,00           724       310   42.8%
+  Maior faixa menos menor faixa: +8.1 p.p.
+
+2024 · Vereador — 88.707 candidaturas aptas, 13.294 eleitos; bens informados: 57.0%
+  Faixa patrimonial                            Candidatos   Eleitos    Taxa
+  ---------------------------------------------------------------------------
+  Sem registro de bens                             38.145     3.325    8.7%
+  Total declarado igual a zero                         60         5    8.3%
+  Q1: R$ 0,01 a R$ 25.000,00                       12.878     1.528   11.9%
+  Q2: R$ 25.005,00 a R$ 85.000,00                  12.558     2.198   17.5%
+  Q3: R$ 85.020,00 a R$ 220.000,00                 12.448     2.814   22.6%
+  Q4: R$ 220.025,00 a R$ 2.415.265.000,00          12.618     3.424   27.1%
+  Maior faixa menos menor faixa: +15.3 p.p.
