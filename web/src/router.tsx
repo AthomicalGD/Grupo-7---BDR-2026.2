@@ -30,6 +30,12 @@ export interface BuscaEscola {
   ibge?: number
 }
 
+export interface BuscaPatrimonio {
+  ano?: Ano
+  cargo?: number
+  uf?: string
+}
+
 export interface BuscaReeleicao {
   uf?: string
   cargo?: number
@@ -104,6 +110,16 @@ const escola = createRoute({
     ibge: numero(s.ibge),
   }),
 })
+const patrimonio = createRoute({
+  getParentRoute: () => raiz,
+  path: '/patrimonio',
+  component: lazyRouteComponent(() => import('./patrimonio/PatrimonioPagina'), 'PatrimonioPagina'),
+  validateSearch: (s: Record<string, unknown>): BuscaPatrimonio => ({
+    ano: ANOS.includes(Number(s.ano) as Ano) ? (Number(s.ano) as Ano) : undefined,
+    cargo: [1, 3, 5, 6, 7, 11, 13].includes(Number(s.cargo)) ? Number(s.cargo) : undefined,
+    uf: typeof s.uf === 'string' && /^[A-Z]{2}$/.test(s.uf) ? s.uf : undefined,
+  }),
+})
 const reeleicao = createRoute({
   getParentRoute: () => raiz,
   path: '/reeleicao',
@@ -124,7 +140,7 @@ const metodologia = createRoute({
   component: lazyRouteComponent(() => import('./paginas/Metodologia'), 'Metodologia'),
 })
 
-const arvore = raiz.addChildren([atlas.addChildren([inicio, estado, municipio]), urna, cadeira, escola, reeleicao, politico, metodologia])
+const arvore = raiz.addChildren([atlas.addChildren([inicio, estado, municipio]), urna, cadeira, escola, patrimonio, reeleicao, politico, metodologia])
 
 export const router = createRouter({
   routeTree: arvore,
