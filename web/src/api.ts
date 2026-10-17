@@ -267,6 +267,8 @@ export interface GrupoPatrimonio {
   tipo: 'sem_bens' | 'zero' | 'quartil' | 'faixa'
   de: number | null
   ate: number | null
+  /** o candidato do meio do grupo */
+  mediana: number | null
   candidatos: number
   eleitos: number
   taxa: number
@@ -279,6 +281,23 @@ export interface Patrimonio {
   resumo: { candidatos: number; eleitos: number; sem_bens: number; zero_declarado: number; com_bens: number; cobertura_pct: number }
   grupos: GrupoPatrimonio[]
   sintese: { quartis: number; maior_supera_menor: boolean; diferenca_pp: number | null }
+}
+
+/** A P2 em todos os cargos e anos de uma vez (Presidente sempre nacional). */
+export interface PanoramaPatrimonio {
+  uf: string | null
+  recortes: {
+    ano: Ano
+    cargo: { cod: number; nome: string }
+    nacional: boolean
+    candidatos: number
+    eleitos: number
+    cobertura_pct: number
+    grupos: Pick<GrupoPatrimonio, 'id' | 'tipo' | 'taxa' | 'candidatos' | 'eleitos' | 'mediana'>[]
+    sintese: Patrimonio['sintese']
+  }[]
+  com_quartis: number
+  maior_supera: number
 }
 
 // ───────── P10a: taxa de reeleição ─────────
@@ -483,12 +502,18 @@ export const consultas = {
       queryKey: ['cadeira', ano, cargo, uf, municipio ?? null],
       queryFn: ({ signal }) =>
         get<Cadeira>(`/api/cadeira?ano=${ano}&cargo=${cargo}&uf=${uf}${municipio ? `&municipio=${municipio}` : ''}`, signal),
-       ...sempre,
-     }),
+      ...sempre,
+    }),
   patrimonio: (ano: number, cargo: number, uf = '') =>
     queryOptions({
       queryKey: ['patrimonio', ano, cargo, uf],
       queryFn: ({ signal }) => get<Patrimonio>(`/api/patrimonio?ano=${ano}&cargo=${cargo}${uf ? `&uf=${uf}` : ''}`, signal),
+      ...sempre,
+    }),
+  patrimonioPanorama: (uf = '') =>
+    queryOptions({
+      queryKey: ['patrimonio-panorama', uf],
+      queryFn: ({ signal }) => get<PanoramaPatrimonio>(`/api/patrimonio/panorama${uf ? `?uf=${uf}` : ''}`, signal),
       ...sempre,
     }),
   escola: (ano: number, uf = '') =>
