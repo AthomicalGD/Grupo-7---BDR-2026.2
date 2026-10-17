@@ -314,6 +314,14 @@ A balança: uma barra divergente a partir do zero em que cada partido é um trec
 ### Busca no plenário
 Campo "Procurar eleito" acima do plenário; Enter destaca a cadeira: as outras escurecem (papel a 72%), a achada ganha o anel amarelo do marcador, pulsa duas vezes, e um cartão fixo ao lado leva à carreira. Em tela estreita o cartão desce para baixo do desenho.
 
+### A página do Patrimônio (P2): hierarquia
+A pergunta mais difícil do projeto tem a página mais forte do sistema, organizada em atos, cada um com uma função e um título no mesmo degrau (`t-h1`), separados por espaços grandes (112px) e com espaços curtos dentro deles:
+1. **A pergunta e o recorte:** o maior título do sistema (`.titulo-p2`, até 4,2rem, duas linhas) e, logo abaixo, a frase que é subtítulo e filtro ao mesmo tempo: "Candidatos a **vereador** em **2024**, **nos 6 estados**". Cada palavra destacada (sublinhado grosso no oliva, seta) abre uma gaveta logo abaixo: os cargos com a escadinha de cada um, os dois anos em número grande, ou o minimapa dos estados; fecha com Esc, clique fora ou ao escolher. Nenhum outro controle cerca o cofrinho.
+2. **O cofrinho:** o protagonista, com os passos e o som numa linha acima; o palco cresce até 1,2x em telas largas e, no passo 1, fica só com o porquinho e a ação (a cena sobe 50px), cabendo na primeira tela.
+3. **E você?:** uma régua só, com os exemplos (moto, carro, casa, fazenda) marcados nela no lugar do valor, e o resultado em número grande ao lado.
+4. **Vale para todos os cargos?:** a resposta geral em número grande ("13 de 14") ao lado do título e a grade compacta de escadinhas.
+5. **O que a conta não diz:** três lembretes com ícone.
+
 ### O cofrinho (assinatura, P2)
 A pergunta mais difícil do projeto contada em quatro passos clicáveis (Quebrar, A fila, Seu palpite, Quem se elegeu), com o passo atual no oliva claro da seleção; no celular, só o atual leva o nome. O dinheiro aparece só como dinheiro (moedas, cofrinho); quem se elegeu é gente (bonequinhos), nunca moeda empilhada.
 - **Abertura:** o título, a resposta em número grande ("13 de 14 disputas", que conta de 0 ao aparecer) e, ao lado, o minimapa dos estados: os carregados acesos no oliva claro e clicáveis (Tab e Enter também), o escolhido no oliva cheio com a sigla em branco e um pulo curto, o nome embaixo ao passar o mouse, "Ver todos" para voltar; com Presidente, esmaecido ("Brasil inteiro"). As siglas ficam numa camada por cima de todos os estados.

@@ -9,7 +9,7 @@ test('P2: martelar o cofrinho, cortar a fila, dar o palpite e ver quem se elegeu
 
   // sem nada no endereço: vereador em 2024, todos os estados carregados
   await page.goto('/patrimonio')
-  await expect(page.getByRole('radio', { name: /^Vereador, 2024: / })).toBeChecked({ timeout: 30_000 })
+  await expect(page.getByRole('button', { name: 'Cargo: Vereador. Trocar' })).toBeVisible({ timeout: 30_000 })
   await expect(page.getByText('disputas em que quem declarou mais bens se elegeu mais')).toBeVisible({ timeout: 30_000 })
   await expect(page.getByText(mil(vereador.resumo.candidatos), { exact: true })).toBeVisible()
   await registrar(page, 'patrimonio')
@@ -33,17 +33,20 @@ test('P2: martelar o cofrinho, cortar a fila, dar o palpite e ver quem se elegeu
   await registrar(page, 'patrimonio-eleitos')
 
   // "E você?": um exemplo mostra o grupo e a chance dele
-  await page.getByRole('radio', { name: /^Uma fazenda/ }).click()
+  await page.getByRole('button', { name: /^Fazenda/ }).click()
   await expect(page.getByText(/você estaria entre os 25% com mais bens/)).toBeVisible()
 
-  // o minimapa escolhe o estado; tocar de novo volta a todos
+  // a frase do recorte: o minimapa escolhe o estado; tocar de novo volta a todos
+  await page.getByRole('button', { name: /^Estado: / }).click()
   await page.getByRole('radio', { name: 'Bahia', exact: true }).click()
   await expect(page).toHaveURL(/uf=BA/)
+  await page.getByRole('button', { name: /^Estado: / }).click()
   await page.getByRole('radio', { name: 'Bahia', exact: true }).click()
   await expect(page).not.toHaveURL(/uf=BA/)
 
   // outro cargo apaga o palpite; montar de novo volta ao cofrinho inteiro
-  await page.getByRole('radio', { name: /^Prefeito, 2024: / }).click()
+  await page.getByRole('button', { name: /^Cargo: / }).click()
+  await page.getByRole('radio', { name: /^Prefeito/ }).click()
   await expect(page).toHaveURL(/cargo=11/)
   await expect(page.getByText('Você acertou o palpite!')).toHaveCount(0)
   await page.getByRole('button', { name: 'Montar o cofrinho de novo' }).click()
