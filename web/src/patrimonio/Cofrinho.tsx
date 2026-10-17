@@ -1,12 +1,12 @@
-// O cofrinho da P2, em quatro passos. (0) Todos os candidatos estão dentro de um porquinho de porcelana com a
-// faixa das sete fitas; três marteladas (ou o botão) o racham e quebram em seis cacos. (1) As moedas voam e
-// viram a fila: 100 barrinhas, cada uma 1 em cada 100 candidatos que declararam bens, do menor valor ao maior
-// (altura em escala que cresce de 10 em 10 vezes). (2) A tesoura corta a fila em quatro grupos do mesmo
-// tamanho, com o valor de cada corte, e a pessoa dá o palpite de qual grupo elegeu mais. (3) Cada grupo vira
-// 100 bonequinhos (ou as pessoas de verdade, quando são menos de 30) e os eleitos acendem; o número conta e o
-// carimbo "2,3x a chance" bate no grupo de mais bens. O React desenha sempre a pose final; a Web Animations API
-// e o `animate` do motion só animam a chegada (transform, opacity e clip-path), então "reduzir movimento" vê a
-// mesma cena sem o caminho.
+// O cofrinho da P2, em quatro passos. (0) Todos os candidatos estão dentro de um porquinho rosa de porcelana;
+// cada martelada racha a porcelana a partir do ponto do golpe (rachadura com galhos, de semente fixa), solta
+// lascas e, na terceira, o porquinho se parte em cacos serrilhados que mostram o branco da porcelana. (1) As
+// moedas voam e viram a fila: 100 barrinhas, cada uma 1 em cada 100 candidatos que declararam bens, do menor
+// valor ao maior. (2) A tesoura corta a fila em quatro grupos do mesmo tamanho e a pessoa dá o palpite. (3) Cada
+// grupo vira 100 bonequinhos e os eleitos acendem; o número conta e o carimbo bate no grupo de mais bens.
+// O React desenha sempre a pose final; a Web Animations API e o `animate` do motion só animam a chegada
+// (transform, opacity e clip-path), e os efeitos de cada golpe (lascas, martelo) são elementos criados e
+// removidos fora do React, sem re-render. "Reduzir movimento" vê a mesma cena sem o caminho.
 import { Hammer, Scissors, SpeakerHigh, SpeakerSlash } from '@phosphor-icons/react'
 import { animate } from 'motion'
 import { memo, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
@@ -14,18 +14,17 @@ import type { GrupoPatrimonio, Patrimonio } from '../api'
 import { inteiro } from '../lib/formato'
 import { alternarSom, somLigado } from '../urna/som'
 import { COR, limitesCurtos, moedas, nomeFaixa, POUCOS, quartis, reaisFaixa, taxaCurta } from './conta'
+import { cacos, Desenho, dentroDoCorpo, Gradientes, PORCO, Rachaduras, sorteio } from './porquinho'
 import { tocarCarimbo, tocarCorte, tocarGolpe, tocarPilhas, tocarQuebra } from './som'
 
 export type Fase = 0 | 1 | 2 | 3
 
-const FITAS = ['#5e881b', '#a2bd31', '#5d6b94', '#468baf', '#76acd0', '#f19929', '#fbc700']
 // base: a linha de chão da fila; pitch: o passo de cada barrinha; vao: o espaço entre os grupos cortados
 const PLANTAS = {
   largo: { W: 940, H: 440, chao: 314, porco: { x: 46, s: 1, grande: 1.3 }, fila: { x: 334, w: 606 }, base: 300, pitch: 5.4, vao: 22, alto: 150, slot: 150, texto: 450 },
   estreito: { W: 358, H: 950, chao: 214, porco: { x: 63, s: 0.89, grande: 1.15 }, fila: { x: 4, w: 350 }, base: 550, pitch: 3.5, vao: 0, alto: 150, slot: 176, texto: 8 },
 } as const
 type Planta = (typeof PLANTAS)[keyof typeof PLANTAS]
-const PORCO = { W: 260, H: 210, base: 198 }
 const CELULA = 14 // cada bonequinho na grade de 10 por 10
 
 const consulta = '(max-width: 639px)'
@@ -38,62 +37,29 @@ const useEstreito = () => useSyncExternalStore(assinar, () => matchMedia(consult
 const reduzido = () => matchMedia('(prefers-reduced-motion: reduce)').matches
 const EASE = 'cubic-bezier(.16,1,.3,1)'
 
-// Os seis cacos: polígonos que cobrem a caixa do desenho e se encontram no ponto do golpe, perto da fenda.
-const GOLPE = [132, 78]
-const CACOS = [
-  '132,78 118,52 104,0 0,0 0,92 46,98 88,86',
-  '132,78 118,52 104,0 260,0 260,40 196,58 160,70',
-  '132,78 160,70 196,58 260,40 260,150 212,140 170,128',
-  '132,78 170,128 212,140 260,150 260,210 150,210 152,160',
-  '132,78 152,160 150,210 70,210 98,150',
-  '132,78 98,150 70,210 0,210 0,92 46,98 88,86',
-]
-const RACHAS = ['118,52 104,0', '170,128 212,140 260,150', '88,86 46,98 0,92', '160,70 196,58 260,40', '152,160 150,210', '98,150 70,210']
-const GOLPES = 3 // marteladas até quebrar; cada uma mostra mais duas rachaduras
-const VOOS: [number, number, number][][] = [
-  [[-70, -70, -30], [-46, 70, -24]],
-  [[16, -110, 80], [66, 100, 172]],
-  [[70, -60, 35], [58, 46, 26]],
-  [[50, -6, 15], [40, 14, 10]],
-  [[4, -16, -8], [-2, 8, -5]],
-  [[-60, -20, -20], [-40, 18, -12]],
-]
-const pose = ([x, y, r]: [number, number, number], s: number) => `translate(${x * s}px, ${y * s}px) rotate(${r}deg)`
+const GOLPES = 3 // marteladas até quebrar
+// onde cai cada martelada dada pelo teclado (sem ponto de clique): costas, flanco e barriga
+const GOLPES_TECLADO: [number, number][] = [[112, 70], [150, 112], [96, 132]]
+const SEMENTE = 20261017
 
-const Desenho = memo(function Desenho({ p }: { p: string }) {
-  return (
-    <>
-      <rect x={58} y={150} width={24} height={46} rx={9} fill="#dfe4e8" stroke="#8e99a5" strokeWidth={1.5} />
-      <rect x={150} y={150} width={24} height={46} rx={9} fill="#dfe4e8" stroke="#8e99a5" strokeWidth={1.5} />
-      <path d="M180 62 Q186 26 208 34 Q204 56 194 72 Z" fill="#dfe4e8" stroke="#8e99a5" strokeWidth={1.5} strokeLinejoin="round" />
-      <path d="M30 102 C14 96 8 114 19 118 C30 122 33 106 22 106" fill="none" stroke="#8e99a5" strokeWidth={3.6} strokeLinecap="round" />
-      <ellipse cx={122} cy={112} rx={96} ry={68} fill={`url(#${p}-corpo)`} />
-      <g clipPath={`url(#${p}-silhueta)`}>
-        {FITAS.map((cor, i) => {
-          const x = 128 + i * 3.2
-          return <path key={cor} d={`M${x} 38 C${x - 12} 90 ${x - 12} 140 ${x} 186`} stroke={cor} strokeWidth={3.4} fill="none" />
-        })}
-        <ellipse cx={122} cy={166} rx={90} ry={22} fill="rgb(42 53 80 / .07)" />
-      </g>
-      <ellipse cx={122} cy={112} rx={96} ry={68} fill="none" stroke="#8e99a5" strokeWidth={1.6} />
-      <ellipse cx={88} cy={76} rx={28} ry={10} transform="rotate(-18 88 76)" fill="#fff" opacity={0.85} />
-      <rect x={78} y={154} width={26} height={44} rx={10} fill={`url(#${p}-pata)`} stroke="#8e99a5" strokeWidth={1.5} />
-      <rect x={170} y={154} width={26} height={44} rx={10} fill={`url(#${p}-pata)`} stroke="#8e99a5" strokeWidth={1.5} />
-      <ellipse cx={225} cy={116} rx={15} ry={21} fill="#e9edf0" stroke="#8e99a5" strokeWidth={1.6} />
-      <ellipse cx={229} cy={108} rx={2.6} ry={4} fill="#8e99a5" />
-      <ellipse cx={229} cy={124} rx={2.6} ry={4} fill="#8e99a5" />
-      <ellipse cx={196} cy={132} rx={11} ry={6.5} fill="#f19929" opacity={0.22} />
-      {/* o olho pisca uma vez quando o mouse chega (classe .porco-olho) */}
-      <g className="porco-olho">
-        <circle cx={193} cy={96} r={5.4} fill="#18202b" />
-        <circle cx={194.8} cy={94.2} r={1.7} fill="#fff" />
-      </g>
-      <path d="M160 60 Q158 22 184 26 Q188 50 180 70 Z" fill="#fcfdfd" stroke="#8e99a5" strokeWidth={1.5} strokeLinejoin="round" />
-      <path d="M166 56 Q166 34 180 32 Q182 48 177 60 Z" fill="#e3e7eb" />
-      <rect x={100} y={46} width={48} height={8.5} rx={4.2} fill="#18202b" transform="rotate(-3 124 50)" />
-    </>
-  )
-})
+type Golpe = { x: number; y: number; semente: number }
+
+/** Para onde cada caco voa (meio do voo) e onde assenta no chão, a partir da direção do golpe ao caco. */
+function voosDosCacos(lista: { centro: [number, number] }[], gx: number, gy: number, s: number) {
+  const r = sorteio(SEMENTE + 7)
+  return lista.map(({ centro: [cx, cy] }) => {
+    const dx = cx - gx
+    const dy = cy - gy
+    const d = Math.hypot(dx, dy) || 1
+    const ux = dx / d
+    const uy = dy / d
+    const giro = (r() - 0.5) * 70
+    const queda = Math.max(4, (PORCO.base - 10 - cy) * 0.62)
+    const meio = `translate(${(ux * 60) * s}px, ${(uy * 40 - 70) * s}px) rotate(${giro * 0.6}deg)`
+    const fim = `translate(${(ux * 46) * s}px, ${queda * s}px) rotate(${giro}deg)`
+    return { meio, fim, origem: `${cx * s}px ${cy * s}px` }
+  })
+}
 
 /** As barrinhas de um grupo da fila; só mudam com o recorte. */
 const Barras = memo(function Barras({ hs, inicio, n, pitch }: { hs: number[]; inicio: number; n: number; pitch: number }) {
@@ -106,21 +72,31 @@ const Barras = memo(function Barras({ hs, inicio, n, pitch }: { hs: number[]; in
   )
 })
 
-/** Os bonequinhos de um grupo: os que não se elegeram são uma camada só (máscara repetida), e só os eleitos
- * são elementos, preenchendo de baixo para cima (flex com wrap-reverse), para acenderem um a um. */
+/** Os bonequinhos de um grupo: os que não se elegeram e os eleitos são camadas com a figura repetida a cada
+ * 14px (máscara); os eleitos preenchem de baixo para cima e acendem linha a linha (recorte em degraus),
+ * depois a última linha, incompleta, da esquerda para a direita. Duas animações por grupo, não uma por pessoa. */
 const Grade = memo(function Grade({ pessoas, acesos, ordem }: { pessoas: number; acesos: number; ordem: number }) {
   const linhas = Math.max(1, Math.ceil(pessoas / 10))
   const resto = pessoas % 10
+  const cheias = Math.floor(acesos / 10)
+  const sobra = acesos % 10
+  const inicio = 350 + ordem * 140
   return (
     <div className="relative" style={{ width: CELULA * 10, height: linhas * CELULA }}>
-      {/* o fundo: linhas cheias numa camada, e a última, incompleta, no topo */}
       <div className="bonecos-fundo absolute bottom-0 left-0" style={{ width: CELULA * 10, height: Math.floor(pessoas / 10) * CELULA }} />
       {resto > 0 && <div className="bonecos-fundo absolute left-0 top-0" style={{ width: resto * CELULA, height: CELULA }} />}
-      <div className="absolute inset-0 flex flex-wrap-reverse content-start">
-        {Array.from({ length: acesos }, (_, k) => (
-          <span key={k} className="boneco-eleito" style={{ ['--d' as string]: `${350 + ordem * 140 + k * 14}ms` }} />
-        ))}
-      </div>
+      {cheias > 0 && (
+        <div
+          className="bonecos-eleitos absolute bottom-0 left-0"
+          style={{ width: CELULA * 10, height: cheias * CELULA, animation: `sobe-linhas ${cheias * 110}ms steps(${cheias}, end) ${inicio}ms both` }}
+        />
+      )}
+      {sobra > 0 && (
+        <div
+          className="bonecos-eleitos absolute left-0"
+          style={{ bottom: cheias * CELULA, width: sobra * CELULA, height: CELULA, animation: `enche-linha ${sobra * 70}ms steps(${sobra}, end) ${inicio + cheias * 110}ms both` }}
+        />
+      )}
     </div>
   )
 })
@@ -201,8 +177,11 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
   const cena = useRef<HTMLDivElement>(null)
   const anterior = useRef<{ fase: Fase; dados: Patrimonio }>({ fase, dados })
   const [largura, setLargura] = useState(0)
-  const [golpes, setGolpes] = useState(0)
+  const [golpes, setGolpes] = useState<Golpe[]>([])
   const [cortando, setCortando] = useState(false)
+  const [imagem, setImagem] = useState<string | null>(null)
+  const inteiro_ = useRef<SVGSVGElement>(null)
+  const defs = useRef<SVGSVGElement>(null)
   // do passo 1 para o 2 (botão da página ou número do passo), a tesoura corta antes de os grupos se afastarem
   const [faseVista, setFaseVista] = useState(fase)
   if (faseVista !== fase) {
@@ -219,16 +198,48 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
   }, [])
   // voltar ao cofrinho inteiro zera as marteladas
   useEffect(() => {
-    if (fase === 0) setGolpes(0) // eslint-disable-line react-hooks/set-state-in-effect
+    if (fase === 0) {
+      setGolpes([]) // eslint-disable-line react-hooks/set-state-in-effect
+      setImagem(null)
+    }
   }, [fase])
   const escala = largura ? Math.min(1, largura / p.W) : 1
+
+  useEffect(() => {
+    const el = caixa.current
+    if (fase !== 0 || !el || reduzido()) return
+    let quadro = 0
+    const mover = (e: PointerEvent) => {
+      cancelAnimationFrame(quadro)
+      quadro = requestAnimationFrame(() => {
+        const olho = el.querySelector<SVGGElement>('.porco-olho')
+        const pupila = el.querySelector<SVGGElement>('.porco-pupila')
+        if (!olho || !pupila) return
+        const c = olho.getBoundingClientRect()
+        const dx = e.clientX - (c.left + c.width / 2)
+        const dy = e.clientY - (c.top + c.height / 2)
+        const d = Math.hypot(dx, dy) || 1
+        const k = Math.min(1, d / 220)
+        pupila.style.transform = `translate(${(dx / d) * 3.4 * k}px, ${(dy / d) * 3.4 * k}px)`
+      })
+    }
+    window.addEventListener('pointermove', mover, { passive: true })
+    return () => {
+      cancelAnimationFrame(quadro)
+      window.removeEventListener('pointermove', mover)
+    }
+  }, [fase])
 
   const grupos = gruposDe(dados, estreito)
   // as alturas só mudam com a fila: o memo mantém a mesma lista e as barrinhas (memo) não se redesenham
   const hs = useMemo(() => alturas(dados.fila, p.alto), [dados.fila, p.alto])
   const s = p.porco.s
   const porcoY = p.chao - PORCO.base * s
-  const golpe = { x: p.porco.x + GOLPE[0] * s, y: porcoY + GOLPE[1] * s }
+  // o último golpe é o centro da quebra (sem martelada, o meio das costas)
+  const centroQuebra = golpes.at(-1) ?? { x: 126, y: 86, semente: SEMENTE }
+  const golpe = { x: p.porco.x + centroQuebra.x * s, y: porcoY + centroQuebra.y * s }
+  const listaCacos = useMemo(() => cacos(centroQuebra.x, centroQuebra.y, 7, centroQuebra.semente), [centroQuebra.x, centroQuebra.y, centroQuebra.semente])
+  const voosCacos = useMemo(() => voosDosCacos(listaCacos, centroQuebra.x, centroQuebra.y, s), [listaCacos, centroQuebra.x, centroQuebra.y, s])
   const cortada = fase >= 2 && !cortando
   const ultimo = grupos.at(-1)
   const primeiro = grupos[0]
@@ -251,13 +262,12 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
       const porco = el.querySelector('[data-porco]')
       const g = `scale(${p.porco.grande})`
       if (porco) anima(porco, [{ transform: g }, { transform: `${g} rotate(-8deg)` }, { transform: `${g} rotate(7deg) translateY(-4px)` }, { transform: `${g} rotate(-5deg)` }, { transform: 'scale(1.08) rotate(4deg)' }, { transform: 'scale(1.02) rotate(-2deg)' }, { transform: 'none' }], { duration: 450, easing: 'ease-out' })
-      todos('[data-racha]').forEach((r) => {
-        anima(r, [{ strokeDashoffset: '1', opacity: 1 }, { strokeDashoffset: '0', opacity: 1 }, { strokeDashoffset: '0', opacity: 0 }], { duration: 480, delay: 300, easing: 'ease-out', fill: 'both' })
-      })
       todos('[data-caco]').forEach((c) => {
-        const [meio, fim] = VOOS[Number(c.dataset.caco)]
-        anima(c, [{ transform: 'none' }, { transform: 'none', offset: 0.05 }, { transform: pose(meio, s), offset: 0.42, easing: 'cubic-bezier(.3,0,.8,.6)' }, { transform: pose(fim, s) }], { duration: 1100, delay: 480, easing: 'cubic-bezier(.2,.7,.3,1)' })
+        const v = voosCacos[Number(c.dataset.caco)]
+        if (v) anima(c, [{ transform: 'none' }, { transform: 'none', offset: 0.05 }, { transform: v.meio, offset: 0.42, easing: 'cubic-bezier(.3,0,.8,.6)' }, { transform: v.fim }], { duration: 1100, delay: 430, easing: 'cubic-bezier(.2,.7,.3,1)' })
       })
+      // a poeira da porcelana: um anel que se abre no golpe
+      todos('[data-poeira]').forEach((d) => anima(d, [{ opacity: 0.9, transform: 'scale(.2)' }, { opacity: 0, transform: 'scale(1.6)' }], { duration: 700, delay: 430, easing: EASE, fill: 'both' }))
       // as moedas saem do golpe e caem na fila; com a pancada, achatam e voltam (squash and stretch)
       todos('[data-moeda-voo]').forEach((m, k) => {
         const x = Number(m.dataset.x) - golpe.x
@@ -331,16 +341,108 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
     }
   }, [fase, dados, estreito]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const quebrar = () => aoMudarFase(1)
-  const martelar = () => {
-    const el = cena.current?.querySelector('[data-porco]')
-    const proximo = golpes + 1
-    if (proximo >= GOLPES) return quebrar()
-    setGolpes(proximo)
-    tocarGolpe(proximo)
-    if (el && !reduzido()) {
+  // a imagem do porquinho rachado: o SVG do desenho com os gradientes, serializado uma vez
+  useEffect(() => () => { if (imagem) URL.revokeObjectURL(imagem) }, [imagem])
+  const quebrar = async () => {
+    const svg = inteiro_.current
+    if (svg && defs.current && !reduzido()) {
+      const copia = svg.cloneNode(true) as SVGSVGElement
+      copia.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+      copia.insertBefore(defs.current.querySelector('defs')!.cloneNode(true), copia.firstChild)
+      copia.querySelectorAll('.racha-nova').forEach((g) => g.removeAttribute('class'))
+      const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(copia)], { type: 'image/svg+xml' }))
+      const img = new Image()
+      img.src = url
+      // a quebra espera a imagem ficar pronta (alguns milissegundos), para o primeiro quadro já ter os cacos
+      await Promise.race([img.decode().catch(() => {}), new Promise((r) => setTimeout(r, 150))])
+      setImagem(url)
+    }
+    aoMudarFase(1)
+  }
+  // efeitos de cada golpe fora do React: o martelo que desce, as lascas rosadas e a mossa (removidos ao acabar)
+  const efeitosGolpe = (x: number, y: number) => {
+    const el = cena.current
+    if (!el || reduzido()) return
+    const r = sorteio(Math.round(x * 31 + y * 17))
+    const px = p.porco.x + x * s
+    const py = porcoY + y * s
+    // a cena inteira está sob o scale do porquinho grande: o ponto na tela usa o mesmo fator
+    const g = p.porco.grande
+    const ox = p.porco.x + (PORCO.W * s) / 2
+    const oy = porcoY + PORCO.H * s * 0.95
+    const tx = ox + (px - ox) * g
+    const ty = oy + (py - oy) * g
+    const martelo = document.createElement('span')
+    martelo.className = 'martelo-golpe'
+    martelo.style.left = `${tx}px`
+    martelo.style.top = `${ty}px`
+    el.appendChild(martelo)
+    martelo.animate(
+      [
+        { transform: 'translate(-6px, -46px) rotate(-55deg)', opacity: 0 },
+        { transform: 'translate(-6px, -40px) rotate(-60deg)', opacity: 1, offset: 0.3 },
+        { transform: 'translate(-6px, -30px) rotate(8deg)', opacity: 1, offset: 0.55 },
+        { transform: 'translate(-6px, -34px) rotate(-12deg)', opacity: 0 },
+      ],
+      { duration: 420, easing: 'cubic-bezier(.5,0,.2,1)' },
+    ).onfinish = () => martelo.remove()
+    for (let k = 0; k < 7; k++) {
+      const lasca = document.createElement('span')
+      lasca.className = 'lasca'
+      lasca.style.left = `${tx}px`
+      lasca.style.top = `${ty}px`
+      el.appendChild(lasca)
+      const a = r() * Math.PI * 2
+      const v = 18 + r() * 34
+      const dx = Math.cos(a) * v
+      const dy = Math.sin(a) * v - 26
+      lasca.animate(
+        [
+          { transform: 'translate(0,0) rotate(0deg) scale(1)', opacity: 1 },
+          { transform: `translate(${dx}px, ${dy}px) rotate(${r() * 300}deg) scale(.9)`, opacity: 1, offset: 0.55 },
+          { transform: `translate(${dx * 1.3}px, ${dy + 46}px) rotate(${r() * 500}deg) scale(.6)`, opacity: 0 },
+        ],
+        { duration: 620 + r() * 200, delay: 150, easing: 'cubic-bezier(.2,.6,.4,1)', fill: 'backwards' },
+      ).onfinish = () => lasca.remove()
+    }
+  }
+  const martelar = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const porco = cena.current?.querySelector('[data-porco]')
+    // o ponto do clique no espaço do desenho (o botão cobre o porquinho já com o scale); teclado usa pontos fixos
+    let x: number
+    let y: number
+    if (e.detail > 0) {
+      const caixaBotao = e.currentTarget.getBoundingClientRect()
+      x = ((e.clientX - caixaBotao.left) / caixaBotao.width) * PORCO.W
+      y = ((e.clientY - caixaBotao.top) / caixaBotao.height) * PORCO.H
+    } else {
+      ;[x, y] = GOLPES_TECLADO[golpes.length % GOLPES_TECLADO.length]
+    }
+    ;[x, y] = dentroDoCorpo(x, y)
+    const novo = { x, y, semente: SEMENTE + golpes.length * 101 + Math.round(x + y) }
+    const lista = [...golpes, novo]
+    setGolpes(lista)
+    tocarGolpe(lista.length)
+    efeitosGolpe(x, y)
+    if (lista.length >= GOLPES) {
+      // a terceira quebra: deixa a rachadura aparecer antes
+      setTimeout(quebrar, reduzido() ? 0 : 260)
+      return
+    }
+    if (porco && !reduzido()) {
       const g = `scale(${p.porco.grande})`
-      el.animate([{ transform: g }, { transform: `${g} rotate(-6deg) translateY(2px)` }, { transform: `${g} rotate(5deg)` }, { transform: `${g} rotate(-3deg)` }, { transform: g }], { duration: 380, easing: 'ease-out' })
+      // squash and stretch: a pancada achata, o porquinho volta e balança com amplitude que diminui
+      porco.animate(
+        [
+          { transform: g },
+          { transform: `${g} scale(1.06, .9) translateY(4px)`, offset: 0.18 },
+          { transform: `${g} scale(.97, 1.04) rotate(-5deg)`, offset: 0.42 },
+          { transform: `${g} rotate(4deg)`, offset: 0.62 },
+          { transform: `${g} rotate(-2deg)`, offset: 0.8 },
+          { transform: g },
+        ],
+        { duration: 480, easing: 'ease-out' },
+      )
     }
   }
 
@@ -360,19 +462,10 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
         className="absolute left-0 top-0 origin-top-left select-none"
         style={{ width: p.W, height: p.H, transform: escala < 1 ? `scale(${escala})` : undefined, left: escala < 1 ? 0 : Math.max(0, (largura - p.W) / 2) }}
       >
-        <svg width={0} height={0} className="absolute" aria-hidden>
+        <svg ref={defs} width={0} height={0} className="absolute" aria-hidden>
           <defs>
-            <radialGradient id={`${id}-corpo`} cx="38%" cy="32%" r="78%">
-              <stop offset="0" stopColor="#ffffff" />
-              <stop offset=".55" stopColor="#f1f3f5" />
-              <stop offset="1" stopColor="#cfd6dc" />
-            </radialGradient>
-            <linearGradient id={`${id}-pata`} x1="0" x2="1">
-              <stop offset="0" stopColor="#fcfdfd" />
-              <stop offset="1" stopColor="#dde2e7" />
-            </linearGradient>
-            <clipPath id={`${id}-silhueta`}><ellipse cx={122} cy={112} rx={96} ry={68} /></clipPath>
-            {CACOS.map((c, i) => <clipPath key={c} id={`${id}-caco-${i}`}><polygon points={c} /></clipPath>)}
+            <Gradientes p={id} />
+            {listaCacos.map((c, i) => <clipPath key={i} id={`${id}-caco-${i}`}><polygon points={c.pontos} /></clipPath>)}
           </defs>
         </svg>
 
@@ -383,47 +476,65 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
           <svg aria-hidden className="absolute" width={PORCO.W * s} height={18 * s} viewBox="0 0 260 18" style={{ top: (PORCO.base - 9) * s }}>
             <ellipse cx={128} cy={9} rx={fase ? 116 : 96} ry={fase ? 7 : 8} fill="rgb(42 53 80 / .14)" />
           </svg>
-          {CACOS.map((_, i) => (
-            <svg
-              key={i}
-              data-caco={i}
-              aria-hidden
-              className="absolute left-0 top-0 overflow-visible"
-              width={PORCO.W * s}
-              height={PORCO.H * s}
-              viewBox={`0 0 ${PORCO.W} ${PORCO.H}`}
-              style={{ transform: fase ? pose(VOOS[i][1], s) : undefined, transformOrigin: `${GOLPE[0] * s}px ${GOLPE[1] * s}px` }}
-            >
-              <g clipPath={`url(#${id}-caco-${i})`}><Desenho p={id} /></g>
-              {fase > 0 && <polygon points={CACOS[i]} fill="none" stroke="#aeb6bf" strokeWidth={1.2} clipPath={`url(#${id}-silhueta)`} />}
+          {fase === 0 ? (
+            <svg ref={inteiro_} aria-hidden className="absolute left-0 top-0 overflow-visible" width={PORCO.W * s} height={PORCO.H * s} viewBox={`0 0 ${PORCO.W} ${PORCO.H}`}>
+              <Desenho p={id} />
+              <Rachaduras golpes={golpes} p={id} novas={golpes.length - 1} />
             </svg>
-          ))}
-          {/* rachaduras: as das marteladas ficam; na quebra, todas se desenham e somem com os cacos */}
-          {(fase > 0 || golpes > 0) && (
-            <svg aria-hidden className="pointer-events-none absolute left-0 top-0" width={PORCO.W * s} height={PORCO.H * s} viewBox={`0 0 ${PORCO.W} ${PORCO.H}`} style={{ opacity: fase > 0 ? 0 : 1 }}>
-              <g clipPath={`url(#${id}-silhueta)`}>
-                {RACHAS.slice(0, fase > 0 ? RACHAS.length : golpes * 2).map((r) => (
-                  <path
-                    key={r}
-                    data-racha={fase > 0 ? '' : undefined}
-                    className={fase === 0 ? 'racha-nova' : undefined}
-                    d={`M${GOLPE.join(' ')} L${r.replace(/ /g, ' L')}`}
-                    fill="none"
-                    stroke="#18202b"
-                    strokeWidth={2.2}
-                    strokeLinejoin="round"
-                    pathLength={1}
-                    strokeDasharray={1}
-                  />
-                ))}
-              </g>
-            </svg>
+          ) : imagem ? (
+            listaCacos.map((c, i) => (
+              <div
+                key={i}
+                data-caco={i}
+                aria-hidden
+                className="caco absolute left-0 top-0"
+                style={{
+                  width: PORCO.W * s,
+                  height: PORCO.H * s,
+                  backgroundImage: `url(${imagem})`,
+                  clipPath: `polygon(${c.pontos.split(' ').map((par) => { const [x, y] = par.split(','); return `${(Number(x) / PORCO.W) * 100}% ${(Number(y) / PORCO.H) * 100}%` }).join(',')})`,
+                  transform: voosCacos[i]?.fim,
+                  transformOrigin: voosCacos[i]?.origem,
+                }}
+              >
+                {/* a borda quebrada: o recorte deixa só a metade de dentro do traço, o branco da porcelana */}
+                <svg className="absolute inset-0" width="100%" height="100%" viewBox={`0 0 ${PORCO.W} ${PORCO.H}`}>
+                  <g clipPath={`url(#${id}-silhueta)`}>
+                    <polygon points={c.pontos} fill="none" stroke="#fff8fa" strokeWidth={5} strokeLinejoin="round" />
+                  </g>
+                </svg>
+              </div>
+            ))
+          ) : (
+            listaCacos.map((c, i) => (
+              <svg
+                key={i}
+                data-caco={i}
+                aria-hidden
+                className="absolute left-0 top-0 overflow-visible"
+                width={PORCO.W * s}
+                height={PORCO.H * s}
+                viewBox={`0 0 ${PORCO.W} ${PORCO.H}`}
+                style={{ transform: voosCacos[i]?.fim, transformOrigin: voosCacos[i]?.origem }}
+              >
+                <g clipPath={`url(#${id}-caco-${i})`}>
+                  <Desenho p={id} olhar={false} />
+                  <Rachaduras golpes={golpes} p={id} />
+                </g>
+                {/* a borda quebrada mostra o branco da porcelana por dentro, com um fio de sombra */}
+                <g clipPath={`url(#${id}-silhueta)`}>
+                  <polygon points={c.pontos} fill="none" stroke="#fff8fa" strokeWidth={3.2} strokeLinejoin="round" />
+                  <polygon points={c.pontos} fill="none" stroke="#c9607f" strokeWidth={0.8} strokeLinejoin="round" opacity={0.7} />
+                </g>
+              </svg>
+            ))
           )}
+          {fase > 0 && <span data-poeira aria-hidden className="poeira absolute" style={{ left: centroQuebra.x * s - 60, top: centroQuebra.y * s - 60 }} />}
           {fase === 0 && (
             <button
               type="button"
               onClick={martelar}
-              aria-label={`Martelar o cofrinho (${golpes} de ${GOLPES} marteladas). Na terceira ele quebra e separa os ${inteiro(dados.resumo.candidatos)} ${rotulo}.`}
+              aria-label={`Martelar o cofrinho (${golpes.length} de ${GOLPES} marteladas). Na terceira ele quebra e separa os ${inteiro(dados.resumo.candidatos)} ${rotulo}.`}
               className="porquinho-alvo absolute inset-0 rounded-[40%] focus-visible:outline-offset-4"
             />
           )}
@@ -432,19 +543,16 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
         {fase === 0 && (
           <div className="revela absolute" style={estreito ? { left: 8, right: 8, top: 236 } : { left: p.texto, right: 0, top: 40 }}>
             <p className="t-numero tabular text-[clamp(2.8rem,2rem+2vw,4rem)] text-tinta">{inteiro(dados.resumo.candidatos)}</p>
-            <p className="mt-1 max-w-[30ch] text-[1.08rem] font-semibold leading-snug text-tinta">{rotulo} estão aqui dentro, misturados.</p>
-            <p className="mt-3 max-w-[44ch] text-[0.98rem] leading-relaxed text-tinta-2">
-              Bata três vezes no porquinho para quebrá-lo. Os candidatos vão sair em fila, do que declarou menos bens ao que declarou mais.
-            </p>
+            <p className="mt-1 max-w-[30ch] text-[1.08rem] font-semibold leading-snug text-tinta">{rotulo} dentro do cofrinho</p>
             <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3">
               <button type="button" onClick={quebrar} className="botao-vivo h-12 px-6 text-[1rem]">
                 <Hammer size={20} weight="fill" aria-hidden /> Quebrar o cofrinho
               </button>
               <span className="flex items-center gap-1.5 text-[0.84rem] text-tinta-2" aria-live="polite">
                 {Array.from({ length: GOLPES }, (_, i) => (
-                  <Hammer key={i} size={18} weight={i < golpes ? 'fill' : 'regular'} aria-hidden className={i < golpes ? 'martelada text-tinta' : 'text-tinta-3'} />
+                  <Hammer key={i} size={20} weight={i < golpes.length ? 'fill' : 'regular'} aria-hidden className={i < golpes.length ? 'martelada text-[#c9607f]' : 'text-tinta-3'} />
                 ))}
-                <span className="ml-1">{golpes ? `${golpes} de ${GOLPES} marteladas` : 'ou clique no porquinho'}</span>
+                <span className="ml-1">{golpes.length ? `${golpes.length} de ${GOLPES} marteladas` : 'ou bata 3 vezes no porquinho'}</span>
               </span>
             </div>
           </div>
