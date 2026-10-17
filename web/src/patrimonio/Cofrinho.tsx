@@ -8,7 +8,7 @@
 // (transform, opacity e clip-path), e os efeitos de cada golpe (lascas, martelo) são elementos criados e
 // removidos fora do React, sem re-render. "Reduzir movimento" vê a mesma cena sem o caminho.
 import { Hammer, Scissors, SpeakerHigh, SpeakerSlash } from '@phosphor-icons/react'
-import { animate } from 'motion'
+import { animate } from 'motion/react'
 import { memo, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import type { GrupoPatrimonio, Patrimonio } from '../api'
 import { inteiro } from '../lib/formato'

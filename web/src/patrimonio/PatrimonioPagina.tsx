@@ -5,7 +5,7 @@
 // a conta não diz. Conta de scripts/02_patrimonio.py, servida por /api/patrimonio e /api/patrimonio/panorama.
 import { ArrowRight, ArrowSquareOut, ArrowsLeftRight, Receipt, Scissors, ShoppingBagOpen } from '@phosphor-icons/react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { animate } from 'motion'
+import { animate } from 'motion/react'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CARGOS_P2, consultas, type Ano, type PanoramaPatrimonio, type Patrimonio } from '../api'
