@@ -1,23 +1,23 @@
-// P2: quem declara mais bens se elege mais? Três atos: o cofrinho (todos os candidatos de um cargo dentro de
-// um porquinho que se quebra para separá-los em sacolas por faixa de patrimônio e empilhar as moedas dos
-// eleitos), "Vale para todos os cargos?" (uma escadinha por cargo e ano) e o que a conta não diz.
-// Conta de scripts/02_patrimonio.py, servida por /api/patrimonio e /api/patrimonio/panorama.
-import { ArrowRight, ArrowSquareOut, Scissors } from '@phosphor-icons/react'
+// P2: quem declara mais bens se elege mais? A resposta em número grande e o minimapa dos estados no topo;
+// depois o cofrinho em quatro passos, "Vale para todos os cargos?" (uma escadinha por cargo e ano) e três
+// lembretes do que a conta não diz. Conta de scripts/02_patrimonio.py, servida por /api/patrimonio e
+// /api/patrimonio/panorama.
+import { ArrowDown, ArrowRight, ArrowSquareOut, ArrowsLeftRight, Receipt, Scissors, ShoppingBagOpen } from '@phosphor-icons/react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { animate } from 'motion'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CARGOS_P2, consultas, type Ano, type PanoramaPatrimonio, type Patrimonio } from '../api'
 import { CedulaAnos } from '../atlas/CedulaAnos'
-import { silhueta } from '../atlas/geo'
 import { Ciranda, CirandaTela } from '../componentes/Ciranda'
 import { ErroCarga } from '../componentes/ErroCarga'
-import { Escolha } from '../componentes/Escolha'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
-import { cargoPlural, inteiro, noEstado, pct, reais } from '../lib/formato'
+import { inteiro, noEstado, pct, reais } from '../lib/formato'
 import type { BuscaPatrimonio } from '../router'
 import { BotaoSom, Cofrinho, Passos, type Fase } from './Cofrinho'
-import { COR, grupoDoValor, nomeFaixa, POUCOS, quartis, reaisFaixa, taxaCurta, tetoDe } from './conta'
+import { COR, grupoDoValor, nomeFaixa, POUCOS, quartis, taxaCurta, tetoDe } from './conta'
 import { Degraus, Escadas } from './Escadas'
+import { MapaEstados } from './MapaEstados'
 import { Voce } from './Voce'
 
 const ANOS_GERAIS: Ano[] = [2018, 2022]
@@ -27,23 +27,27 @@ const suave = (): ScrollBehavior => (matchMedia('(prefers-reduced-motion: reduce
 const b = (t: string) => <b className="tabular font-bold text-tinta">{t}</b>
 const vezes = (a: number, z: number) => (a / z).toLocaleString('pt-BR', { maximumFractionDigits: 1 })
 
-/** A resposta geral, ao lado da abertura: quantas disputas sobem e o exemplo mais forte. */
-function Lede({ panorama, noLugar }: { panorama: PanoramaPatrimonio; noLugar: string }) {
-  const comparaveis = panorama.recortes.filter((r) => r.sintese.quartis === 4 && r.candidatos >= 200)
-  const forte = comparaveis.toSorted((x, y) => (y.sintese.diferenca_pp ?? 0) - (x.sintese.diferenca_pp ?? 0))[0]
-  const qs = forte ? quartis(forte.grupos) : []
-  const quase = panorama.maior_supera >= panorama.com_quartis - 1
+/** A resposta geral em número grande: em quantas disputas a faixa de mais bens se elegeu mais. */
+function Resposta({ panorama }: { panorama: PanoramaPatrimonio }) {
+  const numero = useRef<HTMLSpanElement>(null)
+  useEffect(() => {
+    const el = numero.current
+    if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const ctrl = animate(0, panorama.maior_supera, { duration: 0.9, ease: [0.16, 1, 0.3, 1], onUpdate: (v) => { el.textContent = String(Math.round(v)) } })
+    return () => ctrl.stop()
+  }, [panorama.maior_supera])
   return (
-    <p className="max-w-[54ch] text-[clamp(1.1rem,0.95rem+0.55vw,1.35rem)] font-medium leading-[1.42] text-tinta-2" style={{ fontStretch: '96%' }}>
-      <b className="font-bold text-tinta">{quase ? 'Sim, em quase todas as disputas.' : 'Em parte.'}</b>{' '}
-      Em {b(inteiro(panorama.maior_supera))} de {b(inteiro(panorama.com_quartis))} disputas (cargo e ano), os 25% que declararam mais bens se
-      elegeram mais que os 25% que declararam menos.
-      {forte && qs.length === 4 && (
-        <>
-          {' '}A maior distância é a de {cargoPlural(forte.cargo.nome)} em {forte.ano}{forte.nacional ? '' : ` ${noLugar}`}: {b(taxaCurta(qs[0].taxa))} contra {b(taxaCurta(qs[3].taxa))}.
-        </>
-      )}
-    </p>
+    <div className="revela mt-5 flex flex-wrap items-end gap-x-4 gap-y-2">
+      <p className="t-numero tabular text-[clamp(3.2rem,2.4rem+2.6vw,4.6rem)] leading-none" style={{ color: COR.texto }}>
+        <span ref={numero}>{inteiro(panorama.maior_supera)}</span><span className="text-[0.5em] text-tinta-3"> de {inteiro(panorama.com_quartis)}</span>
+      </p>
+      <div className="pb-1">
+        <p className="max-w-[30ch] text-[1.05rem] font-semibold leading-snug text-tinta">disputas em que quem declarou mais bens se elegeu mais</p>
+        <a href="#todos" className="mt-1 inline-flex items-center gap-1 text-[0.86rem] font-semibold text-acao hover:underline">
+          Ver as {inteiro(panorama.recortes.length)} disputas <ArrowDown size={14} weight="bold" aria-hidden />
+        </a>
+      </div>
+    </div>
   )
 }
 
@@ -89,7 +93,7 @@ const FichasCargo = memo(function FichasCargo({ panorama, ano, ativo, aoEscolher
                 <span className="min-w-0">
                   <span className="block truncate font-bold leading-tight">{c.nome}</span>
                   <span className={`tabular block text-[0.75rem] ${marcada ? 'text-white' : 'text-tinta-3'}`}>
-                    {r && qs.length ? `${taxaCurta(qs[0].taxa)} → ${taxaCurta(qs.at(-1)!.taxa)} · ${a}` : a}
+                    {r && qs.length ? `${taxaCurta(qs[0].taxa)} → ${taxaCurta(qs.at(-1)!.taxa)}` : a}
                   </span>
                 </span>
                 {r && <Degraus r={r} teto={teto} altura={26} largura={6} claro={marcada} />}
@@ -108,18 +112,12 @@ function Legenda({ dados, fase, aoMudarFase, rotulo, palpite }: { dados: Patrimo
   const sem = dados.grupos.find((g) => g.tipo === 'sem_bens')
   const media = dados.resumo.candidatos ? (100 * dados.resumo.eleitos) / dados.resumo.candidatos : 0
   const iguais = qs.length === 4
-  if (fase === 0)
-    return (
-      <p className="max-w-[64ch] text-[0.92rem] text-tinta-2">
-        Quatro passos: quebrar o cofrinho, ver a fila, dar o seu palpite e descobrir quem se elegeu. Dá para voltar a qualquer passo pelos números acima.
-      </p>
-    )
+  if (fase === 0) return null
   if (fase === 1)
     return (
       <div className="revela flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
-        <p className="max-w-[62ch] text-[1rem] leading-relaxed text-tinta-2">
-          <b className="font-bold text-tinta">Esta é a fila dos {rotulo} que declararam bens</b>, do menor valor ao maior. Cada barrinha representa 1 em cada
-          100 deles; quanto mais alta, mais bens. Agora vamos cortá-la em {iguais ? 'quatro grupos com o mesmo número de pessoas' : `${qs.length} grupos`}.
+        <p className="max-w-[56ch] text-[1.05rem] leading-relaxed text-tinta-2">
+          <b className="font-bold text-tinta">A fila dos {rotulo}</b>, do menor patrimônio ao maior.
         </p>
         <button type="button" onClick={() => aoMudarFase(2)} className="botao-vivo h-12 shrink-0 px-6 text-[1rem]">
           <Scissors size={20} weight="fill" aria-hidden /> Cortar a fila
@@ -129,17 +127,9 @@ function Legenda({ dados, fase, aoMudarFase, rotulo, palpite }: { dados: Patrimo
   if (fase === 2)
     return (
       <div className="revela flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
-        <div className="max-w-[62ch] text-[1rem] leading-relaxed text-tinta-2">
-          <p>
-            {iguais ? (
-              <><b className="font-bold text-tinta">Quatro grupos do mesmo tamanho</b>, 25 de cada 100 candidatos em cada um. O que muda é quanto declararam: o
-              candidato do meio de cada grupo tem {qs.map((g, i) => <span key={g.id}>{b(reaisFaixa(g.mediana))}{i < qs.length - 2 ? ', ' : i === qs.length - 2 ? ' e ' : ''}</span>)}.</>
-            ) : (
-              <><b className="font-bold text-tinta">{qs.length} grupos</b>: com tantos valores repetidos, não deu para cortar em quatro partes iguais.</>
-            )}
-          </p>
-          <p className="mt-2 text-[1.08rem] font-semibold text-tinta">Seu palpite: qual grupo você acha que elegeu mais gente? Toque nele.</p>
-        </div>
+        <p className="max-w-[56ch] text-[1.05rem] leading-relaxed text-tinta-2">
+          <b className="font-bold text-tinta">{iguais ? '4 grupos com o mesmo número de pessoas.' : `${qs.length} grupos.`}</b> Qual elegeu mais? Toque nele.
+        </p>
         <button type="button" onClick={() => aoMudarFase(3)} className="botao-contorno h-11 shrink-0 px-5 text-[0.92rem]">
           Pular o palpite
         </button>
@@ -175,13 +165,11 @@ function Legenda({ dados, fase, aoMudarFase, rotulo, palpite }: { dados: Patrimo
         )}
         {qs.some((g) => g.candidatos < POUCOS) && (
           <p className="mt-3 rounded-xl border border-escolha/50 bg-escolha-claro px-3.5 py-2 text-[0.88rem] text-tinta">
-            <b>Poucos candidatos:</b> os grupos têm de {inteiro(Math.min(...qs.map((g) => g.candidatos)))} a {inteiro(Math.max(...qs.map((g) => g.candidatos)))} pessoas, então a
-            cena mostra as pessoas de verdade. Um eleito a mais ou a menos muda muito a porcentagem; compare com as outras disputas abaixo.
+            <b>Poucos candidatos:</b> um eleito a mais muda muito a porcentagem.
           </p>
         )}
         <p className="mt-2 text-[0.88rem] text-tinta-3">
-          Cada bonequinho é 1 em cada 100 candidatos do grupo; os verdes se elegeram. Na média de todos, {taxaCurta(media)}.
-          {sem && <> Fora da fila, quem não registrou nenhum bem ({inteiro(sem.candidatos)}): {taxaCurta(sem.taxa)} se elegeram.</>}
+          Média de todos: {taxaCurta(media)}.{sem && <> Sem bens declarados: {taxaCurta(sem.taxa)}.</>}
         </p>
       </div>
       <button type="button" onClick={() => aoMudarFase(0)} className="botao-contorno h-11 shrink-0 px-5 text-[0.92rem]">
@@ -211,11 +199,11 @@ export function PatrimonioPagina() {
   const navegar = useNavigate({ from: '/patrimonio' })
   // funções estáveis: as fichas, as escadinhas e o "E você?" são memo e não se redesenham a cada passo do cofrinho
   const mudar = useCallback((s: Partial<BuscaPatrimonio>) => navegar({ search: (a) => ({ ...a, ...s }), replace: true, resetScroll: false }), [navegar])
+  const escolherUf = useCallback((sigla: string | undefined) => mudar({ uf: sigla }), [mudar])
   const escolherCargo = useCallback((c: number) => mudar({ cargo: c, ano: undefined }), [mudar])
   const { data: ufs } = useQuery(consultas.ufs())
   const { data: malha } = useQuery(consultas.malhaBrasil())
   const carregadas = useMemo(() => (ufs ?? []).filter((u) => u.carregada && u.sigla !== 'BR'), [ufs])
-  const silhuetas = useMemo(() => new Map(malha ? carregadas.map((u) => [u.sigla, silhueta(malha, u.cd_ibge, 22)]) : []), [malha, carregadas])
   const [fase, setFase] = useState<Fase>(0)
   const [palpite, setPalpite] = useState<string | null>(null)
   const [valor, setValor] = useState<number | null>(null)
@@ -257,42 +245,18 @@ export function PatrimonioPagina() {
 
   return (
     <div className="mx-auto max-w-[var(--casca-max)] px-4 pb-12 pt-6 md:px-[var(--casca-margem)] md:pt-7">
-      <header>
-        <h1 className="t-display">Quem declara mais bens se elege mais?</h1>
-      </header>
-      <div className="mt-4 grid gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <div>
-          <p className="max-w-[60ch] text-[1.06rem] text-tinta-2">
-            Todo candidato entrega ao TSE a lista do que tem: casa, carro, terreno, dinheiro guardado. Quebre o cofrinho e veja se quem declarou
-            mais se elegeu mais.
-          </p>
-          <fieldset className="mt-5 min-w-0">
-            <legend className="t-rotulo mb-2 text-tinta-2">Estado</legend>
-            <div role="radiogroup" aria-label="Estado" className="flex flex-wrap gap-2">
-              <Escolha rotulo="Todos os estados carregados" ativo={!uf} aoClicar={() => mudar({ uf: undefined })}>
-                Todos
-              </Escolha>
-              {carregadas.map((u) => (
-                <Escolha key={u.sigla} rotulo={u.nome} ativo={u.sigla === uf} aoClicar={() => mudar({ uf: u.sigla })}>
-                  <svg width={22} height={22} viewBox="0 0 22 22" aria-hidden className="shrink-0">
-                    <path d={silhuetas.get(u.sigla)} fill="currentColor" opacity={0.85} />
-                  </svg>
-                  {u.sigla}
-                </Escolha>
-              ))}
-            </div>
-            {cargo.nacional && uf && (
-              <p className="mt-2 text-[0.82rem] text-tinta-3">Presidente é uma disputa nacional: o cofrinho mostra o Brasil inteiro.</p>
-            )}
-          </fieldset>
-        </div>
-        {qp.data ? <Lede panorama={qp.data} noLugar={noLugar} /> : <span />}
+      <div className="grid items-start gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1fr)_auto]">
+        <header>
+          <h1 className="t-display">Quem declara mais bens se elege mais?</h1>
+          <p className="mt-3 max-w-[52ch] text-[1.06rem] text-tinta-2">O que cada candidato declarou ao TSE (casa, carro, terreno) e quem se elegeu.</p>
+          {qp.data ? <Resposta panorama={qp.data} /> : <div className="mt-5 h-[74px]" />}
+        </header>
+        <MapaEstados malha={malha} ufs={carregadas} escolhida={uf} aoEscolher={escolherUf} nacional={cargo.nacional} />
       </div>
 
       <div>
-        <section id="cofrinho" aria-labelledby="cofrinho-titulo" className="mt-9 max-w-[var(--miolo-max)] scroll-mt-24">
+        <section id="cofrinho" aria-labelledby="cofrinho-titulo" className="mt-7 max-w-[var(--miolo-max)] scroll-mt-24">
           <h2 id="cofrinho-titulo" className="t-h2">O cofrinho dos candidatos</h2>
-          <p className="mt-1 max-w-[88ch] text-[0.95rem] text-tinta-2">Escolha um cargo ao lado e siga os quatro passos.</p>
           <div className="mt-6 grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-10">
             <FichasCargo panorama={qp.data} ano={ano} ativo={cargo.cod} aoEscolher={escolherCargo} />
             <div className="min-w-0">
@@ -351,10 +315,7 @@ export function PatrimonioPagina() {
 
         <section aria-labelledby="todos" className="adiar mt-16 max-w-[var(--miolo-max)]">
           <h2 id="todos" className="t-h2">Vale para todos os cargos?</h2>
-          <p className="mb-6 mt-1 max-w-[64ch] text-[0.95rem] text-tinta-2">
-            Cada escadinha é uma disputa {uf ? noLugar : `nos ${carregadas.length} estados`} (Presidente, no Brasil inteiro). Quando os degraus
-            sobem, quem declarou mais bens se elegeu mais. Toque numa escadinha para abri-la no cofrinho.
-          </p>
+          <p className="mb-6 mt-1 max-w-[64ch] text-[0.95rem] text-tinta-2">Degraus subindo: quem declarou mais bens se elegeu mais. Toque para abrir no cofrinho.</p>
           {qp.data ? (
             <Escadas panorama={qp.data} ativo={ativo} aoAbrir={abrir} />
           ) : qp.error ? (
@@ -366,37 +327,27 @@ export function PatrimonioPagina() {
 
         <section aria-labelledby="nao-diz" className="adiar mt-16 max-w-[var(--miolo-max)]">
           <h2 id="nao-diz" className="t-h2">O que a conta não diz</h2>
-          <div className="mt-5 grid gap-x-12 gap-y-6 text-[0.95rem] leading-relaxed text-tinta-2 md:grid-cols-3">
-            <div>
-              <h3 className="t-h3 text-tinta">Não é a riqueza de verdade</h3>
-              <p className="mt-2">
-                É o que o próprio candidato declarou, sem conferência. Imóvel costuma entrar pelo valor de compra, não pelo de mercado, e há
-                declarações com erros de digitação (milhões onde seriam milhares). Por isso a página fala do candidato do meio de cada
-                sacola, que não muda com esses extremos.
-              </p>
-            </div>
-            <div>
-              <h3 className="t-h3 text-tinta">Sacola vazia não é pobreza</h3>
-              <p className="mt-2">
-                {dados ? <>{b(pct(100 - dados.resumo.cobertura_pct, 0))} dos {rotulo} </> : 'Muitos candidatos '}
-                não registraram nenhum bem. Pode ser quem não tem nada, quem esqueceu ou quem não quis declarar: por isso essa sacola fica
-                separada e nunca vira R$ 0. Quem declarou exatamente R$ 0 também fica de fora das quatro sacolas (está na tabela).
-              </p>
-            </div>
-            <div>
-              <h3 className="t-h3 text-tinta">Andar junto não é causar</h3>
-              <p className="mt-2">
-                Quem tem mais bens costuma também ter mais tempo de política, mandato, partido forte e campanha cara. A escadinha mostra que
-                as duas coisas andam juntas, não que o dinheiro elege sozinho.
-              </p>
-            </div>
-          </div>
+          <ul className="mt-5 grid gap-x-10 gap-y-5 md:grid-cols-3">
+            {[
+              { Icone: Receipt, titulo: 'É o que foi declarado', texto: 'Ninguém confere, e há erros de digitação.' },
+              { Icone: ShoppingBagOpen, titulo: 'Sem bens não é pobreza', texto: dados ? `${pct(100 - dados.resumo.cobertura_pct, 0)} não declararam nada e ficam fora da fila.` : 'Quem não declarou nada fica fora da fila.' },
+              { Icone: ArrowsLeftRight, titulo: 'Andar junto não é causar', texto: 'Mais bens costuma vir com mais carreira e campanha.' },
+            ].map(({ Icone, titulo, texto }) => (
+              <li key={titulo} className="lembrete flex items-start gap-3.5">
+                <span className="grid size-12 shrink-0 place-items-center rounded-full bg-selecao-claro text-selecao-tinta"><Icone size={26} weight="fill" aria-hidden /></span>
+                <span>
+                  <span className="block font-bold text-tinta">{titulo}</span>
+                  <span className="mt-0.5 block text-[0.92rem] leading-snug text-tinta-2">{texto}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
           <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 border-t border-linha pt-4 text-[0.88rem]">
             <Link to="/metodologia" hash="m-patrimonio" className="inline-flex items-center gap-1.5 font-semibold text-acao hover:underline">
               Como a conta é feita <ArrowRight size={14} weight="bold" aria-hidden />
             </Link>
             <a href={TSE_BENS} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-semibold text-acao hover:underline">
-              Ver a lista de bens de um candidato no portal do TSE <ArrowSquareOut size={14} weight="bold" aria-hidden />
+              Bens de cada candidato no TSE <ArrowSquareOut size={14} weight="bold" aria-hidden />
             </a>
           </div>
         </section>

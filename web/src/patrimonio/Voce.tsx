@@ -26,9 +26,6 @@ export const Voce = memo(function Voce({ dados, rotulo, valor, aoMudar }: { dado
   return (
     <section aria-labelledby="voce-titulo" className="mt-8 rounded-[20px] border border-linha bg-folha p-5 sm:p-6">
       <h3 id="voce-titulo" className="t-h2">E você, em que grupo cairia?</h3>
-      <p className="mt-1 max-w-[62ch] text-[0.95rem] text-tinta-2">
-        Escolha quanto valem as coisas que você tem e veja onde você entraria na fila dos {rotulo}.
-      </p>
       <div role="radiogroup" aria-label="Exemplos de patrimônio" className="mt-4 flex flex-wrap gap-2">
         {EXEMPLOS.map((e) => {
           const ativo = valor === e.valor

@@ -3,7 +3,6 @@
 // Quando o último degrau não passa do primeiro, a escadinha leva o aviso "não sobe". Tocar abre o cofrinho.
 import { memo } from 'react'
 import type { PanoramaPatrimonio } from '../api'
-import { inteiro } from '../lib/formato'
 import { COR, quartis, taxaCurta, tetoDe } from './conta'
 
 type Recorte = PanoramaPatrimonio['recortes'][number]
@@ -12,14 +11,14 @@ const GERAIS = [1, 3, 5, 6, 7]
 const MUNICIPAIS = [11, 13]
 
 /** Os quatro degraus em miniatura (usado também nas fichas de cargo). */
-export function Degraus({ r, teto, altura = 40, largura = 11, claro = false }: { r: Recorte; teto: number; altura?: number; largura?: number; claro?: boolean }) {
+export function Degraus({ r, teto, altura = 40, largura = 11, claro = false, animar = false }: { r: Recorte; teto: number; altura?: number; largura?: number; claro?: boolean; animar?: boolean }) {
   const qs = quartis(r.grupos)
   return (
     <span aria-hidden className="flex items-end gap-[3px]" style={{ height: altura }}>
       {qs.map((g) => (
         <span
           key={g.id}
-          className="rounded-t-[3px]"
+          className={`${animar ? 'degrau ' : ''}rounded-t-[3px]`}
           style={{
             width: largura,
             height: Math.max(2, (altura * g.taxa) / teto),
@@ -47,7 +46,7 @@ function Celula({ r, teto, ativa, aoAbrir }: { r: Recorte; teto: number; ativa: 
       }`}
     >
       <span className="flex items-end justify-between gap-2">
-        <Degraus r={r} teto={teto} />
+        <Degraus r={r} teto={teto} animar />
         {!sobe && <span className="rounded-full bg-papel-2 px-2 py-0.5 text-[0.75rem] font-bold text-tinta-2">não sobe</span>}
       </span>
       <span className="tabular text-[0.8rem] leading-tight text-tinta-2">
@@ -108,11 +107,7 @@ export const Escadas = memo(function Escadas({ panorama, ativo, aoAbrir }: { pan
           <div className="max-w-[34ch] text-[0.86rem] leading-relaxed text-tinta-2">
             <p className="flex items-center gap-2 font-semibold text-tinta">
               <Degraus r={panorama.recortes.find((r) => r.sintese.maior_supera_menor) ?? panorama.recortes[0]} teto={teto} altura={22} largura={7} />
-              Como ler cada escadinha
-            </p>
-            <p className="mt-1.5">
-              Os quatro degraus são as quatro faixas, da que declarou menos bens à que declarou mais. A altura é a parte que se elegeu, na
-              mesma régua para todas (até {inteiro(Math.ceil(teto))}%). Embaixo, a faixa de menos bens → a de mais bens.
+              menos bens → mais bens
             </p>
             {excecoes.length > 0 && (
               <p className="mt-2">
