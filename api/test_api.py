@@ -106,6 +106,18 @@ def main() -> None:
     assert gasto[2022] > 0 and gasto[1994] is None, gasto
     assert all(c["partido"] for c in wd["candidaturas"])   # partido também nas derrotas (migração 011)
 
+    # P2: quartis de patrimônio no recorte carregado e disputa presidencial nacional na carga BR
+    pat = get("/api/patrimonio?ano=2024&cargo=13")
+    assert pat["resumo"]["candidatos"] == 88707 and pat["resumo"]["sem_bens"] == 38145, pat["resumo"]
+    qs = [g for g in pat["grupos"] if g["tipo"] == "quartil"]
+    assert len(qs) == 4 and sum(g["candidatos"] for g in qs) == pat["resumo"]["com_bens"] - pat["resumo"]["zero_declarado"]
+    assert pat["sintese"]["maior_supera_menor"] and qs[-1]["taxa"] > qs[0]["taxa"]
+    presidente = get("/api/patrimonio?ano=2018&cargo=1")
+    assert presidente["escopo"] == {"uf": None, "ufs": ["BR"], "nacional": True}
+    assert presidente["resumo"]["candidatos"] == 13 and presidente["resumo"]["eleitos"] == 1
+    assert cliente.get("/api/patrimonio?ano=2024&cargo=1").status_code == 404
+    assert cliente.get("/api/patrimonio?ano=2018&cargo=1&uf=PI").status_code == 422
+
     # malha simplificada sem frestas: ponto de fronteira compartilhada fica nos dois vizinhos ou em nenhum
     original = json.loads((IBGE / "malhas" / "municipios_22.geojson").read_text(encoding="utf-8"))
     def pontos(fc):

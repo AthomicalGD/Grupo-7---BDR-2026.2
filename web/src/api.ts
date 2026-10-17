@@ -249,6 +249,38 @@ export interface Cadeira {
   receitas: Record<'fundo_eleitoral' | 'fundo_partidario' | 'pessoas_fisicas' | 'proprios' | 'outros', number>
 }
 
+// ───────── P2: patrimônio declarado e taxa de eleição ─────────
+
+export const CARGOS_P2 = [
+  { cod: 1, nome: 'Presidente', municipal: false, nacional: true },
+  { cod: 3, nome: 'Governador', municipal: false, nacional: false },
+  { cod: 5, nome: 'Senador', municipal: false, nacional: false },
+  { cod: 6, nome: 'Deputado federal', municipal: false, nacional: false },
+  { cod: 7, nome: 'Deputado estadual', municipal: false, nacional: false },
+  { cod: 11, nome: 'Prefeito', municipal: true, nacional: false },
+  { cod: 13, nome: 'Vereador', municipal: true, nacional: false },
+] as const
+
+export interface GrupoPatrimonio {
+  id: string
+  rotulo: string
+  tipo: 'sem_bens' | 'zero' | 'quartil' | 'faixa'
+  de: number | null
+  ate: number | null
+  candidatos: number
+  eleitos: number
+  taxa: number
+}
+
+export interface Patrimonio {
+  ano: number
+  cargo: { cod: number; nome: string }
+  escopo: { uf: string | null; ufs: string[]; nacional: boolean }
+  resumo: { candidatos: number; eleitos: number; sem_bens: number; zero_declarado: number; com_bens: number; cobertura_pct: number }
+  grupos: GrupoPatrimonio[]
+  sintese: { quartis: number; maior_supera_menor: boolean; diferenca_pp: number | null }
+}
+
 // ───────── P10a: taxa de reeleição ─────────
 
 /** Dos eleitos, quantos tentaram a reeleição (mesmo cargo e lugar, eleição seguinte) e quantos voltaram. */
@@ -451,6 +483,12 @@ export const consultas = {
       queryKey: ['cadeira', ano, cargo, uf, municipio ?? null],
       queryFn: ({ signal }) =>
         get<Cadeira>(`/api/cadeira?ano=${ano}&cargo=${cargo}&uf=${uf}${municipio ? `&municipio=${municipio}` : ''}`, signal),
+       ...sempre,
+     }),
+  patrimonio: (ano: number, cargo: number, uf = '') =>
+    queryOptions({
+      queryKey: ['patrimonio', ano, cargo, uf],
+      queryFn: ({ signal }) => get<Patrimonio>(`/api/patrimonio?ano=${ano}&cargo=${cargo}${uf ? `&uf=${uf}` : ''}`, signal),
       ...sempre,
     }),
   escola: (ano: number, uf = '') =>
