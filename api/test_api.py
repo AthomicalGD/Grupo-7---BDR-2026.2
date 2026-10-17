@@ -117,6 +117,10 @@ def main() -> None:
     assert presidente["resumo"]["candidatos"] == 13 and presidente["resumo"]["eleitos"] == 1
     assert cliente.get("/api/patrimonio?ano=2024&cargo=1").status_code == 404
     assert cliente.get("/api/patrimonio?ano=2018&cargo=1&uf=PI").status_code == 422
+    assert qs[0]["mediana"] <= qs[-1]["mediana"]
+    panorama = get("/api/patrimonio/panorama")
+    assert panorama["com_quartis"] == 14 and panorama["maior_supera"] == 13, panorama
+    assert {(r["ano"], r["cargo"]["cod"]) for r in panorama["recortes"]} >= {(2018, 1), (2024, 13)}
 
     # malha simplificada sem frestas: ponto de fronteira compartilhada fica nos dois vizinhos ou em nenhum
     original = json.loads((IBGE / "malhas" / "municipios_22.geojson").read_text(encoding="utf-8"))

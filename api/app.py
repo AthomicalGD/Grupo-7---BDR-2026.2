@@ -1094,6 +1094,8 @@ def _grupo_patrimonio(identificador: str, rotulo: str, tipo: str, linhas: list[d
     return {"id": identificador, "rotulo": rotulo, "tipo": tipo,
             "de": round(min(valores), 2) if valores else None,
             "ate": round(max(valores), 2) if valores else None,
+            # o candidato do meio do grupo: mais fácil de ler que os limites, que pegam os extremos
+            "mediana": round(statistics.median(valores), 2) if valores else None,
             "candidatos": candidatos, "eleitos": eleitos,
             "taxa": round(100 * eleitos / candidatos, 1) if candidatos else 0}
 
@@ -1169,6 +1171,33 @@ def patrimonio_endpoint(ano: int = 2024, cargo: int = 13, uf: str = ""):
     if escolhida and escolhida not in carregados:
         raise HTTPException(404, f"UF sem dados: {uf}")
     return patrimonio(ano, cargo, escolhida)
+
+
+@app.get("/api/patrimonio/panorama")
+def patrimonio_panorama(uf: str = ""):
+    """P2 em todos os cargos e anos de uma vez: a taxa de cada faixa por recorte (Presidente sempre nacional)."""
+    carregados = tuple(sorted(s for s in carregadas() if s != "BR"))
+    escolhida = uf.upper()
+    if escolhida and escolhida not in carregados:
+        raise HTTPException(404, f"UF sem dados: {uf}")
+    recortes = []
+    for ano in sorted(ANOS_P2):
+        for cargo in CARGOS_P2:
+            if (cargo in MUNICIPAIS_P2) != (ano % 4 == 0) or (cargo == PRESIDENTE and not carga_nacional()):
+                continue
+            d = patrimonio(ano, cargo, "" if cargo == PRESIDENTE else escolhida)
+            if not d["resumo"]["candidatos"]:
+                continue
+            recortes.append({
+                "ano": ano, "cargo": d["cargo"], "nacional": d["escopo"]["nacional"],
+                "candidatos": d["resumo"]["candidatos"], "eleitos": d["resumo"]["eleitos"],
+                "cobertura_pct": d["resumo"]["cobertura_pct"],
+                "grupos": [{k: g[k] for k in ("id", "tipo", "taxa", "candidatos", "eleitos", "mediana")} for g in d["grupos"]],
+                "sintese": d["sintese"],
+            })
+    quatro = [r for r in recortes if r["sintese"]["quartis"] == 4]
+    return {"uf": escolhida or None, "recortes": recortes,
+            "com_quartis": len(quatro), "maior_supera": sum(r["sintese"]["maior_supera_menor"] for r in quatro)}
 
 
 # ───────── Malhas (IBGE) ─────────
