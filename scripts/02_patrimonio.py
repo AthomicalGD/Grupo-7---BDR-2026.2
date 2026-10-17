@@ -15,8 +15,8 @@ import pandas as pd
 
 from comum import conectar, consultar, escolher_ufs, gravar_txt
 
-CARGOS = {3: "Governador", 5: "Senador", 6: "Deputado Federal", 7: "Deputado Estadual",
-          11: "Prefeito", 13: "Vereador"}
+CARGOS = {1: "Presidente", 3: "Governador", 5: "Senador", 6: "Deputado Federal",
+          7: "Deputado Estadual", 11: "Prefeito", 13: "Vereador"}
 ANOS = (2018, 2020, 2022, 2024)
 
 SQL = """
@@ -35,7 +35,8 @@ LEFT JOIN mandato ma ON ma.id_politico_eleicao = pe.id_politico_eleicao
 WHERE e.ano = ANY(%(anos)s) AND e.tipo = 2 AND e.turno = 1
   AND e.cod_cargo = ANY(%(cargos)s)
   AND pe.ds_sit_tot_turno IS NOT NULL
-  AND COALESCE(mu.cd_uf, e.cd_uf) = ANY(%(ufs)s)
+  AND (COALESCE(mu.cd_uf, e.cd_uf) = ANY(%(ufs)s)
+       OR (e.cod_cargo = 1 AND e.cd_uf IS NULL AND e.cd_municipio IS NULL))
 """
 
 
@@ -80,8 +81,10 @@ def secao(d: pd.DataFrame, ano: int, cargo: int) -> list[str]:
     zero = d[d["patrimonio"].eq(0)]
     positivos = d[d["patrimonio"].gt(0)]
     cobertura = 100 * (len(d) - len(faltantes)) / len(d)
+    total_eleitos = int(d["eleito"].sum())
+    plural = "eleitos" if total_eleitos != 1 else "eleito"
     out = [f"{ano} · {CARGOS[cargo]} — {inteiro(len(d))} candidaturas aptas, "
-           f"{inteiro(int(d['eleito'].sum()))} eleitos; bens informados: {cobertura:.1f}%",
+           f"{inteiro(total_eleitos)} {plural}; bens informados: {cobertura:.1f}%",
            f"  {'Faixa patrimonial':<43} {'Candidatos':>11} {'Eleitos':>9} {'Taxa':>7}",
            "  " + "-" * 75]
     if not faltantes.empty:
@@ -113,7 +116,7 @@ def relatorio(df: pd.DataFrame, ufs: list[str]) -> str:
             comparacoes.append(faixas[-1][1]["eleito"].mean() > faixas[0][1]["eleito"].mean())
     faltantes = int(df["patrimonio"].isna().sum())
     out = ["P2) Qual a taxa de sucesso eleitoral por patrimônio declarado?", "",
-           f"Abrangência: {', '.join(ufs)} (UFs carregadas, não o Brasil inteiro).",
+           f"Abrangência local: {', '.join(ufs)} (UFs carregadas); Presidente: disputa nacional completa (carga BR).",
            f"Síntese: em {sum(comparacoes)} de {len(comparacoes)} recortes ano/cargo com quatro quartis, "
            "a taxa de eleição do quartil de maior patrimônio supera a do menor.",
            f"Cobertura: {inteiro(faltantes)} de {inteiro(len(df))} candidaturas aptas "
@@ -124,7 +127,7 @@ def relatorio(df: pd.DataFrame, ufs: list[str]) -> str:
            "Quartis calculados só entre valores positivos de cada ano/cargo; empates não são separados.",
            "Sem registro de bens ≠ patrimônio declarado igual a zero: ambos ficam fora dos quartis.",
            "A situação de eleição considera o resultado final, inclusive o 2º turno, sem duplicar a candidatura.",
-           "Vices, suplentes, presidente e eleições suplementares não entram na análise.",
+           "Presidente é tratado como disputa nacional, usando a carga BR; vices, suplentes e eleições suplementares não entram.",
            "Valores de cada faixa são nominais do ano da eleição; taxas não precisam de correção pelo IPCA.",
            "As diferenças são associações observadas, não efeito causal do patrimônio sobre a eleição.", ""]
     for (ano, cargo), grupo in grupos:

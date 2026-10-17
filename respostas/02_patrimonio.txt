@@ -1,17 +1,27 @@
 P2) Qual a taxa de sucesso eleitoral por patrimônio declarado?
 
-Abrangência: AC, BA, GO, PA, PE, PI (UFs carregadas, não o Brasil inteiro).
-Síntese: em 12 de 12 recortes ano/cargo com quatro quartis, a taxa de eleição do quartil de maior patrimônio supera a do menor.
-Cobertura: 94.281 de 219.042 candidaturas aptas (43.0%) não têm bens registrados.
+Abrangência local: AC, BA, GO, PA, PE, PI (UFs carregadas); Presidente: disputa nacional completa (carga BR).
+Síntese: em 13 de 14 recortes ano/cargo com quatro quartis, a taxa de eleição do quartil de maior patrimônio supera a do menor.
+Cobertura: 94.282 de 219.066 candidaturas aptas (43.0%) não têm bens registrados.
 Fonte: TSE, candidaturas e bens declarados; eleições ordinárias de 2018, 2020, 2022 e 2024.
 Taxa = candidaturas eleitas / candidaturas aptas em cada faixa, por ano e cargo.
 Patrimônio = soma dos bens registrados para a candidatura; não é receita de campanha.
 Quartis calculados só entre valores positivos de cada ano/cargo; empates não são separados.
 Sem registro de bens ≠ patrimônio declarado igual a zero: ambos ficam fora dos quartis.
 A situação de eleição considera o resultado final, inclusive o 2º turno, sem duplicar a candidatura.
-Vices, suplentes, presidente e eleições suplementares não entram na análise.
+Presidente é tratado como disputa nacional, usando a carga BR; vices, suplentes e eleições suplementares não entram.
 Valores de cada faixa são nominais do ano da eleição; taxas não precisam de correção pelo IPCA.
 As diferenças são associações observadas, não efeito causal do patrimônio sobre a eleição.
+
+2018 · Presidente — 13 candidaturas aptas, 1 eleito; bens informados: 92.3%
+  Faixa patrimonial                            Candidatos   Eleitos    Taxa
+  ---------------------------------------------------------------------------
+  Sem registro de bens                                  1         0    0.0%
+  Q1: R$ 15.416,00 a R$ 118.835,13                      3         0    0.0%
+  Q2: R$ 428.451,09 a R$ 1.695.203,15                   3         0    0.0%
+  Q3: R$ 2.286.779,48 a R$ 6.135.114,71                 3         1   33.3%
+  Q4: R$ 8.591.035,79 a R$ 425.066.485,46               3         0    0.0%
+  Maior faixa menos menor faixa: +0.0 p.p.
 
 2018 · Governador — 41 candidaturas aptas, 6 eleitos; bens informados: 87.8%
   Faixa patrimonial                            Candidatos   Eleitos    Taxa
@@ -73,6 +83,15 @@ As diferenças são associações observadas, não efeito causal do patrimônio 
   Q3: R$ 67.000,10 a R$ 170.000,00                 15.486     2.870   18.5%
   Q4: R$ 170.000,01 a R$ 1.000.000.000,00          15.212     3.354   22.0%
   Maior faixa menos menor faixa: +11.7 p.p.
+
+2022 · Presidente — 11 candidaturas aptas, 1 eleito; bens informados: 100.0%
+  Faixa patrimonial                            Candidatos   Eleitos    Taxa
+  ---------------------------------------------------------------------------
+  Q1: R$ 197,31 a R$ 8.805,00                           3         0    0.0%
+  Q2: R$ 498.000,00 a R$ 2.317.554,73                   3         0    0.0%
+  Q3: R$ 2.323.735,38 a R$ 3.039.761,97                 2         0    0.0%
+  Q4: R$ 6.572.826,60 a R$ 24.619.627,66                3         1   33.3%
+  Maior faixa menos menor faixa: +33.3 p.p.
 
 2022 · Governador — 50 candidaturas aptas, 6 eleitos; bens informados: 90.0%
   Faixa patrimonial                            Candidatos   Eleitos    Taxa
