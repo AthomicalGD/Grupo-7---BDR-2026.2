@@ -1,4 +1,4 @@
-import { Archive, Armchair, ArrowsClockwise, BookOpenText, GraduationCap, MapTrifold, type Icon } from '@phosphor-icons/react'
+import { Archive, Armchair, ArrowsClockwise, BookOpenText, GraduationCap, MapTrifold, PiggyBank, type Icon } from '@phosphor-icons/react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { motion } from 'motion/react'
@@ -32,12 +32,13 @@ function usePreferencia(chave: string, atributo: string, inicial: string) {
 // Cada módulo tem um ícone; o ativo vira uma pílula no oliva claro da seleção (o mesmo papel em todo o
 // sistema), com o laço das fitas embaixo. A pílula desliza entre os itens (mola) e o ícone pula e fica
 // cheio ao chegar.
-type ItemNav = { para: '/' | '/urna' | '/cadeira' | '/escola' | '/reeleicao' | '/metodologia'; rotulo: string; curto?: string; icone: Icon; ativo: (p: string) => boolean }
+type ItemNav = { para: '/' | '/urna' | '/cadeira' | '/escola' | '/patrimonio' | '/reeleicao' | '/metodologia'; rotulo: string; curto?: string; icone: Icon; ativo: (p: string) => boolean }
 const NAV: ItemNav[] = [
   { para: '/', rotulo: 'Mapa', icone: MapTrifold, ativo: (p) => p === '/' || p.startsWith('/uf') },
   { para: '/urna', rotulo: 'Urna', icone: Archive, ativo: (p) => p.startsWith('/urna') || p.startsWith('/politico') },
   { para: '/cadeira', rotulo: 'Cadeira', icone: Armchair, ativo: (p) => p.startsWith('/cadeira') },
   { para: '/escola', rotulo: 'Escola', icone: GraduationCap, ativo: (p) => p.startsWith('/escola') },
+  { para: '/patrimonio', rotulo: 'Patrimônio', curto: 'Bens', icone: PiggyBank, ativo: (p) => p.startsWith('/patrimonio') },
   { para: '/reeleicao', rotulo: 'Reeleição', icone: ArrowsClockwise, ativo: (p) => p.startsWith('/reeleicao') },
   { para: '/metodologia', rotulo: 'Metodologia', curto: 'Método', icone: BookOpenText, ativo: (p) => p.startsWith('/metodologia') },
 ]
@@ -89,7 +90,7 @@ function Cabecalho() {
   const caminho = useRouterState({ select: (s) => s.location.pathname })
   return (
     <header className="sticky top-0 z-30 bg-folha">
-      <div className="mx-auto flex h-14 max-w-[var(--casca-max)] items-center justify-between gap-3 px-4 sm:gap-6 md:px-[var(--casca-margem)]">
+      <div className="mx-auto flex h-14 max-w-[var(--casca-max)] items-center justify-between gap-2 px-4 sm:gap-6 md:px-[var(--casca-margem)]">
         <Link to="/" className="shrink-0" aria-label="Voto Aberto, página inicial">
           <img src={letreiro} alt="Voto Aberto" className="hidden h-9 w-auto lg:block" />
           <img src={simbolo} alt="Voto Aberto" className="h-8 w-auto lg:hidden" />
@@ -114,7 +115,7 @@ function Cabecalho() {
                   )}
                   <Link
                     to={item.para}
-                    className={`nav-item relative flex items-center gap-1.5 rounded-full px-[5px] py-2 text-[0.8rem] transition-colors sm:px-3 sm:text-[0.97rem] ${ativo ? 'font-semibold' : 'text-tinta-2 hover:bg-papel hover:text-tinta'}`}
+                    className={`nav-item relative flex items-center gap-1.5 rounded-full px-[4px] py-2 text-[0.8rem] transition-colors max-sm:[font-stretch:84%] sm:px-3 lg:max-xl:px-2 sm:text-[0.97rem] ${ativo ? 'font-semibold' : 'text-tinta-2 hover:bg-papel hover:text-tinta'}`}
                     style={ativo ? { color: 'var(--color-selecao-tinta)' } : undefined}
                     aria-current={ativo ? 'page' : undefined}
                     aria-label={item.curto ? item.rotulo : undefined}
