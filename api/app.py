@@ -141,6 +141,8 @@ async def _ciclo_de_vida(_app):
     # a P10a de todas as UFs é a conta mais lenta (~7 s na primeira vez): começa a ser feita ao subir,
     # em segundo plano, para a primeira visita à Reeleição já achar o cache pronto
     threading.Thread(target=_aquecer_reeleicao, daemon=True).start()
+    # a P2 de cada estado leva ~3 s na primeira vez (14 recortes): idem
+    threading.Thread(target=_aquecer_patrimonio, daemon=True).start()
     yield
 
 
@@ -1175,6 +1177,15 @@ def patrimonio_endpoint(ano: int = 2024, cargo: int = 13, uf: str = ""):
     if escolhida and escolhida not in carregados:
         raise HTTPException(404, f"UF sem dados: {uf}")
     return patrimonio(ano, cargo, escolhida)
+
+
+def _aquecer_patrimonio() -> None:
+    try:
+        patrimonio_panorama()
+        for sigla in sorted(s for s in carregadas() if s != "BR"):
+            patrimonio_panorama(sigla)
+    except Exception:  # noqa: BLE001 - banco fora do ar: a conta é feita quando a página pedir
+        pass
 
 
 @app.get("/api/patrimonio/panorama")
