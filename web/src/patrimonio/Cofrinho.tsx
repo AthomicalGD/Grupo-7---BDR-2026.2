@@ -15,7 +15,7 @@ import { inteiro } from '../lib/formato'
 import { alternarSom, somLigado } from '../urna/som'
 import { COR, limitesCurtos, moedas, nomeFaixa, POUCOS, quartis, reaisFaixa, taxaCurta } from './conta'
 import { cacos, Desenho, dentroDoCorpo, Gradientes, PORCO, Rachaduras, sorteio } from './porquinho'
-import { tocarCarimbo, tocarCorte, tocarGolpe, tocarPilhas, tocarQuebra } from './som'
+import { baixarSons, tocarCarimbo, tocarCorte, tocarGolpe, tocarPilhas, tocarQuebra } from './som'
 
 export type Fase = 0 | 1 | 2 | 3
 
@@ -205,6 +205,9 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
   }, [fase])
   // o palco encolhe para caber e, em telas largas, cresce até 1,2x: o cofrinho é o protagonista da página
   const escala = largura ? Math.min(estreito ? 1 : 1.2, largura / p.W) : 1
+
+  // os sons (~40 KB) já vêm quando a página abre; decodificam no primeiro toque
+  useEffect(() => baixarSons(), [])
 
   useEffect(() => {
     const el = caixa.current
