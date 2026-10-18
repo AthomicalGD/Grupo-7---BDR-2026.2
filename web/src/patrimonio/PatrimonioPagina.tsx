@@ -156,9 +156,11 @@ export function PatrimonioPagina() {
   const cargo = CARGOS_P2.find((c) => c.cod === busca.cargo) ?? CARGOS_P2[CARGOS_P2.length - 1]
   const anos = cargo.municipal ? ANOS_MUNICIPAIS : ANOS_GERAIS
   const ano = busca.ano && anos.includes(busca.ano) ? busca.ano : anos[anos.length - 1]
-  const ufEscolhida = carregadas.find((u) => u.sigla === busca.uf)
+  // o DF não tem eleição municipal: em prefeito e vereador ele não é um estado escolhível
+  const lugares = useMemo(() => (cargo.municipal ? carregadas.filter((u) => u.sigla !== 'DF') : carregadas), [carregadas, cargo.municipal])
+  const ufEscolhida = lugares.find((u) => u.sigla === busca.uf)
   const uf = ufEscolhida?.sigla ?? ''
-  const noLugar = ufEscolhida ? noEstado(ufEscolhida.sigla, ufEscolhida.nome) : `nos ${carregadas.length} estados carregados`
+  const noLugar = ufEscolhida ? noEstado(ufEscolhida.sigla, ufEscolhida.nome) : `nos ${lugares.length} estados carregados`
   const q = useQuery({ ...consultas.patrimonio(ano, cargo.cod, cargo.nacional ? '' : uf), enabled: !!ufs, placeholderData: keepPreviousData })
   const qp = useQuery({ ...consultas.patrimonioPanorama(uf), enabled: !!ufs, placeholderData: keepPreviousData })
   const dados = q.data
@@ -191,7 +193,7 @@ export function PatrimonioPagina() {
         <header>
           <h1 className="t-display titulo-p2">Quem declara mais bens se elege mais?</h1>
           <div className="mt-5">
-            <Recorte cargo={cargo} ano={ano} anos={anos} uf={uf} ufs={carregadas} malha={malha} panorama={qp.data} aoCargo={escolherCargo} aoAno={escolherAno} aoUf={escolherUf} />
+            <Recorte cargo={cargo} ano={ano} anos={anos} uf={uf} ufs={lugares} malha={malha} panorama={qp.data} aoCargo={escolherCargo} aoAno={escolherAno} aoUf={escolherUf} />
           </div>
         </header>
 

@@ -1065,7 +1065,7 @@ WITH bens AS (
     FROM bem
     GROUP BY id_politico_eleicao
 )
-SELECT e.ano, e.cod_cargo, b.patrimonio, ma.id_mandato IS NOT NULL AS eleito
+SELECT e.ano, (CASE e.cod_cargo WHEN 8 THEN 7 ELSE e.cod_cargo END) AS cod_cargo, b.patrimonio, ma.id_mandato IS NOT NULL AS eleito
 FROM politico_eleicao pe
 JOIN eleicao e ON e.id_eleicao = pe.id_eleicao
 LEFT JOIN municipio mu ON mu.cd_municipio = e.cd_municipio
@@ -1073,7 +1073,9 @@ LEFT JOIN uf um ON um.cd_ibge = mu.cd_uf
 LEFT JOIN uf u ON u.cd_ibge = e.cd_uf
 LEFT JOIN bens b ON b.id_politico_eleicao = pe.id_politico_eleicao
 LEFT JOIN mandato ma ON ma.id_politico_eleicao = pe.id_politico_eleicao
-WHERE e.ano = %(ano)s AND e.tipo = 2 AND e.turno = 1 AND e.cod_cargo = %(cargo)s
+WHERE e.ano = %(ano)s AND e.tipo = 2 AND e.turno = 1
+  -- o deputado distrital (8, só o DF) conta como deputado estadual (7); a lista usa o índice
+  AND e.cod_cargo = ANY(CASE %(cargo)s::int WHEN 7 THEN ARRAY[7, 8] ELSE ARRAY[%(cargo)s::int] END)
   AND pe.ds_sit_tot_turno IS NOT NULL
   AND ((e.cod_cargo = 1 AND e.cd_uf IS NULL AND e.cd_municipio IS NULL)
        OR COALESCE(u.sigla, um.sigla) = ANY(%(ufs)s))
@@ -1176,6 +1178,8 @@ def patrimonio_endpoint(ano: int = 2024, cargo: int = 13, uf: str = ""):
     escolhida = uf.upper()
     if escolhida and escolhida not in carregados:
         raise HTTPException(404, f"UF sem dados: {uf}")
+    if escolhida == "DF" and cargo in MUNICIPAIS_P2:
+        raise HTTPException(404, "O Distrito Federal não tem eleição municipal: não elege prefeito nem vereador.")
     return patrimonio(ano, cargo, escolhida)
 
 
