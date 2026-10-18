@@ -1,12 +1,13 @@
 // Filtros da busca de políticos, discretos: uma linha de fichas (cargo, eleição, estado, partido,
 // resultado); cada uma abre um menu pequeno só quando é clicada. A ficha escolhida mostra o valor e
-// tem um x para tirar. O estado leva a silhueta (como na P1) e o partido a cor do seu viés (P7).
+// tem um x para tirar. O estado abre o minimapa do Brasil (o mesmo seletor da P2 e das outras páginas) e o
+// partido leva a cor do seu viés (P7).
 // A pessoa entra no resultado se tiver uma candidatura que bata com todos os filtros ao mesmo tempo.
 import { CaretDown, Check, X } from '@phosphor-icons/react'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { ANOS_ELEICAO, CARGOS_BUSCA, consultas, filtrando, type FiltrosBusca } from '../api'
-import { silhueta } from '../atlas/geo'
+import { MapaEstados } from '../componentes/MapaEstados'
 import { corVies } from '../lib/vies'
 
 type Chave = keyof FiltrosBusca
@@ -30,7 +31,7 @@ function Opcao({ marcada, aoEscolher, children }: { marcada: boolean; aoEscolher
 }
 
 /** Uma ficha: mostra o nome do filtro ou o valor escolhido; o menu abre embaixo dela. */
-function Ficha({ rotulo, valor, aberto, aoAbrir, aoFechar, aoLimpar, largura = 'w-56', children }: {
+function Ficha({ rotulo, valor, aberto, aoAbrir, aoFechar, aoLimpar, largura = 'w-56', papel = 'menu', children }: {
   rotulo: string
   valor?: string
   aberto: boolean
@@ -38,6 +39,8 @@ function Ficha({ rotulo, valor, aberto, aoAbrir, aoFechar, aoLimpar, largura = '
   aoFechar: () => void
   aoLimpar: () => void
   largura?: string
+  /** dialog quando o conteúdo não é uma lista de opções (o minimapa do estado) */
+  papel?: 'menu' | 'dialog'
   children: ReactNode
 }) {
   const caixa = useRef<HTMLDivElement>(null)
@@ -63,7 +66,7 @@ function Ficha({ rotulo, valor, aberto, aoAbrir, aoFechar, aoLimpar, largura = '
   return (
     <div ref={caixa} className="relative">
       <div className={`inline-flex h-8 items-center rounded-full border text-[0.82rem] font-semibold transition-colors ${valor ? 'selecionado-fita' : 'border-linha-2 bg-folha text-tinta-2 hover:border-tinta-3 hover:text-tinta'}`}>
-        <button type="button" aria-haspopup="menu" aria-expanded={aberto} onClick={aberto ? aoFechar : abrir} className="inline-flex h-full items-center gap-1 rounded-full pl-3 pr-2.5">
+        <button type="button" aria-haspopup={papel} aria-expanded={aberto} onClick={aberto ? aoFechar : abrir} className="inline-flex h-full items-center gap-1 rounded-full pl-3 pr-2.5">
           {valor ?? rotulo}
           {!valor && <CaretDown size={11} weight="bold" aria-hidden className={`transition-transform ${aberto ? 'rotate-180' : ''}`} />}
         </button>
@@ -74,7 +77,7 @@ function Ficha({ rotulo, valor, aberto, aoAbrir, aoFechar, aoLimpar, largura = '
         )}
       </div>
       {aberto && (
-        <div role="menu" aria-label={rotulo} className={`absolute top-10 z-30 max-h-[320px] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-xl border border-linha bg-folha p-1.5 shadow-[var(--shadow-papel)] ${aDireita ? 'right-0' : 'left-0'} ${largura}`}>
+        <div role={papel} aria-label={rotulo} className={`absolute top-10 z-30 max-w-[calc(100vw-2rem)] rounded-xl border border-linha bg-folha shadow-[var(--shadow-papel)] ${papel === 'menu' ? 'max-h-[320px] overflow-y-auto p-1.5' : 'gaveta p-4'} ${aDireita ? 'right-0' : 'left-0'} ${largura}`}>
           {children}
         </div>
       )}
@@ -88,7 +91,6 @@ export function FiltroCandidatura({ filtros, aoMudar }: { filtros: FiltrosBusca;
   const { data: partidos = [] } = useQuery(consultas.partidos())
   const [aberto, setAberto] = useState<Chave | null>(null)
   const carregadas = useMemo(() => ufs.filter((u) => u.carregada), [ufs])
-  const silhuetas = useMemo(() => new Map(malha ? carregadas.map((u) => [u.sigla, silhueta(malha, u.cd_ibge, 18)]) : []), [malha, carregadas])
   // da esquerda para a direita, como no espectro do voto
   const porVies = useMemo(() => [...partidos].sort((a, b) => a.vies - b.vies || a.sigla.localeCompare(b.sigla)), [partidos])
 
@@ -128,15 +130,8 @@ export function FiltroCandidatura({ filtros, aoMudar }: { filtros: FiltrosBusca;
         </div>
       </Ficha>
 
-      <Ficha rotulo="Estado" valor={uf?.sigla} {...ficha('uf')}>
-        {carregadas.map((u) => (
-          <Opcao key={u.sigla} marcada={filtros.uf === u.sigla} aoEscolher={() => escolher('uf', u.sigla)}>
-            <svg width={18} height={18} viewBox="0 0 18 18" aria-hidden className="shrink-0 text-tinta-3">
-              <path d={silhuetas.get(u.sigla)} fill="currentColor" />
-            </svg>
-            {u.nome}
-          </Opcao>
-        ))}
+      <Ficha rotulo="Estado" valor={uf?.sigla} papel="dialog" largura="w-[372px]" {...ficha('uf')}>
+        <MapaEstados malha={malha} ufs={carregadas} escolhida={filtros.uf ?? ''} aoEscolher={(s) => { aoMudar({ ...filtros, uf: s }); setAberto(null) }} />
       </Ficha>
 
       <Ficha rotulo="Partido" valor={filtros.partido} {...ficha('partido')}>

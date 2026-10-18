@@ -60,7 +60,8 @@ test('P4: o caderno, os santinhos, o plenário e o boletim respondem as pergunta
 
 test('P4: o filtro por estado recorta a página e abre o boletim na capital', async ({ page }) => {
   await page.goto('/escola')
-  await page.getByRole('radio', { name: 'Bahia' }).click()
+  await page.getByRole('button', { name: /^Estado: / }).click({ timeout: 30_000 })
+  await page.getByRole('dialog', { name: 'Escolher o estado' }).getByRole('radio', { name: 'Bahia' }).click()
   await expect(page.getByText(/Em 2022, na Bahia, quem se elegeu tinha/)).toBeVisible({ timeout: 20_000 })
   await expect(page).toHaveURL(/uf=BA/)
   const lugar = page.locator('section[aria-labelledby="lugar-p4"]')

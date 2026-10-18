@@ -43,3 +43,9 @@ export function silhueta(malha: Malha, codigo: number, lado = 40): string {
   const p = geoConicEqualArea().parallels([-2, -22]).rotate([54, 0]).preclip((s) => s).precision(0).fitSize([lado, lado], f)
   return geoPath(p).digits(1)(f) ?? ''
 }
+
+/** O Brasil inteiro ajustado a um quadrado, com os estados separados pelo traço (ícone do seletor de estado). */
+export function silhuetaBrasil(malha: Malha, lado = 26): string {
+  const p = geoConicEqualArea().parallels([-2, -22]).rotate([54, 0]).preclip((s) => s).precision(0).fitSize([lado, lado], malha)
+  return geoPath(p).digits(1)(malha) ?? ''
+}
