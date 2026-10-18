@@ -5,8 +5,8 @@ Cortados, normalizados e convertidos para MP3 mono 64 kbps.
 golpe1.mp3  impactPlate_light_002.ogg   Kenney, Impact Sounds  https://kenney.nl/assets/impact-sounds
 golpe2.mp3  impactPlate_medium_000.ogg  Kenney, Impact Sounds
 golpe3.mp3  impactPlate_heavy_000.ogg   Kenney, Impact Sounds
-quebra.mp3  montagem: "Mug smash" (MordinSolus, Freesound #632337) + "Drop Coins 1" (FlatHill, Freesound #211447)
-            https://freesound.org/people/MordinSolus/sounds/632337/  https://freesound.org/people/FlatHill/sounds/211447/
+quebra.mp3  montagem: "Breaking pot short" (anna_bliss, Freesound #810043) + "Coins Dropping" (meghannmiller, Freesound #469182)
+            https://freesound.org/people/anna_bliss/sounds/810043/  https://freesound.org/people/meghannmiller/sounds/469182/
             (não há gravação livre de cofrinho de porquinho quebrando: é cerâmica estilhaçando e moedas caindo)
 chacoalho1.mp3, chacoalho2.mp3  "Coin Moneybox" (EminYILDIRIM, Freesound #536075), dois trechos
             https://freesound.org/people/EminYILDIRIM/sounds/536075/
