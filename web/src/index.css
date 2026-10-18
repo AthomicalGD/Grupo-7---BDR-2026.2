@@ -359,7 +359,6 @@
 }
 /* a fila: cada grupo anda inteiro (uma camada por grupo, não uma por barrinha) */
 .grupo-fila { transition: transform 720ms var(--ease-saida); }
-.barrinha { border-radius: 1.5px 1.5px 0 0; background: var(--color-fita-ardosia); }
 /* o palpite: as quatro áreas surgem uma depois da outra */
 @keyframes palpite-surge { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .palpite-alvo { animation: palpite-surge 380ms var(--ease-saida) both; animation-delay: calc(var(--i, 0) * 70ms); transition: background-color 160ms, border-color 160ms, transform 160ms var(--ease-saida); }
@@ -564,3 +563,20 @@
 .exemplo-regua[aria-pressed="true"]::before { background: var(--color-selecao); height: 10px; }
 @media (prefers-reduced-motion: reduce) { .gaveta { animation: none; } }
 
+
+/* P2: a fila (parada dos bens). Barrinhas com topo arredondado e 2px de papel entre elas, que crescem da base
+   em onda depois que o porquinho quebra; o contorno e o balão da barrinha sob o cursor. */
+@keyframes barra-cresce { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.barrinha {
+  border-radius: 2px 2px 0 0; transform-origin: bottom;
+  animation: barra-cresce 560ms var(--ease-saida) both; animation-delay: calc(1250ms + var(--j, 0) * 7ms);
+  transition: background-color 420ms ease;
+}
+.eixo-fila { paint-order: stroke; -webkit-text-stroke: 3px var(--color-papel); }
+.realce-barra { border: 1.5px solid var(--color-tinta); border-bottom: 0; border-radius: 3px 3px 0 0; }
+.dica-fila {
+  min-width: 150px; padding: 7px 10px; border-radius: 10px; background: var(--color-tinta); color: var(--color-folha);
+  font-size: 0.78rem; line-height: 1.35; box-shadow: var(--shadow-papel); z-index: 3;
+}
+.dica-fila b { font-weight: 800; }
+.dica-fila .dica-grupo { color: #c9d1e6; }

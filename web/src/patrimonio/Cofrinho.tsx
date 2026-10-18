@@ -21,8 +21,8 @@ export type Fase = 0 | 1 | 2 | 3
 
 // base: a linha de chão da fila; pitch: o passo de cada barrinha; vao: o espaço entre os grupos cortados
 const PLANTAS = {
-  largo: { W: 940, H: 440, alturaInicial: 322, subida: 50, chao: 314, porco: { x: 46, s: 1, grande: 1.3 }, fila: { x: 334, w: 606 }, base: 300, pitch: 5.4, vao: 22, alto: 150, slot: 150, texto: 450 },
-  estreito: { W: 358, H: 950, alturaInicial: 560, subida: 0, chao: 214, porco: { x: 63, s: 0.89, grande: 1.15 }, fila: { x: 4, w: 350 }, base: 550, pitch: 3.5, vao: 0, alto: 150, slot: 176, texto: 8 },
+  largo: { W: 940, H: 440, alturas: [322, 300, 300, 440], subidas: [50, 90, 90, 0], chao: 314, porco: { x: 46, s: 1, grande: 1.3 }, fila: { x: 334, w: 606 }, base: 300, baseFila: 300, pitch: 5, vao: 26, alto: 170, slot: 150, texto: 450 },
+  estreito: { W: 358, H: 950, alturas: [560, 430, 950, 950], subidas: [0, 100, 0, 0], chao: 214, porco: { x: 63, s: 0.89, grande: 1.15 }, fila: { x: 4, w: 350 }, base: 550, baseFila: 450, pitch: 3.5, vao: 0, alto: 150, slot: 176, texto: 8 },
 } as const
 type Planta = (typeof PLANTAS)[keyof typeof PLANTAS]
 const CELULA = 14 // cada bonequinho na grade de 10 por 10
@@ -62,11 +62,16 @@ function voosDosCacos(lista: { centro: [number, number] }[], gx: number, gy: num
 }
 
 /** As barrinhas de um grupo da fila; só mudam com o recorte. */
-const Barras = memo(function Barras({ hs, inicio, n, pitch }: { hs: number[]; inicio: number; n: number; pitch: number }) {
+const Barras = memo(function Barras({ hs, inicio, n, pitch, cor }: { hs: number[]; inicio: number; n: number; pitch: number; cor: string }) {
+  const largura = Math.max(1.5, pitch - 2)
   return (
     <>
       {Array.from({ length: n }, (_, j) => (
-        <span key={j} className="barrinha absolute bottom-0" style={{ left: j * pitch, width: pitch * 0.72, height: hs[inicio + j] ?? 8 }} />
+        <span
+          key={j}
+          className="barrinha absolute bottom-0"
+          style={{ left: j * pitch, width: largura, height: hs[inicio + j] ?? 8, background: cor, ['--j' as string]: inicio + j }}
+        />
       ))}
     </>
   )
@@ -143,7 +148,7 @@ function lugar(p: Planta, gr: Grupo, total: number, cortada: boolean, estreito: 
   const largura = 100 * p.pitch
   const x0 = p.fila.x + (p.fila.w - largura) / 2
   const centroFila = x0 + (gr.inicio + gr.n / 2) * p.pitch
-  if (!cortada) return { x: centroFila, base: p.base }
+  if (!cortada) return { x: centroFila, base: p.baseFila }
   if (estreito) {
     const col = gr.i % 2
     const lin = Math.floor(gr.i / 2)
@@ -152,13 +157,21 @@ function lugar(p: Planta, gr: Grupo, total: number, cortada: boolean, estreito: 
   return { x: centroFila + (gr.i - (total - 1) / 2) * p.vao, base: p.base }
 }
 
-/** Altura de cada barrinha: escala que cresce de 10 em 10 vezes, do menor ao maior valor da fila. */
-function alturas(fila: number[], alto: number) {
-  if (!fila.length) return []
-  const lo = Math.log10(Math.max(1, fila[0]))
-  const hi = Math.log10(Math.max(10, fila[fila.length - 1]))
-  return fila.map((v) => 6 + ((alto - 6) * (Math.log10(Math.max(1, v)) - lo)) / Math.max(0.5, hi - lo))
+/** A escala da fila: cresce de 10 em 10 vezes, do menor ao maior valor. Dá a altura de cada barrinha e as
+ * linhas de referência nas potências de 10 que caem dentro da fila (R$ 1 mil, R$ 10 mil...). */
+function escalaFila(fila: number[], alto: number) {
+  const lo = Math.log10(Math.max(1, fila[0] ?? 1))
+  const hi = Math.log10(Math.max(10, fila.at(-1) ?? 10))
+  const y = (v: number) => 6 + ((alto - 6) * (Math.log10(Math.max(1, v)) - lo)) / Math.max(0.5, hi - lo)
+  const marcas: number[] = []
+  for (let k = Math.ceil(lo); k <= Math.floor(hi); k++) marcas.push(10 ** k)
+  return { hs: fila.map(y), marcas: marcas.map((v) => ({ v, y: y(v) })) }
 }
+
+// os grupos cortados, do que declarou menos ao que declarou mais: um tom da ardósia cada, do claro ao escuro
+// (rampa ordinal validada: claridade monótona, um só matiz, o mais claro a 2,2:1 do papel); a fila inteira é um tom só
+const ARDOSIA = ['#9aa6c8', '#7584b2', '#5d6b94', '#3a4670']
+const corDoGrupo = (i: number, total: number) => (total === 4 ? ARDOSIA[i] : ARDOSIA[Math.round((i / Math.max(1, total - 1)) * 3)])
 
 export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar, voce }: {
   dados: Patrimonio
@@ -205,6 +218,8 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
   }, [fase])
   // o palco encolhe para caber e, em telas largas, cresce até 1,2x: o cofrinho é o protagonista da página
   const escala = largura ? Math.min(estreito ? 1 : 1.2, largura / p.W) : 1
+  const dica = useRef<HTMLDivElement>(null)
+  const realce = useRef<HTMLSpanElement>(null)
 
   // os sons (~40 KB) já vêm quando a página abre; decodificam no primeiro toque
   useEffect(() => baixarSons(), [])
@@ -236,7 +251,8 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
 
   const grupos = gruposDe(dados, estreito)
   // as alturas só mudam com a fila: o memo mantém a mesma lista e as barrinhas (memo) não se redesenham
-  const hs = useMemo(() => alturas(dados.fila, p.alto), [dados.fila, p.alto])
+  const escalaY = useMemo(() => escalaFila(dados.fila, p.alto), [dados.fila, p.alto])
+  const hs = escalaY.hs
   const s = p.porco.s
   const porcoY = p.chao - PORCO.base * s
   // o último golpe é o centro da quebra (sem martelada, o meio das costas)
@@ -249,6 +265,49 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
   const primeiro = grupos[0]
   const sobe = !!(primeiro && ultimo && ultimo.g.taxa > primeiro.g.taxa && primeiro.g.taxa > 0 && grupos.length > 1)
   const media = dados.resumo.candidatos ? (100 * dados.resumo.eleitos) / dados.resumo.candidatos : 0
+
+  // o valor da barrinha sob o cursor, nos passos da fila; um quadro por movimento, direto no DOM
+  useEffect(() => {
+    const el = cena.current
+    if (!el || (fase !== 1 && fase !== 2) || cortando) return
+    let quadro = 0
+    const esconder = () => { dica.current?.classList.add('hidden'); realce.current?.classList.add('hidden') }
+    const mover = (e: PointerEvent) => {
+      cancelAnimationFrame(quadro)
+      quadro = requestAnimationFrame(() => {
+        const caixaCena = el.getBoundingClientRect()
+        const k = caixaCena.width / p.W
+        const x = (e.clientX - caixaCena.left) / k
+        const y = (e.clientY - caixaCena.top) / k
+        const alvo = grupos.map((gr) => ({ gr, pos: lugar(p, gr, grupos.length, fase >= 2, estreito) })).find(({ gr, pos }) => x >= pos.x - (gr.n * p.pitch) / 2 && x < pos.x + (gr.n * p.pitch) / 2 && y > pos.base - p.alto - 20 && y < pos.base + 6)
+        if (!alvo || !dica.current || !realce.current) return esconder()
+        const { gr, pos } = alvo
+        const j = Math.min(gr.n - 1, Math.floor((x - (pos.x - (gr.n * p.pitch) / 2)) / p.pitch))
+        const indice = gr.inicio + j
+        const h = hs[indice] ?? 8
+        const bx = pos.x - (gr.n * p.pitch) / 2 + j * p.pitch
+        realce.current.style.transform = `translate(${bx - 1.5}px, ${pos.base - h - 1.5}px)`
+        realce.current.style.width = `${Math.max(1.5, p.pitch - 2) + 3}px`
+        realce.current.style.height = `${h + 1.5}px`
+        dica.current.innerHTML = `<b>${indice + 1}º de 100</b> na fila<br><span>declarou cerca de <b>${reaisFaixa(dados.fila[indice])}</b></span>${fase >= 2 ? `<br><span class="dica-grupo">${nomeFaixa(gr.g, gr.i, grupos.length).nome}</span>` : ''}`
+        const esquerda = Math.min(p.W - 190, Math.max(0, bx - 80))
+        dica.current.style.transform = `translate(${esquerda}px, ${Math.max(0, pos.base - h - 74)}px)`
+        dica.current.classList.remove('hidden')
+        realce.current.classList.remove('hidden')
+      })
+    }
+    el.addEventListener('pointermove', mover)
+    el.addEventListener('pointerdown', mover)
+    el.addEventListener('pointerleave', esconder)
+    return () => {
+      cancelAnimationFrame(quadro)
+      el.removeEventListener('pointermove', mover)
+      el.removeEventListener('pointerdown', mover)
+      el.removeEventListener('pointerleave', esconder)
+      esconder()
+    }
+  }, [fase, cortando, dados, estreito]) // eslint-disable-line react-hooks/exhaustive-deps
+
 
   // a chegada de cada passo
   useLayoutEffect(() => {
@@ -287,8 +346,7 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
           { duration: 860, delay: 600 + k * 28, easing: 'cubic-bezier(.33,0,.4,1)', fill: 'both' },
         ))
       })
-      // a fila se ergue da esquerda para a direita: um recorte por grupo, não um por barrinha
-      todos('[data-barras]').forEach((b, i) => anima(b, [{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)' }], { duration: 520, delay: 1350 + i * 200, easing: 'cubic-bezier(.65,0,.35,1)' }))
+      // a fila se ergue em onda da esquerda para a direita (CSS .barrinha, atraso pelo índice da barrinha)
       todos('[data-legenda-fila]').forEach((l) => anima(l, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: 2200, easing: EASE }))
     }
 
@@ -456,15 +514,15 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
   const nVoos = estreito ? 16 : 26
   const voos = Array.from({ length: nVoos }, (_, k) => {
     const j = Math.min(99, Math.round((k + 0.5) * (100 / nVoos)))
-    return { x: x0 + j * p.pitch, y: p.base - (hs[j] ?? 40) - 6, k }
+    return { x: x0 + j * p.pitch, y: p.baseFila - (hs[j] ?? 40) - 6, k }
   })
 
   return (
-    <div ref={caixa} className="palco relative w-full" style={{ height: (fase === 0 ? p.alturaInicial : p.H) * escala }}>
+    <div ref={caixa} className="palco relative w-full" style={{ height: p.alturas[fase] * escala }}>
       <div
         ref={cena}
         className="cena absolute left-0 top-0 origin-top-left select-none transition-transform duration-500"
-        style={{ width: p.W, height: p.H, transform: `translateY(${fase === 0 ? -p.subida * escala : 0}px) scale(${escala})`, left: Math.max(0, (largura - p.W * escala) / 2) }}
+        style={{ width: p.W, height: p.H, transform: `translateY(${-p.subidas[fase] * escala}px) scale(${escala})`, left: Math.max(0, (largura - p.W * escala) / 2) }}
       >
         <svg ref={defs} width={0} height={0} className="absolute" aria-hidden>
           <defs>
@@ -569,28 +627,43 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
         {fase > 0 && (
           <>
             {/* a fila inteira: os valores das pontas e o que é cada barrinha */}
+            {/* linhas de referência: finas, sólidas, atrás das barras; o rótulo na ponta esquerda, onde a fila é baixa */}
+            {fase === 1 && hs.length > 0 && (
+              <div aria-hidden className="pointer-events-none">
+                {escalaY.marcas.map(({ v, y }) => (
+                  <div key={v} className="absolute h-px bg-linha" style={{ left: p.fila.x, width: p.fila.w, top: p.baseFila - y }}>
+                    <span className="eixo-fila absolute -top-[15px] left-0 whitespace-nowrap text-[0.7rem] font-semibold text-tinta-3">{reaisFaixa(v)}</span>
+                  </div>
+                ))}
+                <div className="absolute h-px bg-linha-2" style={{ left: p.fila.x, width: p.fila.w, top: p.baseFila }} />
+              </div>
+            )}
             {fase === 1 && hs.length > 0 && (
               <div data-legenda-fila aria-hidden>
-                <span className="absolute text-[0.75rem] font-semibold text-tinta-2" style={{ left: x0, top: p.base + 8 }}>← {reaisFaixa(dados.fila[0])}</span>
-                <span className="absolute text-right text-[0.75rem] font-semibold text-tinta-2" style={{ right: p.W - (x0 + largFila), top: p.base + 8 }}>{reaisFaixa(dados.fila[99])} →</span>
-                <span className="absolute text-center text-[0.8rem] text-tinta-2" style={{ left: x0, width: largFila, top: p.base + 30 }}>
+                <span className="absolute text-[0.8rem] text-tinta-2" style={{ left: x0, top: p.baseFila + 10 }}>menos bens</span>
+                <span className="absolute text-right text-[0.8rem] text-tinta-2" style={{ right: p.W - (x0 + largFila), top: p.baseFila + 10 }}>mais bens</span>
+                <span className="absolute text-center text-[0.8rem] text-tinta-2" style={{ left: x0, width: largFila, top: p.baseFila + 34 }}>
                   cada barrinha é 1 em cada 100 candidatos que declararam bens
                 </span>
               </div>
             )}
 
+            {/* o valor de cada barrinha: um balão e um contorno, movidos direto no DOM (sem re-render) */}
+            <span ref={realce} aria-hidden className="realce-barra pointer-events-none absolute left-0 top-0 hidden" />
+            <div ref={dica} aria-hidden className="dica-fila pointer-events-none absolute left-0 top-0 hidden" />
+
             {/* os cortes da tesoura, nas emendas da fila inteira */}
             {cortando && grupos.slice(1).map((gr) => {
               const x = x0 + gr.inicio * p.pitch - p.pitch * 0.14
               return (
-                <div key={gr.g.id} data-corte data-x={x} aria-hidden className="absolute origin-bottom" style={{ left: x, top: p.base - p.alto - 26, height: p.alto + 32 }}>
+                <div key={gr.g.id} data-corte data-x={x} aria-hidden className="absolute origin-bottom" style={{ left: x, top: p.baseFila - p.alto - 26, height: p.alto + 32 }}>
                   <div className="h-full border-l-2 border-dashed border-tinta" />
                   <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-tinta px-2 py-0.5 text-[0.75rem] font-bold text-folha">{reaisFaixa(gr.g.de)}</span>
                 </div>
               )
             })}
             {cortando && (
-              <span data-tesoura aria-hidden className="absolute left-0 grid size-9 -translate-x-1/2 place-items-center rounded-full bg-escolha text-tinta shadow-[var(--shadow-cartao)]" style={{ top: p.base - p.alto - 64 }}>
+              <span data-tesoura aria-hidden className="absolute left-0 grid size-9 -translate-x-1/2 place-items-center rounded-full bg-escolha text-tinta shadow-[var(--shadow-cartao)]" style={{ top: p.baseFila - p.alto - 64 }}>
                 <Scissors size={22} weight="fill" style={{ transform: 'rotate(90deg)' }} />
               </span>
             )}
@@ -608,7 +681,7 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
                   {/* as barrinhas do grupo: andam juntas (uma transformação por grupo) */}
                   <div className="grupo-fila absolute left-0 top-0" style={{ width: w, height: p.alto, transform: `translate(${pos.x - w / 2}px, ${pos.base - p.alto}px)` }}>
                     <div data-barras className="absolute inset-0 origin-bottom transition-transform duration-500" style={{ transform: fase === 3 ? 'scaleY(.28)' : undefined }}>
-                      <Barras hs={hs} inicio={gr.inicio} n={gr.n} pitch={p.pitch} />
+                      <Barras hs={hs} inicio={gr.inicio} n={gr.n} pitch={p.pitch} cor={fase >= 2 && !cortando ? corDoGrupo(gr.i, grupos.length) : '#5d6b94'} />
                     </div>
                   </div>
 

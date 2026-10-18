@@ -56,7 +56,7 @@ export const Voce = memo(function Voce({ dados, rotulo, valor, aoMudar }: { dado
                   style={{ left: `${posicaoDe(e.valor)}%` }}
                 >
                   <span className="text-[0.86rem] font-bold">{e.nome}</span>
-                  <span className="tabular text-[0.75rem] text-tinta-3">{reaisFaixa(e.valor)}</span>
+                  <span className="tabular text-[0.75rem] text-tinta-3 max-sm:hidden">{reaisFaixa(e.valor)}</span>
                 </button>
               )
             })}
