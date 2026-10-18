@@ -145,9 +145,25 @@ def vies(linhas: list[dict], chave) -> dict:
     return saida
 
 
-@lru_cache(maxsize=1)
-def vies_ufs() -> dict:
-    return vies(votos_vies(), lambda r: r["cd_uf"])
+# Cargos do filtro do atlas (#10): os de eleicao_referencia, sem o deputado distrital (só o DF, que não é carregado).
+CARGOS_VIES = {1: "Presidente", 3: "Governador", 5: "Senador", 6: "Deputado federal", 7: "Deputado estadual",
+               11: "Prefeito", 13: "Vereador"}
+
+
+def linhas_vies(cargo: int | None = None) -> list[dict]:
+    """As linhas de votos_vies de um cargo só, ou de todos (cargo=None)."""
+    return votos_vies() if cargo is None else [r for r in votos_vies() if r["cod_cargo"] == cargo]
+
+
+def cargo_de(cargo: int | None) -> int | None:
+    if cargo is not None and cargo not in CARGOS_VIES:
+        raise HTTPException(404, f"Cargo fora do filtro do viés: {cargo}")
+    return cargo
+
+
+@lru_cache(maxsize=16)
+def vies_ufs(cargo: int | None = None) -> dict:
+    return vies(linhas_vies(cargo), lambda r: r["cd_uf"])
 
 
 # ───────── App ─────────
@@ -176,23 +192,34 @@ def saude():
     return {"banco": True, "ufs_carregadas": [r["sigla"] for r in consultar(SQL_CARREGADAS)]}
 
 
+@app.get("/api/vies/cargos")
+def cargos_vies():
+    """Os cargos do filtro do atlas e os anos em que cada um foi disputado (eleicao_referencia)."""
+    anos = defaultdict(list)
+    for r in consultar("SELECT ano_eleitoral, cargos FROM eleicao_referencia ORDER BY 1"):
+        for c in r["cargos"]:
+            if c in CARGOS_VIES:
+                anos[c].append(r["ano_eleitoral"])
+    return [{"cod": c, "nome": nome, "anos": anos.get(c, []), "municipal": c in (11, 13)} for c, nome in CARGOS_VIES.items()]
+
+
 @app.get("/api/ufs")
-def listar_ufs():
-    por_uf = vies_ufs()
+def listar_ufs(cargo: int | None = None):
+    por_uf = vies_ufs(cargo_de(cargo))
     return [{**uf, "carregada": s in carregadas(), "vies": por_uf.get(uf["cd_ibge"], VAZIO)["vies"],
              "alinhamento": por_uf.get(uf["cd_ibge"], VAZIO)["alinhamento"]}
             for s, uf in sorted(UFS.items())]
 
 
 @app.get("/api/ufs/{sigla}")
-def detalhar_uf(sigla: str):
-    return detalhe_uf(uf_de(sigla)["sigla"])
+def detalhar_uf(sigla: str, cargo: int | None = None):
+    return detalhe_uf(uf_de(sigla)["sigla"], cargo_de(cargo))
 
 
-@lru_cache(maxsize=32)
-def detalhe_uf(sigla: str) -> dict:
+@lru_cache(maxsize=128)
+def detalhe_uf(sigla: str, cargo: int | None = None) -> dict:
     uf = UFS[sigla]
-    linhas = [r for r in votos_vies() if r["cd_uf"] == uf["cd_ibge"]]
+    linhas = [r for r in linhas_vies(cargo) if r["cd_uf"] == uf["cd_ibge"]]
     estado = vies(linhas, lambda r: 0).get(0, VAZIO)
     por_regiao = vies(linhas, lambda r: MUNICIPIOS.get(r["cd_ibge"], {}).get("regiao_intermediaria"))
     por_municipio = vies(linhas, lambda r: r["cd_ibge"])
@@ -208,7 +235,7 @@ def detalhe_uf(sigla: str) -> dict:
     municipios = {ibge: m for ibge, m in MUNICIPIOS.items() if m["sg_uf"] == sigla}
     regioes = sorted({m["regiao_intermediaria"] for m in municipios.values()}, key=sem_acento)
     return {
-        "sigla": sigla, "cd_ibge": uf["cd_ibge"], "nome": uf["nome"], "regiao": uf["regiao"],
+        "sigla": sigla, "cd_ibge": uf["cd_ibge"], "nome": uf["nome"], "regiao": uf["regiao"], "cargo": cargo,
         "carregada": sigla in carregadas(), "vies": estado["vies"], "sem_vies_pct": estado["sem_vies_pct"],
         "alinhamento": estado["alinhamento"], "sem_alinhamento_pct": estado["sem_alinhamento_pct"],
         "regioes": [{"nome": r, "vies": por_regiao.get(r, VAZIO)["vies"]} for r in regioes],
@@ -229,7 +256,7 @@ JOIN eleicao_referencia r ON r.ano_eleitoral = v.ano_eleicao AND v.cod_cargo = A
 JOIN partido p   ON p.id_partido = v.id_partido
 JOIN municipio m ON m.cd_municipio = v.cd_municipio
 LEFT JOIN vies_partido_onda o ON o.ano_eleitoral = v.ano_eleicao AND o.numero = p.numero AND o.sigla = p.sigla
-WHERE m.cd_uf = %(cd_uf)s AND v.ano_eleicao = %(ano)s
+WHERE m.cd_uf = %(cd_uf)s AND v.ano_eleicao = %(ano)s AND (%(cargo)s::int IS NULL OR v.cod_cargo = %(cargo)s)
 GROUP BY p.sigla, v.cod_cargo
 HAVING sum(v.qt_votos_validos) > 0
 """
@@ -247,16 +274,30 @@ LEFT JOIN mandato ma     ON ma.id_politico_eleicao = pe.id_politico_eleicao
 LEFT JOIN uf u           ON u.cd_ibge = e.cd_uf
 LEFT JOIN municipio mm   ON mm.cd_municipio = e.cd_municipio
 LEFT JOIN uf um          ON um.cd_ibge = mm.cd_uf
-WHERE v.cd_uf = %(cd_uf)s AND v.ano = %(ano)s
+WHERE v.cd_uf = %(cd_uf)s AND v.ano = %(ano)s AND (%(cargo)s::int IS NULL OR e.cod_cargo = %(cargo)s)
 GROUP BY pe.id_politico_eleicao, pe.id_politico, po.nome, pa.sigla, c.nome
 """
 CANDIDATOS_POR_PARTIDO = 6
 
 
+def candidato_composicao(c: dict, ano: int) -> dict:
+    return {"id": c["id"], "nome": c["nome"], "cargo": c["cargo"], "local": c["local"], "votos": c["votos"],
+            "eleito": c["eleito"], "foto": foto_url(ano, c["uf"], c["sq"], c["cd_mun"])}
+
+
 @lru_cache(maxsize=64)
-def composicao_vies(sigla: str, ano: int) -> dict:
+def candidatos_por_partido(sigla: str, ano: int, cargo: int | None) -> dict[str, list]:
+    """Os candidatos de cada partido no estado, os mais votados primeiro (para a lista e a busca de #11)."""
+    candidatos: dict[str, list] = defaultdict(list)
+    for c in consultar(SQL_COMPOSICAO_CANDIDATOS, {"cd_uf": UFS[sigla]["cd_ibge"], "ano": ano, "cargo": cargo}):
+        candidatos[c["partido"]].append({**c, "busca": sem_acento(c["nome"])})
+    return {p: sorted(lista, key=lambda c: -c["votos"]) for p, lista in candidatos.items()}
+
+
+@lru_cache(maxsize=128)
+def composicao_vies(sigla: str, ano: int, cargo: int | None = None) -> dict:
     cd_uf = UFS[sigla]["cd_ibge"]
-    linhas = consultar(SQL_COMPOSICAO_PARTIDOS, {"cd_uf": cd_uf, "ano": ano})
+    linhas = consultar(SQL_COMPOSICAO_PARTIDOS, {"cd_uf": cd_uf, "ano": ano, "cargo": cargo})
     # cargos com peso igual: o partido puxa, em cada cargo, viés x sua fatia dos votos com viés daquele cargo
     com_vies: dict[int, int] = defaultdict(int)
     for r in linhas:
@@ -271,36 +312,46 @@ def composicao_vies(sigla: str, ano: int) -> dict:
         if r["vies"] is not None and com_vies[r["cod_cargo"]]:
             p["contribuicao"] += r["vies"] * r["votos"] / com_vies[r["cod_cargo"]] / n_cargos
     total = sum(p["votos"] for p in partidos.values())
-    candidatos: dict[str, list] = defaultdict(list)
-    for c in consultar(SQL_COMPOSICAO_CANDIDATOS, {"cd_uf": cd_uf, "ano": ano}):
-        candidatos[c["partido"]].append(c)
+    candidatos = candidatos_por_partido(sigla, ano, cargo)
     saida = []
     for p in sorted(partidos.values(), key=lambda p: -p["votos"]):
-        lista = sorted(candidatos.get(p["sigla"], []), key=lambda c: -c["votos"])
+        lista = candidatos.get(p["sigla"], [])
         nominais = sum(c["votos"] for c in lista)
         saida.append({
             "sigla": p["sigla"], "nome": p["nome"], "vies": round(p["vies"], 1) if p["vies"] is not None else None,
             "votos": p["votos"], "pct": round(100 * p["votos"] / total, 2),
             "contribuicao": round(p["contribuicao"], 2),   # pontos que o partido soma ao viés (0 se sem viés)
             "nominais": nominais, "legenda": max(0, p["votos"] - nominais), "candidatos_total": len(lista),
-            "candidatos": [{"id": c["id"], "nome": c["nome"], "cargo": c["cargo"], "local": c["local"],
-                            "votos": c["votos"], "eleito": c["eleito"],
-                            "foto": foto_url(ano, c["uf"], c["sq"], c["cd_mun"])}
-                           for c in lista[:CANDIDATOS_POR_PARTIDO]],
+            "candidatos": [candidato_composicao(c, ano) for c in lista[:CANDIDATOS_POR_PARTIDO]],
         })
     vies_uf = sum(p["contribuicao"] for p in partidos.values()) if n_cargos else None
-    return {"uf": sigla, "ano": ano, "votos": total, "vies": round(vies_uf, 1) if vies_uf is not None else None,
-            "partidos": saida}
+    return {"uf": sigla, "ano": ano, "cargo": cargo, "votos": total,
+            "vies": round(vies_uf, 1) if vies_uf is not None else None, "partidos": saida}
 
 
-@app.get("/api/ufs/{sigla}/composicao")
-def composicao(sigla: str, ano: int):
+def _uf_ano(sigla: str, ano: int) -> str:
     uf = uf_de(sigla)["sigla"]
     if uf not in carregadas():
         raise HTTPException(404, f"UF sem dados: {uf}")
     if ano not in ANOS:
         raise HTTPException(404, f"Ano fora da P7: {ano}")
-    return composicao_vies(uf, ano)
+    return uf
+
+
+@app.get("/api/ufs/{sigla}/composicao")
+def composicao(sigla: str, ano: int, cargo: int | None = None):
+    return composicao_vies(_uf_ano(sigla, ano), ano, cargo_de(cargo))
+
+
+@app.get("/api/ufs/{sigla}/composicao/{partido}")
+def candidatos_do_partido(sigla: str, partido: str, ano: int, cargo: int | None = None, q: str = "",
+                          desde: int = Query(0, ge=0), limite: int = Query(6, ge=1, le=60)):
+    """#11: os candidatos de um partido no estado, os mais votados primeiro, com busca pelo nome (sem acento)."""
+    lista = candidatos_por_partido(_uf_ano(sigla, ano), ano, cargo_de(cargo)).get(partido.upper(), [])
+    termo = sem_acento(q.strip())
+    achados = [c for c in lista if termo in c["busca"]] if termo else lista
+    return {"partido": partido.upper(), "total": len(lista), "achados": len(achados), "desde": desde,
+            "candidatos": [candidato_composicao(c, ano) for c in achados[desde:desde + limite]]}
 
 
 @app.get("/api/municipios")
@@ -315,10 +366,10 @@ def buscar_municipios(q: str = "", uf: str = "", limite: int = Query(8, ge=1, le
 
 
 @app.get("/api/municipios/{ibge}")
-def detalhar_municipio(ibge: int):
+def detalhar_municipio(ibge: int, cargo: int | None = None):
     if ibge not in MUNICIPIOS:
         raise HTTPException(404, f"Município desconhecido: {ibge}")
-    return detalhe_municipio(ibge)
+    return detalhe_municipio(ibge, cargo_de(cargo))
 
 
 # Partidos votados no município em cada ano, com o viés daquela eleição (NULL = sem viés, vão para o fim).
@@ -329,7 +380,7 @@ FROM votacao_partido_municipio v
 JOIN eleicao_referencia r ON r.ano_eleitoral = v.ano_eleicao AND v.cod_cargo = ANY (r.cargos)
 JOIN partido p ON p.id_partido = v.id_partido
 LEFT JOIN vies_partido_onda o ON o.ano_eleitoral = v.ano_eleicao AND o.numero = p.numero AND o.sigla = p.sigla
-WHERE v.cd_municipio = %s AND v.ano_eleicao = ANY(%s)
+WHERE v.cd_municipio = %s AND v.ano_eleicao = ANY(%s) AND (%s::int IS NULL OR v.cod_cargo = %s)
 GROUP BY v.ano_eleicao, p.id_partido
 HAVING sum(v.qt_votos_validos) > 0
 ORDER BY 1, vies NULLS LAST, votos DESC
@@ -359,21 +410,21 @@ ORDER BY e.ano
 
 
 @lru_cache(maxsize=1024)
-def detalhe_municipio(ibge: int) -> dict:
+def detalhe_municipio(ibge: int, cargo: int | None = None) -> dict:
     m = MUNICIPIOS[ibge]
     uf = UFS[m["sg_uf"]]
     base = {"ibge": ibge, "nome": m["municipio"], "uf": m["sg_uf"], "uf_nome": m["uf"],
             "regiao_intermediaria": m["regiao_intermediaria"], "regiao_imediata": m["regiao_imediata"],
-            "carregada": m["sg_uf"] in carregadas()}
+            "carregada": m["sg_uf"] in carregadas(), "cargo": cargo}
     cd = base["carregada"] and consultar("SELECT cd_municipio FROM municipio WHERE cd_ibge = %s", (ibge,))
     if not cd:
         return {**base, "vies": {}, "vies_uf": {}, "sem_vies_pct": {}, "alinhamento": {}, "alinhamento_uf": {},
                 "espectro": {}, "indicadores": {}, "comparecimento": {}, "prefeitos": [], "cadeiras": []}
     cd = cd[0]["cd_municipio"]
 
-    v = vies([r for r in votos_vies() if r["cd_ibge"] == ibge], lambda r: 0).get(0, VAZIO)
+    v = vies([r for r in linhas_vies(cargo) if r["cd_ibge"] == ibge], lambda r: 0).get(0, VAZIO)
     espectro = defaultdict(list)
-    for r in consultar(SQL_ESPECTRO, (cd, ANOS)):
+    for r in consultar(SQL_ESPECTRO, (cd, ANOS, cargo, cargo)):
         espectro[str(r.pop("ano"))].append(r)
     for partidos in espectro.values():
         total = sum(p["votos"] for p in partidos)
@@ -386,7 +437,7 @@ def detalhe_municipio(ibge: int) -> dict:
         comparecimento[ano] = {**r, "isentos_pct": round(100 * (r["brancos"] + r["nulos"] + r["abstencoes"])
                                                          / r["aptos"], 1) if r["aptos"] else None}
 
-    do_uf = vies_ufs().get(uf["cd_ibge"], VAZIO)
+    do_uf = vies_ufs(cargo).get(uf["cd_ibge"], VAZIO)
     return {**base, "vies": v["vies"], "vies_uf": do_uf["vies"], "sem_vies_pct": v["sem_vies_pct"],
             "alinhamento": v["alinhamento"], "alinhamento_uf": do_uf["alinhamento"], "espectro": espectro,
             "indicadores": indicadores(cd, comparecimento), "comparecimento": comparecimento,
