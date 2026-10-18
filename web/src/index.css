@@ -443,3 +443,15 @@
   animation: linha-impressa 420ms var(--ease-saida) both;
   animation-delay: calc(260ms + var(--i, 0) * 90ms);
 }
+
+/* Atlas (#10): a cédula de cargos abre logo abaixo da casa "Cargo" (desce e cresce do canto); a pílula do
+   cargo entra sobre o mapa; a lista de candidatos de um partido se abre empurrando o conteúdo. */
+@keyframes cedula-abre { from { opacity: 0; transform: translateY(-6px) scale(.97); } to { opacity: 1; transform: none; } }
+.cedula-cargos { animation: cedula-abre 220ms var(--ease-saida) both; transform-origin: top right; }
+@keyframes pilula-entra { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.pilula-cargo { animation: pilula-entra 260ms var(--ease-saida) both; }
+.gatilho-cargo { transition: background-color 180ms, color 180ms, transform 160ms var(--ease-saida); }
+.gatilho-cargo:active { transform: scale(.97); }
+@keyframes partido-abre { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.abre-partido { animation: partido-abre 240ms var(--ease-saida) both; }
+@media (prefers-reduced-motion: reduce) { .cedula-cargos, .pilula-cargo, .abre-partido { animation: none; } }

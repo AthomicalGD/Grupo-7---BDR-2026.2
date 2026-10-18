@@ -414,22 +414,53 @@ async function get<T>(caminho: string, signal?: AbortSignal): Promise<T> {
   return r.json()
 }
 
+/** Um cargo do filtro do atlas (#10) e os anos em que foi disputado. */
+export interface CargoVies {
+  cod: number
+  nome: string
+  anos: Ano[]
+  municipal: boolean
+}
+
+/** Os candidatos de um partido no estado (#11): página e busca pelo nome. */
+export interface CandidatosPartido {
+  partido: string
+  total: number
+  achados: number
+  desde: number
+  candidatos: ComposicaoVies['partidos'][number]['candidatos']
+}
+
 const sempre = { staleTime: Infinity, gcTime: 30 * 60_000 } // os dados só mudam com uma nova carga
+/** "?cargo=1" (ou "&cargo=1"), ou nada quando são todos os cargos */
+const comCargo = (cargo: number | undefined, sep: '?' | '&') => (cargo ? `${sep}cargo=${cargo}` : '')
 
 export const consultas = {
-  ufs: () => queryOptions({ queryKey: ['ufs'], queryFn: ({ signal }) => get<UF[]>('/api/ufs', signal), ...sempre }),
-  uf: (sigla: string) =>
-    queryOptions({ queryKey: ['uf', sigla], queryFn: ({ signal }) => get<UFDetalhe>(`/api/ufs/${sigla}`, signal), ...sempre }),
-  composicao: (sigla: string, ano: number) =>
+  ufs: (cargo?: number) =>
+    queryOptions({ queryKey: ['ufs', cargo ?? null], queryFn: ({ signal }) => get<UF[]>(`/api/ufs${comCargo(cargo, '?')}`, signal), ...sempre }),
+  uf: (sigla: string, cargo?: number) =>
+    queryOptions({ queryKey: ['uf', sigla, cargo ?? null], queryFn: ({ signal }) => get<UFDetalhe>(`/api/ufs/${sigla}${comCargo(cargo, '?')}`, signal), ...sempre }),
+  cargosVies: () => queryOptions({ queryKey: ['cargos-vies'], queryFn: ({ signal }) => get<CargoVies[]>('/api/vies/cargos', signal), ...sempre }),
+  composicao: (sigla: string, ano: number, cargo?: number) =>
     queryOptions({
-      queryKey: ['composicao', sigla, ano],
-      queryFn: ({ signal }) => get<ComposicaoVies>(`/api/ufs/${sigla}/composicao?ano=${ano}`, signal),
+      queryKey: ['composicao', sigla, ano, cargo ?? null],
+      queryFn: ({ signal }) => get<ComposicaoVies>(`/api/ufs/${sigla}/composicao?ano=${ano}${comCargo(cargo, '&')}`, signal),
       ...sempre,
     }),
-  municipio: (ibge: number) =>
+  candidatosPartido: (sigla: string, partido: string, ano: number, cargo: number | undefined, q: string, limite: number) =>
     queryOptions({
-      queryKey: ['municipio', ibge],
-      queryFn: ({ signal }) => get<Municipio>(`/api/municipios/${ibge}`, signal),
+      queryKey: ['candidatos-partido', sigla, partido, ano, cargo ?? null, q, limite],
+      queryFn: ({ signal }) =>
+        get<CandidatosPartido>(
+          `/api/ufs/${sigla}/composicao/${encodeURIComponent(partido)}?ano=${ano}${comCargo(cargo, '&')}&limite=${limite}${q ? `&q=${encodeURIComponent(q)}` : ''}`,
+          signal,
+        ),
+      ...sempre,
+    }),
+  municipio: (ibge: number, cargo?: number) =>
+    queryOptions({
+      queryKey: ['municipio', ibge, cargo ?? null],
+      queryFn: ({ signal }) => get<Municipio>(`/api/municipios/${ibge}${comCargo(cargo, '?')}`, signal),
       ...sempre,
     }),
   buscaMunicipios: (q: string, uf = '') =>

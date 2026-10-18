@@ -1,8 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'motion/react'
 import { lazy, Suspense, useCallback, useEffect } from 'react'
-import { consultas, type Ano, type MunicipioBusca } from '../api'
+import { ANOS, consultas, type Ano, type MunicipioBusca } from '../api'
 import { Ciranda, CirandaTela } from '../componentes/Ciranda'
 import { ErroCarga } from '../componentes/ErroCarga'
 import type { BuscaAtlas } from '../router'
@@ -12,6 +12,7 @@ import { Legenda } from './Legenda'
 import { Mapa } from './Mapa'
 import { PainelBrasil } from './PainelBrasil'
 import { PainelEstado } from './PainelEstado'
+import { PilulaCargo, SeletorCargo } from './SeletorCargo'
 
 const Relevo3D = lazy(() => import('../relevo/Relevo3D'))
 
@@ -25,23 +26,31 @@ export function Atlas() {
   const params = useParams({ strict: false }) as { sigla?: string; ibge?: string }
   const busca = useSearch({ strict: false }) as BuscaAtlas
   const navegar = useNavigate()
-  const ano: Ano = busca.ano ?? 2022
+  const cargo = busca.cargo
+  const cargos = useQuery(consultas.cargosVies())
+  const doCargo = cargos.data?.find((c) => c.cod === cargo)
+  // com um cargo escolhido, só os anos em que ele foi disputado; o ano pedido vai para o válido mais próximo
+  const anos: readonly Ano[] = doCargo?.anos.length ? doCargo.anos : ANOS
+  const pedido: Ano = busca.ano ?? 2022
+  const ano: Ano = anos.includes(pedido) ? pedido : anos.reduce((a, b) => (Math.abs(b - pedido) < Math.abs(a - pedido) ? b : a))
   const relativo = !!busca.relativo
   const sigla = params.sigla?.toUpperCase()
   const ibge = params.ibge ? Number(params.ibge) : undefined
   const relevo = !!busca.relevo && !!sigla
 
   const malhaBrasil = useQuery(consultas.malhaBrasil())
-  const ufs = useQuery(consultas.ufs())
+  // a troca de cargo mantém o mapa anterior até o novo chegar (sem piscar o "carregando")
+  const ufs = useQuery({ ...consultas.ufs(cargo), placeholderData: keepPreviousData })
   const malhaUF = useQuery({ ...consultas.malhaUF(sigla ?? ''), enabled: !!sigla })
-  const detalheUF = useQuery({ ...consultas.uf(sigla ?? ''), enabled: !!sigla })
-  const municipio = useQuery({ ...consultas.municipio(ibge ?? 0), enabled: !!ibge })
+  const detalheUF = useQuery({ ...consultas.uf(sigla ?? '', cargo), enabled: !!sigla, placeholderData: (anterior) => (anterior?.sigla === sigla ? anterior : undefined) })
+  const municipio = useQuery({ ...consultas.municipio(ibge ?? 0, cargo), enabled: !!ibge, placeholderData: (anterior) => (anterior?.ibge === ibge ? anterior : undefined) })
 
   const mudarBusca = useCallback(
     (parcial: Partial<BuscaAtlas>) => navegar({ to: '.', search: (s: BuscaAtlas) => ({ ...s, ...parcial }), replace: true }),
     [navegar],
   )
   const mudarAno = useCallback((a: Ano) => mudarBusca({ ano: a }), [mudarBusca])
+  const mudarCargo = useCallback((c: number | undefined) => mudarBusca({ cargo: c }), [mudarBusca])
   const irUF = useCallback(
     (s: string) => navegar({ to: '/uf/$sigla', params: { sigla: s }, search: (b: BuscaAtlas) => b }),
     [navegar],
@@ -68,7 +77,7 @@ export function Atlas() {
   let painel
   if (ibge) {
     painel = municipio.data ? (
-      <Boletim m={municipio.data} ano={ano} aoFechar={() => irUF(sigla!)} />
+      <Boletim m={municipio.data} ano={ano} cargo={doCargo?.nome} aoFechar={() => irUF(sigla!)} />
     ) : municipio.isError ? (
       <ErroCarga erro={municipio.error} compacto />
     ) : (
@@ -79,6 +88,7 @@ export function Atlas() {
       <PainelEstado
         uf={detalheUF.data}
         ano={ano}
+        cargo={doCargo}
         relativo={relativo}
         relevo={relevo}
         aoMudarRelativo={(r) => mudarBusca({ relativo: r || undefined })}
@@ -92,13 +102,18 @@ export function Atlas() {
       <div className="grid min-h-[40dvh] place-items-center"><Ciranda rotulo={`Apurando ${nomeUF ?? sigla}...`} /></div>
     )
   } else {
-    painel = <PainelBrasil ufs={ufs.data} malha={malhaBrasil.data} ano={ano} aoEscolherUF={irUF} aoEscolherMunicipio={escolherNaBusca} />
+    painel = <PainelBrasil ufs={ufs.data} malha={malhaBrasil.data} ano={ano} cargo={doCargo?.nome} aoEscolherUF={irUF} aoEscolherMunicipio={escolherNaBusca} />
   }
 
   return (
     <div className="mx-auto grid max-w-[var(--casca-max)] gap-8 px-4 pt-5 md:px-[var(--casca-margem)] lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12 lg:pt-6">
       <section aria-label="Mapa" className="flex flex-col gap-4 lg:sticky lg:top-[81px] lg:h-[calc(100dvh-133px)] lg:self-start">
-        <CedulaAnos ano={ano} aoMudar={mudarAno} />
+        <CedulaAnos
+          ano={ano}
+          anos={anos}
+          aoMudar={mudarAno}
+          extra={cargos.data && <SeletorCargo cargos={cargos.data} cargo={cargo} aoMudar={mudarCargo} />}
+        />
         <div className="relative h-[58dvh] min-h-[340px] lg:h-auto lg:min-h-0 lg:flex-1">
           {relevo && detalheUF.data && malhaUF.data ? (
             <Suspense fallback={<div className="grid h-full place-items-center"><Ciranda rotulo="Levantando o relevo..." /></div>}>
@@ -117,6 +132,11 @@ export function Atlas() {
               aoEscolherUF={irUF}
               aoEscolherMunicipio={(c) => irMunicipio(c)}
             />
+          )}
+          {doCargo && (
+            <div className="absolute left-3 top-3 z-10">
+              <PilulaCargo nome={doCargo.nome} aoTirar={() => mudarCargo(undefined)} />
+            </div>
           )}
           <AnimatePresence>
             {carregandoUF && (

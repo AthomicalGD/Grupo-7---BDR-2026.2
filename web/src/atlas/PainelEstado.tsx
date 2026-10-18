@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Cube, MapTrifold } from '@phosphor-icons/react'
-import type { Ano, MunicipioBusca, UFDetalhe } from '../api'
+import type { CargoVies, Ano, MunicipioBusca, UFDetalhe } from '../api'
 import { AlinhamentoCamara } from '../graficos/AlinhamentoCamara'
 import { BarrasDivergentes } from '../graficos/BarrasDivergentes'
 import { ViesTempo } from '../graficos/ViesTempo'
@@ -13,6 +13,8 @@ import { Trilha } from './Trilha'
 interface Props {
   uf: UFDetalhe
   ano: Ano
+  /** o cargo do filtro (#10); sem ele, a média dos cargos */
+  cargo?: CargoVies
   relativo: boolean
   relevo: boolean
   aoMudarRelativo: (r: boolean) => void
@@ -46,7 +48,7 @@ export function Alternador<T extends string>({ rotulo, opcoes, valor, aoMudar }:
   )
 }
 
-export function PainelEstado({ uf, ano, relativo, relevo, aoMudarRelativo, aoMudarRelevo, aoEscolherMunicipio, aoAbrirMunicipio }: Props) {
+export function PainelEstado({ uf, ano, cargo, relativo, relevo, aoMudarRelativo, aoMudarRelevo, aoEscolherMunicipio, aoAbrirMunicipio }: Props) {
   const v = uf.vies[ano]
   const doAno = uf.municipios.filter((m) => m.vies[ano] != null).sort((a, b) => a.vies[ano]! - b.vies[ano]!)
   const esquerda = doAno.slice(0, 3)
@@ -112,9 +114,11 @@ export function PainelEstado({ uf, ano, relativo, relevo, aoMudarRelativo, aoMud
         <h2 id="estado-tempo" className="t-h3">O estado na linha do tempo</h2>
         <ViesTempo principal={{ nome: uf.nome, valores: uf.vies }} anoAtivo={ano} />
         <p className="text-[0.82rem] leading-relaxed text-tinta-3">
-          2018 e 2022 somam presidente, governador, senado e deputados; 2020 e 2024, prefeito e vereador, cada cargo com o
-          mesmo peso. Compare anos do mesmo tipo. 2024 usa a classificação dos especialistas de 2022, estendida por dois
-          anos.
+          {cargo
+            ? <>Só o voto para {cargo.nome.toLowerCase()}, disputado em {cargo.anos.join(' e ')}. </>
+            : <>2018 e 2022 somam presidente, governador, senado e deputados; 2020 e 2024, prefeito e vereador, cada cargo com o
+              mesmo peso. Compare anos do mesmo tipo. </>}
+          2024 usa a classificação dos especialistas de 2022, estendida por dois anos.
         </p>
       </section>
 
@@ -125,7 +129,7 @@ export function PainelEstado({ uf, ano, relativo, relevo, aoMudarRelativo, aoMud
 
       <section aria-labelledby="estado-conta" className="space-y-3">
         <h2 id="estado-conta" className="t-h3">De onde vem o {fmtVies(v)}</h2>
-        <ComposicaoVies sigla={uf.sigla} nome={uf.nome} ano={ano} />
+        <ComposicaoVies sigla={uf.sigla} nome={uf.nome} ano={ano} cargo={cargo} />
       </section>
 
       <section aria-labelledby="estado-extremos" className="space-y-3">
