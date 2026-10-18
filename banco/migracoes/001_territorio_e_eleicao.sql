@@ -39,7 +39,7 @@ CREATE TABLE partido (
     numero        smallint NOT NULL,
     sigla         varchar(30) NOT NULL,
     nome          text,
-    vies_politico double precision,                    -- ainda não calculado
+    vies_politico double precision,                    -- -100 a +100 a partir do artigo; NULL = sem valor (006, loader.vies)
     UNIQUE (numero, sigla)
 );
 COMMENT ON TABLE partido IS

@@ -14,7 +14,7 @@ import { TabelaAlternavel } from './TabelaAlternavel'
 const HIERARQUIA = [13, 12, 11, 7, 8, 6, 9, 10, 5, 4, 3, 2, 1]
 const INICIO = 1994, FIM = 2026
 
-export function Trajetoria({ candidaturas, viesPartido }: { candidaturas: Candidatura[]; viesPartido?: Map<string, number> }) {
+export function Trajetoria({ candidaturas, viesPartido }: { candidaturas: Candidatura[]; viesPartido?: Map<string, number | null> }) {
   const id = useId()
   const [foco, setFoco] = useState<number | null>(null)
   const cargos = HIERARQUIA.filter((c) => candidaturas.some((x) => x.cod_cargo === c))
@@ -76,7 +76,7 @@ export function Trajetoria({ candidaturas, viesPartido }: { candidaturas: Candid
                 const muda = c.partido && c.partido !== ordem[i - 1]?.partido
                 return (
                   <g key={i}>
-                    <rect x={x0} y={yPartido - 4} width={Math.max(4, x1 - x0 - 2)} height={8} rx={4} fill={c.partido ? corVies(v ?? 0) : 'var(--color-linha)'} />
+                    <rect x={x0} y={yPartido - 4} width={Math.max(4, x1 - x0 - 2)} height={8} rx={4} fill={c.partido ? corVies(v) : 'var(--color-linha)'} />
                     {muda && (
                       <text x={x0} y={yPartido - 10} className="fill-tinta text-[11.5px] font-bold" style={{ fontStretch: '92%' }}>{c.partido}</text>
                     )}

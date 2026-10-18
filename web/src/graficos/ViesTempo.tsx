@@ -2,6 +2,7 @@
 // (ênfase, não categórico). Um eixo só, de -L a +L, simétrico em 0.
 // Eleições gerais (2018, 2022) e municipais (2020, 2024) têm cargos diferentes e não se comparam:
 // cada tipo tem a sua linha e o seu marcador (círculo e losango).
+// Por padrão desenha o viés; com `medida`, a mesma forma serve ao alinhamento na Câmara (outra cor e rótulos).
 import { useId, useState } from 'react'
 import { ANOS, type Ano, type PorAno } from '../api'
 import { vies as fmtVies } from '../lib/formato'
@@ -13,7 +14,18 @@ interface Serie {
   valores: PorAno<number>
 }
 
-const L = 60
+/** O que a série mede: nome, cor, lado e rótulos das pontas do eixo. */
+export interface Medida {
+  nome: string
+  cor: (v: number | null | undefined) => string
+  lado: (v: number | null | undefined) => string
+  negativo: string
+  positivo: string
+  limite: number
+}
+
+const MEDIDA_VIES: Medida = { nome: 'Viés', cor: (v) => corVies(v), lado: ladoVies, negativo: 'esquerda', positivo: 'direita', limite: 80 }
+
 const GERAIS: Ano[] = [2018, 2022]
 const MUNICIPAIS: Ano[] = [2020, 2024]
 const geral = (a: Ano) => GERAIS.includes(a)
@@ -25,8 +37,10 @@ function Marcador({ a, cx, cy, r, fill, stroke, strokeWidth }: { a: Ano; cx: num
   return <path d={`M${cx} ${cy - d}L${cx + d} ${cy}L${cx} ${cy + d}L${cx - d} ${cy}Z`} fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinejoin="round" />
 }
 
-export function ViesTempo({ principal, contexto, anoAtivo }: { principal: Serie; contexto?: Serie; anoAtivo?: Ano }) {
+export function ViesTempo({ principal, contexto, anoAtivo, medida = MEDIDA_VIES }: { principal: Serie; contexto?: Serie; anoAtivo?: Ano; medida?: Medida }) {
   const id = useId()
+  const L = medida.limite
+  const marcas = [-L, -L / 2, 0, L / 2, L]
   const [foco, setFoco] = useState<Ano | null>(null)
   const W = 360, H = 216, m = { e: 40, d: 64, c: 16, b: 28 }
   const x = (i: number) => m.e + (i * (W - m.e - m.d)) / (ANOS.length - 1)
@@ -49,8 +63,8 @@ export function ViesTempo({ principal, contexto, anoAtivo }: { principal: Serie;
           aria-labelledby={`${id}-t`}
           onPointerLeave={() => setFoco(null)}
         >
-          <title id={`${id}-t`}>{`Viés de ${principal.nome} por ano. ${resumo}.`}</title>
-          {[-60, -30, 0, 30, 60].map((v) => (
+          <title id={`${id}-t`}>{`${medida.nome} de ${principal.nome} por ano. ${resumo}.`}</title>
+          {marcas.map((v) => (
             <g key={v}>
               <line x1={m.e} x2={W - m.d + 8} y1={y(v)} y2={y(v)} stroke={v === 0 ? 'var(--color-linha-2)' : 'var(--color-linha)'} strokeWidth={1} />
               <text x={m.e - 8} y={y(v) + 3.5} textAnchor="end" className="tabular fill-tinta-3 text-[10px]">
@@ -58,8 +72,8 @@ export function ViesTempo({ principal, contexto, anoAtivo }: { principal: Serie;
               </text>
             </g>
           ))}
-          <text x={W - m.d + 8} y={y(L) + 12} textAnchor="end" className="fill-tinta-3 text-[10px]">direita</text>
-          <text x={W - m.d + 8} y={y(-L) - 5} textAnchor="end" className="fill-tinta-3 text-[10px]">esquerda</text>
+          <text x={W - m.d + 8} y={y(L) + 12} textAnchor="end" className="fill-tinta-3 text-[10px]">{medida.positivo}</text>
+          <text x={W - m.d + 8} y={y(-L) - 5} textAnchor="end" className="fill-tinta-3 text-[10px]">{medida.negativo}</text>
           {ANOS.map((a, i) => (
             <text key={a} x={x(i)} y={H - 8} textAnchor="middle" className={`tabular text-[10.5px] ${a === anoAtivo ? 'fill-tinta font-bold' : 'fill-tinta-3'}`}>
               {a}
@@ -93,7 +107,7 @@ export function ViesTempo({ principal, contexto, anoAtivo }: { principal: Serie;
             const ativo = a === (foco ?? anoAtivo)
             return (
               <g key={a}>
-                <Marcador a={a} cx={x(i)} cy={y(v)} r={ativo ? 7.5 : 6} fill={corVies(v)} stroke="var(--color-folha)" strokeWidth={2.5} />
+                <Marcador a={a} cx={x(i)} cy={y(v)} r={ativo ? 7.5 : 6} fill={medida.cor(v)} stroke="var(--color-folha)" strokeWidth={2.5} />
                 <text x={x(i) + (i === 0 ? -6 : i === ANOS.length - 1 ? 6 : 0)} y={y(v) - 13} textAnchor={i === 0 ? 'start' : i === ANOS.length - 1 ? 'end' : 'middle'} className={`tabular text-[11px] ${ativo ? 'fill-tinta font-bold' : 'fill-tinta-2 font-semibold'}`}>
                   {fmtVies(v)}
                 </text>
@@ -124,7 +138,7 @@ export function ViesTempo({ principal, contexto, anoAtivo }: { principal: Serie;
           >
             <p className="font-bold tabular">{foco} <span className="font-normal text-tinta-3">· {geral(foco) ? 'eleição geral' : 'eleição municipal'}</span></p>
             <p>
-              {principal.nome}: <b className="tabular">{fmtVies(principal.valores[foco])}</b> <span className="text-tinta-3">({ladoVies(principal.valores[foco])})</span>
+              {principal.nome}: <b className="tabular">{fmtVies(principal.valores[foco])}</b> <span className="text-tinta-3">({medida.lado(principal.valores[foco])})</span>
             </p>
             {contexto && (
               <p className="text-tinta-2">
@@ -145,7 +159,7 @@ export function ViesTempo({ principal, contexto, anoAtivo }: { principal: Serie;
         </span>
       </div>
       <TabelaAlternavel
-        titulo={`Viés de ${principal.nome} por ano`}
+        titulo={`${medida.nome} de ${principal.nome} por ano`}
         colunas={['Ano', principal.nome, ...(contexto ? [contexto.nome] : [])]}
         linhas={ANOS.map((a) => [String(a), fmtVies(principal.valores[a]), ...(contexto ? [fmtVies(contexto.valores[a])] : [])])}
       />

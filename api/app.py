@@ -5,9 +5,12 @@ Uso (da pasta do projeto): python -m uvicorn api.app:app --port 8000
 Os dados só mudam com uma nova carga e ficam em cache no processo: reinicie a API depois de
 carregar UFs (python -m loader ...).
 
-Viés como em scripts/07_vies_politico_municipio.py: média do viés dos partidos (-100 esquerda,
-+100 direita) ponderada pelos votos válidos de todos os cargos no 1º turno das eleições ordinárias;
-UF e região intermediária, a mesma média sobre os votos de todos os seus municípios.
+Viés como em scripts/07_vies_politico_municipio.py, sobre a view vies_votos_cargo (migração 006):
+em cada cargo, média do viés dos partidos naquela eleição (artigo, -100 esquerda a +100 direita)
+ponderada pelos votos válidos do 1º turno das eleições ordinárias; depois, média dos cargos com peso
+igual. Partido sem viés fica fora da conta e entra em sem_vies_pct. UF e região intermediária: a
+mesma conta sobre os votos de todos os seus municípios. O alinhamento (SVD da Câmara) segue a mesma
+conta, com outro rótulo: acompanha a coalizão de governo, não a ideologia.
 """
 import bisect
 import csv
@@ -43,7 +46,7 @@ SEM_BANCO = "Banco de dados indisponível. Suba o PostgreSQL com `docker compose
 
 ANOS = [2018, 2020, 2022, 2024]
 PRESIDENTE, SENADOR, PREFEITO = 1, 5, 11   # cargo.cod_cargo
-VAZIO = {"vies": {}, "sem_vies_pct": {}}
+VAZIO = {"vies": {}, "sem_vies_pct": {}, "alinhamento": {}, "sem_alinhamento_pct": {}}
 
 
 def sem_acento(s: str) -> str:
@@ -95,33 +98,51 @@ def carregadas() -> frozenset[str]:
     return frozenset(r["sigla"] for r in consultar(SQL_CARREGADAS))
 
 
+SOMAS_VIES = ("votos", "votos_com_vies", "votos_x_vies", "votos_com_alinhamento", "votos_x_alinhamento")
+
+
 @lru_cache(maxsize=1)
 def votos_vies() -> list[dict]:
-    """Votos válidos por município e ano, somados sobre partidos e cargos."""
+    """Votos válidos por município, ano e cargo, com as somas ponderadas do viés e do alinhamento."""
     return consultar("""
-        SELECT m.cd_uf, m.cd_ibge, v.ano_eleicao AS ano,
-               sum(v.qt_votos_validos * p.vies_politico) AS votos_x_vies,
-               sum(v.qt_votos_validos) AS votos,
-               COALESCE(sum(v.qt_votos_validos) FILTER (WHERE p.vies_politico = 0), 0) AS votos_sem_vies
-        FROM votacao_partido_municipio v
-        JOIN partido p ON p.id_partido = v.id_partido
+        SELECT m.cd_uf, m.cd_ibge, v.ano, v.cod_cargo,
+               v.votos, v.votos_com_vies, v.votos_x_vies::float AS votos_x_vies,
+               v.votos_com_alinhamento, v.votos_x_alinhamento::float AS votos_x_alinhamento
+        FROM vies_votos_cargo v
         JOIN municipio m ON m.cd_municipio = v.cd_municipio
-        WHERE v.ano_eleicao = ANY(%s)
-        GROUP BY 1, 2, 3
-        HAVING sum(v.qt_votos_validos) > 0""", (ANOS,))
+        WHERE v.ano = ANY(%s)""", (ANOS,))
+
+
+def _media_dos_cargos(cargos: dict, x: int, com: int) -> float | None:
+    """Média, com peso igual por cargo, de soma ponderada / votos com valor."""
+    valores = [s[x] / s[com] for s in cargos.values() if s[com]]
+    return round(sum(valores) / len(valores), 1) if valores else None
 
 
 def vies(linhas: list[dict], chave) -> dict:
-    """{chave: {"vies": {ano: viés}, "sem_vies_pct": {ano: % dos votos em partidos de viés 0}}}."""
-    soma = defaultdict(lambda: defaultdict(lambda: [0.0, 0, 0]))
+    """{chave: {"vies", "sem_vies_pct", "alinhamento", "sem_alinhamento_pct": {ano: valor}}}.
+
+    Viés e alinhamento: média dos cargos com peso igual; os percentuais são dos votos válidos dos cargos
+    em partidos sem valor (que ficam fora da média)."""
+    soma = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [0.0] * 5)))
     for r in linhas:
-        s = soma[chave(r)][r["ano"]]
-        s[0] += r["votos_x_vies"]
-        s[1] += r["votos"]
-        s[2] += r["votos_sem_vies"]
-    return {k: {"vies": {str(a): round(x / v, 1) for a, (x, v, _) in sorted(anos.items())},
-                "sem_vies_pct": {str(a): round(100 * z / v, 1) for a, (_, v, z) in sorted(anos.items())}}
-            for k, anos in soma.items()}
+        s = soma[chave(r)][r["ano"]][r["cod_cargo"]]
+        for i, campo in enumerate(SOMAS_VIES):
+            s[i] += float(r[campo])
+    saida = {}
+    for k, anos in soma.items():
+        d = {campo: {} for campo in VAZIO}
+        for a, cargos in sorted(anos.items()):
+            votos = sum(s[0] for s in cargos.values())
+            if not votos:
+                continue
+            for nome, x, com in (("vies", 2, 1), ("alinhamento", 4, 3)):
+                valor = _media_dos_cargos(cargos, x, com)
+                if valor is not None:
+                    d[nome][str(a)] = valor
+                d[f"sem_{nome}_pct"][str(a)] = round(100 * (votos - sum(s[com] for s in cargos.values())) / votos, 1)
+        saida[k] = d
+    return saida
 
 
 @lru_cache(maxsize=1)
@@ -158,7 +179,8 @@ def saude():
 @app.get("/api/ufs")
 def listar_ufs():
     por_uf = vies_ufs()
-    return [{**uf, "carregada": s in carregadas(), "vies": por_uf.get(uf["cd_ibge"], VAZIO)["vies"]}
+    return [{**uf, "carregada": s in carregadas(), "vies": por_uf.get(uf["cd_ibge"], VAZIO)["vies"],
+             "alinhamento": por_uf.get(uf["cd_ibge"], VAZIO)["alinhamento"]}
             for s, uf in sorted(UFS.items())]
 
 
@@ -188,24 +210,27 @@ def detalhe_uf(sigla: str) -> dict:
     return {
         "sigla": sigla, "cd_ibge": uf["cd_ibge"], "nome": uf["nome"], "regiao": uf["regiao"],
         "carregada": sigla in carregadas(), "vies": estado["vies"], "sem_vies_pct": estado["sem_vies_pct"],
+        "alinhamento": estado["alinhamento"], "sem_alinhamento_pct": estado["sem_alinhamento_pct"],
         "regioes": [{"nome": r, "vies": por_regiao.get(r, VAZIO)["vies"]} for r in regioes],
         "municipios": [{"ibge": ibge, "nome": m["municipio"], "regiao": m["regiao_intermediaria"],
-                        "vies": por_municipio.get(ibge, VAZIO)["vies"], "aptos": aptos.get(ibge, {})}
+                        "vies": por_municipio.get(ibge, VAZIO)["vies"],
+                        "alinhamento": por_municipio.get(ibge, VAZIO)["alinhamento"], "aptos": aptos.get(ibge, {})}
                        for ibge, m in municipios.items()],
     }
 
 
 # De onde vem o viés de uma UF num ano (P7): cada partido com os votos válidos que recebeu no estado
-# (nominais + legenda, todos os cargos do 1º turno), o viés e quanto ele puxa a média; e, dentro de
-# cada partido, os candidatos mais votados no estado, cujos votos nominais compõem esses votos.
+# (nominais + legenda, cargos de eleicao_referencia, 1º turno), o viés naquela eleição e quanto ele
+# puxa a média; e, dentro de cada partido, os candidatos mais votados no estado.
 SQL_COMPOSICAO_PARTIDOS = """
-SELECT p.sigla, max(p.nome) AS nome, sum(v.qt_votos_validos) AS votos,
-       sum(v.qt_votos_validos * p.vies_politico) / sum(v.qt_votos_validos) AS vies
+SELECT p.sigla, max(p.nome) AS nome, v.cod_cargo, sum(v.qt_votos_validos) AS votos, max(o.vies)::float AS vies
 FROM votacao_partido_municipio v
+JOIN eleicao_referencia r ON r.ano_eleitoral = v.ano_eleicao AND v.cod_cargo = ANY (r.cargos)
 JOIN partido p   ON p.id_partido = v.id_partido
 JOIN municipio m ON m.cd_municipio = v.cd_municipio
+LEFT JOIN vies_partido_onda o ON o.ano_eleitoral = v.ano_eleicao AND o.numero = p.numero AND o.sigla = p.sigla
 WHERE m.cd_uf = %(cd_uf)s AND v.ano_eleicao = %(ano)s
-GROUP BY p.sigla
+GROUP BY p.sigla, v.cod_cargo
 HAVING sum(v.qt_votos_validos) > 0
 """
 SQL_COMPOSICAO_CANDIDATOS = """
@@ -231,26 +256,39 @@ CANDIDATOS_POR_PARTIDO = 6
 @lru_cache(maxsize=64)
 def composicao_vies(sigla: str, ano: int) -> dict:
     cd_uf = UFS[sigla]["cd_ibge"]
-    partidos = consultar(SQL_COMPOSICAO_PARTIDOS, {"cd_uf": cd_uf, "ano": ano})
-    total = sum(p["votos"] for p in partidos)
+    linhas = consultar(SQL_COMPOSICAO_PARTIDOS, {"cd_uf": cd_uf, "ano": ano})
+    # cargos com peso igual: o partido puxa, em cada cargo, viés x sua fatia dos votos com viés daquele cargo
+    com_vies: dict[int, int] = defaultdict(int)
+    for r in linhas:
+        if r["vies"] is not None:
+            com_vies[r["cod_cargo"]] += r["votos"]
+    n_cargos = sum(1 for v in com_vies.values() if v)
+    partidos: dict[str, dict] = {}
+    for r in linhas:
+        p = partidos.setdefault(r["sigla"], {"sigla": r["sigla"], "nome": r["nome"], "vies": r["vies"],
+                                             "votos": 0, "contribuicao": 0.0})
+        p["votos"] += r["votos"]
+        if r["vies"] is not None and com_vies[r["cod_cargo"]]:
+            p["contribuicao"] += r["vies"] * r["votos"] / com_vies[r["cod_cargo"]] / n_cargos
+    total = sum(p["votos"] for p in partidos.values())
     candidatos: dict[str, list] = defaultdict(list)
     for c in consultar(SQL_COMPOSICAO_CANDIDATOS, {"cd_uf": cd_uf, "ano": ano}):
         candidatos[c["partido"]].append(c)
     saida = []
-    for p in sorted(partidos, key=lambda p: -p["votos"]):
+    for p in sorted(partidos.values(), key=lambda p: -p["votos"]):
         lista = sorted(candidatos.get(p["sigla"], []), key=lambda c: -c["votos"])
         nominais = sum(c["votos"] for c in lista)
         saida.append({
-            "sigla": p["sigla"], "nome": p["nome"], "vies": round(float(p["vies"]), 1), "votos": p["votos"],
-            "pct": round(100 * p["votos"] / total, 2),
-            "contribuicao": round(float(p["vies"]) * p["votos"] / total, 2),   # pontos que o partido soma ao viés
+            "sigla": p["sigla"], "nome": p["nome"], "vies": round(p["vies"], 1) if p["vies"] is not None else None,
+            "votos": p["votos"], "pct": round(100 * p["votos"] / total, 2),
+            "contribuicao": round(p["contribuicao"], 2),   # pontos que o partido soma ao viés (0 se sem viés)
             "nominais": nominais, "legenda": max(0, p["votos"] - nominais), "candidatos_total": len(lista),
             "candidatos": [{"id": c["id"], "nome": c["nome"], "cargo": c["cargo"], "local": c["local"],
                             "votos": c["votos"], "eleito": c["eleito"],
                             "foto": foto_url(ano, c["uf"], c["sq"], c["cd_mun"])}
                            for c in lista[:CANDIDATOS_POR_PARTIDO]],
         })
-    vies_uf = sum(p["vies"] * p["votos"] for p in saida) / total if total else None
+    vies_uf = sum(p["contribuicao"] for p in partidos.values()) if n_cargos else None
     return {"uf": sigla, "ano": ano, "votos": total, "vies": round(vies_uf, 1) if vies_uf is not None else None,
             "partidos": saida}
 
@@ -283,14 +321,18 @@ def detalhar_municipio(ibge: int):
     return detalhe_municipio(ibge)
 
 
+# Partidos votados no município em cada ano, com o viés daquela eleição (NULL = sem viés, vão para o fim).
 SQL_ESPECTRO = """
-SELECT v.ano_eleicao AS ano, p.sigla, p.nome, p.numero, p.vies_politico AS vies, sum(v.qt_votos_validos) AS votos
+SELECT v.ano_eleicao AS ano, p.sigla, p.nome, p.numero, round(max(o.vies), 1)::float AS vies,
+       sum(v.qt_votos_validos) AS votos
 FROM votacao_partido_municipio v
+JOIN eleicao_referencia r ON r.ano_eleitoral = v.ano_eleicao AND v.cod_cargo = ANY (r.cargos)
 JOIN partido p ON p.id_partido = v.id_partido
+LEFT JOIN vies_partido_onda o ON o.ano_eleitoral = v.ano_eleicao AND o.numero = p.numero AND o.sigla = p.sigla
 WHERE v.cd_municipio = %s AND v.ano_eleicao = ANY(%s)
 GROUP BY v.ano_eleicao, p.id_partido
 HAVING sum(v.qt_votos_validos) > 0
-ORDER BY 1, vies, votos DESC
+ORDER BY 1, vies NULLS LAST, votos DESC
 """
 
 # Presidente nos anos gerais, prefeito nos municipais; 1º turno das eleições ordinárias.
@@ -325,8 +367,8 @@ def detalhe_municipio(ibge: int) -> dict:
             "carregada": m["sg_uf"] in carregadas()}
     cd = base["carregada"] and consultar("SELECT cd_municipio FROM municipio WHERE cd_ibge = %s", (ibge,))
     if not cd:
-        return {**base, "vies": {}, "vies_uf": {}, "sem_vies_pct": {}, "espectro": {},
-                "indicadores": {}, "comparecimento": {}, "prefeitos": [], "cadeiras": []}
+        return {**base, "vies": {}, "vies_uf": {}, "sem_vies_pct": {}, "alinhamento": {}, "alinhamento_uf": {},
+                "espectro": {}, "indicadores": {}, "comparecimento": {}, "prefeitos": [], "cadeiras": []}
     cd = cd[0]["cd_municipio"]
 
     v = vies([r for r in votos_vies() if r["cd_ibge"] == ibge], lambda r: 0).get(0, VAZIO)
@@ -344,8 +386,9 @@ def detalhe_municipio(ibge: int) -> dict:
         comparecimento[ano] = {**r, "isentos_pct": round(100 * (r["brancos"] + r["nulos"] + r["abstencoes"])
                                                          / r["aptos"], 1) if r["aptos"] else None}
 
-    return {**base, "vies": v["vies"], "vies_uf": vies_ufs().get(uf["cd_ibge"], VAZIO)["vies"],
-            "sem_vies_pct": v["sem_vies_pct"], "espectro": espectro,
+    do_uf = vies_ufs().get(uf["cd_ibge"], VAZIO)
+    return {**base, "vies": v["vies"], "vies_uf": do_uf["vies"], "sem_vies_pct": v["sem_vies_pct"],
+            "alinhamento": v["alinhamento"], "alinhamento_uf": do_uf["alinhamento"], "espectro": espectro,
             "indicadores": indicadores(cd, comparecimento), "comparecimento": comparecimento,
             "prefeitos": prefeitos(cd, m["sg_uf"]), "cadeiras": cadeiras_municipio(ibge, m["sg_uf"])}
 
