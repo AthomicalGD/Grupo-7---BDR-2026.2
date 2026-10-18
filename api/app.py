@@ -155,6 +155,20 @@ def linhas_vies(cargo: int | None = None) -> list[dict]:
     return votos_vies() if cargo is None else [r for r in votos_vies() if r["cod_cargo"] == cargo]
 
 
+@lru_cache(maxsize=1)
+def indice_vies() -> tuple[dict, dict]:
+    """As linhas de votos_vies agrupadas por UF e por município, para não varrer as ~80 mil a cada pedido."""
+    por_uf, por_municipio = defaultdict(list), defaultdict(list)
+    for r in votos_vies():
+        por_uf[r["cd_uf"]].append(r)
+        por_municipio[r["cd_ibge"]].append(r)
+    return por_uf, por_municipio
+
+
+def so_do_cargo(linhas: list[dict], cargo: int | None) -> list[dict]:
+    return linhas if cargo is None else [r for r in linhas if r["cod_cargo"] == cargo]
+
+
 def cargo_de(cargo: int | None) -> int | None:
     if cargo is not None and cargo not in CARGOS_VIES:
         raise HTTPException(404, f"Cargo fora do filtro do viés: {cargo}")
@@ -172,7 +186,7 @@ def vies_ufs(cargo: int | None = None) -> dict:
 async def _ciclo_de_vida(_app):
     # a P10a de todas as UFs é a conta mais lenta (~7 s na primeira vez): começa a ser feita ao subir,
     # em segundo plano, para a primeira visita à Reeleição já achar o cache pronto
-    threading.Thread(target=_aquecer_reeleicao, daemon=True).start()
+    threading.Thread(target=_aquecer, daemon=True).start()
     yield
 
 
@@ -219,7 +233,7 @@ def detalhar_uf(sigla: str, cargo: int | None = None):
 @lru_cache(maxsize=128)
 def detalhe_uf(sigla: str, cargo: int | None = None) -> dict:
     uf = UFS[sigla]
-    linhas = [r for r in linhas_vies(cargo) if r["cd_uf"] == uf["cd_ibge"]]
+    linhas = so_do_cargo(indice_vies()[0].get(uf["cd_ibge"], []), cargo)
     estado = vies(linhas, lambda r: 0).get(0, VAZIO)
     por_regiao = vies(linhas, lambda r: MUNICIPIOS.get(r["cd_ibge"], {}).get("regiao_intermediaria"))
     por_municipio = vies(linhas, lambda r: r["cd_ibge"])
@@ -422,7 +436,7 @@ def detalhe_municipio(ibge: int, cargo: int | None = None) -> dict:
                 "espectro": {}, "indicadores": {}, "comparecimento": {}, "prefeitos": [], "cadeiras": []}
     cd = cd[0]["cd_municipio"]
 
-    v = vies([r for r in linhas_vies(cargo) if r["cd_ibge"] == ibge], lambda r: 0).get(0, VAZIO)
+    v = vies(so_do_cargo(indice_vies()[1].get(ibge, []), cargo), lambda r: 0).get(0, VAZIO)
     espectro = defaultdict(list)
     for r in consultar(SQL_ESPECTRO, (cd, ANOS, cargo, cargo)):
         espectro[str(r.pop("ano"))].append(r)
@@ -875,10 +889,20 @@ def reeleicao_uf(sigla: str) -> dict:
             "ligados_por_nome": sum(r["ligados"] for r in validas)}
 
 
-def _aquecer_reeleicao() -> None:
+def _aquecer() -> None:
+    """Ao subir, em segundo plano: primeiro o atlas (a tela inicial), depois a P10a. O viés de cada cargo,
+    as malhas e o detalhe de cada UF carregada já ficam em cache; entrar num estado grande não espera
+    mais a malha (segundos em MG) nem as contas do viés."""
     try:
+        for cargo in (None, *CARGOS_VIES):
+            vies_ufs(cargo)
+        indice_vies()
+        malha("brasil_ufs.geojson")
+        for sigla in sorted(carregadas() & UFS.keys(), key=lambda s: -sum(m["sg_uf"] == s for m in MUNICIPIOS.values())):
+            malha(f"municipios_{UFS[sigla]['cd_ibge']}.geojson")
+            detalhe_uf(sigla, None)
         reeleicao_uf(TODOS)
-    except Exception:  # noqa: BLE001 - banco fora do ar: a conta é feita quando a página pedir
+    except Exception:  # noqa: BLE001 - banco fora do ar: as contas são feitas quando a página pedir
         pass
 
 
@@ -1207,6 +1231,25 @@ def simplificar(features: list, tol: float) -> None:
 
 @lru_cache(maxsize=32)
 def malha(arquivo: str) -> tuple[bytes, bytes]:
+    """A malha pronta (ver _montar_malha), guardada em dados/cache_malhas: montar a de MG leva segundos,
+    então só é feita de novo quando o arquivo do IBGE ou a tolerância mudam."""
+    origem = IBGE / "malhas" / arquivo
+    cache = DADOS / "cache_malhas" / f"{origem.stem}-{origem.stat().st_mtime_ns}-{TOLERANCIA_MALHA}.json"
+    if cache.exists() and cache.with_suffix(".json.gz").exists():
+        return cache.read_bytes(), cache.with_suffix(".json.gz").read_bytes()
+    bruto, comprimido = _montar_malha(arquivo)
+    try:
+        cache.parent.mkdir(exist_ok=True)
+        for antigo in cache.parent.glob(f"{origem.stem}-*"):
+            antigo.unlink()
+        cache.write_bytes(bruto)
+        cache.with_suffix(".json.gz").write_bytes(comprimido)
+    except OSError:  # sem permissão de escrita: segue só com o cache em memória
+        pass
+    return bruto, comprimido
+
+
+def _montar_malha(arquivo: str) -> tuple[bytes, bytes]:
     """GeoJSON com os anéis invertidos: o IBGE segue a RFC 7946 (exterior anti-horário) e o
     d3-geo exige o exterior no sentido horário. Das propriedades fica só codarea, como inteiro.
     Municípios saem simplificados sem quebrar a topologia (simplificar).

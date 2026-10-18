@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'motion/react'
 import { lazy, Suspense, useCallback, useEffect } from 'react'
@@ -60,6 +60,15 @@ export function Atlas() {
       navegar({ to: '/uf/$sigla/$ibge', params: { sigla: uf, ibge: String(cod) }, search: (b: BuscaAtlas) => b }),
     [navegar, sigla],
   )
+  // apontar um estado (mouse ou foco) já pede a malha e o detalhe dele: o clique encontra tudo pronto
+  const cliente = useQueryClient()
+  const preverUF = useCallback(
+    (s: string) => {
+      void cliente.prefetchQuery(consultas.malhaUF(s))
+      void cliente.prefetchQuery(consultas.uf(s, cargo))
+    },
+    [cliente, cargo],
+  )
   const escolherNaBusca = useCallback((m: MunicipioBusca) => irMunicipio(m.ibge, m.uf), [irMunicipio])
 
   const nomeUF = ufs.data?.find((u) => u.sigla === sigla)?.nome
@@ -102,7 +111,7 @@ export function Atlas() {
       <div className="grid min-h-[40dvh] place-items-center"><Ciranda rotulo={`Apurando ${nomeUF ?? sigla}...`} /></div>
     )
   } else {
-    painel = <PainelBrasil ufs={ufs.data} malha={malhaBrasil.data} ano={ano} cargo={doCargo?.nome} aoEscolherUF={irUF} aoEscolherMunicipio={escolherNaBusca} />
+    painel = <PainelBrasil ufs={ufs.data} malha={malhaBrasil.data} ano={ano} cargo={doCargo?.nome} aoEscolherUF={irUF} aoApontarUF={preverUF} aoEscolherMunicipio={escolherNaBusca} />
   }
 
   return (
@@ -130,6 +139,7 @@ export function Atlas() {
               detalheUF={detalheUF.data}
               relativo={relativo}
               aoEscolherUF={irUF}
+              aoApontarUF={preverUF}
               aoEscolherMunicipio={(c) => irMunicipio(c)}
             />
           )}
