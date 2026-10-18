@@ -347,7 +347,8 @@ estimativas de população para 2018, 2020 e 2024 e o Censo para 2022.
 | Harvard Dataverse | API, doi:10.7910/DVN/MFIXKW | Classificação ideológica dos partidos (Bolognesi, Codato, Ribeiro & Silva; base de Bolognesi, Ribeiro & Codato, *Dados* 66(2), 2023) |
 
 Os sons do cofrinho (P2) são gravações em domínio público (CC0): Kenney (Impact Sounds, RPG Audio, Interface
-Sounds), Freesound #565642 (jc.sg) e OpenGameArt "scissors"; a origem de cada arquivo está em `web/public/sons/CREDITOS.txt`.
+Sounds), Freesound (cerâmica quebrando, moedas caindo e um cofre de moedas chacoalhando; não há gravação
+livre de cofrinho de porquinho quebrando, então a quebra é uma montagem) e OpenGameArt "scissors"; a origem de cada arquivo está em `web/public/sons/CREDITOS.txt`.
 
 O CDN do TSE recusa (HTTP 403) User-Agents que contenham "crawler", "python" ou "httpx". O crawler
 usa um User-Agent compatível que ainda identifica o projeto.

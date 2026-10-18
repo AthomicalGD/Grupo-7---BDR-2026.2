@@ -4,7 +4,7 @@
 // igual à outra. Se um arquivo não carregar, entra o som sintetizado de antes. Respeita o botão de som da urna.
 import { somLigado } from '../urna/som'
 
-const ARQUIVOS = ['golpe1', 'golpe2', 'golpe3', 'quebra', 'moedas', 'tesoura', 'carimbo', 'tic'] as const
+const ARQUIVOS = ['golpe1', 'golpe2', 'golpe3', 'chacoalho1', 'chacoalho2', 'quebra', 'moedas', 'tesoura', 'carimbo', 'tic'] as const
 type Som = (typeof ARQUIVOS)[number]
 
 let contexto: AudioContext | null = null
@@ -84,21 +84,22 @@ function plim(c: AudioContext, t: number, freq: number, volume: number) {
   osc.stop(t + 0.3)
 }
 
-/** Cada martelada: o prato de louça batido, mais forte a cada vez. */
+/** Cada martelada: a louça batida (mais forte a cada vez) e as moedas chacoalhando dentro do cofrinho. */
 export function tocarGolpe(vez: number) {
   if (!somLigado()) return
   void decodificar().then(() => {
     const nome = (['golpe1', 'golpe2', 'golpe3'] as const)[Math.min(2, Math.max(0, vez - 1))]
-    if (!tocar(nome, { volume: 0.8 + vez * 0.1 })) estalo(ctx(), ctx().currentTime, 0.2 + vez * 0.1)
+    if (!tocar(nome, { volume: 0.7 + vez * 0.1 })) estalo(ctx(), ctx().currentTime, 0.2 + vez * 0.1)
+    tocar(vez % 2 ? 'chacoalho1' : 'chacoalho2', { atraso: 0.03, volume: 0.55 + vez * 0.08 })
   })
 }
 
-/** A cerâmica quebra e, logo depois, as moedas se espalham. */
+/** O cofrinho estilhaça com as moedas caindo (montagem de cerâmica e moedas) e, depois, as moedas pousam na fila. */
 export function tocarQuebra() {
   if (!somLigado()) return
   void decodificar().then(() => {
-    const quebrou = tocar('quebra', { atraso: 0.3, volume: 0.95 })
-    const moedas = tocar('moedas', { atraso: 0.62, volume: 0.75 })
+    const quebrou = tocar('quebra', { atraso: 0.3, volume: 1 })
+    const moedas = tocar('moedas', { atraso: 1.2, volume: 0.35 })
     if (!quebrou) estalo(ctx(), ctx().currentTime + 0.3, 0.5)
     if (!moedas) for (let i = 0; i < 6; i++) plim(ctx(), ctx().currentTime + 0.5 + i * 0.07, 2800 + Math.random() * 1200, 0.04)
   })
