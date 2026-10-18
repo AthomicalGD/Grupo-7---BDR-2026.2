@@ -65,7 +65,8 @@ export function CadeiraPagina() {
   const ano = busca.ano && anos.includes(busca.ano) ? busca.ano : anos[1]
   const vereador = cargo.cod === 13
   const lugares = useMemo(() => semMunicipal(carregadas, cargo.municipal), [carregadas, cargo.municipal])
-  const uf = lugares.some((u) => u.sigla === busca.uf) ? busca.uf! : ''
+  // antes da lista de estados chegar vale o endereço (senão a câmara do padrão é pedida à toa e pisca)
+  const uf = busca.uf && (ufs ? lugares.some((u) => u.sigla === busca.uf) : !(cargo.municipal && busca.uf === 'DF')) ? busca.uf : ''
   const municipio = vereador ? (busca.municipio ?? CAPITAIS[uf || 'PI']) : undefined
   const q = useQuery({ ...consultas.cadeira(ano, cargo.cod, vereador ? '' : uf, municipio), placeholderData: keepPreviousData })
   const dados = q.data

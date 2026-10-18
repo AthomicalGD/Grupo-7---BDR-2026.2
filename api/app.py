@@ -15,16 +15,22 @@ conta, com outro rótulo: acompanha a coalizão de governo, não a ideologia.
 import bisect
 import csv
 import gzip
+import hashlib
 import json
 import math
 import os
+import pickle
 import random
+import shutil
 import statistics
+import struct
 import threading
+import traceback
 import unicodedata
+import zlib
 from collections import Counter, defaultdict
 from contextlib import asynccontextmanager
-from functools import lru_cache
+from functools import lru_cache, wraps
 from pathlib import Path
 
 import zipfile
@@ -41,7 +47,7 @@ from crawler.fotos import PASTA as PASTA_FOTOS, chave as chave_foto, indice as i
 
 DADOS = Path(__file__).resolve().parent.parent / "dados"
 IBGE = DADOS / "ibge"
-BANCO_PADRAO = "postgresql://eleicoes:eleicoes@localhost:5432/eleicoes"
+BANCO_PADRAO = "postgresql://eleicoes:eleicoes@127.0.0.1:5432/eleicoes"
 SEM_BANCO = "Banco de dados indisponível. Suba o PostgreSQL com `docker compose up -d` na pasta do projeto."
 
 ANOS = [2018, 2020, 2022, 2024]
@@ -74,9 +80,23 @@ def uf_de(sigla: str) -> dict:
 
 # ───────── Banco ─────────
 
-@lru_cache(maxsize=1)
+_POOL: ThreadedConnectionPool | None = None
+_TRAVA_POOL = threading.Lock()
+
+
 def pool() -> ThreadedConnectionPool:
-    return ThreadedConnectionPool(1, 20, os.environ.get("DATABASE_URL", BANCO_PADRAO))
+    # um só pool para todas as threads: com o lru_cache, os dois aquecimentos que sobem juntos criavam
+    # dois pools e devolviam a conexão ao errado ("trying to put unkeyed connection")
+    global _POOL
+    if _POOL is None:
+        with _TRAVA_POOL:
+            if _POOL is None:
+                # 127.0.0.1, não localhost: no Windows o localhost tenta antes o IPv6 (::1), que o Docker não
+                # atende, e cada conexão nova esperava 2 s. E 6 conexões ficam abertas: com 1, dois pedidos ao
+                # mesmo tempo abriam e fechavam conexões novas (e pagavam esses 2 s) a todo momento.
+                url = os.environ.get("DATABASE_URL", BANCO_PADRAO).replace("@localhost:", "@127.0.0.1:")
+                _POOL = ThreadedConnectionPool(6, 20, url)
+    return _POOL
 
 
 def consultar(sql: str, params=None) -> list[dict]:
@@ -88,6 +108,55 @@ def consultar(sql: str, params=None) -> list[dict]:
             return cur.fetchall()
     finally:
         pool().putconn(conn, close=bool(conn.closed))   # descarta conexões quebradas (banco reiniciado)
+
+
+# ───────── Cache em disco ─────────
+# As contas pesadas (P10a de todas as UFs ~28 s, P2 panorama ~18 s, P4 de 2022 ~17 s...) ficam guardadas em
+# dados/cache_api/<versão>/, e a API reiniciada não as refaz. A versão junta o que muda os resultados: a
+# carga de cada UF (carga_uf), a classificação de viés dos partidos e VERSAO_CONTAS. Carregar um
+# estado, reclassificar o viés ou aumentar VERSAO_CONTAS gera outra versão; as pastas antigas são apagadas.
+CACHE_API = DADOS / "cache_api"
+# Aumente ao mudar uma conta ou consulta (o que muda um resultado); mudanças que não mudam resultados
+# (tamanho dos caches, textos de erro) não precisam, e assim não obrigam a refazer tudo.
+VERSAO_CONTAS = 1
+
+
+@lru_cache(maxsize=1)
+def versao_cache() -> str:
+    dados = consultar("""
+        SELECT md5(COALESCE((SELECT string_agg(sg_uf || carregada_em::text, ',' ORDER BY sg_uf) FROM carga_uf), '')
+                || COALESCE((SELECT string_agg(t::text, ',' ORDER BY t::text) FROM vies_partido_onda t), '')) AS v""")[0]["v"]
+    versao = f"{dados[:10]}-{VERSAO_CONTAS}"
+    if CACHE_API.exists():
+        for velha in CACHE_API.iterdir():
+            if velha.is_dir() and "-" in velha.name and velha.name != versao:   # "fotos" fica
+                shutil.rmtree(velha, ignore_errors=True)
+    return versao
+
+
+# Com o disco por baixo, a memória guarda poucos resultados das contas que devolvem listas grandes
+# (candidatos de cada partido, campanhas de um cargo inteiro): ler do disco leva milissegundos.
+def em_disco(f):
+    """Guarda o resultado de f(*args) em disco (ver versao_cache). Vai por baixo do lru_cache: a memória
+    responde primeiro, o disco depois de reiniciar, a conta só na primeira vez de cada versão."""
+    @wraps(f)
+    def g(*args, **kw):
+        chave = hashlib.sha1(repr((args, sorted(kw.items()))).encode()).hexdigest()[:20]
+        arquivo = CACHE_API / versao_cache() / f.__name__ / f"{chave}.pkl"
+        try:
+            return pickle.loads(arquivo.read_bytes())
+        except (OSError, pickle.UnpicklingError, EOFError):
+            pass
+        valor = f(*args, **kw)
+        try:
+            arquivo.parent.mkdir(parents=True, exist_ok=True)
+            temp = arquivo.with_suffix(f".{threading.get_ident()}.tmp")
+            temp.write_bytes(pickle.dumps(valor, protocol=pickle.HIGHEST_PROTOCOL))
+            temp.replace(arquivo)
+        except OSError:   # sem espaço ou sem permissão: segue só com a memória
+            pass
+        return valor
+    return g
 
 
 SQL_CARREGADAS = "SELECT u.sigla FROM carga_uf c JOIN uf u ON u.sigla = c.sg_uf ORDER BY 1"
@@ -111,6 +180,7 @@ def sem_municipal(uf: str, municipal: bool) -> None:
 
 
 @lru_cache(maxsize=1)
+@em_disco
 def votos_vies() -> list[dict]:
     """Votos válidos por município, ano e cargo, com as somas ponderadas do viés e do alinhamento."""
     return consultar("""
@@ -186,6 +256,7 @@ def cargo_de(cargo: int | None) -> int | None:
 
 
 @lru_cache(maxsize=16)
+@em_disco
 def vies_ufs(cargo: int | None = None) -> dict:
     return vies(linhas_vies(cargo), lambda r: r["cd_uf"])
 
@@ -240,7 +311,8 @@ def detalhar_uf(sigla: str, cargo: int | None = None):
     return detalhe_uf(uf_de(sigla)["sigla"], cargo_de(cargo))
 
 
-@lru_cache(maxsize=128)
+@lru_cache(maxsize=48)
+@em_disco
 def detalhe_uf(sigla: str, cargo: int | None = None) -> dict:
     uf = UFS[sigla]
     linhas = so_do_cargo(indice_vies()[0].get(uf["cd_ibge"], []), cargo)
@@ -309,7 +381,8 @@ def candidato_composicao(c: dict, ano: int) -> dict:
             "eleito": c["eleito"], "foto": foto_url(ano, c["uf"], c["sq"], c["cd_mun"])}
 
 
-@lru_cache(maxsize=64)
+@lru_cache(maxsize=8)
+@em_disco
 def candidatos_por_partido(sigla: str, ano: int, cargo: int | None) -> dict[str, list]:
     """Os candidatos de cada partido no estado, os mais votados primeiro (para a lista e a busca de #11)."""
     candidatos: dict[str, list] = defaultdict(list)
@@ -318,7 +391,8 @@ def candidatos_por_partido(sigla: str, ano: int, cargo: int | None) -> dict[str,
     return {p: sorted(lista, key=lambda c: -c["votos"]) for p, lista in candidatos.items()}
 
 
-@lru_cache(maxsize=128)
+@lru_cache(maxsize=32)
+@em_disco
 def composicao_vies(sigla: str, ano: int, cargo: int | None = None) -> dict:
     cd_uf = UFS[sigla]["cd_ibge"]
     linhas = consultar(SQL_COMPOSICAO_PARTIDOS, {"cd_uf": cd_uf, "ano": ano, "cargo": cargo})
@@ -433,7 +507,8 @@ ORDER BY e.ano
 """
 
 
-@lru_cache(maxsize=1024)
+@lru_cache(maxsize=128)
+@em_disco
 def detalhe_municipio(ibge: int, cargo: int | None = None) -> dict:
     m = MUNICIPIOS[ibge]
     uf = UFS[m["sg_uf"]]
@@ -516,13 +591,53 @@ def indicadores(cd_municipio: int, comparecimento: dict) -> dict:
 # ───────── Fotos dos candidatos (python -m crawler --fotos) ─────────
 # Ficam nos zips do TSE, um por eleição e UF; cada foto é lida do zip pelo SQ_CANDIDATO.
 
-@lru_cache(maxsize=64)
-def zip_fotos(ano: int, uf: str) -> tuple[zipfile.ZipFile, dict[str, str]] | None:
-    caminho = DADOS / PASTA_FOTOS / str(ano) / f"foto_cand{ano}_{uf}_div.zip"
+# Abrir um zip municipal grande (SP 2020: ~90 mil fotos, 2 GB) lê o diretório inteiro dele: ~0,5 s cada,
+# e um boletim passa por vários anos. O índice de cada zip (chave -> onde a foto está dentro dele) fica em
+# dados/cache_api/fotos, pelo tamanho e data do zip; a foto é lida direto da posição, sem abrir o zip.
+def _zip_fotos(ano: int, uf: str) -> Path:
+    return DADOS / PASTA_FOTOS / str(ano) / f"foto_cand{ano}_{uf}_div.zip"
+
+
+@lru_cache(maxsize=48)
+def indice_zip(ano: int, uf: str) -> dict[str, tuple[int, int, int, str]] | None:
+    """chave da foto -> (posição do cabeçalho local, tamanho comprimido, método, extensão)."""
+    caminho = _zip_fotos(ano, uf)
     if not caminho.exists():
         return None
-    z = zipfile.ZipFile(caminho)
-    return z, indice_fotos(z.namelist())
+    st = caminho.stat()
+    guardado = CACHE_API / "fotos" / f"{ano}_{uf}_{st.st_size}_{st.st_mtime_ns}.pkl"
+    try:
+        return pickle.loads(guardado.read_bytes())
+    except (OSError, pickle.UnpicklingError, EOFError):
+        pass
+    with zipfile.ZipFile(caminho) as z:
+        onde = {i.filename: (i.header_offset, i.compress_size, i.compress_type) for i in z.infolist()}
+    indice = {chave: (*onde[nome], nome.rsplit(".", 1)[-1].lower()) for chave, nome in indice_fotos(list(onde)).items()}
+    try:
+        guardado.parent.mkdir(parents=True, exist_ok=True)
+        for velho in guardado.parent.glob(f"{ano}_{uf}_*.pkl"):
+            velho.unlink()
+        guardado.write_bytes(pickle.dumps(indice, protocol=pickle.HIGHEST_PROTOCOL))
+    except OSError:
+        pass
+    return indice
+
+
+def ler_foto(caminho: Path, posicao: int, tamanho: int, metodo: int) -> bytes:
+    """Lê uma foto do zip pela posição: cabeçalho local (30 bytes + nome + extra) e os dados."""
+    with open(caminho, "rb") as f:
+        f.seek(posicao)
+        cabecalho = f.read(30)
+        if cabecalho[:4] != b"PK":
+            raise HTTPException(500, "Zip de fotos corrompido")
+        nome, extra = struct.unpack("<HH", cabecalho[26:30])
+        f.seek(posicao + 30 + nome + extra)
+        dados = f.read(tamanho)
+    if metodo == zipfile.ZIP_STORED:
+        return dados
+    if metodo == zipfile.ZIP_DEFLATED:
+        return zlib.decompress(dados, -15)
+    raise HTTPException(500, f"Compressão não suportada no zip de fotos: {metodo}")
 
 
 def foto_url(ano, uf, sq, cd_municipio=None) -> str | None:
@@ -532,19 +647,21 @@ def foto_url(ano, uf, sq, cd_municipio=None) -> str | None:
         return None
     uf, ano = uf or "BR", int(ano)   # sem UF: Presidente
     chave = chave_foto(sq, cd_municipio if ano == 2004 else None)
-    achado = zip_fotos(ano, uf)
-    return f"/api/fotos/{ano}/{uf}/{chave}" if achado and chave in achado[1] else None
+    indice = indice_zip(ano, uf)
+    return f"/api/fotos/{ano}/{uf}/{chave}" if indice and chave in indice else None
 
 
 @app.get("/api/fotos/{ano}/{uf}/{chave}")
 def foto(ano: int, uf: str, chave: str):
-    achado = zip_fotos(ano, uf.upper())
-    nome = achado and achado[1].get(chave)
-    if not nome:
+    uf = uf.upper()
+    indice = indice_zip(ano, uf)
+    achado = indice and indice.get(chave)
+    if not achado:
         raise HTTPException(404, "Foto não encontrada")
-    ext = nome.rsplit(".", 1)[-1].lower()
+    posicao, tamanho, metodo, ext = achado
     tipo = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "bmp": "image/bmp", "gif": "image/gif"}[ext]
-    return Response(achado[0].read(nome), media_type=tipo, headers={"Cache-Control": "public, max-age=31536000, immutable"})
+    return Response(ler_foto(_zip_fotos(ano, uf), posicao, tamanho, metodo), media_type=tipo,
+                    headers={"Cache-Control": "public, max-age=31536000, immutable"})
 
 
 # ───────── Políticos (nunca expõe CPF, título eleitoral nem data de nascimento completa) ─────────
@@ -739,6 +856,7 @@ def buscar_politicos(q: str = "", uf: str = "", cargo: int | None = None, ano: i
 
 
 @lru_cache(maxsize=1)
+@em_disco
 def veteranos() -> list[dict]:
     """Políticos com 5+ candidaturas e 2+ vitórias, sorteados pela tecla BRANCO da urna."""
     return consultar("""
@@ -780,6 +898,7 @@ CARGOS_TITULARES = {3, 5, 6, 7, 8, 11, 13}   # governador, senador, deputados, p
 
 
 @lru_cache(maxsize=256)
+@em_disco
 def taxa_reeleicao(cod_cargo: int, sigla: str) -> dict | None:
     cod_cargo = 7 if cod_cargo == 8 else cod_cargo   # o distrital (DF) entra como deputado estadual
     r = consultar(SQL_REELEICAO, {"cargo": cod_cargo, "cd_uf": UFS[sigla]["cd_ibge"],
@@ -857,6 +976,7 @@ def _media_municipal(linhas: list[dict]) -> float | None:
 
 
 @lru_cache(maxsize=32)
+@em_disco
 def linhas_reeleicao(sigla: str) -> tuple[dict, ...]:
     return tuple(consultar(SQL_REELEICAO_UF, {"cargos": list(CARGOS_P10), "cd_uf": UFS[sigla]["cd_ibge"]}))
 
@@ -875,6 +995,7 @@ def _ufs_p10(uf: str) -> list[str]:
 
 
 @lru_cache(maxsize=32)
+@em_disco
 def reeleicao_uf(sigla: str) -> dict:
     ufs = sorted(carregadas() - {"BR"}) if sigla == TODOS else [sigla]
     linhas = [r for u in ufs for r in linhas_reeleicao(u)]
@@ -912,12 +1033,20 @@ def _aquecer() -> None:
         for sigla in sorted(carregadas() & UFS.keys(), key=lambda s: -sum(m["sg_uf"] == s for m in MUNICIPIOS.values())):
             malha(f"municipios_{UFS[sigla]['cd_ibge']}.geojson")
             detalhe_uf(sigla, None)
+        for sigla in sorted(carregadas() & UFS.keys()):   # "De onde vem o viés" (~2 s por estado e ano a frio)
+            for ano in ANOS:
+                composicao_vies(sigla, ano, None)
         for ano in ANOS_ESCOLA:   # a P4 abre em 2022 com todos os estados: ~11 s a frio
             escola_ano(ano, "")
         escola_comparar_tudo()
+        custo_cadeira(2022, 6)   # a P1 abre em deputado federal, 2022, todos os estados
+        veteranos()              # o BRANCO da urna sorteia daqui
         reeleicao_uf(TODOS)
+        for z in sorted((DADOS / PASTA_FOTOS).glob("*/foto_cand*_div.zip"), reverse=True):   # do mais recente
+            ano, uf = z.stem.split("_")[1][4:], z.stem.split("_")[2]
+            indice_zip(int(ano), uf)
     except Exception:  # noqa: BLE001 - banco fora do ar: as contas são feitas quando a página pedir
-        pass
+        traceback.print_exc()   # mas fica no log: um aquecimento parado no meio deixa telas lentas
 
 
 @app.get("/api/reeleicao")
@@ -980,6 +1109,7 @@ GRUPOS_P10 = ("voltaram", "perderam", "nao")
 
 
 @lru_cache(maxsize=48)
+@em_disco
 def pessoas_reeleicao(sigla: str, cargo: int, ano: int) -> list[dict]:
     return consultar(SQL_REELEICAO_PESSOAS, {"cargo": cargo, "cd_uf": UFS[sigla]["cd_ibge"], "ano": ano,
                                              "prox": ano + (8 if cargo == SENADOR else 4)})
@@ -1075,7 +1205,8 @@ def ipca() -> dict[int, float]:
     return {a: round(idx[2024] / i, 4) for a, i in idx.items()}
 
 
-@lru_cache(maxsize=256)
+@lru_cache(maxsize=8)
+@em_disco
 def campanhas(ano: int, cargo: int, ufs: tuple[str, ...], municipio: int | None) -> list[dict]:
     linhas = consultar(SQL_CAMPANHAS, {"ano": ano, "cargo": cargo, "ufs": list(ufs), "municipio": municipio})
     for r in linhas:
@@ -1139,7 +1270,8 @@ def custo_cadeira(ano: int, cargo: int, uf: str = "", municipio: int | None = No
     return cadeira(ano, cargo, ufs, municipio)
 
 
-@lru_cache(maxsize=256)
+@lru_cache(maxsize=32)
+@em_disco
 def cadeira(ano: int, cargo: int, ufs: tuple[str, ...], municipio: int | None) -> dict:
     linhas = campanhas(ano, cargo, ufs, municipio)
     # A curva de vitória do vereador usa a UF toda: um município sozinho tem poucos candidatos.
@@ -1423,6 +1555,7 @@ def _ano_escola(ano: int) -> int:
 
 
 @lru_cache(maxsize=2)
+@em_disco
 def municipios_escola(ano: int) -> dict[int, dict]:
     """Cada município com a % de superior completo de quem votou, dos candidatos, dos eleitos e dos votos,
     e o quintil pela escolaridade de quem votou (cortes nos quantis, como o pandas.qcut do script)."""
@@ -1432,6 +1565,7 @@ def municipios_escola(ano: int) -> dict[int, dict]:
 
 
 @lru_cache(maxsize=16)
+@em_disco
 def escola_ano(ano: int, uf: str = "") -> dict:
     """O quadro das UFs carregadas ou de uma só; com UF, os quintos dividem os municípios dela."""
     cd_uf = UFS[uf]["cd_ibge"] if uf else None
@@ -1466,7 +1600,8 @@ def escola(ano: int = 2024, uf: str = ""):
     return escola_ano(ano, uf)
 
 
-@lru_cache(maxsize=256)
+@lru_cache(maxsize=64)
+@em_disco
 def escola_lugar(ibge: int, ano: int) -> dict:
     m = MUNICIPIOS[ibge]
     if m["sg_uf"] not in carregadas():
@@ -1572,6 +1707,7 @@ def escola_municipios(ano: int = 2024, uf: str = ""):
 
 
 @lru_cache(maxsize=16)
+@em_disco
 def escola_partidos_ano(ano: int, uf: str = "") -> list[dict]:
     cd_uf = UFS[uf]["cd_ibge"] if uf else None
     linhas = consultar(SQL_ESCOLA_PARTIDOS, {"ano": ano, "cargos": CARGOS_ESCOLA[ano], "cd_uf": cd_uf})
@@ -1585,6 +1721,7 @@ def escola_partidos(ano: int = 2024, uf: str = ""):
 
 
 @lru_cache(maxsize=1)
+@em_disco
 def escola_comparar_tudo() -> dict:
     sigla = {u["cd_ibge"]: s for s, u in UFS.items()}
     anos: dict = {str(a): {} for a in ANOS_ESCOLA}
