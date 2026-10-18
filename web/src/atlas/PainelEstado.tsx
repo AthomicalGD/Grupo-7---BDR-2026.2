@@ -118,7 +118,7 @@ export function PainelEstado({ uf, ano, cargo, relativo, relevo, aoMudarRelativo
             ? <>Só o voto para {cargo.nome.toLowerCase()}, disputado em {cargo.anos.join(' e ')}. </>
             : <>2018 e 2022 somam presidente, governador, senado e deputados; 2020 e 2024, prefeito e vereador, cada cargo com o
               mesmo peso. Compare anos do mesmo tipo. </>}
-          2024 usa a classificação dos especialistas de 2022, estendida por dois anos.
+          {(!cargo || cargo.anos.includes(2024)) && '2024 usa a classificação dos especialistas de 2022, estendida por dois anos.'}
         </p>
       </section>
 

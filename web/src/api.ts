@@ -435,12 +435,27 @@ const sempre = { staleTime: Infinity, gcTime: 30 * 60_000 } // os dados só muda
 /** "?cargo=1" (ou "&cargo=1"), ou nada quando são todos os cargos */
 const comCargo = (cargo: number | undefined, sep: '?' | '&') => (cargo ? `${sep}cargo=${cargo}` : '')
 
+const GERAIS: Ano[] = [2018, 2022]
+const MUNICIPAIS: Ano[] = [2020, 2024]
+/** Os cargos de /api/vies/cargos, para mostrar antes da resposta chegar. */
+const CARGOS_PADRAO: CargoVies[] = [
+  { cod: 1, nome: 'Presidente', anos: GERAIS, municipal: false },
+  { cod: 3, nome: 'Governador', anos: GERAIS, municipal: false },
+  { cod: 5, nome: 'Senador', anos: GERAIS, municipal: false },
+  { cod: 6, nome: 'Deputado federal', anos: GERAIS, municipal: false },
+  { cod: 7, nome: 'Deputado estadual', anos: GERAIS, municipal: false },
+  { cod: 11, nome: 'Prefeito', anos: MUNICIPAIS, municipal: true },
+  { cod: 13, nome: 'Vereador', anos: MUNICIPAIS, municipal: true },
+]
+
 export const consultas = {
   ufs: (cargo?: number) =>
     queryOptions({ queryKey: ['ufs', cargo ?? null], queryFn: ({ signal }) => get<UF[]>(`/api/ufs${comCargo(cargo, '?')}`, signal), ...sempre }),
   uf: (sigla: string, cargo?: number) =>
     queryOptions({ queryKey: ['uf', sigla, cargo ?? null], queryFn: ({ signal }) => get<UFDetalhe>(`/api/ufs/${sigla}${comCargo(cargo, '?')}`, signal), ...sempre }),
-  cargosVies: () => queryOptions({ queryKey: ['cargos-vies'], queryFn: ({ signal }) => get<CargoVies[]>('/api/vies/cargos', signal), ...sempre }),
+  // a lista quase nunca muda: começa com a de sempre para o filtro e os textos não esperarem a API fria
+  cargosVies: () =>
+    queryOptions({ queryKey: ['cargos-vies'], queryFn: ({ signal }) => get<CargoVies[]>('/api/vies/cargos', signal), placeholderData: CARGOS_PADRAO, ...sempre }),
   composicao: (sigla: string, ano: number, cargo?: number) =>
     queryOptions({
       queryKey: ['composicao', sigla, ano, cargo ?? null],
