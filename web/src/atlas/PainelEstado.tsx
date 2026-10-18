@@ -79,7 +79,7 @@ export function PainelEstado({ uf, ano, cargo, relativo, relevo, aoMudarRelativo
           <div>
             <h1 className="t-h1">{uf.nome}</h1>
             <p className="mt-1 text-tinta-2">
-              {uf.municipios.length} municípios · região {uf.regiao}
+              {uf.municipios.length === 1 ? '1 município' : `${uf.municipios.length} municípios`} · região {uf.regiao}
             </p>
           </div>
           <div className="text-right">
@@ -89,6 +89,11 @@ export function PainelEstado({ uf, ano, cargo, relativo, relevo, aoMudarRelativo
             <p className="text-[0.82rem] text-tinta-2">{ladoVies(v)} em {ano}</p>
           </div>
         </div>
+        {uf.sigla === 'DF' && (cargo ? cargo.municipal : ano % 4 === 0) && (
+          <p className="rounded-xl border border-linha bg-folha px-4 py-3 text-[0.9rem] text-tinta-2">
+            O Distrito Federal não tem eleição municipal: não elege prefeito nem vereador. Os dados dele estão em 2018 e 2022.
+          </p>
+        )}
         <div className="flex flex-wrap gap-2 pt-1">
           <Alternador
             rotulo="Escala de cor"

@@ -259,6 +259,9 @@ export interface Cadeira {
   receitas: Record<'fundo_eleitoral' | 'fundo_partidario' | 'pessoas_fisicas' | 'proprios' | 'outros', number>
 }
 
+/** O DF não tem eleição municipal: nos recortes de prefeito e vereador ele não é um estado escolhível. */
+export const semMunicipal = (ufs: UF[], municipal: boolean) => (municipal ? ufs.filter((u) => u.sigla !== 'DF') : ufs)
+
 // ───────── P10a: taxa de reeleição ─────────
 
 /** Dos eleitos, quantos tentaram a reeleição (mesmo cargo e lugar, eleição seguinte) e quantos voltaram. */

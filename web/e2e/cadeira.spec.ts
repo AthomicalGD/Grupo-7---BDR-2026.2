@@ -12,7 +12,7 @@ test('P1: o plenário tem uma cadeira por eleito e o custo bate com a resposta',
 
   // corrigido pela inflação, a mesma cadeira vale mais
   await page.getByRole('radio', { name: 'Em reais de 2024' }).click()
-  await expect(plenario.getByText('R$ 2,0 mi', { exact: true })).toBeVisible()
+  await expect(plenario.getByText('R$ 2,0 mi', { exact: true }).first()).toBeVisible() // o custo (e o topo da legenda)
 
   // o cartão de cada cadeira leva à carreira
   await page.locator('svg [data-i]').first().hover()

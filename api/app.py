@@ -101,11 +101,20 @@ def carregadas() -> frozenset[str]:
 SOMAS_VIES = ("votos", "votos_com_vies", "votos_x_vies", "votos_com_alinhamento", "votos_x_alinhamento")
 
 
+# O deputado distrital (8, só o DF) conta como deputado estadual (7) em todo o site. Nos filtros, o cargo 7
+# vira a lista [7, 8] (e.cod_cargo = ANY(...), que usa o índice; um CASE sobre a coluna não usaria); nas
+# colunas devolvidas, CASE e.cod_cargo WHEN 8 THEN 7.
+def sem_municipal(uf: str, municipal: bool) -> None:
+    """O DF não tem municípios nem eleição municipal: prefeito e vereador lá são um recorte vazio."""
+    if municipal and uf.upper() == "DF":
+        raise HTTPException(404, "O Distrito Federal não tem eleição municipal: não elege prefeito nem vereador.")
+
+
 @lru_cache(maxsize=1)
 def votos_vies() -> list[dict]:
     """Votos válidos por município, ano e cargo, com as somas ponderadas do viés e do alinhamento."""
     return consultar("""
-        SELECT m.cd_uf, m.cd_ibge, v.ano, v.cod_cargo,
+        SELECT m.cd_uf, m.cd_ibge, v.ano, CASE v.cod_cargo WHEN 8 THEN 7 ELSE v.cod_cargo END AS cod_cargo,
                v.votos, v.votos_com_vies, v.votos_x_vies::float AS votos_x_vies,
                v.votos_com_alinhamento, v.votos_x_alinhamento::float AS votos_x_alinhamento
         FROM vies_votos_cargo v
@@ -145,7 +154,8 @@ def vies(linhas: list[dict], chave) -> dict:
     return saida
 
 
-# Cargos do filtro do atlas (#10): os de eleicao_referencia, sem o deputado distrital (só o DF, que não é carregado).
+# Cargos do filtro do atlas (#10): os de eleicao_referencia. O deputado distrital (8, só o DF) conta como
+# deputado estadual (7) em todo o site: é a assembleia do DF.
 CARGOS_VIES = {1: "Presidente", 3: "Governador", 5: "Senador", 6: "Deputado federal", 7: "Deputado estadual",
                11: "Prefeito", 13: "Vereador"}
 
@@ -264,14 +274,14 @@ def detalhe_uf(sigla: str, cargo: int | None = None) -> dict:
 # (nominais + legenda, cargos de eleicao_referencia, 1º turno), o viés naquela eleição e quanto ele
 # puxa a média; e, dentro de cada partido, os candidatos mais votados no estado.
 SQL_COMPOSICAO_PARTIDOS = """
-SELECT p.sigla, max(p.nome) AS nome, v.cod_cargo, sum(v.qt_votos_validos) AS votos, max(o.vies)::float AS vies
+SELECT p.sigla, max(p.nome) AS nome, CASE v.cod_cargo WHEN 8 THEN 7 ELSE v.cod_cargo END AS cod_cargo, sum(v.qt_votos_validos) AS votos, max(o.vies)::float AS vies
 FROM votacao_partido_municipio v
 JOIN eleicao_referencia r ON r.ano_eleitoral = v.ano_eleicao AND v.cod_cargo = ANY (r.cargos)
 JOIN partido p   ON p.id_partido = v.id_partido
 JOIN municipio m ON m.cd_municipio = v.cd_municipio
 LEFT JOIN vies_partido_onda o ON o.ano_eleitoral = v.ano_eleicao AND o.numero = p.numero AND o.sigla = p.sigla
-WHERE m.cd_uf = %(cd_uf)s AND v.ano_eleicao = %(ano)s AND (%(cargo)s::int IS NULL OR v.cod_cargo = %(cargo)s)
-GROUP BY p.sigla, v.cod_cargo
+WHERE m.cd_uf = %(cd_uf)s AND v.ano_eleicao = %(ano)s AND (%(cargo)s::int IS NULL OR v.cod_cargo = ANY(CASE %(cargo)s::int WHEN 7 THEN ARRAY[7, 8] ELSE ARRAY[%(cargo)s::int] END))
+GROUP BY p.sigla, 3
 HAVING sum(v.qt_votos_validos) > 0
 """
 SQL_COMPOSICAO_CANDIDATOS = """
@@ -288,7 +298,7 @@ LEFT JOIN mandato ma     ON ma.id_politico_eleicao = pe.id_politico_eleicao
 LEFT JOIN uf u           ON u.cd_ibge = e.cd_uf
 LEFT JOIN municipio mm   ON mm.cd_municipio = e.cd_municipio
 LEFT JOIN uf um          ON um.cd_ibge = mm.cd_uf
-WHERE v.cd_uf = %(cd_uf)s AND v.ano = %(ano)s AND (%(cargo)s::int IS NULL OR e.cod_cargo = %(cargo)s)
+WHERE v.cd_uf = %(cd_uf)s AND v.ano = %(ano)s AND (%(cargo)s::int IS NULL OR e.cod_cargo = ANY(CASE %(cargo)s::int WHEN 7 THEN ARRAY[7, 8] ELSE ARRAY[%(cargo)s::int] END))
 GROUP BY pe.id_politico_eleicao, pe.id_politico, po.nome, pa.sigla, c.nome
 """
 CANDIDATOS_POR_PARTIDO = 6
@@ -601,7 +611,7 @@ WITH base AS (
 # Cargo e eleição, aqui, olham só as candidaturas que batem com os filtros.
 FILTROS_CANDIDATURA = {
     "uf": "COALESCE(u.sigla, um.sigla) = %(uf)s",
-    "cargo": "e.cod_cargo = %(cargo)s",
+    "cargo": "e.cod_cargo = ANY(CASE %(cargo)s::int WHEN 7 THEN ARRAY[7, 8] ELSE ARRAY[%(cargo)s::int] END)",
     "ano": "e.ano = %(ano)s",
     "partido": "pa.sigla = %(partido)s",
     "resultado": "(ma.id_mandato IS NOT NULL) = %(resultado)s",
@@ -757,7 +767,7 @@ WITH cand AS (
     JOIN eleicao e ON e.id_eleicao = pe.id_eleicao
     LEFT JOIN municipio m ON m.cd_municipio = e.cd_municipio
     LEFT JOIN mandato ma ON ma.id_politico_eleicao = pe.id_politico_eleicao
-    WHERE e.tipo <> 1 AND e.cod_cargo = %(cargo)s AND COALESCE(m.cd_uf, e.cd_uf) = %(cd_uf)s
+    WHERE e.tipo <> 1 AND e.cod_cargo = ANY(CASE %(cargo)s::int WHEN 7 THEN ARRAY[7, 8] ELSE ARRAY[%(cargo)s::int] END) AND COALESCE(m.cd_uf, e.cd_uf) = %(cd_uf)s
     GROUP BY 1, 2, 3
 )
 SELECT count(DISTINCT (a.id_politico, a.ano)) FILTER (WHERE b.id_politico IS NOT NULL) AS tentaram,
@@ -771,6 +781,7 @@ CARGOS_TITULARES = {3, 5, 6, 7, 8, 11, 13}   # governador, senador, deputados, p
 
 @lru_cache(maxsize=256)
 def taxa_reeleicao(cod_cargo: int, sigla: str) -> dict | None:
+    cod_cargo = 7 if cod_cargo == 8 else cod_cargo   # o distrital (DF) entra como deputado estadual
     r = consultar(SQL_REELEICAO, {"cargo": cod_cargo, "cd_uf": UFS[sigla]["cd_ibge"],
                                   "passo": 8 if cod_cargo == SENADOR else 4})[0]
     if not r["tentaram"]:
@@ -789,7 +800,7 @@ NOME_P10 = ("regexp_replace(translate(upper(p.nome), 'ÁÀÂÃÄÉÈÊËÍÌÎÏ
             "'AAAAAEEEEIIIIOOOOOUUUUCNSI'), '[^A-Z]', '', 'g')")
 SQL_REELEICAO_UF = f"""
 WITH cand AS (
-    SELECT pe.id_politico, e.ano, e.cod_cargo, e.cd_municipio,
+    SELECT pe.id_politico, e.ano, (CASE e.cod_cargo WHEN 8 THEN 7 ELSE e.cod_cargo END) AS cod_cargo, e.cd_municipio,
            COALESCE(e.cd_municipio, -e.cd_uf) AS unidade,
            p.nr_titulo_eleitoral IS NULL AS sem_titulo, p.dt_nascimento,
            {NOME_P10} AS nome, split_part(upper(p.nome), ' ', 1) AS primeiro_nome,
@@ -799,7 +810,7 @@ WITH cand AS (
     JOIN eleicao e ON e.id_eleicao = pe.id_eleicao
     LEFT JOIN municipio m ON m.cd_municipio = e.cd_municipio
     LEFT JOIN mandato ma ON ma.id_politico_eleicao = pe.id_politico_eleicao
-    WHERE e.tipo <> 1 AND e.cod_cargo = ANY(%(cargos)s) AND COALESCE(m.cd_uf, e.cd_uf) = %(cd_uf)s
+    WHERE e.tipo <> 1 AND e.cod_cargo = ANY(%(cargos)s::int[] || CASE WHEN 7 = ANY(%(cargos)s::int[]) THEN ARRAY[8] ELSE ARRAY[]::int[] END) AND COALESCE(m.cd_uf, e.cd_uf) = %(cd_uf)s
     GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9
 ),
 proximo AS (
@@ -890,7 +901,7 @@ def reeleicao_uf(sigla: str) -> dict:
 
 
 def _aquecer() -> None:
-    """Ao subir, em segundo plano: primeiro o atlas (a tela inicial), depois a P10a. O viés de cada cargo,
+    """Ao subir, em segundo plano: primeiro o atlas (a tela inicial), depois a P4 e a P10a. O viés de cada cargo,
     as malhas e o detalhe de cada UF carregada já ficam em cache; entrar num estado grande não espera
     mais a malha (segundos em MG) nem as contas do viés."""
     try:
@@ -901,6 +912,9 @@ def _aquecer() -> None:
         for sigla in sorted(carregadas() & UFS.keys(), key=lambda s: -sum(m["sg_uf"] == s for m in MUNICIPIOS.values())):
             malha(f"municipios_{UFS[sigla]['cd_ibge']}.geojson")
             detalhe_uf(sigla, None)
+        for ano in ANOS_ESCOLA:   # a P4 abre em 2022 com todos os estados: ~11 s a frio
+            escola_ano(ano, "")
+        escola_comparar_tudo()
         reeleicao_uf(TODOS)
     except Exception:  # noqa: BLE001 - banco fora do ar: as contas são feitas quando a página pedir
         pass
@@ -928,7 +942,7 @@ WITH cand AS (
     JOIN eleicao e ON e.id_eleicao = pe.id_eleicao
     LEFT JOIN municipio m ON m.cd_municipio = e.cd_municipio
     LEFT JOIN mandato ma ON ma.id_politico_eleicao = pe.id_politico_eleicao
-    WHERE e.tipo <> 1 AND e.cod_cargo = %(cargo)s AND COALESCE(m.cd_uf, e.cd_uf) = %(cd_uf)s
+    WHERE e.tipo <> 1 AND e.cod_cargo = ANY(CASE %(cargo)s::int WHEN 7 THEN ARRAY[7, 8] ELSE ARRAY[%(cargo)s::int] END) AND COALESCE(m.cd_uf, e.cd_uf) = %(cd_uf)s
       AND e.ano IN (%(ano)s, %(prox)s)
     GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
 ),
@@ -954,7 +968,7 @@ LEFT JOIN municipio mu ON mu.cd_municipio = x.cd_municipio
 LEFT JOIN LATERAL (
     SELECT pe.id_politico_eleicao, pe.sq_candidato, pe.nm_urna, pe.id_partido
     FROM politico_eleicao pe JOIN eleicao e ON e.id_eleicao = pe.id_eleicao
-    WHERE pe.id_politico = x.id_politico AND e.ano = %(ano)s AND e.cod_cargo = %(cargo)s
+    WHERE pe.id_politico = x.id_politico AND e.ano = %(ano)s AND e.cod_cargo = ANY(CASE %(cargo)s::int WHEN 7 THEN ARRAY[7, 8] ELSE ARRAY[%(cargo)s::int] END)
       AND COALESCE(e.cd_municipio, -e.cd_uf) = x.unidade AND e.tipo <> 1
     ORDER BY e.turno LIMIT 1
 ) c ON true
@@ -1048,7 +1062,7 @@ LEFT JOIN uf um          ON um.cd_ibge = m.cd_uf
 LEFT JOIN uf u           ON u.cd_ibge = e.cd_uf
 LEFT JOIN mandato ma     ON ma.id_politico_eleicao = pe.id_politico_eleicao
 LEFT JOIN partido pa     ON pa.id_partido = COALESCE(pe.id_partido, ma.id_partido)
-WHERE e.ano = %(ano)s AND e.cod_cargo = %(cargo)s AND e.tipo <> 1
+WHERE e.ano = %(ano)s AND e.cod_cargo = ANY(CASE %(cargo)s::int WHEN 7 THEN ARRAY[7, 8] ELSE ARRAY[%(cargo)s::int] END) AND e.tipo <> 1
   AND COALESCE(u.sigla, um.sigla) = ANY(%(ufs)s)
   AND (%(municipio)s::int IS NULL OR m.cd_ibge = %(municipio)s::int)
 """
@@ -1115,6 +1129,7 @@ def custo_cadeira(ano: int, cargo: int, uf: str = "", municipio: int | None = No
         if uf.upper() not in ufs:
             raise HTTPException(404, f"UF sem dados: {uf}")
         ufs = (uf.upper(),)
+        sem_municipal(uf, cargo in MUNICIPAIS)
     if cargo == 13 and municipio is None:
         raise HTTPException(422, "Para vereador, escolha um município")
     if municipio is not None:
@@ -1289,14 +1304,14 @@ VOTO_ESCOLA = {2022: [6, 7], 2024: [13]}
 SQL_ESCOLA_NIVEIS = "SELECT nivel, rotulo FROM escolaridade WHERE nivel IS NOT NULL ORDER BY nivel"
 
 SQL_ESCOLA_CARGOS = """
-SELECT e.cod_cargo AS cargo, c.nome, es.nivel, count(*) AS candidatos, count(m.id_mandato) AS eleitos
+SELECT (CASE e.cod_cargo WHEN 8 THEN 7 ELSE e.cod_cargo END) AS cargo, c.nome, es.nivel, count(*) AS candidatos, count(m.id_mandato) AS eleitos
 FROM politico_eleicao pe
 JOIN eleicao e       USING (id_eleicao)
-JOIN cargo c         USING (cod_cargo)
+JOIN cargo c         ON c.cod_cargo = (CASE e.cod_cargo WHEN 8 THEN 7 ELSE e.cod_cargo END)
 JOIN escolaridade es ON es.ds_grau = pe.ds_grau_instrucao
 LEFT JOIN mandato m  USING (id_politico_eleicao)
 LEFT JOIN municipio mu ON mu.cd_municipio = e.cd_municipio
-WHERE e.ano = %(ano)s AND e.tipo = 2 AND e.cod_cargo = ANY(%(cargos)s)
+WHERE e.ano = %(ano)s AND e.tipo = 2 AND e.cod_cargo = ANY(%(cargos)s::int[] || CASE WHEN 7 = ANY(%(cargos)s::int[]) THEN ARRAY[8] ELSE ARRAY[]::int[] END)
   AND pe.ds_sit_tot_turno IS NOT NULL AND es.nivel IS NOT NULL
   AND (%(cd_uf)s::int IS NULL OR COALESCE(mu.cd_uf, e.cd_uf, %(cd_uf)s) = %(cd_uf)s)
 GROUP BY 1, 2, 3
@@ -1344,7 +1359,7 @@ votos AS (
     JOIN zona_eleitoral z    USING (id_zona)
     JOIN politico_eleicao pe USING (id_politico_eleicao)
     JOIN escolaridade es     ON es.ds_grau = pe.ds_grau_instrucao
-    WHERE e.ano = %(ano)s AND e.turno = 1 AND e.tipo = 2 AND e.cod_cargo = ANY(%(voto)s) AND es.nivel IS NOT NULL
+    WHERE e.ano = %(ano)s AND e.turno = 1 AND e.tipo = 2 AND e.cod_cargo = ANY(%(voto)s::int[] || CASE WHEN 7 = ANY(%(voto)s::int[]) THEN ARRAY[8] ELSE ARRAY[]::int[] END) AND es.nivel IS NOT NULL
     GROUP BY 1
 )
 SELECT mu.cd_ibge AS ibge, mu.cd_uf, vt.comparecimento::int, vt.votantes::float, d.candidatos::float, d.eleitos::float,
@@ -1377,7 +1392,7 @@ JOIN zona_eleitoral z    USING (id_zona)
 JOIN politico_eleicao pe USING (id_politico_eleicao)
 JOIN escolaridade es     ON es.ds_grau = pe.ds_grau_instrucao
 WHERE z.cd_municipio = %(mun)s AND e.ano = %(ano)s AND e.turno = 1 AND e.tipo = 2
-  AND e.cod_cargo = ANY(%(voto)s) AND es.nivel IS NOT NULL
+  AND e.cod_cargo = ANY(%(voto)s::int[] || CASE WHEN 7 = ANY(%(voto)s::int[]) THEN ARRAY[8] ELSE ARRAY[]::int[] END) AND es.nivel IS NOT NULL
 GROUP BY 1
 """
 
@@ -1446,7 +1461,9 @@ def escola_ano(ano: int, uf: str = "") -> dict:
 
 @app.get("/api/escola")
 def escola(ano: int = 2024, uf: str = ""):
-    return escola_ano(_ano_escola(ano), _uf_escola(uf))
+    ano, uf = _ano_escola(ano), _uf_escola(uf)
+    sem_municipal(uf, ano % 4 == 0)
+    return escola_ano(ano, uf)
 
 
 @lru_cache(maxsize=256)
@@ -1491,21 +1508,21 @@ JOIN escolaridade es   ON es.ds_grau = pe.ds_grau_instrucao
 JOIN partido pa        ON pa.id_partido = pe.id_partido
 LEFT JOIN mandato m    USING (id_politico_eleicao)
 LEFT JOIN municipio mu ON mu.cd_municipio = e.cd_municipio
-WHERE e.ano = %(ano)s AND e.tipo = 2 AND e.cod_cargo = ANY(%(cargos)s)
+WHERE e.ano = %(ano)s AND e.tipo = 2 AND e.cod_cargo = ANY(%(cargos)s::int[] || CASE WHEN 7 = ANY(%(cargos)s::int[]) THEN ARRAY[8] ELSE ARRAY[]::int[] END)
   AND pe.ds_sit_tot_turno IS NOT NULL AND es.nivel IS NOT NULL
   AND (%(cd_uf)s::int IS NULL OR COALESCE(mu.cd_uf, e.cd_uf, %(cd_uf)s) = %(cd_uf)s)
 GROUP BY pa.id_partido, 1, 2, 3
 """
 
 SQL_ESCOLA_COMPARAR_CARGOS = """
-SELECT e.ano, COALESCE(mu.cd_uf, e.cd_uf) AS cd_uf, e.cod_cargo AS cargo, es.nivel,
+SELECT e.ano, COALESCE(mu.cd_uf, e.cd_uf) AS cd_uf, (CASE e.cod_cargo WHEN 8 THEN 7 ELSE e.cod_cargo END) AS cargo, es.nivel,
        count(*) AS candidatos, count(m.id_mandato) AS eleitos
 FROM politico_eleicao pe
 JOIN eleicao e         USING (id_eleicao)
 JOIN escolaridade es   ON es.ds_grau = pe.ds_grau_instrucao
 LEFT JOIN mandato m    USING (id_politico_eleicao)
 LEFT JOIN municipio mu ON mu.cd_municipio = e.cd_municipio
-WHERE e.ano IN (2022, 2024) AND e.tipo = 2 AND e.cod_cargo IN (1, 3, 5, 6, 7, 11, 13)
+WHERE e.ano IN (2022, 2024) AND e.tipo = 2 AND e.cod_cargo IN (1, 3, 5, 6, 7, 8, 11, 13)
   AND pe.ds_sit_tot_turno IS NOT NULL AND es.nivel IS NOT NULL
 GROUP BY 1, 2, 3, 4
 """
@@ -1527,6 +1544,8 @@ def _uf_escola(uf: str) -> str:
     uf = uf_de(uf)["sigla"]
     if uf not in carregadas():
         raise HTTPException(404, f"UF sem dados: {uf}")
+    if uf == "DF":   # os quintos dividem os municípios da UF; o DF só tem Brasília
+        raise HTTPException(404, "O Distrito Federal tem um só município (Brasília): ele entra no recorte de todos os estados.")
     return uf
 
 
@@ -1545,6 +1564,7 @@ def municipios_recorte(ano: int, uf: str = "") -> list[dict]:
 def escola_municipios(ano: int = 2024, uf: str = ""):
     """Cada município do recorte: % com superior de quem votou, dos candidatos, dos eleitos e dos votos."""
     ano, uf = _ano_escola(ano), _uf_escola(uf)
+    sem_municipal(uf, ano % 4 == 0)
     return [{"ibge": m["ibge"], "nome": MUNICIPIOS[m["ibge"]]["municipio"], "uf": MUNICIPIOS[m["ibge"]]["sg_uf"],
              "comparecimento": m["comparecimento"], "eleitos_n": m["eleitos_n"], "quintil": m["quintil"],
              **{k: (round(m[k], 1) if m[k] is not None else None) for k in ("votantes", "candidatos", "eleitos", "votados")}}
