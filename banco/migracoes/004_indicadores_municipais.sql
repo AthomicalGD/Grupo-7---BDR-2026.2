@@ -5,10 +5,17 @@ CREATE TABLE malha_municipio (
     geometria    jsonb   NOT NULL
 );
 
+-- Preenchida por scripts/07_vies_politico_municipio.py. Em cada cargo da eleição (eleicao_referencia.cargos),
+-- média do viés dos partidos ponderada pelos votos válidos (nominais + legenda, 1º turno); os cargos entram com
+-- peso igual. Partido sem valor fica fora do numerador e do denominador e aparece na cobertura.
 CREATE TABLE vies_municipio (
-    cd_municipio   integer  NOT NULL REFERENCES municipio,
-    ano_eleitoral  smallint NOT NULL,
-    vies_calculado double precision NOT NULL,
+    cd_municipio          integer  NOT NULL REFERENCES municipio,
+    ano_eleitoral         smallint NOT NULL,
+    vies_calculado        double precision,     -- viés do artigo, -100 a +100
+    cobertura_vies        numeric(5,2),         -- % dos votos válidos dos cargos em partidos com viés
+    alinhamento           double precision,     -- alinhamento na Câmara (SVD), -100 a +100; não é o viés
+    cobertura_alinhamento numeric(5,2),         -- % dos votos válidos dos cargos em partidos com alinhamento
+    n_cargos              smallint NOT NULL,    -- cargos com votos no município
     PRIMARY KEY (cd_municipio, ano_eleitoral)
 );
 

@@ -9,13 +9,16 @@ interface Props {
   ufs: UF[]
   malha: Malha
   ano: Ano
+  /** nome do cargo do filtro (#10), se houver */
+  cargo?: string
   aoEscolherUF: (sigla: string) => void
+  aoApontarUF?: (sigla: string) => void
   aoEscolherMunicipio: (m: MunicipioBusca) => void
 }
 
 const ORDEM_REGIOES = ['Norte', 'Nordeste', 'Centro-Oeste', 'Sudeste', 'Sul']
 
-export function PainelBrasil({ ufs, malha, ano, aoEscolherUF, aoEscolherMunicipio }: Props) {
+export function PainelBrasil({ ufs, malha, ano, cargo, aoEscolherUF, aoApontarUF, aoEscolherMunicipio }: Props) {
   const silhuetas = useMemo(() => new Map(ufs.map((u) => [u.sigla, silhueta(malha, u.cd_ibge, 40)])), [ufs, malha])
   const carregadas = ufs.filter((u) => u.carregada).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
   const faltam = ufs.filter((u) => !u.carregada)
@@ -29,7 +32,7 @@ export function PainelBrasil({ ufs, malha, ano, aoEscolherUF, aoEscolherMunicipi
         <h1 className="t-display">Para onde o voto pendeu</h1>
         <p className="max-w-[54ch] text-[1.05rem] leading-relaxed text-tinta-2">
           Viés partidário de cada estado e município de 2018 a 2024, de −100 (esquerda) a +100 (direita), calculado
-          com os votos válidos de todos os cargos.
+          {cargo ? <> só com os votos válidos para <b className="font-semibold text-tinta">{cargo.toLowerCase()}</b>.</> : ' com os votos válidos de todos os cargos.'}
         </p>
       </header>
 
@@ -48,6 +51,8 @@ export function PainelBrasil({ ufs, malha, ano, aoEscolherUF, aoEscolherMunicipi
                 <button
                   type="button"
                   onClick={() => aoEscolherUF(u.sigla)}
+                  onPointerEnter={() => aoApontarUF?.(u.sigla)}
+                  onFocus={() => aoApontarUF?.(u.sigla)}
                   className="group flex w-full items-center gap-2.5 rounded-2xl border border-linha bg-folha px-3 py-2.5 text-left transition-[border-color,transform,box-shadow] hover:border-tinta hover:shadow-[var(--shadow-cartao)] active:scale-[0.99]"
                 >
                   <svg viewBox="0 0 40 40" className="size-9 shrink-0 overflow-visible" aria-hidden>

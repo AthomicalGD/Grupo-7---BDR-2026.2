@@ -4,7 +4,7 @@ import { Cube, Square } from '@phosphor-icons/react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
-import { CARGOS_P1, consultas, type Ano, type Cadeira, type UF } from '../api'
+import { CARGOS_P1, consultas, semMunicipal, type Ano, type Cadeira, type UF } from '../api'
 import { BuscaMunicipio } from '../atlas/BuscaMunicipio'
 import { CedulaAnos } from '../atlas/CedulaAnos'
 import { silhueta } from '../atlas/geo'
@@ -64,7 +64,9 @@ export function CadeiraPagina() {
   const anos: Ano[] = cargo.municipal ? [2020, 2024] : [2018, 2022]
   const ano = busca.ano && anos.includes(busca.ano) ? busca.ano : anos[1]
   const vereador = cargo.cod === 13
-  const uf = carregadas.some((u) => u.sigla === busca.uf) ? busca.uf! : ''
+  const lugares = useMemo(() => semMunicipal(carregadas, cargo.municipal), [carregadas, cargo.municipal])
+  // antes da lista de estados chegar vale o endereço (senão a câmara do padrão é pedida à toa e pisca)
+  const uf = busca.uf && (ufs ? lugares.some((u) => u.sigla === busca.uf) : !(cargo.municipal && busca.uf === 'DF')) ? busca.uf : ''
   const municipio = vereador ? (busca.municipio ?? CAPITAIS[uf || 'PI']) : undefined
   const q = useQuery({ ...consultas.cadeira(ano, cargo.cod, vereador ? '' : uf, municipio), placeholderData: keepPreviousData })
   const dados = q.data
@@ -133,10 +135,10 @@ export function CadeiraPagina() {
             <div role="radiogroup" aria-label="Estado" className="flex flex-wrap gap-2">
               {!vereador && (
                 <Escolha ativo={!uf} aoClicar={() => mudar({ uf: undefined })}>
-                  {carregadas.length} estados
+                  {lugares.length} estados
                 </Escolha>
               )}
-              {carregadas.map((u) => (
+              {lugares.map((u) => (
                 <Escolha
                   key={u.sigla}
                   rotulo={u.nome}

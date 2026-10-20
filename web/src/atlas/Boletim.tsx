@@ -7,6 +7,7 @@ import { encode } from 'uqr'
 import { enderecoParaOutroAparelho } from '../lib/rede'
 import type { Ano, Municipio } from '../api'
 import { Retrato } from '../componentes/Retrato'
+import { AlinhamentoCamara } from '../graficos/AlinhamentoCamara'
 import { Espectro } from '../graficos/Espectro'
 import { ViesTempo } from '../graficos/ViesTempo'
 import { decimal, nomeProprio, pct, plural, reais, reaisCurto } from '../lib/formato'
@@ -53,7 +54,7 @@ function Indicador({ valor, rotulo, fonte }: { valor: string; rotulo: string; fo
   )
 }
 
-export function Boletim({ m, ano, aoFechar }: { m: Municipio; ano: Ano; aoFechar: () => void }) {
+export function Boletim({ m, ano, cargo, aoFechar }: { m: Municipio; ano: Ano; cargo?: string; aoFechar: () => void }) {
   const ind = m.indicadores
   const [emitido] = useState(() => new Date().toLocaleDateString('pt-BR'))
   const url = typeof window !== 'undefined' ? enderecoParaOutroAparelho() : ''
@@ -99,8 +100,14 @@ export function Boletim({ m, ano, aoFechar }: { m: Municipio; ano: Ano; aoFechar
                 <p className="mb-4 text-[0.85rem] text-tinta-3">Votos válidos por partido, do mais à esquerda ao mais à direita</p>
                 <Espectro espectro={m.espectro} anoAtivo={ano} />
                 {m.sem_vies_pct[ano] != null && (
-                  <p className="mt-3 text-[0.78rem] text-tinta-3">Votos em partidos sem viés informado em {ano}: {pct(m.sem_vies_pct[ano])}</p>
+                  <p className="mt-3 text-[0.78rem] text-tinta-3">Votos em partidos sem viés em {ano} (ficam fora da média): {pct(m.sem_vies_pct[ano])}</p>
                 )}
+              </Linha>
+
+              <Linha i={2} className="mt-8">
+                <h3 className="t-h3">Alinhamento na Câmara</h3>
+                <p className="mb-3 text-[0.85rem] text-tinta-3">{m.nome} comparado ao estado</p>
+                <AlinhamentoCamara nome={m.nome} valores={m.alinhamento} contexto={{ nome: m.uf_nome, valores: m.alinhamento_uf }} anoAtivo={ano} />
               </Linha>
 
               <Picote />
@@ -186,7 +193,7 @@ export function Boletim({ m, ano, aoFechar }: { m: Municipio; ano: Ano; aoFechar
             <div className="space-y-1">
               <p className="font-semibold">Aponte a câmera para abrir este boletim</p>
               <p className="t-mono text-[0.72rem] uppercase tracking-[0.06em] text-tinta-3">Emitido em {emitido} · Fontes: TSE, IBGE, Atlas Brasil</p>
-              <p className="text-[0.78rem] text-tinta-3">Viés: média do viés dos partidos ponderada pelos votos válidos, todos os cargos do 1º turno.</p>
+              <p className="text-[0.78rem] text-tinta-3">Viés: média do viés dos partidos ponderada pelos votos válidos, {cargo ? `só o voto para ${cargo.toLowerCase()}` : 'todos os cargos do 1º turno'}.</p>
             </div>
           </Linha>
         </article>

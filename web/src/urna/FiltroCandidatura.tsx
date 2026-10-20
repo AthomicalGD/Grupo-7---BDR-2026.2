@@ -89,8 +89,11 @@ export function FiltroCandidatura({ filtros, aoMudar }: { filtros: FiltrosBusca;
   const [aberto, setAberto] = useState<Chave | null>(null)
   const carregadas = useMemo(() => ufs.filter((u) => u.carregada), [ufs])
   const silhuetas = useMemo(() => new Map(malha ? carregadas.map((u) => [u.sigla, silhueta(malha, u.cd_ibge, 18)]) : []), [malha, carregadas])
-  // da esquerda para a direita, como no espectro do voto
-  const porVies = useMemo(() => [...partidos].sort((a, b) => a.vies - b.vies || a.sigla.localeCompare(b.sigla)), [partidos])
+  // da esquerda para a direita, como no espectro do voto; partidos sem viés no fim
+  const porVies = useMemo(
+    () => [...partidos].sort((a, b) => (a.vies ?? Infinity) - (b.vies ?? Infinity) || a.sigla.localeCompare(b.sigla)),
+    [partidos],
+  )
 
   const escolher = <K extends Chave>(k: K, v: FiltrosBusca[K]) => {
     aoMudar({ ...filtros, [k]: filtros[k] === v ? undefined : v })

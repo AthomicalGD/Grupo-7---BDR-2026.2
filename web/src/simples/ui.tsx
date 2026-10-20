@@ -8,7 +8,7 @@ import { vies as fmtVies } from '../lib/formato'
 import { SATURA } from '../lib/vies'
 import { corVies } from './cores'
 
-/** Viés com sinal e uma régua de −60 a +60: a barra sai do centro na cor do lado. */
+/** Viés com sinal e uma régua de −SATURA a +SATURA: a barra sai do centro na cor do lado. */
 export function Vies({ valor, regua = true }: { valor: number | null | undefined; regua?: boolean }) {
   if (valor == null) return <span className="text-tinta-3">sem dados</span>
   const f = Math.min(1, Math.abs(valor) / SATURA) * 50

@@ -36,7 +36,7 @@ python -m crawler
 | `--simular` | Mostra o plano (arquivo por arquivo, com tamanhos reais) e o espaço final, sem baixar nada |
 | `--perguntas 1 2 5` | Só o necessário para essas perguntas |
 | `--anos 2024` | Só esses anos, dentro do escopo de cada pergunta |
-| `--fontes tse ibge ipea dataverse` | Só essas fontes |
+| `--fontes tse ibge ipea dataverse camara` | Só essas fontes |
 | `--atualizar` | Baixa de novo o que o servidor republicou desde o último download |
 | `--carreira-ate 2026` | Estende a P10 às candidaturas de 2026 (ainda sem resultado) |
 | `--manter-zips` | Guarda os zips do TSE em `dados/_zips` (ocupa +6 GB) |
@@ -82,8 +82,8 @@ python -m loader SP RJ MG
 - Cada UF é gravada numa única transação e registrada em `carga_uf`: se a carga falhar, a UF não fica
   pela metade e pode ser pedida de novo.
 - Na primeira carga entra também `BR`: as candidaturas a Presidente, necessárias à votação de toda UF.
-- O viés dos partidos (`partido.vies_politico`, de -100 a +100) vem da migração `006_vies_partidos.sql`;
-  partidos sem viés informado ficam com 0.
+- O viés dos partidos é calculado ao fim de cada carga (`python -m loader.vies`, seção "Viés dos partidos e
+  alinhamento"). Partido sem viés fica `NULL`, nunca 0.
 - A migração `011_custo_da_cadeira.sql` (P1) guarda o partido de toda candidatura (`politico_eleicao.id_partido`),
   o IPCA de outubro de cada ano (`ipca_outubro`, IBGE/SIDRA 1737) e as views materializadas `campanha` (gasto,
   receitas por fonte e votos do 1º turno de cada candidatura) e `despesa_por_eleicao`. O loader atualiza as views ao
@@ -99,6 +99,16 @@ python -m loader SP RJ MG
   `politico`) e cria a tabela `escolaridade`, que põe os 8 graus do TSE em ordem para candidato e eleitor. Num banco
   carregado antes dela, rode `python -m loader.partidos` uma vez. A resposta sai com
   `python scripts/04_escolaridade.py` em `respostas/04_escolaridade.txt`.
+- **Banco criado antes da correção do viés:** as antigas migrações 006 a 009 viraram um único
+  `006_vies_partidos.sql`, e 001 e 004 foram editadas no lugar. Como o serviço `migracoes` só aplica arquivos
+  novos, recrie o banco e carregue as UFs de novo:
+
+  ```bash
+  docker compose down -v
+  docker compose up -d
+  python -m loader SP RJ MG
+  ```
+
 Para tirar UFs do banco (ex.: liberar espaço ou recarregar do zero):
 
 ```bash
@@ -115,7 +125,61 @@ python -m loader.remover AC RS
 - `BR` (candidaturas a Presidente) só sai junto com a última UF, porque a votação de toda UF depende dela.
 - Depois, a UF pode ser carregada de novo com `python -m loader` e é preciso **reiniciar a API**.
 
-- Não são carregados: votos do exterior (`ZZ`), `VIES_MUNICIPIO` (métrica ainda por calcular), `MALHA_MUNICIPIO` e `idade_media_populacao` (o crawler não baixa esses dados).
+- Não são carregados: votos do exterior (`ZZ`), `MALHA_MUNICIPIO` e `idade_media_populacao` (o crawler não baixa esses dados).
+  `vies_municipio` é preenchida por `python scripts/07_vies_politico_municipio.py` (seção abaixo).
+
+### Viés dos partidos e alinhamento (P7)
+
+O **viés** de cada partido é a média das notas dos especialistas de Bolognesi et al. (`dados/ideologia_partidos/df_experts.csv`;
+0 = extrema esquerda, 10 = extrema direita), mostrada de -100 a +100 por `(média - 5) * 20`. Cada eleição usa a sua
+onda: 2018 e 2020 a de 2018; 2022 e 2024 a de 2022 (em 2024 estendida por dois anos, o que a interface avisa).
+
+O **alinhamento na Câmara** é outra medida, mostrada à parte: a posição de cada partido nas votações nominais do
+Plenário (SVD), numa janela que termina antes de cada eleição. Ele acompanha quem é governo e quem é oposição, e não
+a ideologia.
+
+| Onde | O quê |
+|---|---|
+| `eleicao_referencia` (migração 006) | Onda do artigo, janela do SVD e cargos de cada eleição |
+| `vies_partido_onda` | Viés de cada partido em cada eleição: média (0 a 10), escala -100 a +100 e a origem do número |
+| `partido_alinhamento` | Alinhamento de cada partido em cada eleição (-100 a +100) |
+| `partido.vies_politico` | O viés da eleição mais recente do partido, de -100 a +100 (`NULL` = sem valor) |
+| `vies_votos_cargo` (view) | Votos por município, ano e cargo, com o viés e o alinhamento daquela eleição: base do script 07 e da API |
+| `vies_municipio` | Viés, alinhamento, cobertura e nº de cargos por município e ano (script 07) |
+| `banco/referencia/sucessao_partidos.csv` | Renomeações (mesmo valor) e fusões (média dos componentes): PRD 2024 = PTB + Patriota, Podemos 2024 = Podemos + PSC, Solidariedade 2024 = Solidariedade + PROS, Mobiliza = PMN etc. |
+| `banco/referencia/tabela1_artigo.csv` | Tabela 1 do artigo, conferida pelos testes |
+| `banco/referencia/svd/` | Resultado de cada janela do SVD (`svd_eleicao_<ano>.csv`) e os parâmetros e a validação (`janelas.csv`) |
+
+O `loader` grava o viés e o alinhamento sozinho ao fim de cada carga. Depois de mudar as regras de sucessão ou os
+arquivos do SVD, recalcule à mão:
+
+```bash
+python -m loader.vies
+```
+
+A origem de cada número ("direto", "renomeado de X", "média de X e Y") fica em `respostas/vies_partidos_auditoria.csv`
+(gerado a cada execução, fora do git).
+
+O viés de um município num ano é calculado em cada cargo (média dos vieses ponderada pelos votos válidos do 1º turno,
+nominais e de legenda) e os cargos entram com peso igual. Partidos sem viés ficam fora da média e aparecem na
+cobertura. Estados e regiões usam a mesma conta. Para gravar `vies_municipio` e gerar
+`respostas/07_vies_politico_municipio.txt`:
+
+```bash
+python scripts/07_vies_politico_municipio.py
+```
+
+Para refazer o alinhamento, baixe as votações da Câmara e rode a janela de cada eleição (as datas estão em
+`eleicao_referencia` e em `banco/referencia/svd/janelas.csv`):
+
+```bash
+python -m crawler --fontes camara
+python scripts/svd_camara.py --nome eleicao_2024 --inicio 2023-02-01 --fim 2024-10-05 --partido moda --experts dados/ideologia_partidos/df_experts.csv --onda 2022
+```
+
+- `scripts/svd_camara.py` grava em `banco/referencia/svd/` e mostra a correlação com o artigo e com o governo.
+- Conferência sem banco (Tabela 1 e regras de sucessão): `python -m loader.test_vies --sem-banco`; com o banco,
+  sem a opção (inclui a cobertura por ano).
 
 ### Fotos dos candidatos
 
@@ -153,18 +217,18 @@ python -m uvicorn api.app:app --port 8000
 | Endpoint | Retorna |
 |---|---|
 | `GET /api/saude` | Se o banco responde e as UFs carregadas (503 com instruções se o banco estiver fora) |
-| `GET /api/ufs` | As 27 UFs, com nº de municípios, se estão carregadas e o viés por ano |
-| `GET /api/ufs/{sigla}` | Viés da UF, das regiões intermediárias e de cada município, eleitorado apto por ano |
-| `GET /api/ufs/{sigla}/composicao?ano=` | De onde vem o viés da UF no ano: cada partido com votos, viés e quanto puxa a média (a soma dá o viés), e os candidatos mais votados de cada partido |
+| `GET /api/ufs` | As 27 UFs, com nº de municípios, se estão carregadas, o viés e o alinhamento na Câmara por ano |
+| `GET /api/ufs/{sigla}` | Viés da UF, das regiões intermediárias e de cada município, alinhamento da UF e de cada município, % dos votos em partidos sem viés e eleitorado apto por ano |
+| `GET /api/ufs/{sigla}/composicao?ano=` | De onde vem o viés da UF no ano: cada partido com votos, viés naquela eleição e quanto puxa a média (a soma dá o viés; partido sem viés puxa 0), e os candidatos mais votados de cada partido |
 | `GET /api/escola?ano=&uf=` | P4 (2022 ou 2024; `uf` opcional recorta um estado): quem votou, candidatos e eleitos por grau de escolaridade e cargo, municípios em quintis pela escolaridade de quem votou e a correlação |
 | `GET /api/escola/municipios?ano=&uf=` | P4: cada município com a % de superior completo de quem votou, dos candidatos, dos eleitos e dos votos (mapa, dispersão e ranking) |
 | `GET /api/escola/partidos?ano=&uf=` | P4: cada partido na ordem do viés, com candidatos e eleitos e quantos deles têm superior completo |
 | `GET /api/escola/comparar` | P4: 2022 e 2024 lado a lado, por estado e cargo (candidatos e eleitos por grau) e quem votou por estado |
 | `GET /api/escola/municipio/{ibge}?ano=` | P4 no município: quem votou por grau, os eleitos (2024) com grau e partido, os votos para deputado (2022) ou vereador por grau, e o quintil |
 | `GET /api/municipios?q=&uf=&limite=8` | Busca de municípios por nome, sem acentos, em todo o Brasil |
-| `GET /api/municipios/{ibge}` | Viés, votos por partido, indicadores (PIB per capita, IDHM...), comparecimento e prefeitos |
+| `GET /api/municipios/{ibge}` | Viés e alinhamento (do município e da UF), votos por partido com o viés de cada eleição, indicadores (PIB per capita, IDHM...), comparecimento e prefeitos |
 | `GET /api/politicos?q=&cargo=&ano=&uf=&partido=&resultado=&limite=8` | Busca de políticos por nome (trigramas, sem acentos; migração `010_busca_politicos.sql`) e/ou por uma candidatura que bata com todos os filtros |
-| `GET /api/partidos` | Siglas das candidaturas, com o viés médio (filtro da busca) |
+| `GET /api/partidos` | Siglas das candidaturas, com o viés atual do partido (`null` = sem viés; filtro da busca) |
 | `GET /api/politicos/aleatorio` | Um político com 5+ candidaturas e 2+ vitórias |
 | `GET /api/politicos/{id}` | Candidaturas, resultados, votos e reeleições do político (sem CPF, título ou data de nascimento) |
 | `GET /api/patrimonio?ano=&cargo=&uf=` | P2: candidatos e eleitos por faixa de patrimônio declarado (sem bens, R$ 0 e quartis, com limites e o candidato do meio) e a fila dos que declararam bens em 100 passos, como em `respostas/02_patrimonio.txt`; Presidente sempre nacional |
@@ -175,8 +239,10 @@ python -m uvicorn api.app:app --port 8000
 | `GET /api/fotos/{ano}/{uf}/{sq}` | Foto da candidatura, lida do zip do TSE (candidaturas, busca e prefeitos já trazem a URL em `foto`) |
 | `GET /api/geo/brasil`, `GET /api/geo/uf/{sigla}` | Malhas do IBGE em GeoJSON, com os anéis no sentido que o d3-geo espera |
 
-- O viés segue a mesma conta de `scripts/07_vies_politico_municipio.py`; o custo da cadeira, a de `scripts/01_custo_cadeira.py`.
-- As respostas ficam em cache no processo: **reinicie a API depois de carregar UFs**.
+- O viés e o alinhamento seguem a mesma conta de `scripts/07_vies_politico_municipio.py`, as duas sobre a view
+  `vies_votos_cargo` (cargos com peso igual, partidos sem viés fora da média); o custo da cadeira segue a de
+  `scripts/01_custo_cadeira.py`.
+- As respostas ficam em cache no processo: **reinicie a API depois de carregar UFs** (ou de rodar `python -m loader.vies`).
 - Conferência contra o banco (precisa de PI carregado): `python -m api.test_api`.
 
 ## Front-end (Voto Aberto)
@@ -280,10 +346,10 @@ O que protege o notebook, nos dois:
 | Mapa do Brasil, viés por estado, linha do tempo 2018-2024 | `/` | P7 |
 | Plenário: quanto custa uma cadeira, por cargo, ano e estado (ou câmara municipal), em 2D e 3D | `/cadeira` | P1 |
 | Escola: o diploma ajuda a se eleger (do eleitor ao eleito, a chance de cada grau) e onde se estudou menos se elege menos diploma (cinco grupos de municípios, mapa por estado com 3D, dispersão, ranking e o boletim); cada cargo e cada estado, os partidos; filtro por estado | `/escola` | P4 |
-| Estado: municípios, de onde vem o viés (partidos e candidatos), regiões intermediárias, extremos, relevo 3D | `/uf/PI` | P7 |
-| Boletim do município: viés, espectro do voto, prefeitos, custo da cadeira, indicadores, QR code | `/uf/PI/2211001` | P7, P1, P3 |
+| Estado: municípios, de onde vem o viés (partidos e candidatos), alinhamento na Câmara, regiões intermediárias, extremos, relevo 3D | `/uf/PI` | P7 |
+| Boletim do município: viés, espectro do voto, alinhamento na Câmara, prefeitos, custo da cadeira, indicadores, QR code | `/uf/PI/2211001` | P7, P1, P3 |
 | Urna de consulta (UE2020 em vetor): busca pelo nome e cédula de filtros (cargo, ano, estado, partido, resultado) | `/urna` | P10 |
-| Ficha da carreira: situação atual, fita das eleições, trajetória com os partidos, custo das campanhas, santinhos | `/politico/368990` | P10, P1 |
+| Ficha da carreira: situação atual, fita das eleições, trajetória com os partidos, custo das campanhas, santinhos | `/politico/{id}` (o id muda quando o banco é recriado) | P10, P1 |
 | Fontes, método e limitações | `/metodologia` | todas |
 
 - Testes ponta a ponta (desktop 1440×900 e celular 390×844, contra os dados reais):
@@ -311,7 +377,8 @@ dados/
 ├── ibge/
 │   ├── pib/  populacao/  censo2022/  territorio/
 ├── ipea_atlas/idhm_municipios.csv
-├── ideologia_partidos/
+├── ideologia_partidos/            df_experts.csv (notas dos especialistas, P7)
+├── camara/                        votacoes, votacoesVotos e votacoesOrientacoes-<ano>.csv (alinhamento, P7)
 └── _controle/manifesto.json       <- controle interno (versão e arquivos de cada download)
 ```
 
@@ -329,7 +396,7 @@ pergunta fica no `INDICE_PERGUNTAS.md`, gerado a cada execução.
 | 4 | 2022, 2024 | candidatos, comparecimento/abstenção, votação por candidato, código TSE-IBGE, instrução no Censo 2022 | `DS_GRAU_INSTRUCAO` (candidato); `DS_GRAU_ESCOLARIDADE` + `QT_APTOS`/`QT_COMPARECIMENTO` (eleitorado por zona) |
 | 5 | E.P. | candidatos, votação por candidato e por partido, detalhe da votação, vagas | `DS_SIT_TOT_TURNO` (ELEITO POR QP / ELEITO POR MÉDIA), `QT_VOTOS_NOMINAIS_VALIDOS`, `QT_VOTOS_LEGENDA_VALIDOS`, `QT_TOTAL_VOTOS_VALIDOS`, `QT_VAGA` |
 | 6 | E.P. | candidatos, comparecimento/abstenção, votação por candidato, código TSE-IBGE, idade no Censo 2022 | `DS_FAIXA_ETARIA`, `NR_IDADE_DATA_POSSE`, `DT_NASCIMENTO`, partido do eleito; idade mediana e índice de envelhecimento |
-| 7 | E.P. | candidatos, votação por partido, código TSE-IBGE, regiões (IBGE), ideologia dos partidos | votos por `SG_PARTIDO` × escala ideológica |
+| 7 | E.P. | candidatos, votação por partido, código TSE-IBGE, regiões (IBGE), ideologia dos partidos; votações da Câmara (alinhamento, à parte) | votos por `SG_PARTIDO` × escala ideológica |
 | 8 | E.P. | candidatos, receitas | `DS_FONTE_RECEITA` (ex.: FUNDO ESPECIAL = FEFC), `DS_ORIGEM_RECEITA`, `VR_RECEITA`, doador originário |
 | 9 | E.P. | candidatos, despesas contratadas | `DS_ORIGEM_DESPESA` (tipo), `DS_DESPESA` (texto livre, para a nuvem), `NM_FORNECEDOR` |
 | 10 | 1994-2024 | candidatos (16 eleições) | `NR_TITULO_ELEITORAL_CANDIDATO`, `DS_CARGO`, `DS_SIT_TOT_TURNO`, `ST_REELEICAO` |
@@ -345,6 +412,7 @@ estimativas de população para 2018, 2020 e 2024 e o Censo para 2022.
 | IBGE | API SIDRA + API de Localidades | PIB municipal (tabela 5938), população estimada (6579), Censo 2022: população (4709), idade mediana/envelhecimento (9515), instrução 18+ (10061); regiões dos municípios |
 | Atlas Brasil (PNUD/Ipea/FJP) | API do Ipeadata, séries `ADH_IDHM`, `_E`, `_L`, `_R` | IDHM e subíndices por município. O link de "dados brutos" do site do Atlas saiu do ar (404) |
 | Harvard Dataverse | API, doi:10.7910/DVN/MFIXKW | Classificação ideológica dos partidos (Bolognesi, Codato, Ribeiro & Silva; base de Bolognesi, Ribeiro & Codato, *Dados* 66(2), 2023) |
+| Câmara dos Deputados, Dados Abertos | `dadosabertos.camara.leg.br/arquivos/{tipo}/csv/{tipo}-{ano}.csv`, de 2015 ao ano corrente (o ano corrente é baixado de novo a cada execução) | Votações do Plenário, votos dos deputados e orientações de bancada, para o alinhamento dos partidos (P7) |
 
 Os sons do cofrinho (P2) são gravações em domínio público (CC0): Kenney (Impact Sounds, RPG Audio, Interface
 Sounds), Freesound (cerâmica quebrando, moedas caindo e um cofre de moedas chacoalhando; não há gravação
@@ -379,7 +447,8 @@ usa um User-Agent compatível que ainda identifica o projeto.
 | Candidatos 1994-2024 (16 eleições) | 2,2 GB |
 | Bens, votação por partido, detalhe da votação, vagas, códigos | 1,0 GB |
 | IBGE, IDHM, ideologia | 25 MB |
-| **Total** | **~33 GB** |
+| Votações da Câmara, 2015-2026 (medido em 17/10/2026) | 0,6 GB |
+| **Total** | **~34 GB** |
 
 ## Observações para a análise
 
@@ -400,6 +469,9 @@ usa um User-Agent compatível que ainda identifica o projeto.
 - **P6:** para medir alternância com mais pontos no tempo, os arquivos de candidatos de 1994 a 2024,
   baixados para a P10, trazem a sequência de prefeitos desde 1996 sem custo extra de download.
 - **P7:** `df_experts.csv` traz as notas individuais dos especialistas (0 = esquerda, 10 = direita)
-  por partido, em 2018 e 2022. A escala sai da média por partido. Partidos criados ou fundidos depois
-  de 2022 (PRD = PTB + Patriota; Mobiliza = ex-PMN; PROS incorporado ao Solidariedade; PSC ao
-  Podemos) precisam de mapeamento manual para 2024.
+  por partido, em 2018 e 2022. A escala sai da média por partido, com duas casas, como na Tabela 1 do artigo.
+  Partidos criados ou fundidos depois de 2022 (PRD = PTB + Patriota; Mobiliza = ex-PMN; PROS incorporado ao
+  Solidariedade; PSC ao Podemos) estão mapeados em `banco/referencia/sucessao_partidos.csv`. Uma fusão posterior
+  à onda usa a média dos componentes, mesmo que o partido tenha valor próprio na onda (Podemos 2024 = 7,93, e não
+  os 7,44 do Podemos de 2022). O alinhamento da Câmara não substitui o viés: correlaciona mais com o apoio ao
+  governo da época (0,81 a 0,93) do que com o artigo (0,68 a 0,77).

@@ -290,26 +290,46 @@ export function Metodologia() {
 
       <Secao id="m-vies" titulo="Viés político (P7)" resposta={{ para: '/', rotulo: 'Ver a resposta no mapa' }}>
         <p>
-          Cada partido tem um viés de <b>−100 (esquerda)</b> a <b>+100 (direita)</b>, a partir da classificação de
-          especialistas de Bolognesi, Codato, Ribeiro e Silva (Harvard Dataverse). O viés de um município num ano é a média
-          desses vieses <b>ponderada pelos votos válidos</b> (nominais e de legenda) que cada partido recebeu ali, somando
-          todos os cargos do 1º turno.
+          O viés de cada partido vem da classificação de especialistas de Bolognesi, Codato, Ribeiro e Silva (Harvard
+          Dataverse): a média das notas de <b>0 (extrema esquerda)</b> a <b>10 (extrema direita)</b>, nas ondas de julho de
+          2018 e de 2022. A aplicação mostra essa média de <b>−100</b> a <b>+100</b>:
         </p>
         <p className="rounded-xl border border-linha bg-folha px-5 py-4 text-tinta">
-          viés do município = Σ (votos válidos do partido × viés do partido) ÷ Σ votos válidos
+          viés do partido = (média dos especialistas − 5) × 20
         </p>
-        <p>Estados e regiões intermediárias usam a mesma média sobre os votos de todos os seus municípios.</p>
+        <p>
+          A conta é exata porque 0 e 10 são os extremos do questionário: o centro do artigo (4,5 a 5,5) vira −10 a +10.
+          2018 e 2020 usam a onda de 2018; 2022 e 2024, a de 2022. Em 2024 a onda é estendida por dois anos, o que os
+          autores desaconselham, e por isso a interface avisa.
+        </p>
+        <p>
+          O viés de um município num ano é calculado em cada cargo, como a média dos vieses <b>ponderada pelos votos
+          válidos</b> (nominais e de legenda, 1º turno) que cada partido recebeu ali; depois, os cargos entram com
+          <b> peso igual</b>.
+        </p>
+        <p className="rounded-xl border border-linha bg-folha px-5 py-4 text-tinta">
+          viés do cargo = Σ (votos do partido × viés do partido) ÷ Σ votos dos partidos com viés · viés do município = média dos cargos
+        </p>
+        <p>Estados e regiões intermediárias usam a mesma conta sobre os votos de todos os seus municípios.</p>
         <ul className="list-disc space-y-2 pl-5">
           <li>2018 e 2022 somam presidente, governador, senado e deputados; 2020 e 2024, prefeito e vereador. Compare anos do mesmo tipo.</li>
-          <li>Em 2018 cada eleitor tinha dois votos para o Senado, então o Senado pesa o dobro nesse ano.</li>
-          <li>Partidos sem viés informado entram como 0 e puxam a média para o centro; cada boletim mostra a parcela desses votos.</li>
-          <li>Partidos extintos herdam o viés de quem os sucedeu (fusões e incorporações).</li>
+          <li>Com os cargos de peso igual, os dois votos para o Senado em 2018 não pesam mais que os outros cargos.</li>
+          <li>Partidos sem viés ficam fora da média (nem no numerador, nem no denominador); cada boletim mostra a parcela desses votos.</li>
+          <li>Partido que só mudou de nome tem o mesmo valor; partido criado por fusão depois da onda recebe a média dos componentes (ex.: PRD em 2024 = PTB + Patriota).</li>
         </ul>
+        <p>
+          À parte, a aplicação mostra o <b>alinhamento na Câmara</b>: a mesma conta com a posição de cada partido nas votações
+          nominais do Plenário, na legislatura antes de cada eleição (decomposição SVD, de −100 a +100). Ele não é o viés:
+          acompanha quem é governo e quem é oposição, e o mesmo partido muda dezenas de pontos de um governo para outro. Por
+          isso tem outra paleta e outro rótulo.
+        </p>
         <Detalhe titulo="De onde vêm os dados">
           <Origens
             linhas={[
               ['Votos de cada partido, nominais e de legenda', ARQ('tse/votacao_partido_munzona/'), <>{ARQ('votacao_partido_munzona')}, somada em {ARQ('votacao_partido_municipio')}</>],
-              ['Viés dos partidos (especialistas)', ARQ('ideologia_partidos/df_experts.csv'), <>{ARQ('partido.vies_politico')} (migrações 006 a 009)</>],
+              ['Viés dos partidos (especialistas)', ARQ('ideologia_partidos/df_experts.csv'), <>{ARQ('vies_partido_onda')} e {ARQ('partido.vies_politico')} (<code>python -m loader.vies</code>)</>],
+              ['Renomeações e fusões de partidos', ARQ('banco/referencia/sucessao_partidos.csv'), ARQ('vies_partido_onda.origem')],
+              ['Votações nominais da Câmara (alinhamento)', ARQ('camara/'), <>{ARQ('partido_alinhamento')}, via <code>scripts/svd_camara.py</code></>],
               ['Municípios e regiões intermediárias', ARQ('ibge/territorio/'), ARQ('municipio')],
               ['Contorno dos estados e municípios', ARQ('ibge/malhas/'), 'lidas e simplificadas pela API'],
               ['Código do município no TSE e no IBGE', ARQ('tse/municipio_tse_ibge/'), ARQ('municipio.cd_ibge')],
@@ -318,9 +338,10 @@ export function Metodologia() {
         </Detalhe>
         <Detalhe titulo="Desafios">
           <ul className="list-disc space-y-2 pl-5">
-            <li><b>Partidos que mudam de nome, se fundem ou são incorporados:</b> o viés vale para os nomes antigos do mesmo partido (migração 006), os extintos herdam o de quem os sucedeu (007 e 008), e um gatilho grava o viés de qualquer partido que a carga inserir depois (009).</li>
-            <li><b>Ausência visível:</b> partido sem viés informado entra como 0 e puxa a média para o centro; o boletim de cada município mostra quanto do voto foi para esses partidos.</li>
-            <li><b>Eleições diferentes:</b> anos gerais e municipais têm cargos diferentes, e em 2018 o Senado tinha duas vagas por estado.</li>
+            <li><b>Partidos que mudam de nome, se fundem ou são incorporados:</b> as regras ficam num arquivo de dados (<code>sucessao_partidos.csv</code>), e cada valor guarda a origem ("direto", "renomeado de X", "média de X e Y"). A coluna de 2018 da Tabela 1 do artigo é reproduzida para os 32 partidos.</li>
+            <li><b>Ausência visível:</b> partido sem viés fica fora da média, sem virar 0; o boletim de cada município mostra quanto do voto foi para esses partidos.</li>
+            <li><b>Eleições diferentes:</b> anos gerais e municipais têm cargos diferentes; com peso igual por cargo, o voto duplo para o Senado em 2018 não distorce o ano.</li>
+            <li><b>Viés e alinhamento separados:</b> uma versão anterior usava como viés a posição dos partidos nas votações da Câmara, que segue a coalizão de governo. Hoje esse número aparece à parte, como alinhamento.</li>
             <li><b>De onde vem o viés de um estado:</b> somar os votos de cada candidato zona a zona levava 4,7 s na Bahia; a view <code>votos_candidato_uf</code> (migração 012) faz o mesmo em 0,07 s.</li>
             <li><b>Mapa leve:</b> a malha do IBGE é simplificada preservando as fronteiras comuns, e os municípios só entram depois que a câmera pousa no estado.</li>
           </ul>

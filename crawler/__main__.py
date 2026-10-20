@@ -4,12 +4,12 @@ import shutil
 import sys
 from pathlib import Path
 
-from . import dataverse, fotos, ibge, ipea, tse
+from . import camara, dataverse, fotos, ibge, ipea, tse
 from .catalogo import ITENS, PERGUNTAS, PRIMEIRO_ANO_CANDIDATOS, ULTIMO_ANO_COM_RESULTADO, montar_plano
 from .manifesto import Manifesto, gerar_indice
 from .rede import descrever_erro, novo_cliente
 
-COLETORES = {"ibge": ibge.coletar, "ipea": ipea.coletar, "dataverse": dataverse.coletar}
+COLETORES = {"ibge": ibge.coletar, "ipea": ipea.coletar, "dataverse": dataverse.coletar, "camara": camara.coletar}
 RAIZ_PADRAO = Path(__file__).resolve().parent.parent / "dados"
 
 
@@ -20,7 +20,7 @@ def _argumentos(argv):
     )
     p.add_argument("--perguntas", type=int, nargs="+", choices=sorted(PERGUNTAS), metavar="N",
                    help="perguntas a atender (padrão: todas, 1 a 10)")
-    p.add_argument("--fontes", nargs="+", choices=["tse", "ibge", "ipea", "dataverse"],
+    p.add_argument("--fontes", nargs="+", choices=["tse", "ibge", "ipea", "dataverse", "camara"],
                    help="limita às fontes indicadas (padrão: todas)")
     p.add_argument("--anos", type=int, nargs="+", metavar="ANO",
                    help="limita aos anos indicados, dentro do escopo de cada pergunta")

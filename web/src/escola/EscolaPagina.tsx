@@ -6,7 +6,7 @@ import { ArrowRight, X } from '@phosphor-icons/react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
-import { consultas, type Ano, type Escola } from '../api'
+import { consultas, semMunicipal, type Ano, type Escola } from '../api'
 import { CedulaAnos } from '../atlas/CedulaAnos'
 import { Alternador } from '../atlas/PainelEstado'
 import { silhueta } from '../atlas/geo'
@@ -51,10 +51,11 @@ export function EscolaPagina() {
   const ano: Ano = busca.ano === 2024 ? 2024 : 2022
   const { data: ufs } = useQuery(consultas.ufs())
   const { data: malha } = useQuery(consultas.malhaBrasil())
-  const carregadas = useMemo(() => (ufs ?? []).filter((u) => u.carregada && u.sigla !== 'BR'), [ufs])
+  // o DF não é um recorte aqui: os quintos dividem os municípios da UF e ele só tem Brasília (entra em todos)
+  const carregadas = useMemo(() => semMunicipal((ufs ?? []).filter((u) => u.carregada && u.sigla !== 'BR'), true), [ufs])
   const silhuetas = useMemo(() => new Map(malha ? carregadas.map((u) => [u.sigla, silhueta(malha, u.cd_ibge, 22)]) : []), [malha, carregadas])
   // antes da lista de UFs chegar vale o endereço; a API recusa UF sem dados
-  const uf = busca.uf && (!ufs || carregadas.some((u) => u.sigla === busca.uf)) ? busca.uf : ''
+  const uf = busca.uf && busca.uf !== 'DF' && (!ufs || carregadas.some((u) => u.sigla === busca.uf)) ? busca.uf : ''
   const ufInfo = carregadas.find((u) => u.sigla === uf)
   const q = useQuery({ ...consultas.escola(ano, uf), placeholderData: keepPreviousData })
   const [destaque, setDestaque] = useState(SUPERIOR)
