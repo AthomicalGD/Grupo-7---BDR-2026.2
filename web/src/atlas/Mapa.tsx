@@ -2,11 +2,12 @@ import 'd3-transition'
 import { ArrowsIn, Minus, Plus } from '@phosphor-icons/react'
 import { select } from 'd3-selection'
 import { zoom, zoomIdentity, type ZoomBehavior } from 'd3-zoom'
-import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
-import type { Ano, Malha, MunicipioResumo, UF, UFDetalhe } from '../api'
+import { useQueryClient } from '@tanstack/react-query'
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
+import { consultas, type Ano, type Malha, type MunicipioResumo, type UF, type UFDetalhe } from '../api'
 import { useLoja } from '../lib/loja'
 import { corVies } from '../lib/vies'
-import { formas, LADO, projecaoBrasil, type Caixa, type Forma } from './geo'
+import { formas, formasCedo, formasGuardadas, LADO, projecaoBrasil, type Caixa, type Forma } from './geo'
 import { Dica } from './Dica'
 import { hover, type Foco } from './hover'
 import { SATURA_RELATIVO, valorMunicipio } from './valores'
@@ -31,6 +32,7 @@ interface Props {
   detalheUF?: UFDetalhe
   relativo: boolean
   aoEscolherUF: (sigla: string) => void
+  aoApontarUF?: (sigla: string) => void
   aoEscolherMunicipio: (ibge: number) => void
 }
 
@@ -51,7 +53,23 @@ export function Mapa(p: Props) {
 
   const projecao = useMemo(() => projecaoBrasil(p.malhaBrasil), [p.malhaBrasil])
   const formasUF = useMemo(() => formas(p.malhaBrasil, projecao, 2), [p.malhaBrasil, projecao])
-  const formasMun = useMemo(() => (p.malhaUF ? formas(p.malhaUF, projecao, 3) : []), [p.malhaUF, projecao])
+  const formasMun = useMemo(() => (p.malhaUF ? formasGuardadas(p.malhaUF, projecao) : []), [p.malhaUF, projecao])
+  // apontar um estado: o Atlas pede os dados dele e aqui as formas dos municípios são projetadas no ócio
+  const cliente = useQueryClient()
+  // só quando o ponteiro para sobre o estado: varrer o mapa com o mouse não dispara uma conta por estado
+  const { aoApontarUF } = p
+  const espera = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const apontarUF = useCallback(
+    (sigla: string) => {
+      clearTimeout(espera.current)
+      espera.current = setTimeout(() => {
+        aoApontarUF?.(sigla)
+        void cliente.ensureQueryData(consultas.malhaUF(sigla)).then((m) => formasCedo(m, projecao), () => {})
+      }, 160)
+    },
+    [aoApontarUF, cliente, projecao],
+  )
+  useEffect(() => () => clearTimeout(espera.current), [])
   const ufPorCodigo = useMemo(() => new Map(p.ufs.map((u) => [u.cd_ibge, u])), [p.ufs])
   const munPorIbge = useMemo(() => new Map((p.detalheUF?.municipios ?? []).map((m) => [m.ibge, m])), [p.detalheUF])
   const ufSel = p.sigla ? p.ufs.find((u) => u.sigla === p.sigla) : undefined
@@ -152,6 +170,11 @@ export function Mapa(p: Props) {
     if (!alvo) return hover.set(null)
     const foco: Foco = { tipo: alvo.dataset.tipo as Foco['tipo'], codigo: Number(alvo.dataset.codigo), x: e.clientX, y: e.clientY }
     const atual = hover.get()
+    if (foco.tipo === 'uf' && atual?.codigo !== foco.codigo) {
+      const uf = ufPorCodigo.get(foco.codigo)
+      if (uf?.carregada && uf.sigla !== p.sigla) apontarUF(uf.sigla)
+      else clearTimeout(espera.current)
+    }
     if (!atual || atual.codigo !== foco.codigo || Math.abs(atual.x - foco.x) + Math.abs(atual.y - foco.y) > 2) hover.set(foco)
   }
 
@@ -192,8 +215,8 @@ export function Mapa(p: Props) {
             <line x1="0" y1="0" x2="0" y2="5" stroke="#c9ced3" strokeWidth="1.6" />
           </pattern>
         </defs>
-        <g ref={cameraRef} onPointerMove={moverHover} onPointerLeave={() => hover.set(null)} onClick={clicar}>
-          <CamadaUFs formas={formasUF} ufPorCodigo={ufPorCodigo} ano={p.ano} sigla={p.sigla} vazarAtiva={mostraMunicipios} aoEscolher={p.aoEscolherUF} />
+        <g ref={cameraRef} onPointerMove={moverHover} onPointerLeave={() => { clearTimeout(espera.current); hover.set(null) }} onClick={clicar}>
+          <CamadaUFs formas={formasUF} ufPorCodigo={ufPorCodigo} ano={p.ano} sigla={p.sigla} vazarAtiva={mostraMunicipios} aoEscolher={p.aoEscolherUF} aoApontar={apontarUF} />
           {mostraMunicipios && (
             <CamadaMunicipios
               key={p.sigla}
@@ -249,6 +272,7 @@ const CamadaUFs = memo(function CamadaUFs({
   sigla,
   vazarAtiva,
   aoEscolher,
+  aoApontar,
 }: {
   formas: Forma[]
   ufPorCodigo: Map<number, UF>
@@ -256,6 +280,7 @@ const CamadaUFs = memo(function CamadaUFs({
   sigla?: string
   vazarAtiva: boolean // com os municípios na tela, o estado ativo fica sem cor por baixo deles
   aoEscolher: (sigla: string) => void
+  aoApontar?: (sigla: string) => void
 }) {
   return (
     <g>
@@ -284,6 +309,7 @@ const CamadaUFs = memo(function CamadaUFs({
             onFocus={(e) => {
               const r = e.currentTarget.getBoundingClientRect()
               hover.set({ tipo: 'uf', codigo: f.codigo, x: r.left + r.width / 2, y: r.top + r.height / 2 })
+              if (uf?.carregada) aoApontar?.(uf.sigla)
             }}
             onBlur={() => hover.set(null)}
             onKeyDown={(e) => {
@@ -328,10 +354,18 @@ const CamadaMunicipios = memo(function CamadaMunicipios({
     return grupos
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- a onda é calculada uma vez, na entrada do estado
   }, [formas])
+  // os anéis montam um por vez, no ritmo da onda: os ~850 municípios de MG montados de uma vez travavam
+  // a tela por meio segundo; assim cada quadro desenha só um anel
+  const [montados, setMontados] = useState(() => (reduzMovimento() ? ANEIS : 1))
+  useEffect(() => {
+    if (montados >= ANEIS) return
+    const t = setTimeout(() => setMontados((n) => n + 1), 90)
+    return () => clearTimeout(t)
+  }, [montados])
   return (
     <g className="camada-municipios" style={{ opacity: foco ? 0.42 : 1, transition: 'opacity 500ms var(--ease-saida)' }}>
-      {aneis.map((anel, i) => (
-        <g key={i} className="municipio-surge" style={{ animationDelay: `${60 + i * 90}ms` }}>
+      {aneis.slice(0, montados).map((anel, i) => (
+        <g key={i} className="municipio-surge" style={{ animationDelay: '60ms' }}>
           {anel.map((f) => (
             <path
               key={f.codigo}

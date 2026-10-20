@@ -1,12 +1,13 @@
 // Escala divergente do viés (-100 esquerda, +100 direita): laranja ↔ cinza ↔ azul.
-// Contínua e simétrica em 0, saturando em ±60 (os dados reais ficam quase todos em [-70, 50]).
+// Viés = (média dos especialistas - 5) × 20. Contínua e simétrica em 0, saturando em ±75: os municípios
+// carregados ficam em [-41, +72] e os partidos em [-90, +76], então só os partidos dos extremos saturam.
 // Cada braço mantém a própria matiz e varia luminosidade e croma em OKLCH, então os
 // passos de luminosidade dos dois lados são iguais (validado no protótipo).
 
 const ESQ = [0.5, 0.15, 46] as const
 const MEIO = [0.935, 0.004, 250] as const
 const DIR = [0.45, 0.11, 254] as const
-export const SATURA = 60
+export const SATURA = 75
 
 export function oklchParaHex(L: number, C: number, H: number): string {
   const h = (H * Math.PI) / 180
@@ -44,12 +45,14 @@ export function corVies(v: number | null | undefined, satura = SATURA): string {
   return cor
 }
 
-/** Texto escuro ou claro sobre a cor do viés. */
-export const tintaSobre = (v: number | null | undefined) => (v != null && Math.abs(v) >= 38 ? '#fcfdfd' : '#18202b')
+/** Texto escuro ou claro sobre a cor do viés: claro a partir de ~63% da saturação (38 de 60 na escala antiga). */
+export const tintaSobre = (v: number | null | undefined, satura = SATURA) =>
+  v != null && Math.abs(v) >= satura * (38 / 60) ? '#fcfdfd' : '#18202b'
 
+/** Centro = faixa de centro do artigo (4,5 a 5,5 na escala 0–10), que vira −10 a +10. */
 export function ladoVies(v: number | null | undefined): string {
   if (v == null) return 'sem dados'
-  if (Math.abs(v) < 5) return 'no centro'
+  if (Math.abs(v) < 10) return 'no centro'
   return v < 0 ? 'pendeu à esquerda' : 'pendeu à direita'
 }
 

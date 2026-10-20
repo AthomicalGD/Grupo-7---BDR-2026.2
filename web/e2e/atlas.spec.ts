@@ -10,8 +10,8 @@ test('mapa do Brasil: estados coloridos, tooltip e troca de ano', async ({ page,
   await page.locator(PI).hover()
   const dica = page.getByRole('tooltip')
   await expect(dica).toContainText('Piauí')
-  await expect(dica).toContainText('−41,9')
-  await expect(dica).toContainText('pendeu à esquerda')
+  await expect(dica).toContainText('+2,8')
+  await expect(dica).toContainText('no centro')
 
   await page.locator('path[data-tipo="uf"][data-codigo="35"]').hover() // SP não está carregado
   await expect(page.getByRole('tooltip')).toContainText('Sem dados carregados')
@@ -19,7 +19,7 @@ test('mapa do Brasil: estados coloridos, tooltip e troca de ano', async ({ page,
 
   await page.getByRole('radio', { name: /2018/ }).click()
   await expect(page).toHaveURL(/ano=2018/)
-  await expect(page.getByRole('button', { name: /Piauí/ })).toContainText('−33,0')
+  await expect(page.getByRole('button', { name: /Piauí/ })).toContainText('+11,8')
   expect(erros).toEqual([])
 })
 
@@ -48,13 +48,14 @@ test('digitar o município leva ao boletim com as respostas da P7', async ({ pag
   const boletim = page.getByRole('article', { name: 'Teresina' })
   await expect(boletim).toBeVisible()
   await expect(boletim.getByText('BOLETIM DO MUNICÍPIO')).toBeVisible()
-  for (const ano of [2018, 2020, 2022, 2024]) await expect(boletim.getByRole('img', { name: new RegExp(`^${ano}: PT`) })).toBeVisible()
+  // o espectro de cada ano vai da esquerda para a direita (viés da PR #9); o PT está em todos
+  for (const ano of [2018, 2020, 2022, 2024]) await expect(boletim.getByRole('img', { name: new RegExp(`^${ano}: (.*, )?PT [0-9]`) })).toBeVisible()
   await expect(boletim.getByRole('link', { name: /Mendes/ }).first()).toBeVisible() // prefeitos levam à carreira
   await expect(boletim.getByRole('img', { name: /QR code/ })).toBeVisible()
   await registrar(page, 'municipio')
 
   await boletim.getByRole('button', { name: 'Ver tabela' }).first().click()
-  await expect(boletim.getByRole('table').first()).toContainText('−34,9')
+  await expect(boletim.getByRole('table').first()).toContainText('+13,1')
 })
 
 test('metodologia e página inexistente', async ({ page }) => {
@@ -80,12 +81,43 @@ test('pular para o conteúdo e nenhuma tela com rolagem horizontal', async ({ pa
 
 test('estado: de onde vem o viés, partido a partido, com os candidatos', async ({ page }) => {
   await page.goto('/uf/PI?ano=2022')
-  await expect(page.getByRole('heading', { name: 'De onde vem o −41,9' })).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByRole('heading', { name: 'De onde vem o +2,8' })).toBeVisible({ timeout: 20_000 })
   const pt = page.getByRole('button', { name: /^PT:/ })
   await expect(pt).toBeVisible({ timeout: 20_000 })
   await pt.click()
   await expect(page.getByRole('link', { name: /Luiz Inácio Lula da Silva/ })).toBeVisible()
   await registrar(page, 'estado-conta')
+})
+
+test('filtro de cargo: só o voto para presidente, com os anos do cargo e a pílula sobre o mapa', async ({ page }) => {
+  await page.goto('/uf/PI?ano=2020')
+  await page.getByRole('button', { name: /^Cargo: todos os cargos/ }).click({ timeout: 20_000 })
+  await page.getByRole('radio', { name: /^Presidente/ }).click()
+  // presidente não foi disputado em 2020: o atlas vai para o ano válido mais próximo e a cédula só mostra os gerais
+  await expect(page).toHaveURL(/cargo=1/)
+  await expect(page.getByRole('radio', { name: /^2018/ })).toBeVisible()
+  await expect(page.getByRole('radio', { name: /^2020/ })).toHaveCount(0)
+  await expect(page.getByText('Só o voto para presidente, disputado em 2018 e 2022.')).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByRole('button', { name: /^Mostrando só o voto para Presidente/ })).toBeVisible()
+  await registrar(page, 'atlas-cargo')
+  // a pílula tira o filtro
+  await page.getByRole('button', { name: /^Mostrando só o voto para Presidente/ }).click()
+  await expect(page).not.toHaveURL(/cargo=/)
+})
+
+test('partido: mostrar mais candidatos e procurar pelo nome dentro dele', async ({ page }) => {
+  await page.goto('/uf/PI?ano=2022')
+  const pt = page.getByRole('button', { name: /^PT:/ })
+  await pt.click({ timeout: 20_000 })
+  const candidatos = page.locator('.abre-partido li')
+  await expect(candidatos).toHaveCount(6, { timeout: 20_000 })
+  await page.getByRole('button', { name: /^Mostrar mais/ }).click()
+  await expect(candidatos).toHaveCount(12, { timeout: 20_000 })
+  await page.getByRole('searchbox', { name: /Procurar candidato do PT/ }).fill('lula')
+  await expect(page.getByRole('link', { name: /Luiz Inácio Lula da Silva/ })).toBeVisible({ timeout: 20_000 })
+  await page.getByRole('searchbox', { name: /Procurar candidato do PT/ }).fill('zzzzzz')
+  await expect(page.getByText(/Ninguém do PT com “zzzzzz”/)).toBeVisible({ timeout: 20_000 })
+  await registrar(page, 'atlas-partido-busca')
 })
 
 test('metodologia: cada questão leva à tela da resposta', async ({ page }) => {

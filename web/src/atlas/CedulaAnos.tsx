@@ -2,18 +2,20 @@
 // "Linha do tempo" percorre 2018 → 2024 e para no último ano.
 import { Pause, Play } from '@phosphor-icons/react'
 import { motion } from 'motion/react'
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { ANOS, type Ano } from '../api'
 
 const TIPO: Record<Ano, string> = { 2018: 'Geral', 2020: 'Municipal', 2022: 'Geral', 2024: 'Municipal' }
 const PASSO_MS = 1600
 
-export function CedulaAnos({ ano, aoMudar, anos = ANOS, linhaDoTempo = true }: {
+export function CedulaAnos({ ano, aoMudar, anos = ANOS, linhaDoTempo = true, extra }: {
   ano: Ano
   aoMudar: (a: Ano) => void
   /** Só os anos que valem aqui (a P1 mostra os dois anos do tipo de eleição do cargo). */
   anos?: readonly Ano[]
   linhaDoTempo?: boolean
+  /** uma casa a mais na cédula, depois dos anos (o cargo, no atlas) */
+  extra?: ReactNode
 }) {
   const [tocando, setTocando] = useState(false)
   const atual = useRef(ano)
@@ -79,6 +81,7 @@ export function CedulaAnos({ ano, aoMudar, anos = ANOS, linhaDoTempo = true }: {
           )
         })}
       </div>
+      {extra && <div className="border-l border-dashed border-linha-2 pl-2 max-sm:w-full max-sm:border-l-0 max-sm:border-t max-sm:pl-0 max-sm:pt-1.5">{extra}</div>}
       {linhaDoTempo && <button
         type="button"
         onClick={() => setTocando((t) => !t)}

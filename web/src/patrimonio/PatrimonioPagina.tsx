@@ -8,7 +8,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { animate } from 'motion/react'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CARGOS_P2, consultas, type Ano, type PanoramaPatrimonio, type Patrimonio } from '../api'
+import { CARGOS_P2, consultas, semMunicipal, type Ano, type PanoramaPatrimonio, type Patrimonio } from '../api'
 import { Ciranda, CirandaTela } from '../componentes/Ciranda'
 import { ErroCarga } from '../componentes/ErroCarga'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
@@ -156,8 +156,7 @@ export function PatrimonioPagina() {
   const cargo = CARGOS_P2.find((c) => c.cod === busca.cargo) ?? CARGOS_P2[CARGOS_P2.length - 1]
   const anos = cargo.municipal ? ANOS_MUNICIPAIS : ANOS_GERAIS
   const ano = busca.ano && anos.includes(busca.ano) ? busca.ano : anos[anos.length - 1]
-  // o DF não tem eleição municipal: em prefeito e vereador ele não é um estado escolhível
-  const lugares = useMemo(() => (cargo.municipal ? carregadas.filter((u) => u.sigla !== 'DF') : carregadas), [carregadas, cargo.municipal])
+  const lugares = useMemo(() => semMunicipal(carregadas, cargo.municipal), [carregadas, cargo.municipal])
   const ufEscolhida = lugares.find((u) => u.sigla === busca.uf)
   const uf = ufEscolhida?.sigla ?? ''
   const noLugar = ufEscolhida ? noEstado(ufEscolhida.sigla, ufEscolhida.nome) : `nos ${lugares.length} estados carregados`

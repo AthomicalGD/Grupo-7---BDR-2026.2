@@ -13,7 +13,10 @@ export interface UF {
   regiao: string
   municipios: number
   carregada: boolean
+  /** Viés ideológico (artigo de especialistas), −100 a +100. */
   vies: PorAno<number>
+  /** Alinhamento nas votações da Câmara (SVD), −100 a +100: segue a coalizão de governo, não é o viés. */
+  alinhamento: PorAno<number>
 }
 
 export interface MunicipioResumo {
@@ -21,11 +24,14 @@ export interface MunicipioResumo {
   nome: string
   regiao: string
   vies: PorAno<number>
+  alinhamento: PorAno<number>
   aptos: PorAno<number>
 }
 
 export interface UFDetalhe extends Omit<UF, 'municipios'> {
+  /** % dos votos válidos em partidos sem viés (ficam fora da média). */
   sem_vies_pct: PorAno<number>
+  sem_alinhamento_pct: PorAno<number>
   regioes: { nome: string; vies: PorAno<number> }[]
   municipios: MunicipioResumo[]
 }
@@ -39,7 +45,8 @@ export interface ComposicaoVies {
   partidos: {
     sigla: string
     nome: string | null
-    vies: number
+    /** viés do partido naquela eleição; null = sem viés (fica fora da média, contribuição 0) */
+    vies: number | null
     votos: number
     pct: number
     /** pontos que o partido soma ao viés do estado (a soma de todos dá o viés) */
@@ -62,7 +69,8 @@ export interface Partido {
   sigla: string
   nome: string | null
   numero: number
-  vies: number
+  /** viés do partido naquela eleição; null = sem viés */
+  vies: number | null
   votos: number
   pct: number
 }
@@ -101,6 +109,8 @@ export interface Municipio {
   vies: PorAno<number>
   vies_uf: PorAno<number>
   sem_vies_pct: PorAno<number>
+  alinhamento: PorAno<number>
+  alinhamento_uf: PorAno<number>
   espectro: PorAno<Partido[]>
   indicadores: Partial<Record<'pib_per_capita' | 'idhm' | 'populacao' | 'eleitores_populacao' | 'isentos', Indicador | null>>
   comparecimento: PorAno<Comparecimento>
@@ -250,6 +260,9 @@ export interface Cadeira {
 }
 
 // ───────── P2: patrimônio declarado e taxa de eleição ─────────
+
+/** O DF não tem eleição municipal: nos recortes de prefeito e vereador ele não é um estado escolhível. */
+export const semMunicipal = (ufs: UF[], municipal: boolean) => (municipal ? ufs.filter((u) => u.sigla !== 'DF') : ufs)
 
 export const CARGOS_P2 = [
   { cod: 1, nome: 'Presidente', municipal: false, nacional: true },
@@ -457,22 +470,68 @@ async function get<T>(caminho: string, signal?: AbortSignal): Promise<T> {
   return r.json()
 }
 
+/** Um cargo do filtro do atlas (#10) e os anos em que foi disputado. */
+export interface CargoVies {
+  cod: number
+  nome: string
+  anos: Ano[]
+  municipal: boolean
+}
+
+/** Os candidatos de um partido no estado (#11): página e busca pelo nome. */
+export interface CandidatosPartido {
+  partido: string
+  total: number
+  achados: number
+  desde: number
+  candidatos: ComposicaoVies['partidos'][number]['candidatos']
+}
+
 const sempre = { staleTime: Infinity, gcTime: 30 * 60_000 } // os dados só mudam com uma nova carga
+/** "?cargo=1" (ou "&cargo=1"), ou nada quando são todos os cargos */
+const comCargo = (cargo: number | undefined, sep: '?' | '&') => (cargo ? `${sep}cargo=${cargo}` : '')
+
+const GERAIS: Ano[] = [2018, 2022]
+const MUNICIPAIS: Ano[] = [2020, 2024]
+/** Os cargos de /api/vies/cargos, para mostrar antes da resposta chegar. */
+const CARGOS_PADRAO: CargoVies[] = [
+  { cod: 1, nome: 'Presidente', anos: GERAIS, municipal: false },
+  { cod: 3, nome: 'Governador', anos: GERAIS, municipal: false },
+  { cod: 5, nome: 'Senador', anos: GERAIS, municipal: false },
+  { cod: 6, nome: 'Deputado federal', anos: GERAIS, municipal: false },
+  { cod: 7, nome: 'Deputado estadual', anos: GERAIS, municipal: false },
+  { cod: 11, nome: 'Prefeito', anos: MUNICIPAIS, municipal: true },
+  { cod: 13, nome: 'Vereador', anos: MUNICIPAIS, municipal: true },
+]
 
 export const consultas = {
-  ufs: () => queryOptions({ queryKey: ['ufs'], queryFn: ({ signal }) => get<UF[]>('/api/ufs', signal), ...sempre }),
-  uf: (sigla: string) =>
-    queryOptions({ queryKey: ['uf', sigla], queryFn: ({ signal }) => get<UFDetalhe>(`/api/ufs/${sigla}`, signal), ...sempre }),
-  composicao: (sigla: string, ano: number) =>
+  ufs: (cargo?: number) =>
+    queryOptions({ queryKey: ['ufs', cargo ?? null], queryFn: ({ signal }) => get<UF[]>(`/api/ufs${comCargo(cargo, '?')}`, signal), ...sempre }),
+  uf: (sigla: string, cargo?: number) =>
+    queryOptions({ queryKey: ['uf', sigla, cargo ?? null], queryFn: ({ signal }) => get<UFDetalhe>(`/api/ufs/${sigla}${comCargo(cargo, '?')}`, signal), ...sempre }),
+  // a lista quase nunca muda: começa com a de sempre para o filtro e os textos não esperarem a API fria
+  cargosVies: () =>
+    queryOptions({ queryKey: ['cargos-vies'], queryFn: ({ signal }) => get<CargoVies[]>('/api/vies/cargos', signal), placeholderData: CARGOS_PADRAO, ...sempre }),
+  composicao: (sigla: string, ano: number, cargo?: number) =>
     queryOptions({
-      queryKey: ['composicao', sigla, ano],
-      queryFn: ({ signal }) => get<ComposicaoVies>(`/api/ufs/${sigla}/composicao?ano=${ano}`, signal),
+      queryKey: ['composicao', sigla, ano, cargo ?? null],
+      queryFn: ({ signal }) => get<ComposicaoVies>(`/api/ufs/${sigla}/composicao?ano=${ano}${comCargo(cargo, '&')}`, signal),
       ...sempre,
     }),
-  municipio: (ibge: number) =>
+  candidatosPartido: (sigla: string, partido: string, ano: number, cargo: number | undefined, q: string, limite: number) =>
     queryOptions({
-      queryKey: ['municipio', ibge],
-      queryFn: ({ signal }) => get<Municipio>(`/api/municipios/${ibge}`, signal),
+      queryKey: ['candidatos-partido', sigla, partido, ano, cargo ?? null, q, limite],
+      queryFn: ({ signal }) =>
+        get<CandidatosPartido>(
+          `/api/ufs/${sigla}/composicao/${encodeURIComponent(partido)}?ano=${ano}${comCargo(cargo, '&')}&limite=${limite}${q ? `&q=${encodeURIComponent(q)}` : ''}`,
+          signal,
+        ),
+      ...sempre,
+    }),
+  municipio: (ibge: number, cargo?: number) =>
+    queryOptions({
+      queryKey: ['municipio', ibge, cargo ?? null],
+      queryFn: ({ signal }) => get<Municipio>(`/api/municipios/${ibge}${comCargo(cargo, '?')}`, signal),
       ...sempre,
     }),
   buscaMunicipios: (q: string, uf = '') =>
@@ -496,7 +555,7 @@ export const consultas = {
       ...sempre,
     }),
   partidos: () =>
-    queryOptions({ queryKey: ['partidos'], queryFn: ({ signal }) => get<{ sigla: string; candidaturas: number; vies: number }[]>('/api/partidos', signal), ...sempre }),
+    queryOptions({ queryKey: ['partidos'], queryFn: ({ signal }) => get<{ sigla: string; candidaturas: number; vies: number | null }[]>('/api/partidos', signal), ...sempre }),
   politico: (id: number) =>
     queryOptions({ queryKey: ['politico', id], queryFn: ({ signal }) => get<Politico>(`/api/politicos/${id}`, signal), ...sempre }),
   cadeira: (ano: number, cargo: number, uf = '', municipio?: number) =>

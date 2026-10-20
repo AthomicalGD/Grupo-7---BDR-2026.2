@@ -70,6 +70,11 @@ function extrudar(malha: Malha): Bloco[] {
   })
 }
 
+/** Sair do 3D com o ponteiro sobre uma coluna deixava o cursor da página em "mãozinha". */
+export function useCursorDeVolta() {
+  useEffect(() => () => void (document.body.style.cursor = ''), [])
+}
+
 export function Coluna({ bloco, altura, cor, selecionado, aoPassar, aoClicar }: {
   bloco: Bloco
   altura: number
@@ -136,6 +141,7 @@ export default function Relevo3D({ malha, uf, ano, relativo, ibge, aoEscolher }:
   const porIbge = useMemo(() => new Map(uf.municipios.map((m) => [m.ibge, m])), [uf])
   const maxAptos = useMemo(() => Math.max(1, ...uf.municipios.map((m) => m.aptos[ano] ?? 0)), [uf, ano])
   const [sobre, setSobre] = useState<number | null>(null)
+  useCursorDeVolta()
   const vUF = uf.vies[ano]
   const mSobre = sobre != null ? porIbge.get(sobre) : undefined
   const bSobre = sobre != null ? blocos.find((b) => b.ibge === sobre) : undefined

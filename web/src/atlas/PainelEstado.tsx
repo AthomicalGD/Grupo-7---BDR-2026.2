@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Cube, MapTrifold } from '@phosphor-icons/react'
-import type { Ano, MunicipioBusca, UFDetalhe } from '../api'
+import type { CargoVies, Ano, MunicipioBusca, UFDetalhe } from '../api'
+import { AlinhamentoCamara } from '../graficos/AlinhamentoCamara'
 import { BarrasDivergentes } from '../graficos/BarrasDivergentes'
 import { ViesTempo } from '../graficos/ViesTempo'
 import { inteiro, pct, vies as fmtVies } from '../lib/formato'
@@ -12,6 +13,8 @@ import { Trilha } from './Trilha'
 interface Props {
   uf: UFDetalhe
   ano: Ano
+  /** o cargo do filtro (#10); sem ele, a média dos cargos */
+  cargo?: CargoVies
   relativo: boolean
   relevo: boolean
   aoMudarRelativo: (r: boolean) => void
@@ -45,7 +48,7 @@ export function Alternador<T extends string>({ rotulo, opcoes, valor, aoMudar }:
   )
 }
 
-export function PainelEstado({ uf, ano, relativo, relevo, aoMudarRelativo, aoMudarRelevo, aoEscolherMunicipio, aoAbrirMunicipio }: Props) {
+export function PainelEstado({ uf, ano, cargo, relativo, relevo, aoMudarRelativo, aoMudarRelevo, aoEscolherMunicipio, aoAbrirMunicipio }: Props) {
   const v = uf.vies[ano]
   const doAno = uf.municipios.filter((m) => m.vies[ano] != null).sort((a, b) => a.vies[ano]! - b.vies[ano]!)
   const esquerda = doAno.slice(0, 3)
@@ -76,7 +79,7 @@ export function PainelEstado({ uf, ano, relativo, relevo, aoMudarRelativo, aoMud
           <div>
             <h1 className="t-h1">{uf.nome}</h1>
             <p className="mt-1 text-tinta-2">
-              {uf.municipios.length} municípios · região {uf.regiao}
+              {uf.municipios.length === 1 ? '1 município' : `${uf.municipios.length} municípios`} · região {uf.regiao}
             </p>
           </div>
           <div className="text-right">
@@ -86,6 +89,11 @@ export function PainelEstado({ uf, ano, relativo, relevo, aoMudarRelativo, aoMud
             <p className="text-[0.82rem] text-tinta-2">{ladoVies(v)} em {ano}</p>
           </div>
         </div>
+        {uf.sigla === 'DF' && (cargo ? cargo.municipal : ano % 4 === 0) && (
+          <p className="rounded-xl border border-linha bg-folha px-4 py-3 text-[0.9rem] text-tinta-2">
+            O Distrito Federal não tem eleição municipal: não elege prefeito nem vereador. Os dados dele estão em 2018 e 2022.
+          </p>
+        )}
         <div className="flex flex-wrap gap-2 pt-1">
           <Alternador
             rotulo="Escala de cor"
@@ -111,14 +119,22 @@ export function PainelEstado({ uf, ano, relativo, relevo, aoMudarRelativo, aoMud
         <h2 id="estado-tempo" className="t-h3">O estado na linha do tempo</h2>
         <ViesTempo principal={{ nome: uf.nome, valores: uf.vies }} anoAtivo={ano} />
         <p className="text-[0.82rem] leading-relaxed text-tinta-3">
-          2018 e 2022 somam presidente, governador, senado e deputados; 2020 e 2024, prefeito e vereador. Compare anos do
-          mesmo tipo.
+          {cargo
+            ? <>Só o voto para {cargo.nome.toLowerCase()}, disputado em {cargo.anos.join(' e ')}. </>
+            : <>2018 e 2022 somam presidente, governador, senado e deputados; 2020 e 2024, prefeito e vereador, cada cargo com o
+              mesmo peso. Compare anos do mesmo tipo. </>}
+          {(!cargo || cargo.anos.includes(2024)) && '2024 usa a classificação dos especialistas de 2022, estendida por dois anos.'}
         </p>
+      </section>
+
+      <section aria-labelledby="estado-alinhamento" className="space-y-3">
+        <h2 id="estado-alinhamento" className="t-h3">Alinhamento na Câmara</h2>
+        <AlinhamentoCamara nome={uf.nome} valores={uf.alinhamento} anoAtivo={ano} />
       </section>
 
       <section aria-labelledby="estado-conta" className="space-y-3">
         <h2 id="estado-conta" className="t-h3">De onde vem o {fmtVies(v)}</h2>
-        <ComposicaoVies sigla={uf.sigla} nome={uf.nome} ano={ano} />
+        <ComposicaoVies sigla={uf.sigla} nome={uf.nome} ano={ano} cargo={cargo} />
       </section>
 
       <section aria-labelledby="estado-extremos" className="space-y-3">
@@ -152,8 +168,8 @@ export function PainelEstado({ uf, ano, relativo, relevo, aoMudarRelativo, aoMud
       </section>
 
       <p className="border-t border-linha pt-4 text-[0.82rem] leading-relaxed text-tinta-3">
-        {pct(semVies)} dos votos válidos de {ano} foram para partidos sem viés informado, que contam como 0 e puxam a média
-        para o centro. Eleitores aptos no estado em {ano}:{' '}
+        {pct(semVies)} dos votos válidos de {ano} foram para partidos sem viés na classificação dos especialistas; eles
+        ficam fora da média. Eleitores aptos no estado em {ano}:{' '}
         {inteiro(uf.municipios.reduce((s, m) => s + (m.aptos[ano] ?? 0), 0))}.
       </p>
     </div>

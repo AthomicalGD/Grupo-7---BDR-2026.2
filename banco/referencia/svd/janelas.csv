@@ -1,0 +1,6 @@
+arquivo;eleicao;inicio;fim;partido_do_deputado;metodo;min_votos;votacoes;deputados;variancia_1o_componente;spearman_artigo;onda_comparada;spearman_governo;observacao
+svd_eleicao_2018.csv;2018;2016-08-31;2018-07-31;moda;original;100;412;593;21.2;0.730;2018;0.810;governo Temer, até antes da eleição
+svd_eleicao_2020.csv;2020;2019-02-01;2020-11-14;moda;original;100;557;546;30.3;0.765;2018;0.915;56ª legislatura até a véspera do 1º turno municipal
+svd_eleicao_2022.csv;2022;2019-02-01;2022-07-31;moda;original;100;1820;595;31.3;0.727;2022;0.934;56ª legislatura até jul/2022; com a moda, DEM e PSL têm valor próprio
+svd_eleicao_2024.csv;2024;2023-02-01;2024-10-05;moda;original;100;478;588;22.7;0.682;2022;-0.902;57ª legislatura até a véspera do 1º turno; governo Lula (sinal do governo invertido)
+svd_replica_legado_57.csv;;2023-02-01;2026-12-31;ultimo;original;100;1126;644;25.7;;;-0.768;réplica do cálculo que gerou os valores antigos das migrações 006 a 009; só auditoria, não entra no banco

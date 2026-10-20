@@ -131,9 +131,11 @@ function gruposDe(dados: Patrimonio, estreito: boolean): Grupo[] {
   const qs = quartis(dados.grupos)
   const ns = repartir(qs)
   let inicio = 0
+  // a escolha vale para o gráfico inteiro: se um grupo tem poucas pessoas, todos mostram as pessoas de verdade
+  // (antes cada grupo decidia sozinho e um mostrava "9 de 29" ao lado de porcentagens)
+  const poucos = qs.some((g) => g.candidatos < POUCOS)
   return qs.map((g, i) => {
     const nome = nomeFaixa(g, i, qs.length)
-    const poucos = g.candidatos < POUCOS
     const item = {
       g, i, nome: estreito ? nome.curto : nome.nome, limites: limitesCurtos(g, i, qs.length), n: ns[i], inicio,
       pessoas: poucos ? g.candidatos : 100, acesos: poucos ? g.eleitos : moedas(g.taxa),
@@ -250,6 +252,8 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
   }, [fase])
 
   const grupos = gruposDe(dados, estreito)
+  // as taxas de cima ficam na mesma linha em todos os grupos, acima da grade mais alta
+  const linhasMax = Math.max(1, ...grupos.map((gr) => Math.ceil(Math.min(100, gr.pessoas) / 10)))
   // as alturas só mudam com a fila: o memo mantém a mesma lista e as barrinhas (memo) não se redesenham
   const escalaY = useMemo(() => escalaFila(dados.fila, p.alto), [dados.fila, p.alto])
   const hs = escalaY.hs
@@ -675,7 +679,6 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
               const meu = voce === gr.g.id && fase >= 2
               const grade = Math.min(100, gr.pessoas)
               const linhas = Math.max(1, Math.ceil(grade / 10))
-              const poucos = gr.pessoas < 100
               return (
                 <div key={gr.g.id}>
                   {/* as barrinhas do grupo: andam juntas (uma transformação por grupo) */}
@@ -697,13 +700,9 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
 
                   {fase === 3 && (
                     <>
-                      <div className="absolute text-center" style={{ left: pos.x - 70, width: 140, top: pos.base - 50 - linhas * CELULA - 44 }}>
+                      <div className="absolute text-center" style={{ left: pos.x - 70, width: 140, top: pos.base - 50 - linhasMax * CELULA - 44 }}>
                         <span className="t-numero tabular inline-block text-[1.9rem]" style={{ color: COR.texto }}>
-                          {poucos ? (
-                            <><span data-conta={gr.acesos}>{inteiro(gr.acesos)}</span><span className="text-[1.1rem] text-tinta-2"> de {inteiro(gr.pessoas)}</span></>
-                          ) : (
-                            <><span data-conta={gr.g.taxa} data-casas="1">{gr.g.taxa.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>%</>
-                          )}
+                          <span data-conta={gr.g.taxa} data-casas="1">{gr.g.taxa.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>%
                         </span>
                       </div>
                       <div data-grade aria-hidden className="absolute" style={{ left: pos.x - (CELULA * 10) / 2, top: pos.base - 50 - linhas * CELULA }}>
@@ -740,9 +739,8 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
             {/* o carimbo do veredito, no grupo de mais bens */}
             {fase === 3 && sobe && ultimo && primeiro && (() => {
               const pos = lugar(p, ultimo, grupos.length, true, estreito)
-              const linhas = Math.ceil(Math.min(100, ultimo.pessoas) / 10)
               return (
-                <div data-carimbo className="carimbo pointer-events-none absolute text-center" style={{ left: pos.x + (estreito ? -6 : 14), top: pos.base - 50 - linhas * CELULA + 14 }}>
+                <div data-carimbo className="carimbo pointer-events-none absolute text-center" style={{ left: pos.x + (estreito ? -6 : 14), top: pos.base - 50 - linhasMax * CELULA + 14 }}>
                   <span className="t-numero block text-[1.6rem] leading-none">{(ultimo.g.taxa / primeiro.g.taxa).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}×</span>
                   <span className="block whitespace-nowrap text-[0.66rem] font-bold uppercase tracking-[0.08em]">a chance</span>
                 </div>

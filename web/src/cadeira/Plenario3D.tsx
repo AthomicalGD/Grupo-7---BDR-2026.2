@@ -43,6 +43,9 @@ function Bancada({ chave, cadeiras, escala, ordem, aoPassar, aoAbrir }: Omit<Pro
 
   useLayoutEffect(() => {
     progresso.current = 0
+    // seleção sem nenhuma cadeira (ex.: o DF não elege prefeito): sem instâncias, o three não cria a cor
+    // por instância (instanceColor fica null) e não há o que desenhar
+    if (!lista.length || !colunas.current || !assentos.current || !encostos.current) return
     const cor = new THREE.Color()
     tmp.scale.setScalar(0)
     tmp.updateMatrix()
@@ -50,13 +53,14 @@ function Bancada({ chave, cadeiras, escala, ordem, aoPassar, aoAbrir }: Omit<Pro
       colunas.current!.setColorAt(i, cor.set(escala.cor(a.gasto)))
       for (const m of [colunas, assentos, encostos]) m.current!.setMatrixAt(i, tmp.matrix)
     })
-    colunas.current!.instanceColor!.needsUpdate = true
+    if (colunas.current.instanceColor) colunas.current.instanceColor.needsUpdate = true
     invalidar()
   }, [lista, escala, chave, invalidar])
 
   // as colunas crescem do chão (com movimento reduzido, já nascem prontas)
   useFrame((estado, dt) => {
-    if (progresso.current >= 1 || !colunas.current) return
+    const col = colunas.current, ass = assentos.current, enc = encostos.current
+    if (progresso.current >= 1 || !lista.length || !col || !ass || !enc) return
     progresso.current = reduz ? 1 : Math.min(1, progresso.current + Math.min(dt, 1 / 30) / 0.9)
     if (progresso.current < 1) estado.invalidate() // o canvas só desenha sob demanda
     const k = 1 - (1 - progresso.current) ** 3
@@ -69,20 +73,20 @@ function Bancada({ chave, cadeiras, escala, ordem, aoPassar, aoAbrir }: Omit<Pro
       tmp.rotation.set(0, giro + Math.PI / 2, 0)
       tmp.scale.set(d * 0.62, h, d * 0.62)
       tmp.updateMatrix()
-      colunas.current!.setMatrixAt(i, tmp.matrix)
+      col.setMatrixAt(i, tmp.matrix)
       tmp.position.set(x, h + 0.06, z)
       tmp.scale.set(d * 0.66, 0.12, d * 0.66)
       tmp.updateMatrix()
-      assentos.current!.setMatrixAt(i, tmp.matrix)
+      ass.setMatrixAt(i, tmp.matrix)
       tmp.position.set(x + Math.cos(giro) * d * 0.3, h + 0.28, z - Math.sin(giro) * d * 0.3)
       tmp.scale.set(d * 0.7, 0.44, d * 0.12)
       tmp.updateMatrix()
-      encostos.current!.setMatrixAt(i, tmp.matrix)
+      enc.setMatrixAt(i, tmp.matrix)
     })
-    colunas.current.instanceMatrix.needsUpdate = true
-    assentos.current!.instanceMatrix.needsUpdate = true
-    encostos.current!.instanceMatrix.needsUpdate = true
-    colunas.current.computeBoundingSphere()
+    col.instanceMatrix.needsUpdate = true
+    ass.instanceMatrix.needsUpdate = true
+    enc.instanceMatrix.needsUpdate = true
+    col.computeBoundingSphere()
   })
 
   const passar = (e: ThreeEvent<PointerEvent>) => {
