@@ -262,6 +262,59 @@ export interface Cadeira {
 /** O DF não tem eleição municipal: nos recortes de prefeito e vereador ele não é um estado escolhível. */
 export const semMunicipal = (ufs: UF[], municipal: boolean) => (municipal ? ufs.filter((u) => u.sigla !== 'DF') : ufs)
 
+// ───────── P2: patrimônio declarado e taxa de eleição ─────────
+
+export const CARGOS_P2 = [
+  { cod: 1, nome: 'Presidente', municipal: false, nacional: true },
+  { cod: 3, nome: 'Governador', municipal: false, nacional: false },
+  { cod: 5, nome: 'Senador', municipal: false, nacional: false },
+  { cod: 6, nome: 'Deputado federal', municipal: false, nacional: false },
+  { cod: 7, nome: 'Deputado estadual', municipal: false, nacional: false },
+  { cod: 11, nome: 'Prefeito', municipal: true, nacional: false },
+  { cod: 13, nome: 'Vereador', municipal: true, nacional: false },
+] as const
+
+export interface GrupoPatrimonio {
+  id: string
+  rotulo: string
+  tipo: 'sem_bens' | 'zero' | 'quartil' | 'faixa'
+  de: number | null
+  ate: number | null
+  /** o candidato do meio do grupo */
+  mediana: number | null
+  candidatos: number
+  eleitos: number
+  taxa: number
+}
+
+export interface Patrimonio {
+  ano: number
+  cargo: { cod: number; nome: string }
+  escopo: { uf: string | null; ufs: string[]; nacional: boolean }
+  resumo: { candidatos: number; eleitos: number; sem_bens: number; zero_declarado: number; com_bens: number; cobertura_pct: number }
+  grupos: GrupoPatrimonio[]
+  /** a fila dos que declararam bens em 100 passos: o valor de quem está em cada 1% (do menor ao maior) */
+  fila: number[]
+  sintese: { quartis: number; maior_supera_menor: boolean; diferenca_pp: number | null }
+}
+
+/** A P2 em todos os cargos e anos de uma vez (Presidente sempre nacional). */
+export interface PanoramaPatrimonio {
+  uf: string | null
+  recortes: {
+    ano: Ano
+    cargo: { cod: number; nome: string }
+    nacional: boolean
+    candidatos: number
+    eleitos: number
+    cobertura_pct: number
+    grupos: Pick<GrupoPatrimonio, 'id' | 'tipo' | 'taxa' | 'candidatos' | 'eleitos' | 'mediana'>[]
+    sintese: Patrimonio['sintese']
+  }[]
+  com_quartis: number
+  maior_supera: number
+}
+
 // ───────── P10a: taxa de reeleição ─────────
 
 /** Dos eleitos, quantos tentaram a reeleição (mesmo cargo e lugar, eleição seguinte) e quantos voltaram. */
@@ -510,6 +563,18 @@ export const consultas = {
       queryKey: ['cadeira', ano, cargo, uf, municipio ?? null],
       queryFn: ({ signal }) =>
         get<Cadeira>(`/api/cadeira?ano=${ano}&cargo=${cargo}&uf=${uf}${municipio ? `&municipio=${municipio}` : ''}`, signal),
+      ...sempre,
+    }),
+  patrimonio: (ano: number, cargo: number, uf = '') =>
+    queryOptions({
+      queryKey: ['patrimonio', ano, cargo, uf],
+      queryFn: ({ signal }) => get<Patrimonio>(`/api/patrimonio?ano=${ano}&cargo=${cargo}${uf ? `&uf=${uf}` : ''}`, signal),
+      ...sempre,
+    }),
+  patrimonioPanorama: (uf = '') =>
+    queryOptions({
+      queryKey: ['patrimonio-panorama', uf],
+      queryFn: ({ signal }) => get<PanoramaPatrimonio>(`/api/patrimonio/panorama${uf ? `?uf=${uf}` : ''}`, signal),
       ...sempre,
     }),
   escola: (ano: number, uf = '') =>

@@ -231,6 +231,8 @@ python -m uvicorn api.app:app --port 8000
 | `GET /api/partidos` | Siglas das candidaturas, com o viés atual do partido (`null` = sem viés; filtro da busca) |
 | `GET /api/politicos/aleatorio` | Um político com 5+ candidaturas e 2+ vitórias |
 | `GET /api/politicos/{id}` | Candidaturas, resultados, votos e reeleições do político (sem CPF, título ou data de nascimento) |
+| `GET /api/patrimonio?ano=&cargo=&uf=` | P2: candidatos e eleitos por faixa de patrimônio declarado (sem bens, R$ 0 e quartis, com limites e o candidato do meio) e a fila dos que declararam bens em 100 passos, como em `respostas/02_patrimonio.txt`; Presidente sempre nacional |
+| `GET /api/patrimonio/panorama?uf=` | P2: a taxa de cada faixa em todos os cargos e anos de uma vez, e em quantas disputas a faixa de mais bens supera a de menos |
 | `GET /api/reeleicao?uf=` | P10a: por cargo, eleitos, quantos tentaram a reeleição e quantos voltaram, ciclo a ciclo e somados (média das taxas municipais para prefeito e vereador), como em `respostas/10a_taxa_reeleicao.txt`; alguns segundos na primeira vez de cada UF |
 | `GET /api/reeleicao/pessoas?uf=&cargo=&eleitos_em=&grupo=&limite=&desde=` | P10a: os eleitos de um cargo numa eleição que voltaram, perderam ou não tentaram na seguinte (`grupo`), os mais votados primeiro, com a contagem dos três grupos |
 | `GET /api/cadeira?ano=&cargo=&uf=&municipio=` | P1: custo da cadeira (gasto médio dos eleitos) e gasto da disputa por cadeira (gasto de todos os candidatos ÷ eleitos), cada eleito com gasto e votos, chance de vitória por faixa de gasto, preço por partido, despesas por tipo, receitas por fonte e o fator do IPCA |
@@ -411,6 +413,10 @@ estimativas de população para 2018, 2020 e 2024 e o Censo para 2022.
 | Atlas Brasil (PNUD/Ipea/FJP) | API do Ipeadata, séries `ADH_IDHM`, `_E`, `_L`, `_R` | IDHM e subíndices por município. O link de "dados brutos" do site do Atlas saiu do ar (404) |
 | Harvard Dataverse | API, doi:10.7910/DVN/MFIXKW | Classificação ideológica dos partidos (Bolognesi, Codato, Ribeiro & Silva; base de Bolognesi, Ribeiro & Codato, *Dados* 66(2), 2023) |
 | Câmara dos Deputados, Dados Abertos | `dadosabertos.camara.leg.br/arquivos/{tipo}/csv/{tipo}-{ano}.csv`, de 2015 ao ano corrente (o ano corrente é baixado de novo a cada execução) | Votações do Plenário, votos dos deputados e orientações de bancada, para o alinhamento dos partidos (P7) |
+
+Os sons do cofrinho (P2) são gravações em domínio público (CC0): Kenney (Impact Sounds, RPG Audio, Interface
+Sounds), Freesound (cerâmica quebrando, moedas caindo e um cofre de moedas chacoalhando; não há gravação
+livre de cofrinho de porquinho quebrando, então a quebra é uma montagem) e OpenGameArt "scissors"; a origem de cada arquivo está em `web/public/sons/CREDITOS.txt`.
 
 O CDN do TSE recusa (HTTP 403) User-Agents que contenham "crawler", "python" ou "httpx". O crawler
 usa um User-Agent compatível que ainda identifica o projeto.

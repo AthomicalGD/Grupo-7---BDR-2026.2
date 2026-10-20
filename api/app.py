@@ -180,6 +180,11 @@ def sem_municipal(uf: str, municipal: bool) -> None:
 
 
 @lru_cache(maxsize=1)
+def carga_nacional() -> bool:
+    return bool(consultar("SELECT 1 FROM carga_uf WHERE sg_uf = 'BR'"))
+
+
+@lru_cache(maxsize=1)
 @em_disco
 def votos_vies() -> list[dict]:
     """Votos válidos por município, ano e cargo, com as somas ponderadas do viés e do alinhamento."""
@@ -268,6 +273,8 @@ async def _ciclo_de_vida(_app):
     # a P10a de todas as UFs é a conta mais lenta (~7 s na primeira vez): começa a ser feita ao subir,
     # em segundo plano, para a primeira visita à Reeleição já achar o cache pronto
     threading.Thread(target=_aquecer, daemon=True).start()
+    # a P2 de cada estado leva ~3 s na primeira vez (14 recortes): idem
+    threading.Thread(target=_aquecer_patrimonio, daemon=True).start()
     yield
 
 
@@ -1308,6 +1315,171 @@ def cadeira(ano: int, cargo: int, ufs: tuple[str, ...], municipio: int | None) -
         "despesas": despesas[:8] + ([{"categoria": "Outras", "valor": outras}] if outras else []),
         "receitas": {f: round(sum(r[f] for r in linhas), 2) for f in fontes},
     }
+
+
+# ───────── Patrimônio declarado (P2) ─────────
+# A ausência de uma linha em `bem` não vira zero: o front mostra os dois casos separados.
+CARGOS_P2 = {1: "Presidente", 3: "Governador", 5: "Senador", 6: "Deputado federal",
+             7: "Deputado estadual", 11: "Prefeito", 13: "Vereador"}
+MUNICIPAIS_P2 = {11, 13}
+ANOS_P2 = set(ANOS)
+
+SQL_PATRIMONIO = """
+WITH bens AS (
+    SELECT id_politico_eleicao, sum(vr_bem_candidato)::double precision AS patrimonio
+    FROM bem
+    GROUP BY id_politico_eleicao
+)
+SELECT e.ano, (CASE e.cod_cargo WHEN 8 THEN 7 ELSE e.cod_cargo END) AS cod_cargo, b.patrimonio, ma.id_mandato IS NOT NULL AS eleito
+FROM politico_eleicao pe
+JOIN eleicao e ON e.id_eleicao = pe.id_eleicao
+LEFT JOIN municipio mu ON mu.cd_municipio = e.cd_municipio
+LEFT JOIN uf um ON um.cd_ibge = mu.cd_uf
+LEFT JOIN uf u ON u.cd_ibge = e.cd_uf
+LEFT JOIN bens b ON b.id_politico_eleicao = pe.id_politico_eleicao
+LEFT JOIN mandato ma ON ma.id_politico_eleicao = pe.id_politico_eleicao
+WHERE e.ano = %(ano)s AND e.tipo = 2 AND e.turno = 1 AND e.cod_cargo = ANY(CASE %(cargo)s::int WHEN 7 THEN ARRAY[7, 8] ELSE ARRAY[%(cargo)s::int] END)
+  AND pe.ds_sit_tot_turno IS NOT NULL
+  AND ((e.cod_cargo = 1 AND e.cd_uf IS NULL AND e.cd_municipio IS NULL)
+       OR COALESCE(u.sigla, um.sigla) = ANY(%(ufs)s))
+"""
+
+
+def _quantil(valores: list[float], proporcao: float) -> float:
+    """Quantil linear, igual ao padrão do pandas usado pelo script da P2."""
+    pos = (len(valores) - 1) * proporcao
+    baixo, acima = math.floor(pos), math.ceil(pos)
+    if baixo == acima:
+        return valores[baixo]
+    return valores[baixo] + (valores[acima] - valores[baixo]) * (pos - baixo)
+
+
+def _grupo_patrimonio(identificador: str, rotulo: str, tipo: str, linhas: list[dict]) -> dict:
+    candidatos = len(linhas)
+    eleitos = sum(bool(l["eleito"]) for l in linhas)
+    valores = [l["patrimonio"] for l in linhas if l["patrimonio"] is not None]
+    return {"id": identificador, "rotulo": rotulo, "tipo": tipo,
+            "de": round(min(valores), 2) if valores else None,
+            "ate": round(max(valores), 2) if valores else None,
+            # o candidato do meio do grupo: mais fácil de ler que os limites, que pegam os extremos
+            "mediana": round(statistics.median(valores), 2) if valores else None,
+            "candidatos": candidatos, "eleitos": eleitos,
+            "taxa": round(100 * eleitos / candidatos, 1) if candidatos else 0}
+
+
+def _grupos_patrimonio(linhas: list[dict]) -> list[dict]:
+    grupos = []
+    sem_bens = [l for l in linhas if l["patrimonio"] is None]
+    zeros = [l for l in linhas if l["patrimonio"] == 0]
+    positivos = [l for l in linhas if l["patrimonio"] is not None and l["patrimonio"] > 0]
+    if sem_bens:
+        grupos.append(_grupo_patrimonio("sem_bens", "Sem registro de bens", "sem_bens", sem_bens))
+    if zeros:
+        grupos.append(_grupo_patrimonio("zero", "Total declarado igual a zero", "zero", zeros))
+    if positivos:
+        valores = sorted(l["patrimonio"] for l in positivos)
+        limites = sorted({_quantil(valores, p) for p in (0, 0.25, 0.5, 0.75, 1)})
+        faixas = [[] for _ in range(max(1, len(limites) - 1))]
+        for linha in positivos:
+            indice = bisect.bisect_left(limites[1:], linha["patrimonio"])
+            faixas[min(indice, len(faixas) - 1)].append(linha)
+        faixas = [f for f in faixas if f]
+        quatro = len(faixas) == 4
+        for i, faixa in enumerate(faixas, 1):
+            rotulo = f"Q{i}" if quatro else f"Faixa {i}/{len(faixas)}"
+            grupos.append(_grupo_patrimonio(f"q{i}", rotulo, "quartil" if quatro else "faixa", faixa))
+    return grupos
+
+
+@lru_cache(maxsize=64)
+@em_disco
+def patrimonio(ano: int, cargo: int, uf: str) -> dict:
+    nacional = cargo == PRESIDENTE
+    ufs = ("BR",) if nacional else ((uf,) if uf else tuple(sorted(s for s in carregadas() if s != "BR")))
+    linhas = consultar(SQL_PATRIMONIO, {"ano": ano, "cargo": cargo, "ufs": list(ufs)})
+    for linha in linhas:
+        linha["patrimonio"] = float(linha["patrimonio"]) if linha["patrimonio"] is not None else None
+    grupos = _grupos_patrimonio(linhas)
+    quartis = [g for g in grupos if g["tipo"] == "quartil"]
+    primeiro, ultimo = (quartis[0], quartis[-1]) if len(quartis) >= 2 else (None, None)
+    sem = next((g for g in grupos if g["tipo"] == "sem_bens"), None)
+    zero = next((g for g in grupos if g["tipo"] == "zero"), None)
+    total = len(linhas)
+    eleitos = sum(bool(l["eleito"]) for l in linhas)
+    sem_count = sum(l["patrimonio"] is None for l in linhas)
+    # a fila dos que declararam bens, em 100 passos: o valor de quem está em cada 1% da fila (para desenhá-la)
+    positivos = sorted(l["patrimonio"] for l in linhas if l["patrimonio"] is not None and l["patrimonio"] > 0)
+    fila = [round(_quantil(positivos, (i + 0.5) / 100), 2) for i in range(100)] if positivos else []
+    return {
+        "ano": ano, "cargo": {"cod": cargo, "nome": CARGOS_P2[cargo]},
+        "escopo": {"uf": None if nacional else (uf or None), "ufs": list(ufs), "nacional": nacional},
+        "resumo": {"candidatos": total, "eleitos": eleitos,
+                   "sem_bens": sem_count,
+                   "zero_declarado": zero["candidatos"] if zero else 0,
+                   "com_bens": total - (sem["candidatos"] if sem else 0),
+                   "cobertura_pct": round(100 * (total - (sem["candidatos"] if sem else 0)) / total, 1) if total else 0},
+        "grupos": grupos,
+        "fila": fila,
+        "sintese": {"quartis": len(quartis),
+                    "maior_supera_menor": bool(primeiro and ultimo and ultimo["taxa"] > primeiro["taxa"]),
+                    "diferenca_pp": round(ultimo["taxa"] - primeiro["taxa"], 1) if primeiro and ultimo else None},
+    }
+
+
+@app.get("/api/patrimonio")
+def patrimonio_endpoint(ano: int = 2024, cargo: int = 13, uf: str = ""):
+    if cargo not in CARGOS_P2:
+        raise HTTPException(404, f"Cargo fora da P2: {cargo}")
+    if ano not in ANOS_P2 or (cargo in MUNICIPAIS_P2) != (ano % 4 == 0):
+        raise HTTPException(404, f"Não houve eleição para {CARGOS_P2[cargo].lower()} em {ano}")
+    if cargo == PRESIDENTE:
+        if uf:
+            raise HTTPException(422, "Presidente é uma disputa nacional e não usa UF")
+        if not carga_nacional():
+            raise HTTPException(404, "A carga nacional BR não está disponível")
+        return patrimonio(ano, cargo, "")
+    carregados = tuple(sorted(s for s in carregadas() if s != "BR"))
+    escolhida = uf.upper()
+    if escolhida and escolhida not in carregados:
+        raise HTTPException(404, f"UF sem dados: {uf}")
+    sem_municipal(escolhida, cargo in MUNICIPAIS_P2)
+    return patrimonio(ano, cargo, escolhida)
+
+
+def _aquecer_patrimonio() -> None:
+    try:
+        patrimonio_panorama()
+        for sigla in sorted(s for s in carregadas() if s != "BR"):
+            patrimonio_panorama(sigla)
+    except Exception:  # noqa: BLE001 - banco fora do ar: a conta é feita quando a página pedir
+        traceback.print_exc()
+
+
+@app.get("/api/patrimonio/panorama")
+def patrimonio_panorama(uf: str = ""):
+    """P2 em todos os cargos e anos de uma vez: a taxa de cada faixa por recorte (Presidente sempre nacional)."""
+    carregados = tuple(sorted(s for s in carregadas() if s != "BR"))
+    escolhida = uf.upper()
+    if escolhida and escolhida not in carregados:
+        raise HTTPException(404, f"UF sem dados: {uf}")
+    recortes = []
+    for ano in sorted(ANOS_P2):
+        for cargo in CARGOS_P2:
+            if (cargo in MUNICIPAIS_P2) != (ano % 4 == 0) or (cargo == PRESIDENTE and not carga_nacional()):
+                continue
+            d = patrimonio(ano, cargo, "" if cargo == PRESIDENTE else escolhida)
+            if not d["resumo"]["candidatos"]:
+                continue
+            recortes.append({
+                "ano": ano, "cargo": d["cargo"], "nacional": d["escopo"]["nacional"],
+                "candidatos": d["resumo"]["candidatos"], "eleitos": d["resumo"]["eleitos"],
+                "cobertura_pct": d["resumo"]["cobertura_pct"],
+                "grupos": [{k: g[k] for k in ("id", "tipo", "taxa", "candidatos", "eleitos", "mediana")} for g in d["grupos"]],
+                "sintese": d["sintese"],
+            })
+    quatro = [r for r in recortes if r["sintese"]["quartis"] == 4]
+    return {"uf": escolhida or None, "recortes": recortes,
+            "com_quartis": len(quatro), "maior_supera": sum(r["sintese"]["maior_supera_menor"] for r in quatro)}
 
 
 # ───────── Malhas (IBGE) ─────────

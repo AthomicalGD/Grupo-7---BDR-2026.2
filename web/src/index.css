@@ -321,6 +321,69 @@
 }
 .cedula-voltou, .cedula-perdeu { border-color: transparent; box-shadow: 0 1px 0 rgb(42 53 80 / .2); }
 .urna-rotulo { background: rgb(252 253 253 / .85); }
+/* P2: o cofrinho. O mouse em cima balança o porquinho e o olho pisca; a pupila segue o cursor. Cada martelada
+   desenha a rachadura a partir do golpe, com o martelo descendo e lascas rosadas voando (elementos criados e
+   removidos pelo script). */
+@keyframes balanca {
+  0%, 100% { transform: none; }
+  25% { transform: rotate(-3deg); }
+  60% { transform: rotate(2.5deg); }
+}
+@keyframes pisca { 0%, 100% { transform: scaleY(1); } 45%, 55% { transform: scaleY(.1); } }
+@keyframes racha { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes estala { 0% { transform: scale(1); } 40% { transform: scale(1.5) rotate(-18deg); } 100% { transform: none; } }
+[data-porco]:has(.porquinho-alvo:hover) > svg { animation: balanca 620ms ease-in-out; transform-origin: 50% 95%; }
+[data-porco]:has(.porquinho-alvo:hover) .porco-olho { animation: pisca 260ms ease-in-out 120ms; transform-box: fill-box; transform-origin: center; }
+.porco-pupila { transition: transform 140ms var(--ease-saida); }
+.racha-nova path { animation: racha 340ms cubic-bezier(.2,.8,.3,1) both; }
+.racha-nova ellipse { animation: surge 160ms ease both; }
+.martelada { animation: estala 360ms var(--ease-saida); }
+.porquinho-alvo { cursor: pointer; }
+.martelo-golpe {
+  position: absolute; width: 40px; height: 40px; margin: -20px 0 0 -8px; pointer-events: none; z-index: 2;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect x='17' y='14' width='6' height='24' rx='3' fill='%23c58a4f' stroke='%237a5230' stroke-width='1.2'/%3E%3Crect x='6' y='4' width='28' height='12' rx='3' fill='%235d6676' stroke='%2318202b' stroke-width='1.4'/%3E%3Crect x='8' y='6' width='24' height='3' rx='1.5' fill='%23fff' opacity='.35'/%3E%3C/svg%3E") center / contain no-repeat;
+  transform-origin: 50% 95%;
+}
+.lasca {
+  position: absolute; width: 7px; height: 6px; margin: -3px 0 0 -3px; pointer-events: none;
+  background: linear-gradient(135deg, #ffd3df, #ee8fac); clip-path: polygon(0 0, 100% 30%, 60% 100%);
+}
+.poeira {
+  width: 120px; height: 120px; border-radius: 50%; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle, transparent 48%, rgb(255 214 226 / .38) 56%, transparent 66%);
+}
+.moeda-voo {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff 0 12%, #e3e7ea 30%, #b7c0c8 75%, #98a2ac);
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / .55), 0 1px 0 rgb(42 53 80 / .25);
+}
+/* a fila: cada grupo anda inteiro (uma camada por grupo, não uma por barrinha) */
+.grupo-fila { transition: transform 720ms var(--ease-saida); }
+/* o palpite: as quatro áreas surgem uma depois da outra */
+@keyframes palpite-surge { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.palpite-alvo { animation: palpite-surge 380ms var(--ease-saida) both; animation-delay: calc(var(--i, 0) * 70ms); transition: background-color 160ms, border-color 160ms, transform 160ms var(--ease-saida); }
+.palpite-alvo:hover { transform: translateY(-3px); }
+.palpite-alvo:active { transform: translateY(1px); }
+/* os bonequinhos: os que não se elegeram são uma camada com a figura repetida a cada 14px; os eleitos são
+   células de 14px com a mesma figura, no oliva (3:1 sobre o papel), que acendem um a um */
+:root { --boneco: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Ccircle cx='7' cy='4.3' r='2.7'/%3E%3Cpath d='M2.6 14C2.6 9.4 4.4 7.6 7 7.6S11.4 9.4 11.4 14Z'/%3E%3C/svg%3E"); }
+.bonecos-eleitos { background: var(--color-eleito); -webkit-mask: var(--boneco) 0 0 / 14px 14px repeat; mask: var(--boneco) 0 0 / 14px 14px repeat; }
+@keyframes sobe-linhas { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes enche-linha { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.caco { background-size: 100% 100%; will-change: transform; }
+.bonecos-fundo { background: #c3cad1; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Ccircle cx='7' cy='4.3' r='2.7'/%3E%3Cpath d='M2.6 14C2.6 9.4 4.4 7.6 7 7.6S11.4 9.4 11.4 14Z'/%3E%3C/svg%3E") 0 0 / 14px 14px repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Ccircle cx='7' cy='4.3' r='2.7'/%3E%3Cpath d='M2.6 14C2.6 9.4 4.4 7.6 7 7.6S11.4 9.4 11.4 14Z'/%3E%3C/svg%3E") 0 0 / 14px 14px repeat; }
+/* o carimbo do veredito, na tinta dos carimbos dos santinhos */
+.carimbo {
+  color: var(--color-reeleito); border: 3px solid currentColor; border-radius: 6px; padding: 4px 9px 5px;
+  background: rgb(238 243 223 / .92); transform: rotate(-8deg);
+  box-shadow: 0 6px 16px -8px rgb(42 53 80 / .4);
+}
+@keyframes pino { 0% { transform: translateY(-14px) scale(.6); opacity: 0; } 60% { transform: translateY(2px); opacity: 1; } 100% { transform: none; } }
+.voce-pino { display: inline-block; animation: pino 420ms var(--ease-saida) both; }
+@media (prefers-reduced-motion: reduce) {
+  [data-porco]:has(.porquinho-alvo:hover) > svg, [data-porco]:has(.porquinho-alvo:hover) .porco-olho, .racha-nova path { animation: none; }
+  .grupo-fila, .palpite-alvo { transition: none; }
+}
 /* A subtela "Quem são" abre empurrando o conteúdo (linhas de grade de 0fr a 1fr). */
 .subtela { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 420ms cubic-bezier(.16, 1, .3, 1); }
 .subtela[data-aberta="true"] { grid-template-rows: 1fr; }
@@ -455,3 +518,77 @@
 @keyframes partido-abre { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .abre-partido { animation: partido-abre 240ms var(--ease-saida) both; }
 @media (prefers-reduced-motion: reduce) { .cedula-cargos, .pilula-cargo, .abre-partido { animation: none; } }
+
+/* P2: o minimapa dos estados. Os carregados são botões no oliva claro; o escolhido no oliva cheio, com a
+   sigla em branco e um pulo curto; passar o mouse levanta o estado. Os sem dados ficam em papel. */
+.mapa-estados .estado-sem-dados { fill: #e3e7eb; stroke: #fcfdfd; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.mapa-estados .estado-alvo { cursor: pointer; outline: none; }
+.mapa-estados .estado-alvo path {
+  stroke: #fcfdfd; stroke-width: 1.2; vector-effect: non-scaling-stroke;
+  transform-box: fill-box; transform-origin: center;
+  transition: fill 280ms var(--ease-saida), transform 260ms var(--ease-saida), filter 200ms;
+}
+.mapa-estados .estado-aceso path { fill: #b9cd80; }
+.mapa-estados .estado-apagado path { fill: #dfe8c4; }
+.mapa-estados .estado-ativo path { fill: var(--color-selecao); animation: estado-pula 420ms var(--ease-saida); }
+.mapa-estados .estado-alvo:hover path, .mapa-estados .estado-alvo:focus-visible path { transform: scale(1.1); filter: drop-shadow(0 3px 4px rgb(42 53 80 / .3)); }
+.mapa-estados .estado-alvo:focus-visible path { stroke: var(--color-acao); stroke-width: 2.5; }
+.mapa-estados .sigla, .mapa-estados .sigla-ativa { font-size: 44px; font-weight: 800; fill: var(--color-tinta); paint-order: stroke; stroke: rgb(252 253 253 / .7); stroke-width: 6px; }
+.mapa-estados .sigla-ativa { fill: #fff; stroke: none; }
+.mapa-estados[class*="opacity-45"] .estado-alvo { cursor: default; }
+@keyframes estado-pula { 0% { transform: scale(.85); } 55% { transform: scale(1.16); } 100% { transform: none; } }
+/* lembretes do fim: o ícone gira um pouco quando o mouse passa */
+.lembrete span:first-child { transition: transform 260ms var(--ease-saida); }
+.lembrete:hover span:first-child { transform: rotate(-8deg) scale(1.06); }
+@media (prefers-reduced-motion: reduce) {
+  .mapa-estados .estado-alvo path, .lembrete span:first-child { transition: none; }
+  .mapa-estados .estado-ativo path { animation: none; }
+}
+/* os degraus das escadinhas crescem quando entram na tela (linha do tempo de rolagem; sem ela, ficam inteiros) */
+@supports (animation-timeline: view()) {
+  @keyframes degrau-cresce { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  .degrau { transform-origin: bottom; animation: degrau-cresce linear both; animation-timeline: view(); animation-range: entry 10% entry 90%; }
+  .degrau:nth-child(2) { animation-range: entry 20% entry 95%; }
+  .degrau:nth-child(3) { animation-range: entry 30% entry 100%; }
+  .degrau:nth-child(4) { animation-range: entry 40% cover 30%; }
+}
+@media (prefers-reduced-motion: reduce) { .degrau { animation: none !important; } }
+
+/* P2: hierarquia da página. O título é a maior voz do sistema (a pergunta mais difícil merece); a frase do
+   recorte é o subtítulo e o filtro, com as palavras escolhidas sublinhadas por um traço do oliva. */
+.titulo-p2 { font-size: clamp(2.4rem, 1.3rem + 3vw, 4.2rem); line-height: .96; letter-spacing: -0.022em; max-width: 19ch; }
+.recorte-palavra {
+  text-decoration: underline; text-decoration-color: color-mix(in oklab, var(--color-selecao) 55%, transparent);
+  text-decoration-thickness: 3px; text-underline-offset: 6px; transition: background-color 160ms, text-decoration-color 160ms;
+}
+.recorte-palavra:hover { background: var(--color-selecao-claro); text-decoration-color: var(--color-selecao); }
+@keyframes gaveta-abre { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: none; } }
+.gaveta { animation: gaveta-abre 220ms var(--ease-saida) both; transform-origin: top left; }
+/* a régua do "E você?": trilho em degradê do papel ao oliva (mais bens à direita), botão grande no oliva */
+.regua-voce { -webkit-appearance: none; appearance: none; height: 28px; background: transparent; cursor: pointer; }
+.regua-voce::-webkit-slider-runnable-track { height: 8px; border-radius: 999px; background: linear-gradient(90deg, #e6eaed, #b9cd80 60%, var(--color-selecao)); }
+.regua-voce::-moz-range-track { height: 8px; border-radius: 999px; background: linear-gradient(90deg, #e6eaed, #b9cd80 60%, var(--color-selecao)); }
+.regua-voce::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; margin-top: -10px; border-radius: 50%; background: var(--color-folha); border: 4px solid var(--color-selecao); box-shadow: 0 3px 8px -2px rgb(42 53 80 / .35); transition: transform 160ms var(--ease-saida); }
+.regua-voce::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--color-folha); border: 4px solid var(--color-selecao); }
+.regua-voce:active::-webkit-slider-thumb { transform: scale(1.15); }
+.exemplo-regua::before { content: ""; position: absolute; top: -8px; left: 50%; width: 2px; height: 8px; border-radius: 1px; background: var(--color-linha-2); }
+.exemplo-regua[aria-pressed="true"]::before { background: var(--color-selecao); height: 10px; }
+@media (prefers-reduced-motion: reduce) { .gaveta { animation: none; } }
+
+
+/* P2: a fila (parada dos bens). Barrinhas com topo arredondado e 2px de papel entre elas, que crescem da base
+   em onda depois que o porquinho quebra; o contorno e o balão da barrinha sob o cursor. */
+@keyframes barra-cresce { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.barrinha {
+  border-radius: 2px 2px 0 0; transform-origin: bottom;
+  animation: barra-cresce 560ms var(--ease-saida) both; animation-delay: calc(1250ms + var(--j, 0) * 7ms);
+  transition: background-color 420ms ease;
+}
+.eixo-fila { paint-order: stroke; -webkit-text-stroke: 3px var(--color-papel); }
+.realce-barra { border: 1.5px solid var(--color-tinta); border-bottom: 0; border-radius: 3px 3px 0 0; }
+.dica-fila {
+  min-width: 150px; padding: 7px 10px; border-radius: 10px; background: var(--color-tinta); color: var(--color-folha);
+  font-size: 0.78rem; line-height: 1.35; box-shadow: var(--shadow-papel); z-index: 3;
+}
+.dica-fila b { font-weight: 800; }
+.dica-fila .dica-grupo { color: #c9d1e6; }

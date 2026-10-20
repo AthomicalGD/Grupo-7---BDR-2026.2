@@ -16,7 +16,7 @@ import p7VotosPartido from './consultas/p7_votos_partido.sql?raw'
 function Secao({ id, titulo, resposta, children }: {
   id: string
   titulo: string
-  resposta?: { para: '/' | '/cadeira' | '/urna' | '/escola' | '/reeleicao'; rotulo: string }
+  resposta?: { para: '/' | '/cadeira' | '/patrimonio' | '/urna' | '/escola' | '/reeleicao'; rotulo: string }
   children: ReactNode
 }) {
   return (
@@ -111,6 +111,7 @@ const ARQ = (caminho: string) => <code>{caminho}</code>
 const INDICE = [
   ['m-caminho', 'Do arquivo ao banco'],
   ['m-cadeira', 'P1'],
+  ['m-patrimonio', 'P2'],
   ['m-escolaridade', 'P4'],
   ['m-vies', 'P7'],
   ['m-carreira', 'P10'],
@@ -211,6 +212,32 @@ export function Metodologia() {
         <Detalhe titulo="As consultas">
           <Consulta titulo="Gasto e votos de cada candidatura" sql={p1Campanha} />
           <Consulta titulo="Gasto de cada candidato, na época e em reais de 2024" sql={p1Gasto} />
+        </Detalhe>
+      </Secao>
+
+      <Secao id="m-patrimonio" titulo="Patrimônio declarado e sucesso eleitoral (P2)" resposta={{ para: '/patrimonio', rotulo: 'Ver a resposta no patrimônio' }}>
+        <p>
+          A pergunta compara a <b>taxa de eleição</b> entre candidaturas aptas, separadas em faixas pela soma dos bens declarados ao TSE.
+          O cálculo é refeito para cada ano e cargo, para não misturar disputas com números de vagas e regras diferentes.
+        </p>
+        <p className="rounded-xl border border-linha bg-folha px-5 py-4 text-tinta">
+          taxa de sucesso = candidaturas eleitas ÷ candidaturas aptas na faixa
+        </p>
+        <ul className="list-disc space-y-2 pl-5">
+          <li><b>Quartis:</b> os patrimônios positivos são ordenados e divididos em quatro grupos. Empates nos cortes não são separados artificialmente.</li>
+          <li><b>Ausências:</b> candidaturas sem registro de bens e candidaturas com total declarado igual a zero aparecem separadas e ficam fora dos quartis.</li>
+          <li><b>Resultado:</b> a situação final do TSE identifica os eleitos; a candidatura é contada uma vez, mesmo quando houve segundo turno.</li>
+          <li><b>Presidente:</b> é uma disputa nacional e usa a carga <code>BR</code>; não é necessário carregar todos os estados para esse recorte.</li>
+          <li><b>Limitação:</b> patrimônio declarado não é patrimônio real nem renda. A associação observada não prova efeito causal sobre a eleição.</li>
+        </ul>
+        <Detalhe titulo="De onde vêm os dados">
+          <Origens
+            linhas={[
+              ['Patrimônio declarado', ARQ('tse/bens_candidatos/'), ARQ('bem.vr_bem_candidato')],
+              ['Candidaturas e situação final', ARQ('tse/candidatos/'), <>{ARQ('politico_eleicao.ds_sit_tot_turno')}, {ARQ('mandato')}</>],
+              ['Quartis e relatório reproduzível', ARQ('scripts/02_patrimonio.py'), ARQ('respostas/02_patrimonio.txt')],
+            ]}
+          />
         </Detalhe>
       </Secao>
 
