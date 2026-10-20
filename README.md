@@ -181,6 +181,27 @@ python scripts/svd_camara.py --nome eleicao_2024 --inicio 2023-02-01 --fim 2024-
 - Conferência sem banco (Tabela 1 e regras de sucessão): `python -m loader.test_vies --sem-banco`; com o banco,
   sem a opção (inclui a cobertura por ano).
 
+### Nuvem de despesas por candidatura (P9)
+
+Com uma candidatura carregada no banco, descubra o `id_politico_eleicao` pelo nome e ano (a chave
+muda se o banco for recriado). Por exemplo, numa consulta SQL:
+
+```sql
+SELECT pe.id_politico_eleicao, p.nome, e.ano, c.nome AS cargo
+FROM politico_eleicao pe
+JOIN politico p ON p.id_politico = pe.id_politico
+JOIN eleicao e ON e.id_eleicao = pe.id_eleicao
+JOIN cargo c ON c.cod_cargo = e.cod_cargo
+WHERE p.nome ILIKE '%NOME%' AND e.ano = 2024;
+```
+
+Depois rode `python scripts/09_nuvem_despesas.py <id_politico_eleicao>`. O script grava
+`respostas/09_nuvem_despesas_<id>.png` (nuvem ponderada pelo valor contratado) e
+`respostas/09_nuvem_despesas_<id>.txt` (valores, percentuais, tipos declarados ao TSE e até
+cinco fornecedores por tipo). Usa o tipo oficial da despesa; a descrição livre só classifica
+tipos genéricos quando contém termos reconhecíveis. Não infere o serviço pelo fornecedor.
+Exclui doações financeiras a outras campanhas para evitar dupla contagem, como na P1.
+
 ### Fotos dos candidatos
 
 O TSE publica a foto de registro de cada candidatura num zip por eleição e UF
