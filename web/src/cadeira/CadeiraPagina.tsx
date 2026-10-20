@@ -7,8 +7,8 @@ import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { CARGOS_P1, consultas, semMunicipal, type Ano, type Cadeira, type UF } from '../api'
 import { BuscaMunicipio } from '../atlas/BuscaMunicipio'
 import { CedulaAnos } from '../atlas/CedulaAnos'
-import { silhueta } from '../atlas/geo'
 import { Alternador } from '../atlas/PainelEstado'
+import { SeletorEstado } from '../componentes/SeletorEstado'
 import { Ciranda, CirandaTela } from '../componentes/Ciranda'
 import { ErroCarga } from '../componentes/ErroCarga'
 import { Escolha } from '../componentes/Escolha'
@@ -75,7 +75,6 @@ export function CadeiraPagina() {
   const [aviso, setAviso] = useState('')
   // o destaque vale só para a seleção em que foi feito (cargo, ano, lugar)
   const [destaque, setDestaque] = useState<{ id: number; chave: string } | null>(null)
-  const silhuetas = useMemo(() => new Map(malha ? carregadas.map((u) => [u.sigla, silhueta(malha, u.cd_ibge, 22)]) : []), [malha, carregadas])
 
   useEffect(() => {
     document.title = 'Quanto custa uma cadeira? · Voto Aberto'
@@ -130,27 +129,16 @@ export function CadeiraPagina() {
           <CedulaAnos ano={ano} anos={anos} linhaDoTempo={false} aoMudar={(a) => mudar({ ano: a })} />
         </fieldset>
         <fieldset className="min-w-0 xl:col-span-2">
-          <legend className="t-rotulo mb-2 text-tinta-2">{vereador ? 'Câmara municipal' : 'Onde'}</legend>
+          <legend className="t-rotulo mb-2 text-tinta-2">{vereador ? 'Câmara municipal' : 'Estado'}</legend>
           <div className="flex flex-wrap items-center gap-2">
-            <div role="radiogroup" aria-label="Estado" className="flex flex-wrap gap-2">
-              {!vereador && (
-                <Escolha ativo={!uf} aoClicar={() => mudar({ uf: undefined })}>
-                  {lugares.length} estados
-                </Escolha>
-              )}
-              {lugares.map((u) => (
-                <Escolha
-                  key={u.sigla}
-                  rotulo={u.nome}
-                  ativo={u.sigla === ufEscolhida}
-                  aoClicar={() => mudar(vereador ? { uf: u.sigla, municipio: CAPITAIS[u.sigla] } : { uf: u.sigla })}
-                >
-                  <svg width={22} height={22} viewBox="0 0 22 22" aria-hidden className="shrink-0">
-                    <path d={silhuetas.get(u.sigla)} fill="currentColor" opacity={0.85} />
-                  </svg>
-                  {u.sigla}
-                </Escolha>
-              ))}
+            <div className="w-full sm:w-[300px]">
+              <SeletorEstado
+                malha={malha}
+                ufs={lugares}
+                escolhida={ufEscolhida}
+                obrigatorio={vereador}
+                aoEscolher={(s) => mudar(vereador && s ? { uf: s, municipio: CAPITAIS[s] } : { uf: s })}
+              />
             </div>
             {vereador && (
               <div className="flex min-w-[min(100%,340px)] flex-1 flex-wrap items-center gap-3">

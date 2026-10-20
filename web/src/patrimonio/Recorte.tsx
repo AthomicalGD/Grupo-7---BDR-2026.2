@@ -7,7 +7,7 @@ import { memo, useEffect, useRef, useState, type ReactNode } from 'react'
 import { CARGOS_P2, type Ano, type Malha, type PanoramaPatrimonio, type UF } from '../api'
 import { quartis, taxaCurta, tetoDe } from './conta'
 import { Degraus } from './Escadas'
-import { MapaEstados } from './MapaEstados'
+import { MapaEstados } from '../componentes/MapaEstados'
 
 type Gaveta = 'cargo' | 'ano' | 'estado' | null
 

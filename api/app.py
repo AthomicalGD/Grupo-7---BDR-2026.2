@@ -170,6 +170,11 @@ def carregadas() -> frozenset[str]:
 SOMAS_VIES = ("votos", "votos_com_vies", "votos_x_vies", "votos_com_alinhamento", "votos_x_alinhamento")
 
 
+@lru_cache(maxsize=1)
+def carga_nacional() -> bool:
+    return bool(consultar("SELECT 1 FROM carga_uf WHERE sg_uf = 'BR'"))
+
+
 # O deputado distrital (8, só o DF) conta como deputado estadual (7) em todo o site. Nos filtros, o cargo 7
 # vira a lista [7, 8] (e.cod_cargo = ANY(...), que usa o índice; um CASE sobre a coluna não usaria); nas
 # colunas devolvidas, CASE e.cod_cargo WHEN 8 THEN 7.
@@ -177,11 +182,6 @@ def sem_municipal(uf: str, municipal: bool) -> None:
     """O DF não tem municípios nem eleição municipal: prefeito e vereador lá são um recorte vazio."""
     if municipal and uf.upper() == "DF":
         raise HTTPException(404, "O Distrito Federal não tem eleição municipal: não elege prefeito nem vereador.")
-
-
-@lru_cache(maxsize=1)
-def carga_nacional() -> bool:
-    return bool(consultar("SELECT 1 FROM carga_uf WHERE sg_uf = 'BR'"))
 
 
 @lru_cache(maxsize=1)
@@ -1452,7 +1452,7 @@ def _aquecer_patrimonio() -> None:
         for sigla in sorted(s for s in carregadas() if s != "BR"):
             patrimonio_panorama(sigla)
     except Exception:  # noqa: BLE001 - banco fora do ar: a conta é feita quando a página pedir
-        traceback.print_exc()
+        pass
 
 
 @app.get("/api/patrimonio/panorama")

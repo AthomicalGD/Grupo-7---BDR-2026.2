@@ -259,10 +259,10 @@ export interface Cadeira {
   receitas: Record<'fundo_eleitoral' | 'fundo_partidario' | 'pessoas_fisicas' | 'proprios' | 'outros', number>
 }
 
+// ───────── P2: patrimônio declarado e taxa de eleição ─────────
+
 /** O DF não tem eleição municipal: nos recortes de prefeito e vereador ele não é um estado escolhível. */
 export const semMunicipal = (ufs: UF[], municipal: boolean) => (municipal ? ufs.filter((u) => u.sigla !== 'DF') : ufs)
-
-// ───────── P2: patrimônio declarado e taxa de eleição ─────────
 
 export const CARGOS_P2 = [
   { cod: 1, nome: 'Presidente', municipal: false, nacional: true },

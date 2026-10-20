@@ -564,6 +564,10 @@
 .recorte-palavra:hover { background: var(--color-selecao-claro); text-decoration-color: var(--color-selecao); }
 @keyframes gaveta-abre { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: none; } }
 .gaveta { animation: gaveta-abre 220ms var(--ease-saida) both; transform-origin: top left; }
+/* o campo do seletor de estado (Cadeira, Escola, Reeleição): a borda escurece aberto e sob o ponteiro */
+.campo-estado { transition: border-color 160ms, box-shadow 200ms var(--ease-saida), transform 160ms var(--ease-saida); }
+.campo-estado:hover, .campo-estado[aria-expanded="true"] { box-shadow: 0 6px 16px -10px rgb(42 53 80 / .35); }
+.campo-estado:active { transform: scale(.985); }
 /* a régua do "E você?": trilho em degradê do papel ao oliva (mais bens à direita), botão grande no oliva */
 .regua-voce { -webkit-appearance: none; appearance: none; height: 28px; background: transparent; cursor: pointer; }
 .regua-voce::-webkit-slider-runnable-track { height: 8px; border-radius: 999px; background: linear-gradient(90deg, #e6eaed, #b9cd80 60%, var(--color-selecao)); }

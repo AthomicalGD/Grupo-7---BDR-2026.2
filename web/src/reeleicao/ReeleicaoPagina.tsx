@@ -8,10 +8,9 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { consultas, type ContaReeleicao, type GrupoReeleicao, type Malha, type Reeleicao, type UF } from '../api'
-import { silhueta } from '../atlas/geo'
+import { SeletorEstado } from '../componentes/SeletorEstado'
 import { Ciranda, CirandaTela } from '../componentes/Ciranda'
 import { ErroCarga } from '../componentes/ErroCarga'
-import { Escolha } from '../componentes/Escolha'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { cargoPlural, inteiro, noEstado, pct } from '../lib/formato'
 import type { BuscaReeleicao } from '../router'
@@ -227,7 +226,6 @@ export function ReeleicaoPagina() {
   const { data: ufs } = useQuery(consultas.ufs())
   const { data: malha } = useQuery(consultas.malhaBrasil())
   const carregadas = useMemo(() => (ufs ?? []).filter((u) => u.carregada && u.sigla !== 'BR'), [ufs])
-  const silhuetas = useMemo(() => new Map(malha ? carregadas.map((u) => [u.sigla, silhueta(malha, u.cd_ibge, 22)]) : []), [malha, carregadas])
 
   // sem estado no endereço: todos os carregados somados
   const uf = carregadas.find((u) => u.sigla === busca.uf)
@@ -256,19 +254,7 @@ export function ReeleicaoPagina() {
           </p>
           <fieldset className="mt-5 min-w-0">
             <legend className="t-rotulo mb-2 text-tinta-2">Estado</legend>
-            <div role="radiogroup" aria-label="Estado" className="flex flex-wrap gap-2">
-              <Escolha rotulo="Todos os estados carregados" ativo={sigla === TODOS} aoClicar={() => mudar({ uf: undefined })}>
-                Todos
-              </Escolha>
-              {carregadas.map((u) => (
-                <Escolha key={u.sigla} rotulo={u.nome} ativo={u.sigla === sigla} aoClicar={() => mudar({ uf: u.sigla })}>
-                  <svg width={22} height={22} viewBox="0 0 22 22" aria-hidden className="shrink-0">
-                    <path d={silhuetas.get(u.sigla)} fill="currentColor" opacity={0.85} />
-                  </svg>
-                  {u.sigla}
-                </Escolha>
-              ))}
-            </div>
+            <SeletorEstado malha={malha} ufs={carregadas} escolhida={uf?.sigla ?? ''} aoEscolher={(s) => mudar({ uf: s })} />
           </fieldset>
         </div>
         {dados && <Lede dados={dados} nome={noUF} />}
