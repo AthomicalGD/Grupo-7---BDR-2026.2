@@ -1,0 +1,208 @@
+P9) Para onde foi o dinheiro da candidatura de SANDRO DA MABEL ANTÔNIO SCODRO?
+Candidatura: 376423 | SQ_CANDIDATO: 90002002544 | PREFEITO | Goiânia | 2024
+
+Fonte: TSE, despesas contratadas declaradas pela candidatura; valores em reais do ano da eleição.
+Nuvem: tamanho da expressão proporcional à soma dos valores contratados por tipo de gasto.
+O tipo do TSE (DS_ORIGEM_DESPESA) prevalece; descrições livres (DS_DESPESA) só ajudam
+a identificar serviços nas categorias genéricas. Não se usa o nome/CNAE do fornecedor
+para inferir o tipo de gasto. Categorias sem identificação ficam explícitas.
+Fora da conta: 'Doações financeiras a outros candidatos/partidos' (transferência que reaparece na campanha recebedora).
+Despesas com valor zero: 0; registros com valor positivo sem fornecedor: 8.
+Total analisado: R$ 11.011.081,58 em 3073 despesas.
+Cobertura da classificação por valor:
+  tipo TSE: 2529 despesas, R$ 10.675.881,46 (97.0% do valor)
+  descrição: 511 despesas, R$ 308.049,00 (2.8% do valor)
+  sem identificação: 33 despesas, R$ 27.151,12 (0.2% do valor)
+
+Gastos por tipo (base da nuvem):
+  Tipo | despesas | valor | participação | inferidas da descrição
+  Propaganda audiovisual | 215 | R$ 4.126.000,00 | 37.5% | 0
+  Propaganda impressa | 570 | R$ 2.073.728,71 | 18.8% | 0
+  Pessoal | 1387 | R$ 1.547.533,49 | 14.1% | 0
+  Propaganda digital | 26 | R$ 927.305,00 | 8.4% | 0
+  Transporte e veículos | 85 | R$ 629.822,17 | 5.7% | 0
+  Pesquisas ou testes eleitorais | 2 | R$ 324.000,00 | 2.9% | 0
+  Serviços advocatícios | 3 | R$ 280.000,00 | 2.5% | 0
+  Correspondências e despesas postais | 2 | R$ 187.813,94 | 1.7% | 0
+  Propaganda sonora | 12 | R$ 169.200,00 | 1.5% | 0
+  Fiscalização da eleição | 503 | R$ 152.100,00 | 1.4% | 503
+  Eventos | 20 | R$ 115.331,00 | 1.0% | 0
+  Alimentação | 53 | R$ 97.194,23 | 0.9% | 0
+  Mobilização e militância | 14 | R$ 77.836,00 | 0.7% | 2
+  Comunicação e assessoria | 2 | R$ 64.000,00 | 0.6% | 2
+  Locação/cessão de bens imóveis | 3 | R$ 41.000,00 | 0.4% | 0
+  Água | 8 | R$ 37.403,68 | 0.3% | 0
+  Pré-instalação física de comitê de campanha | 10 | R$ 31.630,00 | 0.3% | 0
+  Administração financeira | 1 | R$ 30.000,00 | 0.3% | 1
+  Outros serviços (não identificados) | 31 | R$ 26.686,12 | 0.2% | 0
+  Estrutura e manutenção | 2 | R$ 26.649,00 | 0.2% | 2
+  Serviços contábeis | 1 | R$ 20.000,00 | 0.2% | 0
+  Materiais de expediente | 106 | R$ 15.860,48 | 0.1% | 0
+  Outras propagandas | 1 | R$ 5.000,00 | 0.0% | 1
+  Locação/cessão de bens móveis (exceto veículos) | 2 | R$ 3.100,00 | 0.0% | 0
+  Telefone | 3 | R$ 836,71 | 0.0% | 0
+  Não especificado | 2 | R$ 465,00 | 0.0% | 0
+  Energia elétrica | 1 | R$ 294,65 | 0.0% | 0
+  Encargos financeiros, taxas bancárias e/ou op. cartão de crédito | 8 | R$ 291,40 | 0.0% | 0
+
+Fornecedores por tipo (até 5 maiores valores contratados em cada tipo):
+  Propaganda audiovisual — R$ 4.126.000,00:
+    BLACK DOG ESTUDIO E PRODUTORA LTDA: R$ 4.126.000,00 (215 despesas)
+    Categorias declaradas ao TSE: Produção de programas de rádio, televisão ou vídeo (R$ 4.126.000,00)
+  Propaganda impressa — R$ 2.073.728,71:
+    CREATIVE SERVIÇOS ENGENHARIA E COMERCIO LTDA: R$ 551.353,00 (228 despesas)
+    NOSSA GRAFICA TERCEIRIZAÇÕES E SERVIÇOS LTDA: R$ 350.950,00 (47 despesas)
+    VITA MORAES IND E COM TEXTIL LTDA: R$ 217.000,00 (7 despesas)
+    POLIGRAFICA INDUSTRIA E COMERCIO LTDA: R$ 187.530,00 (9 despesas)
+    CONECT PRIME COMUNICAÇÃO VISUAL LTDA: R$ 150.000,00 (1 despesa)
+    ... mais 16 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Publicidade por materiais impressos (R$ 1.476.426,15); Publicidade por adesivos (R$ 597.302,56)
+  Pessoal — R$ 1.547.533,49:
+    CRISTIANE FAVACHO NOGUEIRA: R$ 22.500,00 (2 despesas)
+    MAURIM FERNANDO MARTINS: R$ 15.000,00 (2 despesas)
+    ANNA PAULA MONTEIRO DE SOUZA KORT KAMP: R$ 9.433,33 (2 despesas)
+    CARITA RODRIGUES ARANTES: R$ 9.433,33 (2 despesas)
+    CLAUDIA FERREIRA MENDES: R$ 9.433,33 (2 despesas)
+    ... mais 1257 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Despesas com pessoal (R$ 1.547.533,49)
+  Propaganda digital — R$ 927.305,00:
+    FACEBOOK SERVICOS ON LINE DO BRASIL LTDA: R$ 670.595,00 (20 despesas)
+    DLOCAL BRASIL INSTITUICAO DE PAGAMENTO S.A.: R$ 256.710,00 (6 despesas)
+    Categorias declaradas ao TSE: Despesa com Impulsionamento de Conteúdos (R$ 927.305,00)
+  Transporte e veículos — R$ 629.822,17:
+    AUTO POSTO CHAFARIZ LTDA: R$ 138.120,98 (10 despesas)
+    BELTUR AGENCIA DE VIAGENS E TURISMO LTDA ME: R$ 117.010,81 (16 despesas)
+    VALPOSTO COMBUSTIVEIS LTDA: R$ 95.142,19 (26 despesas)
+    MB TRANSPORTES BERNADES LTDA: R$ 54.530,00 (4 despesas)
+    FILIPE SILVA AMARAL: R$ 35.000,00 (2 despesas)
+    ... mais 14 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Cessão ou locação de veículos (R$ 396.559,00); Combustíveis e lubrificantes (R$ 233.263,17)
+  Pesquisas ou testes eleitorais — R$ 324.000,00:
+    VALERIA TORRES DA COSTA E SILVA CONSULTORIA EM COMUNICA: R$ 224.000,00 (1 despesa)
+    NERVERA SERVIÇOS DE INFORMÁTICA LTDA: R$ 100.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Pesquisas ou testes eleitorais (R$ 324.000,00)
+  Serviços advocatícios — R$ 280.000,00:
+    WANDIR ALLAN SOCIEDADE INDIVIDUAL DE ADVOCACIA: R$ 150.000,00 (1 despesa)
+    CROSARA ADVOGADOS ASSOCIADOS: R$ 100.000,00 (1 despesa)
+    RIOS E SILVA ADVOGADOS ASSOCIADOS SS: R$ 30.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços advocatícios (R$ 280.000,00)
+  Correspondências e despesas postais — R$ 187.813,94:
+    EMP. BRAS. DE CORREIOS E TELEGRAFOS: R$ 187.813,94 (2 despesas)
+    Categorias declaradas ao TSE: Correspondências e despesas postais (R$ 187.813,94)
+  Propaganda sonora — R$ 169.200,00:
+    LEANDRO SOARES GONCALVES: R$ 95.600,00 (6 despesas)
+    JORLAN DIVINO PIMENTEL: R$ 36.400,00 (2 despesas)
+    RACHEL DE FIGUEIREDO: R$ 19.400,00 (2 despesas)
+    ANDRE LUIZ DE OLIVEIRA BELTRÃO: R$ 16.800,00 (1 despesa)
+    MATHEUS FELIPHE AVELLAR: R$ 1.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Publicidade por carros de som (R$ 169.200,00)
+  Fiscalização da eleição — R$ 152.100,00:
+    LUY CARLOS RIBEIRO CORREA: R$ 600,00 (1 despesa)
+    MARCELO BINA DA COSTA: R$ 600,00 (1 despesa)
+    TEREZINHA DE OLIVEIRA ESPOSITO: R$ 600,00 (1 despesa)
+    WANDERSON BELLO DE OLIVEIRA: R$ 600,00 (1 despesa)
+    ABBAS MOUNIR AWALE: R$ 300,00 (1 despesa)
+    ... mais 498 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 151.800,00); Serviços próprios prestados por terceiros (R$ 300,00)
+    Descrição declarada (classificada): PRESTAÇÃO DE SERVIÇOS FISCAL NO DIA DA ELEIÇÃO (R$ 56.100,00)
+    Descrição declarada (classificada): PRESTAÇÃO DE SERVIÇO FISCAL DIA ELEIÇÃO (R$ 27.300,00)
+    Descrição declarada (classificada): CONTRATO PRESTAÇÃO DE SERVIÇO FISCAL DIA ELEIÇÃO (R$ 20.400,00)
+  Eventos — R$ 115.331,00:
+    DEMAIS FESTAS LTDA: R$ 27.725,00 (3 despesas)
+    ELEVA SOLO ENGENHARIA E TECNOLOGIA LTDA: R$ 25.600,00 (8 despesas)
+    RENATO JACOBSON DE OLIVEIRA: R$ 20.600,00 (2 despesas)
+    TONNY MAGALHAES AZEVEDO MA PROMOÇÕES E EVENTOS: R$ 18.830,00 (1 despesa)
+    GRAZIELLA PEREIRA BERNARDO: R$ 11.396,00 (2 despesas)
+    ... mais 4 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Eventos de promoção da candidatura (R$ 115.331,00)
+  Alimentação — R$ 97.194,23:
+    CASA RESTAURANTE E REFEICOES LTDA: R$ 25.033,03 (7 despesas)
+    MAGDA ADRIANA BENEVIDES GOMES LTDA: R$ 24.305,00 (6 despesas)
+    DAVID FERNANDO ROMEIRO LTDA: R$ 18.000,00 (3 despesas)
+    SERGIO B MOREIRA RESTAURANTE BOA VISTA: R$ 13.992,00 (3 despesas)
+    E P PAES LANCHONETE E RESTAURANTE EIRELI: R$ 7.497,25 (22 despesas)
+    ... mais 3 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Alimentação (R$ 97.194,23)
+  Mobilização e militância — R$ 77.836,00:
+    VITA MORAES IND E COM TEXTIL LTDA: R$ 30.900,00 (2 despesas)
+    LUIZ CARLOS CASCAO: R$ 30.000,00 (1 despesa)
+    ASSOCIAÇÃO DOS MAGISTRADOS DO ESTADO DE GOIÁS: R$ 12.000,00 (2 despesas)
+    RENATO JACOBSON DE OLIVEIRA: R$ 2.400,00 (1 despesa)
+    ANDRADE COMERCIO E PRESTAÇAO DE SERVIÇOS DE BORDADOS LTDA: R$ 2.236,00 (7 despesas)
+    ... mais 1 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Atividades de militância e mobilização de rua (R$ 35.536,00); Serviços prestados por terceiros (R$ 30.300,00); Comícios (R$ 12.000,00)
+    Descrição declarada (classificada): SERVIÇO DE COORDENADOR DE CARREATAS E MOBILIZAÇÃO (R$ 30.000,00)
+    Descrição declarada (classificada): PRESTAÇÃO DE SERVIÇOS CABO ELEITORAL (R$ 300,00)
+  Comunicação e assessoria — R$ 64.000,00:
+    RR COMUNICACAO ESTRATEGICA E EVENTOS: R$ 60.000,00 (1 despesa)
+    BARBARA RUBENS JORGE: R$ 4.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 64.000,00)
+    Descrição declarada (classificada): ASSESSORIA DE COMUNICACAO ESTRATEGICA E PRODUCAO D (R$ 60.000,00)
+    Descrição declarada (classificada): PRESTAÇÃO DE SERVIÇOS DE COMUNICAÇÃO (R$ 4.000,00)
+  Locação/cessão de bens imóveis — R$ 41.000,00:
+    UMUARAMA SEMINOVOS LTDA: R$ 30.000,00 (1 despesa)
+    SOCIEDADE GOIANA DE PECUARIA E AGRICULTURA: R$ 10.000,00 (1 despesa)
+    ASSOCIAÇÃO COMERCIAL INDUSTRIAL E DE SERVIÇOS DO ESTADO DE GOIAS: R$ 1.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Locação/cessão de bens imóveis (R$ 41.000,00)
+  Água — R$ 37.403,68:
+    ORF BEBIDAS EIRELI: R$ 21.120,00 (3 despesas)
+    JG DISTRIBUIDORA IMPORTACAO E EXPORTACAO COMERCIO DE ALIMENTOS LTDA: R$ 7.680,00 (1 despesa)
+    CERRADO DISTRIBUIÇÃO E SERVIÇOS LTDA: R$ 7.590,00 (3 despesas)
+    SANEAMENTO DE GOIAS SA: R$ 1.013,68 (1 despesa)
+    Categorias declaradas ao TSE: Água (R$ 37.403,68)
+  Pré-instalação física de comitê de campanha — R$ 31.630,00:
+    INSTALL COMPUTADORES LTDA: R$ 28.300,00 (5 despesas)
+    CLIMACENTER BR COMERCIO E PRESTADORA DE SERVIÇOS: R$ 3.000,00 (1 despesa)
+    RAIMUNDO MAGALHAES DOS SANTOS 12205990187: R$ 330,00 (4 despesas)
+    Categorias declaradas ao TSE: Pré-instalação física de comitê de campanha (R$ 31.630,00)
+  Administração financeira — R$ 30.000,00:
+    BEATRIZ REGINA COELHO DE SOUZA: R$ 30.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 30.000,00)
+    Descrição declarada (classificada): SERVIÇO DE ADMINISTRADOR FINANCEIRO DA CAMPANHA EL (R$ 30.000,00)
+  Outros serviços (não identificados) — R$ 26.686,12:
+    ANAVI LIMPEZA E SERVIÇOS ESPECIALIZADOS LTDA: R$ 12.006,12 (1 despesa)
+    INSTALL COMPUTADORES LTDA: R$ 5.200,00 (1 despesa)
+    WEBER CASSIO DE SOUZA ME: R$ 1.380,00 (2 despesas)
+    ABADIA BATISTA DA SILVA: R$ 300,00 (1 despesa)
+    ADRIANO CARDOSO DA SILVA: R$ 300,00 (1 despesa)
+    ... mais 25 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 26.686,12)
+  Estrutura e manutenção — R$ 26.649,00:
+    ANAVI LIMPEZA E SERVIÇOS ESPECIALIZADOS LTDA: R$ 26.649,00 (2 despesas)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 26.649,00)
+    Descrição declarada (classificada): LIMPEZA DE MANUTENÇÃO COMERCIAL (R$ 22.869,00)
+    Descrição declarada (classificada): LIMPEZA TATERSAL DE ELITE (R$ 3.780,00)
+  Serviços contábeis — R$ 20.000,00:
+    TRAICE AUDITORIA E CONSULTORIA S/S LTDA: R$ 20.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços contábeis (R$ 20.000,00)
+  Materiais de expediente — R$ 15.860,48:
+    CENTER ALVES PRODUTOS DE LIMPEZA E MATERIAIS DO LAZER LTDA: R$ 4.384,10 (20 despesas)
+    LEITE E AQUINO INDUSTRIA E COMERCIO DE GELO LTDA: R$ 4.215,00 (3 despesas)
+    CASA DO SINDICO LTDA: R$ 2.859,00 (18 despesas)
+    SILVA E SALES LTDA: R$ 1.792,13 (34 despesas)
+    LIMPA TUDO DISTRIBUIDORA DE PRODUTOS: R$ 1.408,45 (9 despesas)
+    ... mais 3 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Materiais de expediente (R$ 15.860,48)
+  Outras propagandas — R$ 5.000,00:
+    ELEVATE DIGITAL: R$ 5.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 5.000,00)
+    Descrição declarada (classificada): PUBLICIDADE (R$ 5.000,00)
+  Locação/cessão de bens móveis (exceto veículos) — R$ 3.100,00:
+    CLIMACENTER BR COMERCIO E PRESTADORA DE SERVIÇOS: R$ 3.100,00 (2 despesas)
+    Categorias declaradas ao TSE: Locação/cessão de bens móveis (exceto veículos) (R$ 3.100,00)
+  Telefone — R$ 836,71:
+    LINQ TELECOMUNICAÇÕES LTDA: R$ 451,51 (1 despesa)
+    ALGAR TELECOM S/A: R$ 385,20 (2 despesas)
+    Categorias declaradas ao TSE: Telefone (R$ 836,71)
+  Não especificado — R$ 465,00:
+    SESCON: R$ 465,00 (2 despesas)
+    Categorias declaradas ao TSE: Diversas a especificar (R$ 465,00)
+  Energia elétrica — R$ 294,65:
+    BC PAINEIRA GERAÇÃO E COMERCIALIZAÇÃO DE ENERGIA LTDA: R$ 294,65 (1 despesa)
+    Categorias declaradas ao TSE: Energia elétrica (R$ 294,65)
+  Encargos financeiros, taxas bancárias e/ou op. cartão de crédito — R$ 291,40:
+    (fornecedor não informado): R$ 291,40 (8 despesas)
+    Categorias declaradas ao TSE: Encargos financeiros, taxas bancárias e/ou op. cartão de crédito (R$ 291,40)
+
+Observação: o fornecedor é o vinculado ao documento cadastrado no banco;
+quando falta documento, o banco não associa um fornecedor à despesa.

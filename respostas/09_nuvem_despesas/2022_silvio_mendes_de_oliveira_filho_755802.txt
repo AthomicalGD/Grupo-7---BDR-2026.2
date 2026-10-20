@@ -1,0 +1,209 @@
+P9) Para onde foi o dinheiro da candidatura de SILVIO MENDES DE OLIVEIRA FILHO?
+Candidatura: 755802 | SQ_CANDIDATO: 180001600497 | GOVERNADOR | PI | 2022
+
+Fonte: TSE, despesas contratadas declaradas pela candidatura; valores em reais do ano da eleição.
+Nuvem: tamanho da expressão proporcional à soma dos valores contratados por tipo de gasto.
+O tipo do TSE (DS_ORIGEM_DESPESA) prevalece; descrições livres (DS_DESPESA) só ajudam
+a identificar serviços nas categorias genéricas. Não se usa o nome/CNAE do fornecedor
+para inferir o tipo de gasto. Categorias sem identificação ficam explícitas.
+Fora da conta: 'Doações financeiras a outros candidatos/partidos' (transferência que reaparece na campanha recebedora).
+Despesas com valor zero: 0; registros com valor positivo sem fornecedor: 283.
+Total analisado: R$ 6.899.157,13 em 790 despesas.
+Cobertura da classificação por valor:
+  tipo TSE: 691 despesas, R$ 5.093.679,63 (73.8% do valor)
+  descrição: 53 despesas, R$ 1.764.203,00 (25.6% do valor)
+  sem identificação: 46 despesas, R$ 41.274,50 (0.6% do valor)
+
+Gastos por tipo (base da nuvem):
+  Tipo | despesas | valor | participação | inferidas da descrição
+  Propaganda audiovisual | 7 | R$ 1.524.000,00 | 22.1% | 2
+  Propaganda impressa | 92 | R$ 1.472.460,01 | 21.3% | 2
+  Transporte e veículos | 150 | R$ 668.329,40 | 9.7% | 15
+  Mobilização e militância | 14 | R$ 585.547,50 | 8.5% | 7
+  Propaganda digital | 12 | R$ 500.127,65 | 7.2% | 0
+  Outras propagandas | 1 | R$ 444.000,00 | 6.4% | 1
+  Estratégia política | 2 | R$ 400.000,00 | 5.8% | 2
+  Pesquisas ou testes eleitorais | 3 | R$ 343.000,00 | 5.0% | 0
+  Serviços advocatícios | 2 | R$ 320.000,00 | 4.6% | 0
+  Serviços contábeis | 2 | R$ 150.000,00 | 2.2% | 0
+  Eventos | 7 | R$ 114.633,00 | 1.7% | 3
+  Água | 9 | R$ 65.825,00 | 1.0% | 9
+  Pessoal | 41 | R$ 57.764,80 | 0.8% | 0
+  Locação/cessão de bens imóveis | 1 | R$ 45.000,00 | 0.7% | 0
+  Propaganda sonora | 16 | R$ 43.928,50 | 0.6% | 0
+  Correspondências e despesas postais | 1 | R$ 43.032,30 | 0.6% | 0
+  Outros serviços (não identificados) | 4 | R$ 34.732,00 | 0.5% | 0
+  Alimentação | 16 | R$ 20.388,12 | 0.3% | 0
+  Mascotes de campanha | 4 | R$ 16.000,00 | 0.2% | 4
+  Locação/cessão de bens móveis (exceto veículos) | 7 | R$ 13.500,00 | 0.2% | 0
+  Despesas com Hospedagem | 12 | R$ 8.457,00 | 0.1% | 0
+  Comunicação e assessoria | 1 | R$ 8.400,00 | 0.1% | 1
+  Não especificado | 42 | R$ 6.542,50 | 0.1% | 0
+  Segurança | 6 | R$ 5.580,00 | 0.1% | 6
+  Internet e telefonia | 1 | R$ 4.000,00 | 0.1% | 1
+  Materiais de expediente | 54 | R$ 2.358,05 | 0.0% | 0
+  Encargos financeiros, taxas bancárias e/ou op. cartão de crédito | 283 | R$ 1.551,30 | 0.0% | 0
+
+Fornecedores por tipo (até 5 maiores valores contratados em cada tipo):
+  Propaganda audiovisual — R$ 1.524.000,00:
+    BR IDEIAS FILMES LTDA: R$ 1.500.000,00 (5 despesas)
+    RODRIGUES PRODUÇÕES MUSICAIS LTDA - ME: R$ 15.000,00 (1 despesa)
+    LEVY DAN SOARES BEZERRA 08033423307: R$ 9.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 759.000,00); Produção de programas de rádio, televisão ou vídeo (R$ 750.000,00); Produção de jingles, vinhetas e slogans (R$ 15.000,00)
+    Descrição declarada (classificada): PROD. AUDIOVISUAL· PLATAFORMAS DIGITAIS E OUTROS (R$ 750.000,00)
+    Descrição declarada (classificada): COBERTURA FOTOGRÁFICA DOS EVENTOS DE CAMPANHA (R$ 9.000,00)
+  Propaganda impressa — R$ 1.472.460,01:
+    HALLEY SA GRAFICA E EDITORA: R$ 1.097.489,51 (50 despesas)
+    MAX DIGITAL PRINT LTDA: R$ 122.200,00 (6 despesas)
+    GRAFICON SERVIÇOS GRAFICOS - EPP: R$ 62.094,00 (6 despesas)
+    M. DO C. DE CARVALHO ARTIGOS ESPORTIVOS - ME: R$ 56.000,00 (4 despesas)
+    ABUSAMAK   LOPES LTDA-ME: R$ 49.000,00 (4 despesas)
+    ... mais 6 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Publicidade por materiais impressos (R$ 1.403.378,51); Publicidade por adesivos (R$ 61.081,50); Serviços prestados por terceiros (R$ 8.000,00)
+    Descrição declarada (classificada): LONA IMPRESSA (R$ 8.000,00)
+  Transporte e veículos — R$ 668.329,40:
+    J W SARAIVA E CIA LTDA: R$ 128.580,50 (28 despesas)
+    NUNES FERRAZ - TRANSPORTES TURISMO LTDA: R$ 88.200,00 (12 despesas)
+    MAZUAD AUTO LOCADORA E LOGISTICA LTDA: R$ 53.250,00 (4 despesas)
+    FCN.X CARVALHO COMBUSTÍVEL LTDA: R$ 48.420,39 (27 despesas)
+    J L JUNIOR E CIA LTDA: R$ 48.000,00 (2 despesas)
+    ... mais 38 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Cessão ou locação de veículos (R$ 226.136,61); Combustíveis e lubrificantes (R$ 210.040,49); Despesas com transporte ou deslocamento (R$ 202.262,30); Serviços prestados por terceiros (R$ 29.890,00)
+    Descrição declarada (classificada): SERVIÇOS DE MOTORISTA CONFORME CONTRATO (R$ 5.580,00)
+    Descrição declarada (classificada): SERV DE MOTORISTA· DE 18/08 A 30/09 CONF CONTRATO (R$ 4.000,00)
+    Descrição declarada (classificada): MOTORISTA· PERÍODO 16/08 A 02/10· CONF CONTRATO (R$ 2.790,00)
+  Mobilização e militância — R$ 585.547,50:
+    AFIA MARCIA MARQUES DA COSTA 73352764387: R$ 570.287,50 (7 despesas)
+    M. DO C. DE CARVALHO ARTIGOS ESPORTIVOS - ME: R$ 15.260,00 (7 despesas)
+    Categorias declaradas ao TSE: Atividades de militância e mobilização de rua (R$ 570.287,50); Serviços prestados por terceiros (R$ 15.260,00)
+    Descrição declarada (classificada): UNIFORME PARA EQUIPE DE MILITÂNCIA (R$ 11.760,00)
+    Descrição declarada (classificada): UNIFORME PARA EQUIPE DE MILITÂNCIA TAM G (R$ 1.400,00)
+    Descrição declarada (classificada): UNIFORME PARA EQUIPE DE MILITÂNCIA TAM M (R$ 1.050,00)
+  Propaganda digital — R$ 500.127,65:
+    DLOCAL BRASIL INSTITUICAO DE PAGAMENTO S.A.: R$ 300.000,00 (7 despesas)
+    GOOGLE BRASIL INTERNET LTDA: R$ 200.000,00 (4 despesas)
+    ENDURANCE GROUP B. H. SITESLTDA: R$ 127,65 (1 despesa)
+    Categorias declaradas ao TSE: Despesa com Impulsionamento de Conteúdos (R$ 500.000,00); Criação e inclusão de páginas na internet (R$ 127,65)
+  Outras propagandas — R$ 444.000,00:
+    JOAO CLAUDIO DA SILVA MORENO: R$ 444.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 444.000,00)
+    Descrição declarada (classificada): SERV DE APRESENTADOR DE PROPAGANDA CONF CONTRATO (R$ 444.000,00)
+  Estratégia política — R$ 400.000,00:
+    BENJAMIM COMUNICAÇÃO LTDA: R$ 400.000,00 (2 despesas)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 400.000,00)
+    Descrição declarada (classificada): ESTRATÉGIA POLÍTICA· AGÊNCIA· CRIAÇÃO E OUTRAS (R$ 250.000,00)
+    Descrição declarada (classificada): SERVIÇOS DE ESTRATEGIA POLITICA· AGENCIA E CRIAÇÃO (R$ 150.000,00)
+  Pesquisas ou testes eleitorais — R$ 343.000,00:
+    FATOR REAL PESQUISAS EIRELI: R$ 300.000,00 (2 despesas)
+    OPINAR PESQUISAS LTDA.: R$ 43.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Pesquisas ou testes eleitorais (R$ 343.000,00)
+  Serviços advocatícios — R$ 320.000,00:
+    GEORGIA NUNES ADVOGADOS ASSOCIADOS: R$ 220.000,00 (1 despesa)
+    ARAUJO SOCIEDADE INDIVIDUAL DE ADVOCACIA: R$ 100.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços advocatícios (R$ 320.000,00)
+  Serviços contábeis — R$ 150.000,00:
+    ELEVA SERVIÇOS DE CONSULTORIA CONTABIL E TRIBUTARIA LTDA: R$ 150.000,00 (2 despesas)
+    Categorias declaradas ao TSE: Serviços contábeis (R$ 150.000,00)
+  Eventos — R$ 114.633,00:
+    R. DE CASTRO SANTOS: R$ 103.285,00 (3 despesas)
+    HENRIQUE BUARQUE GURGEL: R$ 5.000,00 (1 despesa)
+    DF REPRESENTANTAÇOES COMERCIO ATACADISTA DE MATERIAIS DE CONSTRUÇÕES MADEIRAS FERRAGENS E SERVIÇOS DE OR: R$ 3.100,00 (1 despesa)
+    JOÃO F O NERY: R$ 2.840,00 (1 despesa)
+    SECRETARIA DA FAZENDA DO ESTADO DO PIAUÍ: R$ 408,00 (1 despesa)
+    Categorias declaradas ao TSE: Eventos de promoção da candidatura (R$ 106.385,00); Serviços prestados por terceiros (R$ 7.840,00); Diversas a especificar (R$ 408,00)
+    Descrição declarada (classificada): LOGISTICA EVENTO ONDA AZUL· TERESINA· DIA 22/09/22 (R$ 5.000,00)
+    Descrição declarada (classificada): SERV LIMPEZA DE RESIDUOS NO EVENTO ONDA AZUL (R$ 2.840,00)
+    Descrição declarada (classificada): TAXA CORPO DE BOMBEIROS MILITAR· EVENTO ONDA AZUL (R$ 408,00)
+  Água — R$ 65.825,00:
+    MINERACAO ARAUJO IND E COM LTDA: R$ 30.625,00 (6 despesas)
+    TEIXEIRA E LEITE LTDA: R$ 25.000,00 (2 despesas)
+    AREIA BRANCA INDUSTRIA E COMERCIO DE AGUA LTDA: R$ 10.200,00 (1 despesa)
+    Categorias declaradas ao TSE: Diversas a especificar (R$ 65.825,00)
+    Descrição declarada (classificada): AGUA MINERAL NATURAL 48/200ML REGINA (R$ 38.125,00)
+    Descrição declarada (classificada): AGUA MINERAL NATURAL 48/200 ML REGINA (R$ 12.500,00)
+    Descrição declarada (classificada): AQUISIÇÃO DE ÁGUA COPO 200ML CONFORME CONTRATO (R$ 10.200,00)
+  Pessoal — R$ 57.764,80:
+    ALDERINA CAVALCANTE ALMEIDA BARROS: R$ 5.040,00 (3 despesas)
+    FRANCISCO TEIXEIRA NUNES JUNIOR: R$ 5.040,00 (3 despesas)
+    CELIA MARIA DIAS MENDES: R$ 4.256,80 (1 despesa)
+    ADSANDRA ALVES GOMES: R$ 3.540,00 (3 despesas)
+    CARLOS EDUARDO DA SILVA BORGES: R$ 2.790,00 (1 despesa)
+    ... mais 15 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Despesas com pessoal (R$ 57.764,80)
+  Locação/cessão de bens imóveis — R$ 45.000,00:
+    CIRO NOGUEIRA AGROPECUÁRIA E IMÓVEIS LTDA: R$ 45.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Locação/cessão de bens imóveis (R$ 45.000,00)
+  Propaganda sonora — R$ 43.928,50:
+    M A R VELOSO MAGALHAES LTDA: R$ 20.000,00 (3 despesas)
+    BR IDEIAS FILMES LTDA: R$ 18.271,00 (11 despesas)
+    R. DE CASTRO SANTOS: R$ 5.657,50 (2 despesas)
+    Categorias declaradas ao TSE: Publicidade por carros de som (R$ 43.928,50)
+  Correspondências e despesas postais — R$ 43.032,30:
+    HAWAI COMÉRCIO E SERVIÇOS - LTDA: R$ 43.032,30 (1 despesa)
+    Categorias declaradas ao TSE: Correspondências e despesas postais (R$ 43.032,30)
+  Outros serviços (não identificados) — R$ 34.732,00:
+    DIRCEU DE SENA ANDRADE 35360259353: R$ 22.500,00 (1 despesa)
+    DARLANE MARQUES BASTOS 02144491305: R$ 6.440,00 (1 despesa)
+    JONATAS DIEGO COSTA DA SILVA: R$ 4.000,00 (1 despesa)
+    ANDRE LUIS PINHEIRO BRAGA: R$ 1.792,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 34.732,00)
+  Alimentação — R$ 20.388,12:
+    HAVENNA PEREIRA DE SOUSA 99202310378: R$ 11.196,00 (2 despesas)
+    G.C.B. TORRES - EPP: R$ 4.958,00 (2 despesas)
+    MUNIZ DE CARVALHO   FILHOS LTDA: R$ 580,00 (1 despesa)
+    M R O PIEROTE - ME: R$ 562,00 (1 despesa)
+    SHISLENE RODRIGUES BORGES 77686756300: R$ 533,00 (1 despesa)
+    ... mais 9 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Alimentação (R$ 20.388,12)
+  Mascotes de campanha — R$ 16.000,00:
+    27.965.402 JUSCILENE DA SILVA OLIVEIRA: R$ 10.000,00 (1 despesa)
+    IKARO JARDEL SANTOS FEITOSA DA COSTA: R$ 2.000,00 (1 despesa)
+    JARBAS VALADAO LEITE: R$ 2.000,00 (1 despesa)
+    RAMON VALADARES MOURA: R$ 2.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 16.000,00)
+    Descrição declarada (classificada): SERVIÇOS DOS MASCOTES DE SÍLVIO MENDES E IRACEMA (R$ 10.000,00)
+    Descrição declarada (classificada): SERVIÇOS DE MASCOTE SILVIO E IRACEMA (R$ 2.000,00)
+    Descrição declarada (classificada): SERVIÇOS DE MASCOTES DE SILVIO E IRACEMA (R$ 2.000,00)
+  Locação/cessão de bens móveis (exceto veículos) — R$ 13.500,00:
+    DANILO RODRIGUES DE MEDEIROS: R$ 13.500,00 (7 despesas)
+    Categorias declaradas ao TSE: Locação/cessão de bens móveis (exceto veículos) (R$ 13.500,00)
+  Despesas com Hospedagem — R$ 8.457,00:
+    MUNIZ DE CARVALHO   FILHOS LTDA: R$ 3.090,00 (4 despesas)
+    MAKTUB HOTEL: R$ 2.460,00 (2 despesas)
+    MARIA DE LOURDES RODRIGUES - ME: R$ 1.500,00 (1 despesa)
+    REAL HOTEL EMPREENDIMENTO LTDA: R$ 500,00 (1 despesa)
+    POUSADA PITORESCO EIRELI: R$ 330,00 (1 despesa)
+    ... mais 3 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Despesas com Hospedagem (R$ 8.457,00)
+  Comunicação e assessoria — R$ 8.400,00:
+    ELLYO JOSE TEIXEIRA PIO 02644713340: R$ 8.400,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 8.400,00)
+    Descrição declarada (classificada): SERVIÇOS DE ASSESSORIA E COMUNICAÇÃO CONF CONTRATO (R$ 8.400,00)
+  Não especificado — R$ 6.542,50:
+    CAVE COMERCIO E SERVIÇOS LTDA-ME: R$ 2.094,00 (4 despesas)
+    ENSAQUE - BOTELHO E LEITE COMERCIO LTDA - ME: R$ 1.548,50 (17 despesas)
+    AREIA BRANCA INDUSTRIA E COMERCIO DE AGUA LTDA: R$ 1.340,00 (1 despesa)
+    EMPRESA EXPRESSO PRINCESA DO SUL: R$ 950,00 (10 despesas)
+    MANOEL BARBOSA LIMA LTDA: R$ 560,00 (9 despesas)
+    ... mais 1 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Diversas a especificar (R$ 6.542,50)
+  Segurança — R$ 5.580,00:
+    LUIZ CARLOS LOIOLA DO VALE FILHO: R$ 2.790,00 (3 despesas)
+    MARCELO DE MORAES FERREIRA: R$ 2.790,00 (3 despesas)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 5.580,00)
+    Descrição declarada (classificada): SERV. DE VIGILÂNCIA E SEGURANÇA CONFORME CONTRATO (R$ 930,00)
+    Descrição declarada (classificada): SERVIÇO DE VIGILÂNCIA DO COMITÊ CONFORME CONTRATO (R$ 930,00)
+    Descrição declarada (classificada): SERVIÇOS DE VIGILÂNCIA DO COMITÊ CONF CONTRATO (R$ 930,00)
+  Internet e telefonia — R$ 4.000,00:
+    IT TECNOLOGIA E INFORMACAO LTDA: R$ 4.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 4.000,00)
+    Descrição declarada (classificada): SERVIÇOS DE INTERNET PARA O COMITÊ DE CAMPANHA (R$ 4.000,00)
+  Materiais de expediente — R$ 2.358,05:
+    B M DE CARVALHO ME: R$ 2.358,05 (54 despesas)
+    Categorias declaradas ao TSE: Materiais de expediente (R$ 2.358,05)
+  Encargos financeiros, taxas bancárias e/ou op. cartão de crédito — R$ 1.551,30:
+    (fornecedor não informado): R$ 1.551,30 (283 despesas)
+    Categorias declaradas ao TSE: Encargos financeiros, taxas bancárias e/ou op. cartão de crédito (R$ 1.551,30)
+
+Observação: o fornecedor é o vinculado ao documento cadastrado no banco;
+quando falta documento, o banco não associa um fornecedor à despesa.

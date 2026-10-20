@@ -1,0 +1,111 @@
+P9) Auditoria das classificações por ano (somente UFs carregadas)
+Despesas contratadas positivas de eleições ordinárias, sem transferências entre campanhas.
+Prioridade de revisão: maiores valores que continuam sem identificação, não nomes de fornecedores.
+
+Ano: 2018
+  tipo TSE: 250363 despesas, R$ 625.646.947,30 (85.8% do valor)
+  descrição: 17677 despesas, R$ 74.052.610,78 (10.2% do valor)
+  sem identificação: 11487 despesas, R$ 29.302.534,82 (4.0% do valor)
+
+  Maiores descrições ainda sem identificação:
+    R$ 641.045,00 | 106 despesas | Serviços prestados por terceiros | PRESTAÇÃO DE SERVIÇOS À CAMPANHA CFE CONTRATO.
+    R$ 552.000,00 | 1 despesa | Serviços prestados por terceiros | SERV DE ACOMPANHAMENTO E CONTEUDO DE ESTRATEGIA DA
+    R$ 535.000,00 | 1 despesa | Serviços prestados por terceiros | 2. ADITIVO SERV P/ 2. TURNO CONF CONTRATO ORIGINAL
+    R$ 332.000,00 | 47 despesas | Serviços prestados por terceiros | PRESTAÇÃO DE SERVIÇOS À CAMPANHA CFE CONTRATO
+    R$ 300.000,00 | 1 despesa | Serviços prestados por terceiros | ACOMPANHAMENTO E CONTEUDO DE ESTRATEGIA DE CAMPANH
+    R$ 300.000,00 | 1 despesa | Serviços prestados por terceiros | SERVIÇO PRESTADO REF A ACOMPANHAMENTO E CONTEUDO
+    R$ 280.000,00 | 1 despesa | Serviços próprios prestados por terceiros | REGISTRO DOCUMENTOS PRESTAÇÃO DE CONTAS ELEITORAIS
+    R$ 272.399,00 | 469 despesas | Serviços prestados por terceiros | PRESTAÇAO DE SERVIÇOS NA CAMPANHA ELEITORAL
+    R$ 265.600,00 | 31 despesas | Serviços próprios prestados por terceiros | SERV COORD ADM E DISTRIB MATERIAL
+    R$ 244.450,00 | 54 despesas | Serviços prestados por terceiros | ASSESSORIA
+    R$ 230.000,00 | 1 despesa | Serviços prestados por terceiros | PLANEJAMNETO E CRIAÇÃO DE PEÇAS DE CAMPANHA PUBLIC
+    R$ 219.615,00 | 1 despesa | Serviços prestados por terceiros | FORNECIMENTO DE APOIO LOGISTICO E DE PESSOAL
+    R$ 218.350,00 | 170 despesas | Serviços prestados por terceiros | PRESTAÇÃO DE SERVIÇOS ADM FINS ELEITORAIS
+    R$ 210.000,00 | 1 despesa | Serviços prestados por terceiros | SERVIÇOS DE INFORMAÇÕES A CAMPANHA ELEITORAL
+    R$ 181.419,81 | 1 despesa | Serviços prestados por terceiros | SERV GESTAO DE PESSOAL
+    R$ 180.800,00 | 37 despesas | Serviços prestados por terceiros | SERVIÇOS DE COODERNAÇÃO DE CAMPANHA
+    R$ 171.800,00 | 47 despesas | Serviços prestados por terceiros | CONTRATO DE PRESTACAO DE SERVICOS
+    R$ 168.163,33 | 69 despesas | Serviços prestados por terceiros | PRESTAÇÃO DE SERVIÇOS PARA CAMPANHA ELEITORAL
+    R$ 150.000,00 | 1 despesa | Serviços prestados por terceiros | ASSESSORIA POLITICA PARA CAMPANHA ELEITORAL
+    R$ 150.000,00 | 1 despesa | Serviços prestados por terceiros | MONITORAMENTO E ANALISE DE CANAIS DE MIDIAS SOC
+
+Ano: 2020
+  tipo TSE: 743810 despesas, R$ 581.803.009,11 (87.8% do valor)
+  descrição: 25640 despesas, R$ 55.497.686,06 (8.4% do valor)
+  sem identificação: 20239 despesas, R$ 25.692.085,86 (3.9% do valor)
+
+  Maiores descrições ainda sem identificação:
+    R$ 422.250,00 | 1 despesa | Serviços prestados por terceiros | SERVIÇO DE EXECUÇÃO DE SERVIÇO DE CAMPANHA
+    R$ 200.000,00 | 1 despesa | Diversas a especificar | ENX DE PECAS P/ MIDIA ON E OFF· EST E TAT DE CAMPA
+    R$ 176.410,00 | 1 despesa | Serviços prestados por terceiros | PLANEJAMENTO E CRIAÇÃO DAS PEÇAS GRAFICAS DE DIVUL
+    R$ 154.378,63 | 151 despesas | Serviços prestados por terceiros | CONTRATO DE PRESTAÇÃO DE SERVIÇOS
+    R$ 140.000,00 | 2 despesas | Diversas a especificar | PRESTAÇÃO DE SERVIÇOS NA ASSESSORIA· CONSULTORIA E
+    R$ 126.100,00 | 5 despesas | Serviços prestados por terceiros | PRESTADOR DE SERVIÇOS
+    R$ 125.000,00 | 1 despesa | Serviços prestados por terceiros | LOCAÇÃO DE DE EQUIPAMENTOS PARA GRAVAO
+    R$ 104.000,00 | 4 despesas | Serviços prestados por terceiros | SERVIÇOS PRESTADOS DE EDIÇÃO
+    R$ 102.631,20 | 77 despesas | Serviços prestados por terceiros | CONTRATO DE PRESTAÇÃO DE SERVIÇO
+    R$ 100.000,00 | 1 despesa | Serviços prestados por terceiros | SERVICO DE PLANEJAMENTO CONSULTORIA E CRIACAO
+    R$ 100.000,00 | 1 despesa | Serviços prestados por terceiros | SERVIÇOS DE REDAÇÃO DIREÇÃO E CRIAÇÃO CAMPANHA
+    R$ 93.657,39 | 100 despesas | Serviços prestados por terceiros | REFERENTE A CAMPANHA ELEITORAL 2020
+    R$ 90.000,00 | 1 despesa | Diversas a especificar | CRIAÇÃO DE ESTRATEGIA E TATICA PARA MIDIAS
+    R$ 86.410,25 | 58 despesas | Serviços prestados por terceiros | PRESTAÇÃO DE SERVIÇOS
+    R$ 82.417,65 | 22 despesas | Serviços prestados por terceiros | SERVICO
+    R$ 80.000,00 | 1 despesa | Serviços prestados por terceiros | GESTAO E MANUT. DAS ATIVIDADES VEICULADAS EM REDES
+    R$ 75.900,00 | 1 despesa | Serviços prestados por terceiros | TRATAMENTO DE DADOS/INFORMAÇÕES PAG. ELETRONICAS
+    R$ 75.000,00 | 9 despesas | Serviços prestados por terceiros | SERVIÇOS PRESTADOS DE ILUMINAÇÃO
+    R$ 75.000,00 | 1 despesa | Serviços próprios prestados por terceiros | DIAGNÓSTICO· ESTRATÉGIA· PLANO DE CAMPANHA
+    R$ 74.000,00 | 6 despesas | Serviços prestados por terceiros | SERVIÇOS PRESTADOS DE PRODUÇÃO
+
+Ano: 2022
+  tipo TSE: 370170 despesas, R$ 1.347.734.826,57 (84.8% do valor)
+  descrição: 16307 despesas, R$ 168.020.927,86 (10.6% do valor)
+  sem identificação: 12596 despesas, R$ 72.745.614,50 (4.6% do valor)
+
+  Maiores descrições ainda sem identificação:
+    R$ 4.005.000,00 | 2 despesas | Serviços prestados por terceiros | PRESTAÇÃO DE SERVIÇOS DE CRIAÇÃO· MONITORAMENTO
+    R$ 3.260.000,00 | 2 despesas | Serviços prestados por terceiros | SERVIÇOS DE CRIAÇÃO· DIRECIONAMENTO E GESTÃO DE AÇ
+    R$ 1.850.335,00 | 561 despesas | Serviços prestados por terceiros | SERVIÇOS DIVERSOS DIVULG. CAMP. CONF. CONTRATO
+    R$ 855.000,00 | 2 despesas | Serviços prestados por terceiros | PREST DE SERVIÇOS DE ELABORAÇÃO E ESTRATEGIA
+    R$ 533.460,41 | 1 despesa | Serviços prestados por terceiros | SERVICO DE ATIVIDADE PARA CAMPANHA
+    R$ 495.035,67 | 2 despesas | Serviços prestados por terceiros | SERVICO
+    R$ 494.535,67 | 1 despesa | Serviços prestados por terceiros | SERVICO DE EXECUCAO DE ATIVIDADES
+    R$ 450.000,00 | 1 despesa | Serviços prestados por terceiros | SERVIÇO PREST.CONF CONTRATO E NFS 96·103·107.109
+    R$ 440.000,00 | 1 despesa | Serviços prestados por terceiros | PROMOCAO ATRAVES COORD· SUBCOORD· SUPERVISORES
+    R$ 393.202,75 | 151 despesas | Serviços prestados por terceiros | APOIO
+    R$ 350.508,65 | 4 despesas | Serviços prestados por terceiros | SERV DE ANALISE E PLANEJ ESTRATEG DE CAMPANHA
+    R$ 350.000,00 | 2 despesas | Serviços prestados por terceiros | ANALISE ELABORAÇÃO DE PARECERES PSICODEMOGRAFICOS
+    R$ 350.000,00 | 1 despesa | Serviços prestados por terceiros | PLANEJAMENTO DE PROGRAMA ELEITORAL
+    R$ 349.048,90 | 83 despesas | Serviços prestados por terceiros | DIVERSAS ATIV. CONSTANTES DA CL. 1. DO CONTRATO
+    R$ 311.996,00 | 11 despesas | Serviços prestados por terceiros | PRESTAÇÃO DE SERVIÇOS NA CAMPANHA ELEITORAL
+    R$ 300.419,38 | 1 despesa | Serviços prestados por terceiros | PRESTAÇÃO DE SERVIÇOS DE TRATAMENTO TECNOLÓGICO
+    R$ 300.000,00 | 1 despesa | Diversas a especificar | CONSUTORIA· PLANEJAMENTO E CRIAÇÃO DE CAMPANHA
+    R$ 300.000,00 | 1 despesa | Serviços prestados por terceiros | PRODUCAO AUDIO COMPUT GRAFICA ILUMINACAO EDICAO
+    R$ 300.000,00 | 1 despesa | Serviços prestados por terceiros | SERVICO DE PESQUISA
+    R$ 295.000,00 | 1 despesa | Serviços prestados por terceiros | SERVIÇOS PRESTADOS NAS AÇOES DE CAMPANHA
+
+Ano: 2024
+  tipo TSE: 797212 despesas, R$ 1.090.733.532,16 (87.0% do valor)
+  descrição: 30807 despesas, R$ 115.314.837,16 (9.2% do valor)
+  sem identificação: 21385 despesas, R$ 47.977.503,17 (3.8% do valor)
+
+  Maiores descrições ainda sem identificação:
+    R$ 669.500,00 | 7 despesas | Serviços prestados por terceiros | CONCEPÇÃO E CRIAÇÃO DE MATERIAL
+    R$ 660.626,00 | 39 despesas | Serviços prestados por terceiros | CONTRATO DE PRESTAÇÃO DE SERVIÇOS
+    R$ 350.000,00 | 1 despesa | Serviços prestados por terceiros | CRIACAO E ESTRAT DE CAMP COM IDENT VISUAL E CONSUL
+    R$ 339.738,00 | 22 despesas | Serviços prestados por terceiros | CONFORME CONTRATO
+    R$ 300.000,00 | 1 despesa | Serviços prestados por terceiros | PRODUTORA
+    R$ 300.000,00 | 2 despesas | Serviços prestados por terceiros | SERVIÇO DE DIREÇÃO PARA 1. TURNO ELEIÇÃO 2024
+    R$ 213.278,80 | 83 despesas | Serviços prestados por terceiros | MONITOR DE CAMPANHA
+    R$ 212.919,72 | 44 despesas | Serviços prestados por terceiros | PRESTAÇÃO DE SERVIÇO
+    R$ 210.000,00 | 8 despesas | Serviços prestados por terceiros | SERVIÇO DE EDIÇÃO PARA 1. TURNO ELEIÇÃO 2024
+    R$ 192.921,55 | 211 despesas | Serviços prestados por terceiros | PRESTAÇÃO DE SERVIÇOS
+    R$ 165.000,00 | 1 despesa | Diversas a especificar | SERVIÇO DE PLANEJ RECRUT CAPACIT APOIO P FISCALIZA
+    R$ 141.000,00 | 3 despesas | Serviços prestados por terceiros | CRIAÇAO, DESIGNER GRAFICO, ARTES, LAYOUT
+    R$ 140.000,00 | 1 despesa | Serviços prestados por terceiros | 1 GALPO 20X60
+    R$ 136.700,00 | 2 despesas | Serviços prestados por terceiros | SERVIÇOS DE ORGANIZAÇÃO E INFRAESTRUTURAÇÃO DE EVE
+    R$ 128.120,19 | 1 despesa | Diversas a especificar | RESTITUIÇÃO DE VALOR-FEFC- MDB
+    R$ 124.920,00 | 1 despesa | Serviços prestados por terceiros | SERV ASSESSORIA COMUNICAO, REDES, REDACAO
+    R$ 123.600,00 | 1 despesa | Serviços prestados por terceiros | GESTAO DE EQUIPE, ORGANIZAÇAO, LOGISTICA
+    R$ 122.254,45 | 7 despesas | Serviços prestados por terceiros | SERVIÇO PRESTADO POR TERCEIRO
+    R$ 122.246,22 | 70 despesas | Serviços prestados por terceiros | CONTRATAÇÃO DE PESSOA FÍSICA
+    R$ 122.000,00 | 3 despesas | Serviços prestados por terceiros | CRIACAO E DIRECAO DE ARTE

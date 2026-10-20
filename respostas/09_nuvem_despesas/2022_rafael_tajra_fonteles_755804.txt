@@ -1,0 +1,181 @@
+P9) Para onde foi o dinheiro da candidatura de RAFAEL TAJRA FONTELES?
+Candidatura: 755804 | SQ_CANDIDATO: 180001604027 | GOVERNADOR | PI | 2022
+
+Fonte: TSE, despesas contratadas declaradas pela candidatura; valores em reais do ano da eleição.
+Nuvem: tamanho da expressão proporcional à soma dos valores contratados por tipo de gasto.
+O tipo do TSE (DS_ORIGEM_DESPESA) prevalece; descrições livres (DS_DESPESA) só ajudam
+a identificar serviços nas categorias genéricas. Não se usa o nome/CNAE do fornecedor
+para inferir o tipo de gasto. Categorias sem identificação ficam explícitas.
+Fora da conta: 'Doações financeiras a outros candidatos/partidos' (transferência que reaparece na campanha recebedora).
+Despesas com valor zero: 0; registros com valor positivo sem fornecedor: 153.
+Total analisado: R$ 6.569.595,80 em 503 despesas.
+Cobertura da classificação por valor:
+  tipo TSE: 463 despesas, R$ 5.504.500,56 (83.8% do valor)
+  descrição: 30 despesas, R$ 841.466,50 (12.8% do valor)
+  sem identificação: 10 despesas, R$ 223.628,74 (3.4% do valor)
+
+Gastos por tipo (base da nuvem):
+  Tipo | despesas | valor | participação | inferidas da descrição
+  Propaganda impressa | 101 | R$ 1.836.206,30 | 28.0% | 0
+  Transporte e veículos | 92 | R$ 1.051.422,77 | 16.0% | 5
+  Propaganda audiovisual | 3 | R$ 920.000,00 | 14.0% | 0
+  Mobilização e militância | 5 | R$ 654.000,00 | 10.0% | 3
+  Propaganda digital | 44 | R$ 450.000,00 | 6.8% | 0
+  Comunicação digital | 1 | R$ 420.000,00 | 6.4% | 1
+  Eventos | 2 | R$ 250.000,00 | 3.8% | 2
+  Serviços advocatícios | 2 | R$ 250.000,00 | 3.8% | 0
+  Outros serviços (não identificados) | 10 | R$ 223.628,74 | 3.4% | 0
+  Serviços contábeis | 1 | R$ 100.000,00 | 1.5% | 0
+  Correspondências e despesas postais | 2 | R$ 90.838,72 | 1.4% | 0
+  Indenização de veículo | 1 | R$ 74.813,00 | 1.1% | 1
+  Pessoal | 1 | R$ 41.409,11 | 0.6% | 0
+  Água | 6 | R$ 36.477,54 | 0.6% | 4
+  Alimentação | 1 | R$ 35.200,00 | 0.5% | 0
+  Locação/cessão de bens imóveis | 4 | R$ 32.875,00 | 0.5% | 0
+  Administração e apoio | 10 | R$ 30.080,00 | 0.5% | 10
+  Despesas com Hospedagem | 22 | R$ 20.888,40 | 0.3% | 0
+  Locação/cessão de bens móveis (exceto veículos) | 1 | R$ 16.000,00 | 0.2% | 0
+  Encargos financeiros, taxas bancárias e/ou op. cartão de crédito | 148 | R$ 12.745,41 | 0.2% | 0
+  Coordenação de campanha | 2 | R$ 8.600,00 | 0.1% | 2
+  Energia elétrica | 1 | R$ 5.095,45 | 0.1% | 0
+  Mascotes de campanha | 1 | R$ 5.000,00 | 0.1% | 1
+  Materiais de expediente | 36 | R$ 2.674,20 | 0.0% | 0
+  Impostos, contribuições e taxas | 5 | R$ 1.042,66 | 0.0% | 0
+  Comunicação e assessoria | 1 | R$ 598,50 | 0.0% | 1
+
+Fornecedores por tipo (até 5 maiores valores contratados em cada tipo):
+  Propaganda impressa — R$ 1.836.206,30:
+    SIEART GRÁFICA E EDITORA LTDA: R$ 1.491.042,50 (63 despesas)
+    JEDSON DE CASTRO SILVA EIRELI: R$ 271.684,00 (25 despesas)
+    L G CARVALHO: R$ 47.250,00 (2 despesas)
+    M. C. SOUSA PAPELARIA - ME: R$ 16.500,00 (6 despesas)
+    P P DA SILVA NETO SERVICOS: R$ 9.229,80 (3 despesas)
+    ... mais 1 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Publicidade por adesivos (R$ 1.103.829,80); Publicidade por materiais impressos (R$ 732.376,50)
+  Transporte e veículos — R$ 1.051.422,77:
+    POSTO PAPALEGUAS LTDA: R$ 199.635,34 (23 despesas)
+    CEARÁ TÁXI AÉREO LTDA: R$ 187.937,49 (17 despesas)
+    D E REBOUÇAS EIRELI: R$ 108.533,25 (7 despesas)
+    PRIME CONSULTORIA E ASSESSORIA EMPRESARIAL LTDA: R$ 85.050,00 (3 despesas)
+    R F C CARVALHO ME: R$ 55.950,00 (4 despesas)
+    ... mais 24 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Cessão ou locação de veículos (R$ 523.223,25); Combustíveis e lubrificantes (R$ 304.262,03); Despesas com transporte ou deslocamento (R$ 212.937,49); Serviços prestados por terceiros (R$ 11.000,00)
+    Descrição declarada (classificada): SERVIÇOS DE MOTORISTA (R$ 11.000,00)
+  Propaganda audiovisual — R$ 920.000,00:
+    CLOSE AUDIOVISUAL LTDA: R$ 920.000,00 (3 despesas)
+    Categorias declaradas ao TSE: Produção de programas de rádio, televisão ou vídeo (R$ 920.000,00)
+  Mobilização e militância — R$ 654.000,00:
+    GREEN LTDA: R$ 648.000,00 (2 despesas)
+    ISRAEL ALVES COSTA: R$ 2.000,00 (1 despesa)
+    LUIZ VIEIRA DE ARAÚJO JÚNIOR: R$ 2.000,00 (1 despesa)
+    RAFAEL CARLOS ALVES LIMA: R$ 2.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Atividades de militância e mobilização de rua (R$ 648.000,00); Serviços prestados por terceiros (R$ 6.000,00)
+    Descrição declarada (classificada): SERVIÇOS DE PANFLETEIRO (R$ 4.000,00)
+    Descrição declarada (classificada): SERVIÇO PRESTADO DE PANFLETEIRO (R$ 2.000,00)
+  Propaganda digital — R$ 450.000,00:
+    GOOGLE BRASIL INTERNET LTDA: R$ 265.000,00 (7 despesas)
+    FACEBOOK SERVICOS ON LINE DO BRASIL LTDA: R$ 185.000,00 (37 despesas)
+    Categorias declaradas ao TSE: Despesa com Impulsionamento de Conteúdos (R$ 450.000,00)
+  Comunicação digital — R$ 420.000,00:
+    GLOBAL MONSTER LTDA: R$ 420.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 420.000,00)
+    Descrição declarada (classificada): PLANEJ ESTRAT MARKETING POLITICO REDES SOCIAIS (R$ 420.000,00)
+  Eventos — R$ 250.000,00:
+    SAMUEL BAHIA NOVAIS: R$ 150.000,00 (1 despesa)
+    ESTÚDIO VOLANTE PRODUÇÕES E EVENTOS LTDA: R$ 100.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 250.000,00)
+    Descrição declarada (classificada): PREST SERV ORG EVENTOS C INFRAESTRUTURA CONF CONT (R$ 150.000,00)
+    Descrição declarada (classificada): SERV ESTIMADOS ORG/EVENTOS INFRAESTR CONF CONTRAT (R$ 100.000,00)
+  Serviços advocatícios — R$ 250.000,00:
+    SILVA   BARROSO ADVOGADOS ASSOCIADOS: R$ 250.000,00 (2 despesas)
+    Categorias declaradas ao TSE: Serviços advocatícios (R$ 250.000,00)
+  Outros serviços (não identificados) — R$ 223.628,74:
+    ESTÚDIO VOLANTE PRODUÇÕES E EVENTOS LTDA: R$ 107.478,60 (3 despesas)
+    SAMUEL BAHIA NOVAIS: R$ 57.137,64 (1 despesa)
+    CABALLERO   ROCHA SOCIEDADE DE ADVOGADOS: R$ 40.000,00 (1 despesa)
+    27.965.402 JUSCILENE DA SILVA OLIVEIRA: R$ 12.440,00 (1 despesa)
+    JAQUELINE SABINO: R$ 2.197,50 (1 despesa)
+    ... mais 3 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 223.628,74)
+  Serviços contábeis — R$ 100.000,00:
+    SAMARA CARVALHO SAMPAIO: R$ 100.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços contábeis (R$ 100.000,00)
+  Correspondências e despesas postais — R$ 90.838,72:
+    LOJA EXPESSO LTDA: R$ 90.838,72 (2 despesas)
+    Categorias declaradas ao TSE: Correspondências e despesas postais (R$ 90.838,72)
+  Indenização de veículo — R$ 74.813,00:
+    AUTO LESTE LTDA: R$ 74.813,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 74.813,00)
+    Descrição declarada (classificada): PGTO INDENIZA SINISTRO VEICULAR PREVISTO EM CONTRA (R$ 74.813,00)
+  Pessoal — R$ 41.409,11:
+    SERVFAZ SERVIÇOS DE SEGURANÇA LTDA: R$ 41.409,11 (1 despesa)
+    Categorias declaradas ao TSE: Despesas com pessoal (R$ 41.409,11)
+  Água — R$ 36.477,54:
+    M C S SALSA LTDA - OURO DA MINA: R$ 22.000,00 (1 despesa)
+    TEIXEIRA E LEITE LTDA: R$ 11.475,00 (1 despesa)
+    AREIA BRANCA INDUSTRIA E COMERCIO DE AGUA LTDA: R$ 1.900,00 (2 despesas)
+    AGUAS DE TERESINA SAN SPE SA: R$ 1.102,54 (2 despesas)
+    Categorias declaradas ao TSE: Diversas a especificar (R$ 35.375,00); Água (R$ 1.102,54)
+    Descrição declarada (classificada): ÁGUA MINERAL 200 ML COM 48 COPOS (R$ 22.000,00)
+    Descrição declarada (classificada): ÁGUA MINERAL NATURAL 48/200 ML REGINA (R$ 11.475,00)
+    Descrição declarada (classificada): ÁGUA COPO 200 ML 24 UNID (R$ 1.900,00)
+  Alimentação — R$ 35.200,00:
+    R O T LIMA SILVA EIRELI: R$ 35.200,00 (1 despesa)
+    Categorias declaradas ao TSE: Alimentação (R$ 35.200,00)
+  Locação/cessão de bens imóveis — R$ 32.875,00:
+    IMOBILIARIA ROCHA E ROCHA LTDA: R$ 13.000,00 (1 despesa)
+    ATLANTIC CITY WORLD CLUB: R$ 10.000,00 (1 despesa)
+    SPE CENTRO DE CONVEÇÕES DE TERESINA SA: R$ 5.375,00 (1 despesa)
+    FRANCISCO EUGÊNIO REIS E SILVA: R$ 4.500,00 (1 despesa)
+    Categorias declaradas ao TSE: Locação/cessão de bens imóveis (R$ 32.875,00)
+  Administração e apoio — R$ 30.080,00:
+    ALESSANDRA CARDOSO SANTANA: R$ 5.000,00 (1 despesa)
+    CAROLINE VIVEIROS MOURA DA CRUZ: R$ 5.000,00 (1 despesa)
+    RANNYERE STRASER TARDELE VIEIRA: R$ 5.000,00 (1 despesa)
+    OCEANA MESQUITA SILVA TEIXEIRA: R$ 2.600,00 (1 despesa)
+    AGLAÊ NOBRE ARRAIS VALENZUELA VALLADARES: R$ 2.540,00 (1 despesa)
+    ... mais 5 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 30.080,00)
+    Descrição declarada (classificada): SERVIÇOS DE AUX ADM NÍVEL SUPERIOR (R$ 10.000,00)
+    Descrição declarada (classificada): SERVIÇOS DE RECEPCIONISTA (R$ 8.680,00)
+    Descrição declarada (classificada): SERVIÇOS DE AUXILIAR DE ADM NÍVEL SUPERIOR (R$ 5.000,00)
+  Despesas com Hospedagem — R$ 20.888,40:
+    J M DA SILVA VERAS ME: R$ 3.010,00 (1 despesa)
+    G A BARDEN - HOTEL BRASAO: R$ 2.222,00 (2 despesas)
+    J FRANCISCO DE SOUSA HOTEIS ME: R$ 2.064,00 (1 despesa)
+    NAYRA PALACE HOTEL: R$ 1.471,50 (1 despesa)
+    LEAL   VANDERLEY LTDA ME: R$ 1.200,00 (1 despesa)
+    ... mais 16 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Despesas com Hospedagem (R$ 20.888,40)
+  Locação/cessão de bens móveis (exceto veículos) — R$ 16.000,00:
+    R   R GOMES LTDA: R$ 16.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Locação/cessão de bens móveis (exceto veículos) (R$ 16.000,00)
+  Encargos financeiros, taxas bancárias e/ou op. cartão de crédito — R$ 12.745,41:
+    (fornecedor não informado): R$ 12.745,41 (148 despesas)
+    Categorias declaradas ao TSE: Encargos financeiros, taxas bancárias e/ou op. cartão de crédito (R$ 12.745,41)
+  Coordenação de campanha — R$ 8.600,00:
+    FERNANDO MACHADO MOREIRA: R$ 6.600,00 (1 despesa)
+    LARISSA MIKAELLE DA CONCEIÇÃO COSTA: R$ 2.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 8.600,00)
+    Descrição declarada (classificada): SERVIÇOS DE COORDENADOR DE ATIVIDADE DE RUA (R$ 6.600,00)
+    Descrição declarada (classificada): SERVIÇOS DE COORDENAÇÃO (R$ 2.000,00)
+  Energia elétrica — R$ 5.095,45:
+    EQUATORIAL PIAUI DISTRIBUIDORA DE ENERGIA SA: R$ 5.095,45 (1 despesa)
+    Categorias declaradas ao TSE: Energia elétrica (R$ 5.095,45)
+  Mascotes de campanha — R$ 5.000,00:
+    27.965.402 JUSCILENE DA SILVA OLIVEIRA: R$ 5.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 5.000,00)
+    Descrição declarada (classificada): SERVIÇO DE MASCOTE DO VICE GOVERNADOR (R$ 5.000,00)
+  Materiais de expediente — R$ 2.674,20:
+    NO MUNDO DO LIVRO LTDA - PAPELARIA A PERERECA: R$ 2.674,20 (36 despesas)
+    Categorias declaradas ao TSE: Materiais de expediente (R$ 2.674,20)
+  Impostos, contribuições e taxas — R$ 1.042,66:
+    (fornecedor não informado): R$ 1.042,66 (5 despesas)
+    Categorias declaradas ao TSE: Impostos, contribuições e taxas (R$ 1.042,66)
+  Comunicação e assessoria — R$ 598,50:
+    G3 TELECOM EIRELI: R$ 598,50 (1 despesa)
+    Categorias declaradas ao TSE: Diversas a especificar (R$ 598,50)
+    Descrição declarada (classificada): PRESTAÇÃO DE SERVIÇOS DE COMUNICAÇÃO MULTIMÍDIA (R$ 598,50)
+
+Observação: o fornecedor é o vinculado ao documento cadastrado no banco;
+quando falta documento, o banco não associa um fornecedor à despesa.

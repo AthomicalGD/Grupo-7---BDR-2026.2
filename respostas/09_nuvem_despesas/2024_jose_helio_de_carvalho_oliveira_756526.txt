@@ -1,0 +1,72 @@
+P9) Para onde foi o dinheiro da candidatura de JOSÉ HÉLIO DE CARVALHO OLIVEIRA?
+Candidatura: 756526 | SQ_CANDIDATO: 180001983855 | PREFEITO | Parnaíba | 2024
+
+Fonte: TSE, despesas contratadas declaradas pela candidatura; valores em reais do ano da eleição.
+Nuvem: tamanho da expressão proporcional à soma dos valores contratados por tipo de gasto.
+O tipo do TSE (DS_ORIGEM_DESPESA) prevalece; descrições livres (DS_DESPESA) só ajudam
+a identificar serviços nas categorias genéricas. Não se usa o nome/CNAE do fornecedor
+para inferir o tipo de gasto. Categorias sem identificação ficam explícitas.
+Fora da conta: 'Doações financeiras a outros candidatos/partidos' (transferência que reaparece na campanha recebedora).
+Despesas com valor zero: 0; registros com valor positivo sem fornecedor: 4.
+Total analisado: R$ 996.433,86 em 329 despesas.
+Cobertura da classificação por valor:
+  tipo TSE: 328 despesas, R$ 896.433,86 (90.0% do valor)
+  descrição: 1 despesa, R$ 100.000,00 (10.0% do valor)
+  sem identificação: 0 despesas, R$ 0,00 (0.0% do valor)
+
+Gastos por tipo (base da nuvem):
+  Tipo | despesas | valor | participação | inferidas da descrição
+  Propaganda impressa | 284 | R$ 504.715,00 | 50.7% | 0
+  Mobilização e militância | 3 | R$ 215.128,68 | 21.6% | 0
+  Propaganda audiovisual | 1 | R$ 100.000,00 | 10.0% | 1
+  Serviços advocatícios | 1 | R$ 40.000,00 | 4.0% | 0
+  Serviços contábeis | 1 | R$ 40.000,00 | 4.0% | 0
+  Transporte e veículos | 4 | R$ 38.893,68 | 3.9% | 0
+  Outras propagandas | 24 | R$ 31.500,00 | 3.2% | 0
+  Propaganda digital | 6 | R$ 25.184,00 | 2.5% | 0
+  Materiais de expediente | 1 | R$ 1.006,50 | 0.1% | 0
+  Encargos financeiros, taxas bancárias e/ou op. cartão de crédito | 4 | R$ 6,00 | 0.0% | 0
+
+Fornecedores por tipo (até 5 maiores valores contratados em cada tipo):
+  Propaganda impressa — R$ 504.715,00:
+    FRANCISCO DAS CHAGAS VIEIRA SERVICOS GRAFICOS - ME: R$ 497.355,00 (282 despesas)
+    DYANNE DE C VIEIRA ARAUJO: R$ 4.000,00 (1 despesa)
+    REI GRAFICA E EDITORA LTDA ME: R$ 3.360,00 (1 despesa)
+    Categorias declaradas ao TSE: Publicidade por materiais impressos (R$ 504.715,00)
+  Mobilização e militância — R$ 215.128,68:
+    J L EMPREENDIMENTOS LTDA: R$ 150.000,00 (1 despesa)
+    GREEN LTDA: R$ 65.128,68 (2 despesas)
+    Categorias declaradas ao TSE: Comícios (R$ 150.000,00); Atividades de militância e mobilização de rua (R$ 65.128,68)
+  Propaganda audiovisual — R$ 100.000,00:
+    CLOSE AUDIOVISUAL LTDA: R$ 100.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 100.000,00)
+    Descrição declarada (classificada): SERVIÇOS DE PRODUÇAO DE AUDIO E VÍDEO-MARKETING (R$ 100.000,00)
+  Serviços advocatícios — R$ 40.000,00:
+    CARVALHOE OLIVEIRA ADVOGADOS ASSOCIADOS: R$ 40.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços advocatícios (R$ 40.000,00)
+  Serviços contábeis — R$ 40.000,00:
+    CONTARE AUDITORIA PERICIA E CONSULTORIA CONTABIL LTDA: R$ 40.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços contábeis (R$ 40.000,00)
+  Transporte e veículos — R$ 38.893,68:
+    MAZUAD AUTO LOCADORA E LOGISTICA LTDA: R$ 25.000,00 (1 despesa)
+    COOPERATIVA DOS TRANSPORTES PÚBLICOS, AUTONOMOS E ALTERNATIVOS DE PARNAIBA: R$ 13.000,00 (1 despesa)
+    V MACHADO E CIA LTDA: R$ 893,68 (2 despesas)
+    Categorias declaradas ao TSE: Cessão ou locação de veículos (R$ 25.000,00); Despesas com transporte ou deslocamento (R$ 13.000,00); Combustíveis e lubrificantes (R$ 893,68)
+  Outras propagandas — R$ 31.500,00:
+    FRANCISCO DAS CHAGAS VIEIRA SERVICOS GRAFICOS - ME: R$ 31.500,00 (24 despesas)
+    Categorias declaradas ao TSE: Publicidade por jornais e revistas (R$ 31.500,00)
+  Propaganda digital — R$ 25.184,00:
+    ADYEN DO BRASIL LTDA: R$ 10.000,00 (2 despesas)
+    FACEBOOK SERVICOS ON LINE DO BRASIL LTDA: R$ 10.000,00 (2 despesas)
+    DLOCAL BRASIL INSTITUICAO DE PAGAMENTO S.A.: R$ 5.000,00 (1 despesa)
+    NUCLEO DE INFORMAÇÃO E COORDENAÇÃO DO PONTO BR - NIC.BR: R$ 184,00 (1 despesa)
+    Categorias declaradas ao TSE: Despesa com Impulsionamento de Conteúdos (R$ 25.000,00); Criação e inclusão de páginas na internet (R$ 184,00)
+  Materiais de expediente — R$ 1.006,50:
+    L C A DE OLIVEIRA: R$ 1.006,50 (1 despesa)
+    Categorias declaradas ao TSE: Materiais de expediente (R$ 1.006,50)
+  Encargos financeiros, taxas bancárias e/ou op. cartão de crédito — R$ 6,00:
+    (fornecedor não informado): R$ 6,00 (4 despesas)
+    Categorias declaradas ao TSE: Encargos financeiros, taxas bancárias e/ou op. cartão de crédito (R$ 6,00)
+
+Observação: o fornecedor é o vinculado ao documento cadastrado no banco;
+quando falta documento, o banco não associa um fornecedor à despesa.
