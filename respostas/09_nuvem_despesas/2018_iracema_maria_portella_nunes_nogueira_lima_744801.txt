@@ -1,0 +1,171 @@
+P9) Para onde foi o dinheiro da candidatura de IRACEMA MARIA PORTELLA NUNES NOGUEIRA LIMA?
+Candidatura: 744801 | SQ_CANDIDATO: 180000613922 | DEPUTADO FEDERAL | PI | 2018
+
+Fonte: TSE, despesas contratadas declaradas pela candidatura; valores em reais do ano da eleição.
+Nuvem: tamanho da expressão proporcional à soma dos valores contratados por tipo de gasto.
+O tipo do TSE (DS_ORIGEM_DESPESA) prevalece; descrições livres (DS_DESPESA) só ajudam
+a identificar serviços nas categorias genéricas. Não se usa o nome/CNAE do fornecedor
+para inferir o tipo de gasto. Categorias sem identificação ficam explícitas.
+Fora da conta: 'Doações financeiras a outros candidatos/partidos' (transferência que reaparece na campanha recebedora).
+Despesas com valor zero: 0; registros com valor positivo sem fornecedor: 31.
+Total analisado: R$ 2.298.573,64 em 917 despesas.
+Cobertura da classificação por valor:
+  tipo TSE: 827 despesas, R$ 1.610.690,44 (70.1% do valor)
+  descrição: 53 despesas, R$ 582.580,20 (25.3% do valor)
+  sem identificação: 37 despesas, R$ 105.303,00 (4.6% do valor)
+
+Gastos por tipo (base da nuvem):
+  Tipo | despesas | valor | participação | inferidas da descrição
+  Propaganda impressa | 114 | R$ 604.837,50 | 26.3% | 0
+  Comunicação digital | 7 | R$ 475.000,00 | 20.7% | 7
+  Transporte e veículos | 124 | R$ 348.089,59 | 15.1% | 38
+  Mobilização e militância | 388 | R$ 317.760,20 | 13.8% | 0
+  Pessoal | 70 | R$ 122.650,00 | 5.3% | 0
+  Propaganda digital | 5 | R$ 105.040,00 | 4.6% | 0
+  Alimentação | 17 | R$ 92.286,00 | 4.0% | 0
+  Outros serviços (não identificados) | 19 | R$ 90.187,50 | 3.9% | 0
+  Pesquisas ou testes eleitorais | 3 | R$ 41.000,00 | 1.8% | 0
+  Serviços advocatícios | 2 | R$ 40.000,00 | 1.7% | 2
+  Não especificado | 18 | R$ 15.115,50 | 0.7% | 0
+  Locação/cessão de bens imóveis | 5 | R$ 11.275,00 | 0.5% | 0
+  Aquisição/Doação de bens móveis ou imóveis | 6 | R$ 8.368,00 | 0.4% | 0
+  Segurança | 2 | R$ 8.000,00 | 0.3% | 2
+  Materiais de expediente | 94 | R$ 4.412,75 | 0.2% | 0
+  Locação/cessão de bens móveis (exceto veículos) | 6 | R$ 3.675,00 | 0.2% | 0
+  Água | 2 | R$ 3.240,00 | 0.1% | 2
+  Despesas com Hospedagem | 1 | R$ 2.120,00 | 0.1% | 0
+  Encargos financeiros, taxas bancárias e/ou op. cartão de crédito | 31 | R$ 2.016,60 | 0.1% | 0
+  Propaganda audiovisual | 1 | R$ 1.800,00 | 0.1% | 0
+  Fogos de artifício | 2 | R$ 1.700,00 | 0.1% | 2
+
+Fornecedores por tipo (até 5 maiores valores contratados em cada tipo):
+  Propaganda impressa — R$ 604.837,50:
+    ZENITE GRAFICA LTDA: R$ 268.360,00 (39 despesas)
+    HALLEY SA GRAFICA E EDITORA: R$ 153.173,00 (33 despesas)
+    MADSON ALVES CARVALHO: R$ 97.075,00 (11 despesas)
+    FRANCISCO DAS CHAGAS VIEIRA SERVICOS GRAFICOS - ME: R$ 50.574,50 (20 despesas)
+    G H M FREIRE: R$ 9.500,00 (2 despesas)
+    ... mais 5 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Publicidade por materiais impressos (R$ 379.155,00); Publicidade por adesivos (R$ 225.682,50)
+  Comunicação digital — R$ 475.000,00:
+    CLOSE AUDIOVISUAL LTDA: R$ 375.000,00 (4 despesas)
+    S.A. PROPAGANDA LTDA: R$ 100.000,00 (3 despesas)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 475.000,00)
+    Descrição declarada (classificada): PRODUÇÃO DE FILMAGEM E MATERIAL P/ INTERNET NF 190 (R$ 150.000,00)
+    Descrição declarada (classificada): PRODUÇÃO DE FILMAGEM E MATERIAL P/ INTERNET NF 177 (R$ 75.000,00)
+    Descrição declarada (classificada): PRODUÇÃO DE FILMAGEM E MATERIAL P/ INTERNET NF 182 (R$ 75.000,00)
+  Transporte e veículos — R$ 348.089,59:
+    FCN.X CARVALHO COMBUSTÍVEL LTDA: R$ 51.564,49 (8 despesas)
+    SINDICATO DAS EMP. DE TRANSP. URB DE PASSAG DE TERESINA: R$ 50.486,40 (9 despesas)
+    REI ARTUR TRANSPORTES E TURISMO LTDA-ME: R$ 44.400,00 (3 despesas)
+    J W SARAIVA E CIA LTDA: R$ 42.898,45 (10 despesas)
+    M. F. LIMA CARNEIRO  CIA LTDA: R$ 40.670,00 (24 despesas)
+    ... mais 36 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Cessão ou locação de veículos (R$ 131.786,53); Combustíveis e lubrificantes (R$ 110.806,46); Serviços prestados por terceiros (R$ 54.640,20); Despesas com transporte ou deslocamento (R$ 50.856,40)
+    Descrição declarada (classificada): SERVIÇOS DE MOTORISTA NFSE-A 02 (R$ 15.065,30)
+    Descrição declarada (classificada): SERVIÇOS DE MOTORISTA NFSE-A 01 (R$ 9.158,40)
+    Descrição declarada (classificada): TRANSPORTE DE MATERIAL DE CAMPANHA· NF 09 (R$ 6.800,00)
+  Mobilização e militância — R$ 317.760,20:
+    MÁRCIO MARQUES DE MOURA: R$ 4.000,00 (2 despesas)
+    VALDENICE LUCAS DE SOUZA: R$ 4.000,00 (3 despesas)
+    ANA TERESA NOGUEIRA PINHEIRO COUTINHO: R$ 3.000,00 (2 despesas)
+    FRANCISCO ROMULLU ARAUJO DE OLIVEIRA: R$ 3.000,00 (2 despesas)
+    KÁTIA MARIA COUTO BEZERRA: R$ 3.000,00 (1 despesa)
+    ... mais 315 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Atividades de militância e mobilização de rua (R$ 317.760,20)
+  Pessoal — R$ 122.650,00:
+    DAYANI GOMES MACEDO: R$ 5.000,00 (1 despesa)
+    EDUARDO BOMPET PIRES: R$ 5.000,00 (1 despesa)
+    JOSENILSON CARLOS SANTANA PEREIRA: R$ 5.000,00 (1 despesa)
+    FRANCISCO JOSE DOS SANTOS: R$ 4.000,00 (3 despesas)
+    RITA DE CÁSSIA SOARES DE SOUSA: R$ 4.000,00 (1 despesa)
+    ... mais 58 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Despesas com pessoal (R$ 122.650,00)
+  Propaganda digital — R$ 105.040,00:
+    ORN MIDIA COMUNICAÇÃO EIRELI: R$ 54.000,00 (1 despesa)
+    ADYEN DO BRASIL LTDA: R$ 50.000,00 (2 despesas)
+    LCNMIDIA SERVIÇOS DE COMUNICAC: R$ 1.000,00 (1 despesa)
+    NUCLEO DE INFORMAÇÃO E COORDENAÇÃO DO PONTO BR - NIC.BR: R$ 40,00 (1 despesa)
+    Categorias declaradas ao TSE: Despesa com Impulsionamento de Conteúdos (R$ 104.000,00); Criação e inclusão de páginas na internet (R$ 1.040,00)
+  Alimentação — R$ 92.286,00:
+    MATHEUS EVANGELISTA FERREIRA ME: R$ 34.600,00 (7 despesas)
+    CAIO XAVIER SOARES COZINHA INDUSTRIAL EIRELI ME: R$ 32.515,00 (3 despesas)
+    FRANCIANOR ALVES DE SOUSA: R$ 23.110,00 (2 despesas)
+    PANIFICADORA SÃO JOSE: R$ 1.800,00 (1 despesa)
+    SANTOS E SANTOS REINALDO LTDA: R$ 83,00 (1 despesa)
+    ... mais 3 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Alimentação (R$ 92.286,00)
+  Outros serviços (não identificados) — R$ 90.187,50:
+    ROBERTA BRINGEL DO VALE COSTA: R$ 30.000,00 (3 despesas)
+    WASHINGTON LUIS DE SOUSA BONFIM: R$ 30.000,00 (1 despesa)
+    TRANSPORTADORA LEAL EIRELI: R$ 10.200,00 (1 despesa)
+    A ALVES DA SILVA MERCEARIA ME: R$ 7.100,00 (5 despesas)
+    AYLANNA MIRANDA BATISTA: R$ 3.750,00 (1 despesa)
+    ... mais 6 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 90.187,50)
+  Pesquisas ou testes eleitorais — R$ 41.000,00:
+    OPINAR PESQUISAS LTDA.: R$ 41.000,00 (3 despesas)
+    Categorias declaradas ao TSE: Pesquisas ou testes eleitorais (R$ 41.000,00)
+  Serviços advocatícios — R$ 40.000,00:
+    EDUARDO MARCELL DE BARROS ALVES ADVOGADOS ASSOCIADOS: R$ 40.000,00 (2 despesas)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 40.000,00)
+    Descrição declarada (classificada): PRESTAÇÃO DE SERVIÇOS JURIDICOS NF 91 (R$ 20.000,00)
+    Descrição declarada (classificada): PRESTAÇÃO DE SERVIÇOS JURIDICOS NF 98 (R$ 20.000,00)
+  Não especificado — R$ 15.115,50:
+    NEWLAND VEÍCULOS LTDA: R$ 9.822,00 (1 despesa)
+    C B SALDANHA - MEE: R$ 3.168,00 (1 despesa)
+    MINERAÇÃO UNIÃO LTDA: R$ 885,00 (1 despesa)
+    TECNO INDUSTRIA E COMERCIO DE COMPUTADORES LTDA - IBYTE: R$ 480,50 (3 despesas)
+    ENSAQUE - BOTELHO E LEITE COMERCIO LTDA - ME: R$ 428,00 (4 despesas)
+    ... mais 4 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Diversas a especificar (R$ 15.115,50)
+  Locação/cessão de bens imóveis — R$ 11.275,00:
+    CONSTRUTORA AZEVEDO LTDA: R$ 9.800,00 (1 despesa)
+    CIRO NOGUEIRA AGROPECUÁRIA E IMÓVEIS LTDA: R$ 500,00 (1 despesa)
+    CARLOS L MELO ME: R$ 400,00 (1 despesa)
+    TEREZINHA MARINA RODRIGUES: R$ 300,00 (1 despesa)
+    M A L XIMENES: R$ 275,00 (1 despesa)
+    Categorias declaradas ao TSE: Locação/cessão de bens imóveis (R$ 11.275,00)
+  Aquisição/Doação de bens móveis ou imóveis — R$ 8.368,00:
+    L.B.F. COMERCIO E SERVIÇOS LTDA - EPP: R$ 3.998,00 (1 despesa)
+    TOP ARCONDICIONADO LTDA.: R$ 2.600,00 (2 despesas)
+    DL SOM AUTOMOTIVO LTDA: R$ 1.710,00 (2 despesas)
+    CONNECT COMPUTADORES E SISTEMAS LTDA: R$ 60,00 (1 despesa)
+    Categorias declaradas ao TSE: Aquisição/Doação de bens móveis ou imóveis (R$ 8.368,00)
+  Segurança — R$ 8.000,00:
+    ANTÔNIO FRANCISCO VALÉRIO DA SILVA: R$ 4.000,00 (1 despesa)
+    EDUARDO RODRIGUES DE ARAUJO NETO: R$ 4.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 8.000,00)
+    Descrição declarada (classificada): SERVIÇOS DE SEGURANÇA NFSE-A 01 (R$ 8.000,00)
+  Materiais de expediente — R$ 4.412,75:
+    F W SOARES DE ARAUJO - ME: R$ 4.412,75 (94 despesas)
+    Categorias declaradas ao TSE: Materiais de expediente (R$ 4.412,75)
+  Locação/cessão de bens móveis (exceto veículos) — R$ 3.675,00:
+    ORNAMENTOS LTDA: R$ 2.900,00 (1 despesa)
+    MARKO COMÉRCIO E SERVIÇOS LTDA: R$ 330,00 (1 despesa)
+    ILANNA BRENDA MENDES BATISTA: R$ 310,00 (2 despesas)
+    ART CORES COMERCIO E SERVIÇOS DE INFORMATICA LTDA: R$ 135,00 (2 despesas)
+    Categorias declaradas ao TSE: Locação/cessão de bens móveis (exceto veículos) (R$ 3.675,00)
+  Água — R$ 3.240,00:
+    MINERACAO ARAUJO IND E COM LTDA: R$ 3.240,00 (2 despesas)
+    Categorias declaradas ao TSE: Diversas a especificar (R$ 3.240,00)
+    Descrição declarada (classificada): ÁGUA MINERAL NATURAL 48/200ML (R$ 1.800,00)
+    Descrição declarada (classificada): ÁGUA MINERAL NATURAL 48/200ML CX (R$ 1.440,00)
+  Despesas com Hospedagem — R$ 2.120,00:
+    RAYSSA RUFINO GOMES LEAL: R$ 2.120,00 (1 despesa)
+    Categorias declaradas ao TSE: Despesas com Hospedagem (R$ 2.120,00)
+  Encargos financeiros, taxas bancárias e/ou op. cartão de crédito — R$ 2.016,60:
+    (fornecedor não informado): R$ 2.016,60 (31 despesas)
+    Categorias declaradas ao TSE: Encargos financeiros, taxas bancárias e/ou op. cartão de crédito (R$ 2.016,60)
+  Propaganda audiovisual — R$ 1.800,00:
+    JOSE QUARESMA CAMPOS FILHO: R$ 1.800,00 (1 despesa)
+    Categorias declaradas ao TSE: Produção de jingles, vinhetas e slogans (R$ 1.800,00)
+  Fogos de artifício — R$ 1.700,00:
+    MILENA FERNANDA JORGE M. SALES: R$ 1.400,00 (1 despesa)
+    BIANOR CARVALHO SUCESSORES LTDA: R$ 300,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 1.400,00); Diversas a especificar (R$ 300,00)
+    Descrição declarada (classificada): SERVIÇO DE QUEIMA DE FOGOS DE ARTIFÍCIO (R$ 1.400,00)
+    Descrição declarada (classificada): GIRANDOLA 1080 TIRO E CORES (R$ 300,00)
+
+Observação: o fornecedor é o vinculado ao documento cadastrado no banco;
+quando falta documento, o banco não associa um fornecedor à despesa.

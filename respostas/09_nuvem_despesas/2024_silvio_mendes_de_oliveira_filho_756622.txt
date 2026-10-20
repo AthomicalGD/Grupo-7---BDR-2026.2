@@ -1,0 +1,100 @@
+P9) Para onde foi o dinheiro da candidatura de SILVIO MENDES DE OLIVEIRA FILHO?
+Candidatura: 756622 | SQ_CANDIDATO: 180001882991 | PREFEITO | Teresina | 2024
+
+Fonte: TSE, despesas contratadas declaradas pela candidatura; valores em reais do ano da eleição.
+Nuvem: tamanho da expressão proporcional à soma dos valores contratados por tipo de gasto.
+O tipo do TSE (DS_ORIGEM_DESPESA) prevalece; descrições livres (DS_DESPESA) só ajudam
+a identificar serviços nas categorias genéricas. Não se usa o nome/CNAE do fornecedor
+para inferir o tipo de gasto. Categorias sem identificação ficam explícitas.
+Fora da conta: 'Doações financeiras a outros candidatos/partidos' (transferência que reaparece na campanha recebedora).
+Despesas com valor zero: 0; registros com valor positivo sem fornecedor: 37.
+Total analisado: R$ 2.943.722,43 em 107 despesas.
+Cobertura da classificação por valor:
+  tipo TSE: 100 despesas, R$ 961.272,43 (32.7% do valor)
+  descrição: 6 despesas, R$ 1.979.820,00 (67.3% do valor)
+  sem identificação: 1 despesa, R$ 2.630,00 (0.1% do valor)
+
+Gastos por tipo (base da nuvem):
+  Tipo | despesas | valor | participação | inferidas da descrição
+  Produção e gestão de conteúdo | 1 | R$ 1.330.000,00 | 45.2% | 1
+  Planejamento de campanha | 1 | R$ 630.000,00 | 21.4% | 1
+  Propaganda impressa | 35 | R$ 325.530,00 | 11.1% | 0
+  Propaganda digital | 5 | R$ 210.000,00 | 7.1% | 0
+  Serviços advocatícios | 3 | R$ 170.000,00 | 5.8% | 0
+  Serviços contábeis | 2 | R$ 74.000,00 | 2.5% | 0
+  Correspondências e despesas postais | 1 | R$ 53.986,59 | 1.8% | 0
+  Transporte e veículos | 9 | R$ 52.023,15 | 1.8% | 2
+  Pesquisas ou testes eleitorais | 2 | R$ 52.000,00 | 1.8% | 0
+  Eventos | 1 | R$ 30.000,00 | 1.0% | 0
+  Comunicação e assessoria | 1 | R$ 9.000,00 | 0.3% | 1
+  Administração e apoio | 1 | R$ 4.160,00 | 0.1% | 1
+  Outros serviços (não identificados) | 1 | R$ 2.630,00 | 0.1% | 0
+  Materiais de expediente | 7 | R$ 229,19 | 0.0% | 0
+  Encargos financeiros, taxas bancárias e/ou op. cartão de crédito | 37 | R$ 163,50 | 0.0% | 0
+
+Fornecedores por tipo (até 5 maiores valores contratados em cada tipo):
+  Produção e gestão de conteúdo — R$ 1.330.000,00:
+    BR IDEIAS FILMES LTDA: R$ 1.330.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 1.330.000,00)
+    Descrição declarada (classificada): SERV DE PRODUÇÃO,JORNALISMO E GESTÃO DE PLATAFORMA (R$ 1.330.000,00)
+  Planejamento de campanha — R$ 630.000,00:
+    DELU COMUNICACAO LTDA: R$ 630.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 630.000,00)
+    Descrição declarada (classificada): PLANEJAMENTO ESTRATÉGICO,PROPAGANDA E PUBLICIDADE (R$ 630.000,00)
+  Propaganda impressa — R$ 325.530,00:
+    HALLEY SA GRAFICA E EDITORA: R$ 210.380,00 (14 despesas)
+    ABUSAMAK   LOPES LTDA-ME: R$ 46.500,00 (5 despesas)
+    CINTIA NOGUEIRA DANTAS: R$ 33.600,00 (4 despesas)
+    MARIA DAS GRAÇAS DIAS NEGREIROS 70592349349: R$ 13.000,00 (7 despesas)
+    T C DE O RIBEIRO: R$ 10.800,00 (3 despesas)
+    ... mais 2 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Publicidade por materiais impressos (R$ 325.530,00)
+  Propaganda digital — R$ 210.000,00:
+    FACEBOOK SERVICOS ON LINE DO BRASIL LTDA: R$ 210.000,00 (5 despesas)
+    Categorias declaradas ao TSE: Despesa com Impulsionamento de Conteúdos (R$ 210.000,00)
+  Serviços advocatícios — R$ 170.000,00:
+    ARAUJO SOCIEDADE INDIVIDUAL DE ADVOCACIA: R$ 170.000,00 (3 despesas)
+    Categorias declaradas ao TSE: Serviços advocatícios (R$ 170.000,00)
+  Serviços contábeis — R$ 74.000,00:
+    CAPITAL CONTABILIDADE LTDA: R$ 40.000,00 (1 despesa)
+    J D SOLUCOES CONTABEIS   TRIBUTARIAS LTDA: R$ 34.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços contábeis (R$ 74.000,00)
+  Correspondências e despesas postais — R$ 53.986,59:
+    EMPRESA BRASILEIRA DE CORREIOS E TELEGRAFOS: R$ 53.986,59 (1 despesa)
+    Categorias declaradas ao TSE: Correspondências e despesas postais (R$ 53.986,59)
+  Transporte e veículos — R$ 52.023,15:
+    ARAUJO E BORGES TURISMO LTDA: R$ 16.800,00 (1 despesa)
+    R F C CARVALHO ME: R$ 14.700,00 (1 despesa)
+    FCN.X CARVALHO COMBUSTÍVEL LTDA: R$ 13.863,15 (5 despesas)
+    CLEYDILSON MARLLEY BARBOSA DA SILVA: R$ 3.330,00 (1 despesa)
+    FRANCISCO DAMASCENO MORAIS: R$ 3.330,00 (1 despesa)
+    Categorias declaradas ao TSE: Cessão ou locação de veículos (R$ 31.500,00); Combustíveis e lubrificantes (R$ 13.863,15); Serviços prestados por terceiros (R$ 6.660,00)
+    Descrição declarada (classificada): SERVIÇOS DE MOTORISTA (R$ 6.660,00)
+  Pesquisas ou testes eleitorais — R$ 52.000,00:
+    OPINAR PESQUISAS LTDA.: R$ 30.000,00 (1 despesa)
+    INSTITUTO PIUAUIENSE DE OPINIAO PUBLICA LTDA: R$ 22.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Pesquisas ou testes eleitorais (R$ 52.000,00)
+  Eventos — R$ 30.000,00:
+    BARBARA MIRIAM FERREIRA BAST 04579528905: R$ 30.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Eventos de promoção da candidatura (R$ 30.000,00)
+  Comunicação e assessoria — R$ 9.000,00:
+    ELLYO JOSÉ TEIXEIRA PIO: R$ 9.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 9.000,00)
+    Descrição declarada (classificada): SERVIÇOS DE ASSESSOR DE COMUNICAÇÃO (R$ 9.000,00)
+  Administração e apoio — R$ 4.160,00:
+    CELIA MARIA DIAS MENDES: R$ 4.160,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 4.160,00)
+    Descrição declarada (classificada): SERVIÇOS DE ASSITENTE ADMINISTRATIVO (R$ 4.160,00)
+  Outros serviços (não identificados) — R$ 2.630,00:
+    CRISCILANE FRANCISCA DA PENHA SILVA: R$ 2.630,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 2.630,00)
+  Materiais de expediente — R$ 229,19:
+    D.J. DOS SANTOS ME: R$ 120,00 (2 despesas)
+    TERESINA DISTRIBUIDORA DE PROD DE LIMPEZA E HIGIENE LTDA: R$ 109,19 (5 despesas)
+    Categorias declaradas ao TSE: Materiais de expediente (R$ 229,19)
+  Encargos financeiros, taxas bancárias e/ou op. cartão de crédito — R$ 163,50:
+    (fornecedor não informado): R$ 163,50 (37 despesas)
+    Categorias declaradas ao TSE: Encargos financeiros, taxas bancárias e/ou op. cartão de crédito (R$ 163,50)
+
+Observação: o fornecedor é o vinculado ao documento cadastrado no banco;
+quando falta documento, o banco não associa um fornecedor à despesa.

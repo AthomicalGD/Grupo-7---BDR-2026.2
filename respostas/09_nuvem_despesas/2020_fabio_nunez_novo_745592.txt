@@ -1,0 +1,119 @@
+P9) Para onde foi o dinheiro da candidatura de FABIO NUNEZ NOVO?
+Candidatura: 745592 | SQ_CANDIDATO: 180001030022 | PREFEITO | Teresina | 2020
+
+Fonte: TSE, despesas contratadas declaradas pela candidatura; valores em reais do ano da eleição.
+Nuvem: tamanho da expressão proporcional à soma dos valores contratados por tipo de gasto.
+O tipo do TSE (DS_ORIGEM_DESPESA) prevalece; descrições livres (DS_DESPESA) só ajudam
+a identificar serviços nas categorias genéricas. Não se usa o nome/CNAE do fornecedor
+para inferir o tipo de gasto. Categorias sem identificação ficam explícitas.
+Fora da conta: 'Doações financeiras a outros candidatos/partidos' (transferência que reaparece na campanha recebedora).
+Despesas com valor zero: 0; registros com valor positivo sem fornecedor: 18.
+Total analisado: R$ 1.233.529,73 em 271 despesas.
+Cobertura da classificação por valor:
+  tipo TSE: 205 despesas, R$ 1.217.309,73 (98.7% do valor)
+  descrição: 44 despesas, R$ 13.526,00 (1.1% do valor)
+  sem identificação: 22 despesas, R$ 2.694,00 (0.2% do valor)
+
+Gastos por tipo (base da nuvem):
+  Tipo | despesas | valor | participação | inferidas da descrição
+  Propaganda impressa | 135 | R$ 531.759,40 | 43.1% | 0
+  Propaganda audiovisual | 2 | R$ 500.000,00 | 40.5% | 0
+  Transporte e veículos | 9 | R$ 46.273,18 | 3.8% | 0
+  Correspondências e despesas postais | 1 | R$ 42.808,63 | 3.5% | 0
+  Serviços advocatícios | 1 | R$ 20.000,00 | 1.6% | 0
+  Serviços contábeis | 1 | R$ 20.000,00 | 1.6% | 0
+  Propaganda digital | 3 | R$ 18.000,00 | 1.5% | 0
+  Eventos | 5 | R$ 16.000,00 | 1.3% | 0
+  Locação/cessão de bens imóveis | 4 | R$ 14.381,36 | 1.2% | 0
+  Mobilização e militância | 42 | R$ 11.130,00 | 0.9% | 42
+  Locação/cessão de bens móveis (exceto veículos) | 5 | R$ 5.900,00 | 0.5% | 0
+  Não especificado | 22 | R$ 2.694,00 | 0.2% | 0
+  Água | 2 | R$ 2.396,00 | 0.2% | 2
+  Materiais de expediente | 20 | R$ 1.776,85 | 0.1% | 0
+  Telefone | 1 | R$ 305,91 | 0.0% | 0
+  Encargos financeiros, taxas bancárias e/ou op. cartão de crédito | 18 | R$ 104,40 | 0.0% | 0
+
+Fornecedores por tipo (até 5 maiores valores contratados em cada tipo):
+  Propaganda impressa — R$ 531.759,40:
+    SILCAR EMBALAGEM LTDA: R$ 345.000,00 (97 despesas)
+    GRAFICON SERVIÇOS GRAFICOS - EPP: R$ 99.992,40 (9 despesas)
+    VERAS   VERAS INDUSTRIA COMERCIO E SERVICOS LTDA: R$ 84.306,00 (25 despesas)
+    GRAFICA E EDITORA REGO LTDA: R$ 2.461,00 (4 despesas)
+    Categorias declaradas ao TSE: Publicidade por materiais impressos (R$ 531.759,40)
+  Propaganda audiovisual — R$ 500.000,00:
+    D V PRODUÇÃO E FINALIZAÇÃO LTDA: R$ 400.000,00 (1 despesa)
+    COSTA   BRITO COMUNICAÇÃO LTDA: R$ 100.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Produção de programas de rádio, televisão ou vídeo (R$ 400.000,00); Produção de jingles, vinhetas e slogans (R$ 100.000,00)
+  Transporte e veículos — R$ 46.273,18:
+    PRIMAVERA SERVIÇOS DE LOCAÇÃO DE VEICULO LTDA: R$ 18.000,00 (3 despesas)
+    ARAUJO E ARAUJO EMPREENDIMENTOS LTDA: R$ 12.600,00 (3 despesas)
+    COPAS COMBUSTIVEL LTDA: R$ 8.173,18 (1 despesa)
+    M. F. LIMA CARNEIRO  CIA LTDA: R$ 7.500,00 (2 despesas)
+    Categorias declaradas ao TSE: Cessão ou locação de veículos (R$ 38.100,00); Combustíveis e lubrificantes (R$ 8.173,18)
+  Correspondências e despesas postais — R$ 42.808,63:
+    HAWAI COMÉRCIO E SERVIÇOS - LTDA: R$ 42.808,63 (1 despesa)
+    Categorias declaradas ao TSE: Correspondências e despesas postais (R$ 42.808,63)
+  Serviços advocatícios — R$ 20.000,00:
+    SOUSA DE BARROS SOCIEDADE INDIVIDUAL DE ADVOCACIA: R$ 20.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços advocatícios (R$ 20.000,00)
+  Serviços contábeis — R$ 20.000,00:
+    SAMARA CARVALHO SAMPAIO: R$ 20.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços contábeis (R$ 20.000,00)
+  Propaganda digital — R$ 18.000,00:
+    DLOCAL BRASIL INSTITUICAO DE PAGAMENTO S.A.: R$ 18.000,00 (3 despesas)
+    Categorias declaradas ao TSE: Despesa com Impulsionamento de Conteúdos (R$ 18.000,00)
+  Eventos — R$ 16.000,00:
+    C M F SILVA: R$ 8.500,00 (1 despesa)
+    FRANCISCA DOS SANTOS CABRAL 71772553387: R$ 4.800,00 (1 despesa)
+    FRANCISCA MARIA DE ALBUQUERQUE ALVES: R$ 1.500,00 (1 despesa)
+    GOLD EVENTOS LTDA ME: R$ 1.000,00 (1 despesa)
+    M S CARDOSO CARVALHO: R$ 200,00 (1 despesa)
+    Categorias declaradas ao TSE: Eventos de promoção da candidatura (R$ 16.000,00)
+  Locação/cessão de bens imóveis — R$ 14.381,36:
+    CARLOS ADALBERTO RIBEIRO ANCHIETA: R$ 9.000,00 (1 despesa)
+    G   G IMÓVEIS LTDA: R$ 2.881,36 (2 despesas)
+    VINICIUS   REBELO CONSTRUÇÕES LTDA: R$ 2.500,00 (1 despesa)
+    Categorias declaradas ao TSE: Locação/cessão de bens imóveis (R$ 14.381,36)
+  Mobilização e militância — R$ 11.130,00:
+    AMANDA CARVALHO RODRIGUES: R$ 265,00 (1 despesa)
+    AMANDA CRUZ DE CARVALHO: R$ 265,00 (1 despesa)
+    AMPARO CONCEIÇÃO DO NASCIMENTO PAIVA: R$ 265,00 (1 despesa)
+    ANA LUISA CARVALHO SANTANA: R$ 265,00 (1 despesa)
+    ANA MARIA RODRIGUES DE ALMEIDA LINHARES: R$ 265,00 (1 despesa)
+    ... mais 37 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 11.130,00)
+    Descrição declarada (classificada): SERVIÇO DE PANFLETAGEM (R$ 6.625,00)
+    Descrição declarada (classificada): SERVIÇOS DE PANFLETAGEM (R$ 1.325,00)
+    Descrição declarada (classificada): SERVIÇOS DE PANFLETEIRO DE 01 A 15/10/2020 (R$ 1.325,00)
+  Locação/cessão de bens móveis (exceto veículos) — R$ 5.900,00:
+    PEDROSA E CIA LTDA: R$ 3.000,00 (2 despesas)
+    JOSEAN ALVES DE ARAÚJO: R$ 1.200,00 (1 despesa)
+    L H S CAVALCANTE PROMOÇÃO DE EVENTOS -  ME: R$ 1.200,00 (1 despesa)
+    RAMALHO   AGUIAR LTDA: R$ 500,00 (1 despesa)
+    Categorias declaradas ao TSE: Locação/cessão de bens móveis (exceto veículos) (R$ 5.900,00)
+  Não especificado — R$ 2.694,00:
+    LEONARDO SILVA SOUSA: R$ 1.000,00 (1 despesa)
+    ESFRIAR - EMPRESA DE SER. EM FRIG. E AR REFR. EIRELI EPP: R$ 600,00 (2 despesas)
+    ROSALIA CASTELO BRANCO DA SILVEIRA: R$ 600,00 (10 despesas)
+    IRENE NOGUEIRA COSTA: R$ 150,00 (3 despesas)
+    DANILO EWERTON PEREIRA DE FRANÇA: R$ 100,00 (1 despesa)
+    ... mais 3 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Diversas a especificar (R$ 2.694,00)
+  Água — R$ 2.396,00:
+    L MAGALHÃES NASCIMENTO: R$ 2.396,00 (2 despesas)
+    Categorias declaradas ao TSE: Diversas a especificar (R$ 2.396,00)
+    Descrição declarada (classificada): AGUA MINERAL CX COPO (R$ 1.230,00)
+    Descrição declarada (classificada): FARDO DE ÁGUA MINERAL DE 510 ML SEM GÁS (R$ 1.166,00)
+  Materiais de expediente — R$ 1.776,85:
+    L ANDRADE PAPELARIA ME: R$ 1.517,40 (13 despesas)
+    M.M. DE SOUZA FERNANDES - ME: R$ 259,45 (7 despesas)
+    Categorias declaradas ao TSE: Materiais de expediente (R$ 1.776,85)
+  Telefone — R$ 305,91:
+    G3 TELECOM EIRELI: R$ 305,91 (1 despesa)
+    Categorias declaradas ao TSE: Telefone (R$ 305,91)
+  Encargos financeiros, taxas bancárias e/ou op. cartão de crédito — R$ 104,40:
+    (fornecedor não informado): R$ 104,40 (18 despesas)
+    Categorias declaradas ao TSE: Encargos financeiros, taxas bancárias e/ou op. cartão de crédito (R$ 104,40)
+
+Observação: o fornecedor é o vinculado ao documento cadastrado no banco;
+quando falta documento, o banco não associa um fornecedor à despesa.

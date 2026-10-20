@@ -1,0 +1,148 @@
+P9) Para onde foi o dinheiro da candidatura de FRANCISCO DE ASSIS DE OLIVEIRA COSTA?
+Candidatura: 755929 | SQ_CANDIDATO: 180001610755 | DEPUTADO FEDERAL | PI | 2022
+
+Fonte: TSE, despesas contratadas declaradas pela candidatura; valores em reais do ano da eleição.
+Nuvem: tamanho da expressão proporcional à soma dos valores contratados por tipo de gasto.
+O tipo do TSE (DS_ORIGEM_DESPESA) prevalece; descrições livres (DS_DESPESA) só ajudam
+a identificar serviços nas categorias genéricas. Não se usa o nome/CNAE do fornecedor
+para inferir o tipo de gasto. Categorias sem identificação ficam explícitas.
+Fora da conta: 'Doações financeiras a outros candidatos/partidos' (transferência que reaparece na campanha recebedora).
+Despesas com valor zero: 0; registros com valor positivo sem fornecedor: 54.
+Total analisado: R$ 1.468.469,58 em 429 despesas.
+Cobertura da classificação por valor:
+  tipo TSE: 406 despesas, R$ 1.105.913,20 (75.3% do valor)
+  descrição: 15 despesas, R$ 347.026,38 (23.6% do valor)
+  sem identificação: 8 despesas, R$ 15.530,00 (1.1% do valor)
+
+Gastos por tipo (base da nuvem):
+  Tipo | despesas | valor | participação | inferidas da descrição
+  Propaganda impressa | 77 | R$ 483.445,72 | 32.9% | 0
+  Comunicação e assessoria | 1 | R$ 300.000,00 | 20.4% | 1
+  Mobilização e militância | 63 | R$ 208.503,50 | 14.2% | 2
+  Transporte e veículos | 80 | R$ 144.956,37 | 9.9% | 7
+  Eventos | 2 | R$ 70.700,00 | 4.8% | 0
+  Serviços advocatícios | 2 | R$ 70.000,00 | 4.8% | 0
+  Locação/cessão de bens móveis (exceto veículos) | 12 | R$ 36.095,00 | 2.5% | 0
+  Segurança | 3 | R$ 32.986,88 | 2.2% | 3
+  Propaganda audiovisual | 2 | R$ 32.300,00 | 2.2% | 0
+  Propaganda digital | 5 | R$ 21.127,92 | 1.4% | 0
+  Locação/cessão de bens imóveis | 4 | R$ 15.700,00 | 1.1% | 0
+  Serviços contábeis | 1 | R$ 10.000,00 | 0.7% | 0
+  Outros serviços (não identificados) | 4 | R$ 8.030,00 | 0.5% | 0
+  Alimentação | 4 | R$ 7.905,00 | 0.5% | 0
+  Materiais de expediente | 105 | R$ 7.815,59 | 0.5% | 0
+  Água | 4 | R$ 7.708,20 | 0.5% | 0
+  Não especificado | 4 | R$ 7.500,00 | 0.5% | 0
+  Administração e apoio | 2 | R$ 2.606,00 | 0.2% | 2
+  Encargos financeiros, taxas bancárias e/ou op. cartão de crédito | 54 | R$ 1.089,40 | 0.1% | 0
+
+Fornecedores por tipo (até 5 maiores valores contratados em cada tipo):
+  Propaganda impressa — R$ 483.445,72:
+    M V OLIVEIRA VIEIRA: R$ 160.765,00 (24 despesas)
+    GRAFICON SERVIÇOS GRAFICOS - EPP: R$ 144.531,00 (9 despesas)
+    I H MARTINS SILVEIRA ME: R$ 91.555,00 (11 despesas)
+    A NOGUEIRA E SILVA JUNIOR EPP: R$ 41.393,80 (6 despesas)
+    M. C. SOUSA PAPELARIA - ME: R$ 12.000,00 (1 despesa)
+    ... mais 7 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Publicidade por materiais impressos (R$ 382.047,00); Publicidade por adesivos (R$ 101.398,72)
+  Comunicação e assessoria — R$ 300.000,00:
+    ZION - COMUNICAÇÃO   ESTRATEGIA LTDA: R$ 300.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 300.000,00)
+    Descrição declarada (classificada): ACESSORIA E CONSULTORIA DE COMUNICAÇÃO NA CAMPANHA (R$ 300.000,00)
+  Mobilização e militância — R$ 208.503,50:
+    AFIA MARCIA MARQUES DA COSTA 73352764387: R$ 150.000,00 (1 despesa)
+    CYNARA RODRIGUES DE SOUSA: R$ 1.818,50 (2 despesas)
+    DERIVALDO ALMEIDA LEÃO: R$ 1.818,00 (1 despesa)
+    FRANCISCO DE ASSIS PAIVA: R$ 1.818,00 (1 despesa)
+    FRANCISCO DE PAULA DE SOUSA VIEIRA: R$ 1.818,00 (1 despesa)
+    ... mais 57 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Atividades de militância e mobilização de rua (R$ 207.978,00); Diversas a especificar (R$ 525,50)
+    Descrição declarada (classificada): CAMISA DE APOIO DO PESSOAL DE MOBILIZAÇÃO E MILITA (R$ 525,00)
+    Descrição declarada (classificada): ATIVIDADE DE MOBILIZAÇÃO E PANFLETAGEM (R$ 0,50)
+  Transporte e veículos — R$ 144.956,37:
+    T R J E SILVA EIRELI: R$ 36.250,00 (8 despesas)
+    TRANSSERVICE PETROLEO LTDA: R$ 20.873,96 (20 despesas)
+    R. DEMES   CIA LTDA: R$ 19.610,26 (17 despesas)
+    MAZUAD AUTO LOCADORA E LOGISTICA LTDA: R$ 11.200,00 (1 despesa)
+    M. F. LIMA CARNEIRO  CIA LTDA: R$ 9.400,00 (2 despesas)
+    ... mais 15 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Cessão ou locação de veículos (R$ 54.500,00); Combustíveis e lubrificantes (R$ 54.298,37); Despesas com transporte ou deslocamento (R$ 25.250,00); Serviços prestados por terceiros (R$ 10.908,00)
+    Descrição declarada (classificada): SERVIÇO DE MOTORISTA NA CAMPANHA ELEITORAL 2022 (R$ 3.030,00)
+    Descrição declarada (classificada): PRESTAÇÃO DE SERVIÇOS DE MOTORISTA (R$ 1.818,00)
+    Descrição declarada (classificada): SERVIÇOS DE MOTORISTA PARA A CAMPANHA ELEITORAL. (R$ 1.818,00)
+  Eventos — R$ 70.700,00:
+    RAFAEL DA SILVA OLIVEIRA: R$ 65.000,00 (1 despesa)
+    D E D EVENTOS E SERVICOS LTDA: R$ 5.700,00 (1 despesa)
+    Categorias declaradas ao TSE: Eventos de promoção da candidatura (R$ 70.700,00)
+  Serviços advocatícios — R$ 70.000,00:
+    SILVA   BARROSO ADVOGADOS ASSOCIADOS: R$ 70.000,00 (2 despesas)
+    Categorias declaradas ao TSE: Serviços advocatícios (R$ 70.000,00)
+  Locação/cessão de bens móveis (exceto veículos) — R$ 36.095,00:
+    RAFAEL DA SILVA OLIVEIRA: R$ 19.600,00 (1 despesa)
+    AGENDA PROMOCOES LTDA: R$ 5.000,00 (1 despesa)
+    B H BERTOLDO ANDRADE PRODUCOES EIRELI: R$ 3.600,00 (4 despesas)
+    COMERCIAL BEBIFESTAS LTDA: R$ 3.000,00 (1 despesa)
+    MARIA CLARA SOARES DA SILVA: R$ 2.500,00 (1 despesa)
+    ... mais 2 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Locação/cessão de bens móveis (exceto veículos) (R$ 36.095,00)
+  Segurança — R$ 32.986,88:
+    CET SEG SEGURANCA ARMADA LTDA: R$ 32.986,88 (3 despesas)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 32.986,88)
+    Descrição declarada (classificada): VIGILANCIA NOTURNA NO MÊS DE SETEMBRO/2022 (R$ 12.986,90)
+    Descrição declarada (classificada): VIGILANCIA DIURNA NO MÊS DE SETEMBRO/2022 (R$ 10.575,16)
+    Descrição declarada (classificada): VIGILANCIA 24H- PERIODO DE 20/08/2022 A 31/08/2022 (R$ 9.424,82)
+  Propaganda audiovisual — R$ 32.300,00:
+    D V PRODUÇÃO E FINALIZAÇÃO LTDA: R$ 25.000,00 (1 despesa)
+    RAFAEL DA SILVA OLIVEIRA: R$ 7.300,00 (1 despesa)
+    Categorias declaradas ao TSE: Produção de programas de rádio, televisão ou vídeo (R$ 25.000,00); Produção de jingles, vinhetas e slogans (R$ 7.300,00)
+  Propaganda digital — R$ 21.127,92:
+    FACEBOOK SERVICOS ON LINE DO BRASIL LTDA: R$ 21.127,92 (5 despesas)
+    Categorias declaradas ao TSE: Despesa com Impulsionamento de Conteúdos (R$ 21.127,92)
+  Locação/cessão de bens imóveis — R$ 15.700,00:
+    JEPHISON ARAUJO DA SILVA: R$ 10.000,00 (1 despesa)
+    MARLENE MARIA FEITOSA: R$ 4.000,00 (1 despesa)
+    EUROPA INVESTIMENTOS LTDA: R$ 1.000,00 (1 despesa)
+    CENTRO SOCIAL DOS CABOS E SOLDADOS: R$ 700,00 (1 despesa)
+    Categorias declaradas ao TSE: Locação/cessão de bens imóveis (R$ 15.700,00)
+  Serviços contábeis — R$ 10.000,00:
+    AGILIZA SERVIÇOS CONTABEIS E APOIO ADMINISTRATIVO: R$ 10.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços contábeis (R$ 10.000,00)
+  Outros serviços (não identificados) — R$ 8.030,00:
+    SILVANIRA DE OLIVEIRA COSTA PRAÇA: R$ 5.000,00 (1 despesa)
+    FRANCISCO MORAES DOS PASSOS: R$ 1.212,00 (1 despesa)
+    DELCIMAR DOS SANTOS: R$ 909,00 (1 despesa)
+    JOSÉ DONATO E SILVA: R$ 909,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 8.030,00)
+  Alimentação — R$ 7.905,00:
+    BENEDITO QUIRINO DA ROCHA: R$ 4.800,00 (2 despesas)
+    J MOREIRA DE SOUSA ME: R$ 3.105,00 (2 despesas)
+    Categorias declaradas ao TSE: Alimentação (R$ 7.905,00)
+  Materiais de expediente — R$ 7.815,59:
+    REGO E GONCALVES LTDA ME: R$ 1.770,12 (25 despesas)
+    DIPALIMP DIST DE PROD HIG LIMP E MED LTDA: R$ 1.725,36 (10 despesas)
+    L. G. CARVALHO E CIA LTDA: R$ 1.508,40 (21 despesas)
+    I DO ESPIRITO SANTO - RIT PAPELARIA: R$ 1.458,55 (39 despesas)
+    SODINE SOC. DIST. DO NE LTDA - TERESINA: R$ 1.353,16 (10 despesas)
+    Categorias declaradas ao TSE: Materiais de expediente (R$ 7.815,59)
+  Água — R$ 7.708,20:
+    COMERCIAL BEBIFESTAS LTDA: R$ 5.625,00 (2 despesas)
+    JORGE BATISTA   CIA LTDA: R$ 2.083,20 (2 despesas)
+    Categorias declaradas ao TSE: Água (R$ 7.708,20)
+  Não especificado — R$ 7.500,00:
+    AFONSO HENRIQUE BRITO GUIMARAES 06818327389: R$ 3.000,00 (1 despesa)
+    MARLON O DE ANDRADE LTDA: R$ 3.000,00 (1 despesa)
+    IRANEIDE FERREIRA DA SILVA 83997091315: R$ 750,00 (1 despesa)
+    VIRTEX TELECOM LTDA: R$ 750,00 (1 despesa)
+    Categorias declaradas ao TSE: Diversas a especificar (R$ 7.500,00)
+  Administração e apoio — R$ 2.606,00:
+    AMURANY KERLE BORGES PÁSCOA PEREIRA: R$ 2.000,00 (1 despesa)
+    GÉSSICA FERREIRA SANTANA SOUZA: R$ 606,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 2.606,00)
+    Descrição declarada (classificada): SERVIÇOS DE AUXILIAR ADMINISTRATIVO PARA CAMPANHA (R$ 2.000,00)
+    Descrição declarada (classificada): SERVIÇO DE RECEPCIONISTA NO COMITE DE FLORIANO-PI (R$ 606,00)
+  Encargos financeiros, taxas bancárias e/ou op. cartão de crédito — R$ 1.089,40:
+    (fornecedor não informado): R$ 1.089,40 (54 despesas)
+    Categorias declaradas ao TSE: Encargos financeiros, taxas bancárias e/ou op. cartão de crédito (R$ 1.089,40)
+
+Observação: o fornecedor é o vinculado ao documento cadastrado no banco;
+quando falta documento, o banco não associa um fornecedor à despesa.

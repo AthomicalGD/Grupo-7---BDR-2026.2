@@ -1,0 +1,115 @@
+P9) Para onde foi o dinheiro da candidatura de IVANARIA DO NASCIMENTO ALVES SAMPAIO?
+Candidatura: 745332 | SQ_CANDIDATO: 180000771560 | PREFEITO | Esperantina | 2020
+
+Fonte: TSE, despesas contratadas declaradas pela candidatura; valores em reais do ano da eleição.
+Nuvem: tamanho da expressão proporcional à soma dos valores contratados por tipo de gasto.
+O tipo do TSE (DS_ORIGEM_DESPESA) prevalece; descrições livres (DS_DESPESA) só ajudam
+a identificar serviços nas categorias genéricas. Não se usa o nome/CNAE do fornecedor
+para inferir o tipo de gasto. Categorias sem identificação ficam explícitas.
+Fora da conta: 'Doações financeiras a outros candidatos/partidos' (transferência que reaparece na campanha recebedora).
+Despesas com valor zero: 0; registros com valor positivo sem fornecedor: 129.
+Total analisado: R$ 275.985,30 em 265 despesas.
+Cobertura da classificação por valor:
+  tipo TSE: 250 despesas, R$ 251.635,30 (91.2% do valor)
+  descrição: 13 despesas, R$ 18.150,00 (6.6% do valor)
+  sem identificação: 2 despesas, R$ 6.200,00 (2.2% do valor)
+
+Gastos por tipo (base da nuvem):
+  Tipo | despesas | valor | participação | inferidas da descrição
+  Propaganda impressa | 23 | R$ 61.620,00 | 22.3% | 0
+  Serviços advocatícios | 2 | R$ 60.000,00 | 21.7% | 0
+  Transporte e veículos | 21 | R$ 37.110,75 | 13.4% | 6
+  Propaganda audiovisual | 5 | R$ 31.590,00 | 11.4% | 2
+  Mobilização e militância | 41 | R$ 24.600,00 | 8.9% | 0
+  Serviços contábeis | 1 | R$ 23.000,00 | 8.3% | 0
+  Propaganda sonora | 9 | R$ 12.500,00 | 4.5% | 1
+  Locação/cessão de bens móveis (exceto veículos) | 1 | R$ 8.000,00 | 2.9% | 0
+  Outros serviços (não identificados) | 2 | R$ 6.200,00 | 2.2% | 0
+  Locação/cessão de bens imóveis | 3 | R$ 2.800,00 | 1.0% | 0
+  Estrutura e manutenção | 2 | R$ 2.090,00 | 0.8% | 2
+  Propaganda digital | 3 | R$ 2.000,00 | 0.7% | 0
+  Administração financeira | 2 | R$ 1.567,50 | 0.6% | 2
+  Materiais de expediente | 17 | R$ 1.251,45 | 0.5% | 0
+  Encargos financeiros, taxas bancárias e/ou op. cartão de crédito | 129 | R$ 981,60 | 0.4% | 0
+  Alimentação | 4 | R$ 674,00 | 0.2% | 0
+
+Fornecedores por tipo (até 5 maiores valores contratados em cada tipo):
+  Propaganda impressa — R$ 61.620,00:
+    ROSILENE S PESSOA - ME: R$ 61.620,00 (23 despesas)
+    Categorias declaradas ao TSE: Publicidade por materiais impressos (R$ 61.620,00)
+  Serviços advocatícios — R$ 60.000,00:
+    ALANO DOURADO MENESES ADVOGADOS ASSOCIADOS: R$ 50.000,00 (1 despesa)
+    FRANCISCO SANTHIAGO HOLANDA FRANÇA SILVA: R$ 10.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços advocatícios (R$ 60.000,00)
+  Transporte e veículos — R$ 37.110,75:
+    MAZUAD AUTO LOCADORA E LOGISTICA LTDA: R$ 19.200,00 (2 despesas)
+    ANTONIO ALVES LOPES: R$ 6.400,00 (1 despesa)
+    FRANCISCO DAS CHAGAS REGO: R$ 4.500,00 (1 despesa)
+    POSTO DE COMBUSTIVEL ESPERANTINA LTDA: R$ 2.308,25 (12 despesas)
+    PAULO ROGERIO BARBOSA SANTOS: R$ 1.567,50 (2 despesas)
+    ... mais 3 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Cessão ou locação de veículos (R$ 19.200,00); Serviços próprios prestados por terceiros (R$ 6.400,00); Serviços prestados por terceiros (R$ 4.702,50); Despesas com transporte ou deslocamento (R$ 4.500,00); Combustíveis e lubrificantes (R$ 2.308,25)
+    Descrição declarada (classificada): CONTRATO PARA TRANSPORTE DE BENS MÓVEIS E OBJETOS (R$ 6.400,00)
+    Descrição declarada (classificada): SERVIÇOS DE MOTORISTA (R$ 2.090,00)
+    Descrição declarada (classificada): SERVIÇOS DE MOTORISTA CONFORME O CONTRATO (R$ 1.045,00)
+  Propaganda audiovisual — R$ 31.590,00:
+    MOTTIVAX LTDA-ME: R$ 29.500,00 (3 despesas)
+    FABRICIO JACKSON FERREIRA: R$ 1.045,00 (1 despesa)
+    ODAIR JOSE SILVA: R$ 1.045,00 (1 despesa)
+    Categorias declaradas ao TSE: Produção de programas de rádio, televisão ou vídeo (R$ 27.000,00); Produção de jingles, vinhetas e slogans (R$ 2.500,00); Serviços prestados por terceiros (R$ 2.090,00)
+    Descrição declarada (classificada): SERVIÇO DE LOCUÇÃO CONFORME CONTRATO (R$ 1.045,00)
+    Descrição declarada (classificada): SERVIÇOS DE LOCUÇÃO CONFORME CONTRATO (R$ 1.045,00)
+  Mobilização e militância — R$ 24.600,00:
+    ANA CAROLINE PEREIRA DA SILVA: R$ 600,00 (1 despesa)
+    ANA LARISSA SOARES DA SILVA: R$ 600,00 (1 despesa)
+    ANTONIA GEOVANA SOUSA QUARESMA: R$ 600,00 (1 despesa)
+    ANTONIO JOSE DA SILVA: R$ 600,00 (1 despesa)
+    AURICELIA FERREIRA DO NASCIMENTO: R$ 600,00 (1 despesa)
+    ... mais 36 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Atividades de militância e mobilização de rua (R$ 24.600,00)
+  Serviços contábeis — R$ 23.000,00:
+    FRANCIMARY BATISTA MEIRELLES: R$ 23.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços contábeis (R$ 23.000,00)
+  Propaganda sonora — R$ 12.500,00:
+    CLAUDIANO BARBOSA DE SOUSA: R$ 5.600,00 (4 despesas)
+    VALDENE QUARESMA SILVA: R$ 5.600,00 (4 despesas)
+    JOSÉ DE OLIVEIRA RODRIGUES: R$ 1.300,00 (1 despesa)
+    Categorias declaradas ao TSE: Publicidade por carros de som (R$ 11.200,00); Serviços prestados por terceiros (R$ 1.300,00)
+    Descrição declarada (classificada): SERVIÇOS DE SONOPLASTA (OPERADOR DE SOM) (R$ 1.300,00)
+  Locação/cessão de bens móveis (exceto veículos) — R$ 8.000,00:
+    ANDALUZ ILUMINAÇÃO LTDA: R$ 8.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Locação/cessão de bens móveis (exceto veículos) (R$ 8.000,00)
+  Outros serviços (não identificados) — R$ 6.200,00:
+    MOTTIVAX LTDA-ME: R$ 5.500,00 (1 despesa)
+    JOSÉ DE OLIVEIRA RODRIGUES: R$ 700,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 6.200,00)
+  Locação/cessão de bens imóveis — R$ 2.800,00:
+    ANATÁLIA GONÇALVES DE SAMPAIO PEREIRA: R$ 2.000,00 (1 despesa)
+    ELIAS MEDEIROS JUNIOR: R$ 800,00 (2 despesas)
+    Categorias declaradas ao TSE: Locação/cessão de bens imóveis (R$ 2.800,00)
+  Estrutura e manutenção — R$ 2.090,00:
+    DENILSON DE MOURA PAIVA: R$ 1.045,00 (1 despesa)
+    FRANCISCO DAS CHAGAS REGO: R$ 1.045,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 2.090,00)
+    Descrição declarada (classificada): SERVIÇOS DE ELETRICISTA CONFORME CONTRATO (R$ 1.045,00)
+    Descrição declarada (classificada): SERVIÇOS ELETRICISTA PRO COMITE CONFORME CONTRATO (R$ 1.045,00)
+  Propaganda digital — R$ 2.000,00:
+    DLOCAL BRASIL INSTITUICAO DE PAGAMENTO S.A.: R$ 2.000,00 (3 despesas)
+    Categorias declaradas ao TSE: Despesa com Impulsionamento de Conteúdos (R$ 2.000,00)
+  Administração financeira — R$ 1.567,50:
+    WILLIAM DA SILVA CASTRO: R$ 1.567,50 (2 despesas)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 1.567,50)
+    Descrição declarada (classificada): SERVIÇO DE ADMINISTRADOR FINANCEIRO (R$ 1.045,00)
+    Descrição declarada (classificada): ADMINISTRADOR FINANCEIRO CONFORME CONTRATO (R$ 522,50)
+  Materiais de expediente — R$ 1.251,45:
+    R RICARDO LIRA QUEIROZ: R$ 1.251,45 (17 despesas)
+    Categorias declaradas ao TSE: Materiais de expediente (R$ 1.251,45)
+  Encargos financeiros, taxas bancárias e/ou op. cartão de crédito — R$ 981,60:
+    (fornecedor não informado): R$ 981,60 (129 despesas)
+    Categorias declaradas ao TSE: Encargos financeiros, taxas bancárias e/ou op. cartão de crédito (R$ 981,60)
+  Alimentação — R$ 674,00:
+    R RICARDO LIRA QUEIROZ: R$ 674,00 (4 despesas)
+    Categorias declaradas ao TSE: Alimentação (R$ 674,00)
+
+Observação: o fornecedor é o vinculado ao documento cadastrado no banco;
+quando falta documento, o banco não associa um fornecedor à despesa.
