@@ -54,7 +54,7 @@ function Indicador({ valor, rotulo, fonte }: { valor: string; rotulo: string; fo
   )
 }
 
-export function Boletim({ m, ano, aoFechar }: { m: Municipio; ano: Ano; aoFechar: () => void }) {
+export function Boletim({ m, ano, cargo, aoFechar }: { m: Municipio; ano: Ano; cargo?: string; aoFechar: () => void }) {
   const ind = m.indicadores
   const [emitido] = useState(() => new Date().toLocaleDateString('pt-BR'))
   const url = typeof window !== 'undefined' ? enderecoParaOutroAparelho() : ''
@@ -193,7 +193,7 @@ export function Boletim({ m, ano, aoFechar }: { m: Municipio; ano: Ano; aoFechar
             <div className="space-y-1">
               <p className="font-semibold">Aponte a câmera para abrir este boletim</p>
               <p className="t-mono text-[0.72rem] uppercase tracking-[0.06em] text-tinta-3">Emitido em {emitido} · Fontes: TSE, IBGE, Atlas Brasil</p>
-              <p className="text-[0.78rem] text-tinta-3">Viés: média do viés dos partidos ponderada pelos votos válidos, todos os cargos do 1º turno.</p>
+              <p className="text-[0.78rem] text-tinta-3">Viés: média do viés dos partidos ponderada pelos votos válidos, {cargo ? `só o voto para ${cargo.toLowerCase()}` : 'todos os cargos do 1º turno'}.</p>
             </div>
           </Linha>
         </article>

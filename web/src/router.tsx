@@ -6,9 +6,14 @@ import { Moldura } from './componentes/Moldura'
 
 export interface BuscaAtlas {
   ano?: Ano
+  /** só o voto para este cargo (#10); sem ele, a média dos cargos */
+  cargo?: number
   relativo?: boolean
   relevo?: boolean
 }
+
+/** Cargos do filtro do atlas (os mesmos de /api/vies/cargos). */
+export const CARGOS_ATLAS = [1, 3, 5, 6, 7, 11, 13]
 
 export interface BuscaCadeira {
   cargo?: number
@@ -57,6 +62,7 @@ const atlas = createRoute({
   component: Atlas,
   validateSearch: (s: Record<string, unknown>): BuscaAtlas => ({
     ano: ANOS.includes(Number(s.ano) as Ano) ? (Number(s.ano) as Ano) : undefined,
+    cargo: CARGOS_ATLAS.includes(Number(s.cargo)) ? Number(s.cargo) : undefined,
     relativo: s.relativo === true || s.relativo === 'true' ? true : undefined,
     relevo: s.relevo === true || s.relevo === 'true' ? true : undefined,
   }),

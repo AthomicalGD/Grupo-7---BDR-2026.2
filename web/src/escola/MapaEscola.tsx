@@ -5,7 +5,7 @@
 // entre os eleitores (quem votou; aqui a régua vai até 25%, porque ninguém passa muito disso).
 // "Em pé" levanta o mesmo recorte em 3D. Estados sem dados ficam hachurados. Clicar num município abre o boletim.
 import { ArrowLeft, Cube, Square } from '@phosphor-icons/react'
-import { useQueries, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { geoConicEqualArea, geoPath } from 'd3-geo'
 import { interpolateZoom, type ZoomView } from 'd3-interpolate'
 import { lazy, memo, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
@@ -45,7 +45,6 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
   aoEscolher: (ibge: number) => void
 }) {
   const [ref, largura] = useLargura<HTMLDivElement>()
-  const malhas = useQueries({ queries: ufs.map((s) => consultas.malhaUF(s)), combine: (rs) => rs.map((r) => r.data) })
   const { data: brasil } = useQuery(consultas.malhaBrasil())
   const { data: listaUfs } = useQuery(consultas.ufs())
   const [hover, setHover] = useState<{ tipo: 'uf' | 'mun'; cod: number } | null>(null)
@@ -53,10 +52,13 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
   const [modo, setModo] = useState<'plano' | 'pe'>('plano')
   const sozinho = ufs.length === 1
   const [foco, setFoco] = useState<string | null>(sozinho ? ufs[0] : null)
-  const prontas = malhas.every(Boolean)
+  // só a malha de municípios do estado aberto: a vista do Brasil se enquadra pelo contorno dos estados
+  // (baixar as 27 malhas de municípios para isso eram ~9 MB a cada visita)
+  const { data: malhaFoco } = useQuery({ ...consultas.malhaUF(foco ?? ''), enabled: !!foco })
   const W = Math.max(largura, 280)
   const porSigla = useMemo(() => new Map((listaUfs ?? []).map((u) => [u.sigla, u])), [listaUfs])
   const porCodigo = useMemo(() => new Map((listaUfs ?? []).map((u) => [u.cd_ibge, u])), [listaUfs])
+  const prontas = !!brasil && !!listaUfs
   const campo = quem === 'eleitores' ? 'votantes' : medida
   const porIbge = useMemo(() => new Map(municipios.map((m) => [m.ibge, m])), [municipios])
 
@@ -72,10 +74,10 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
   }, [selecionado, porIbge, foco])
 
   const desenho = useMemo(() => {
-    if (!prontas || !largura) return null
-    const lista = malhas as Malha[]
-    const feicoes = lista.flatMap((m) => m.features)
-    const colecao = { type: 'FeatureCollection', features: feicoes } as Malha
+    if (!prontas || !largura || !brasil) return null
+    const codigo = new Map(ufs.map((s) => [s, porSigla.get(s)?.cd_ibge]))
+    const doRecorte = brasil.features.filter((f) => ufs.some((s) => codigo.get(s) === f.properties.codarea))
+    const colecao = { ...brasil, features: doRecorte } as Malha
     const proj = geoConicEqualArea().parallels([-2, -22]).rotate([54, 0]).preclip((s) => s).precision(0).fitWidth(W - 16, colecao)
     let caminho = geoPath(proj).digits(1)
     let [[, y0], [, y1]] = caminho.bounds(colecao)
@@ -87,17 +89,22 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
     proj.translate([proj.translate()[0] + 8, proj.translate()[1] - y0 + 8])
     caminho = geoPath(proj).digits(1)
     const H = Math.ceil(y1 - y0 + 16)
-    const caixas = new Map(lista.map((m, i) => [ufs[i], caminho.bounds(m)]))
+    const caixas = new Map(
+      ufs.flatMap((s) => {
+        const f = doRecorte.find((x) => x.properties.codarea === codigo.get(s))
+        return f ? [[s, caminho.bounds(f)] as const] : []
+      }),
+    )
     const estados = brasil ? brasil.features.map((f) => ({ cd: f.properties.codarea, d: caminho(f) ?? '', centro: caminho.centroid(f) })) : []
     // os caminhos dos municípios só são montados para o estado aberto (a vista do Brasil não os usa)
-    return { estados, caixas, H, caminho, malhaDe: new Map(lista.map((m, i) => [ufs[i], m])) }
-  }, [prontas, largura, W, ufs, malhas, brasil])
+    return { estados, caixas, H, caminho }
+  }, [prontas, largura, W, ufs, brasil, porSigla])
   const H = desenho?.H ?? Math.round(W * 0.9)
   // a lista estável mantém o memo dos municípios: o hover não redesenha centenas de caminhos
   const formasFoco = useMemo<Forma[]>(() => {
-    const m = foco ? desenho?.malhaDe.get(foco) : undefined
+    const m = foco ? malhaFoco : undefined
     return m && desenho ? m.features.map((f) => ({ ibge: f.properties.codarea, uf: foco!, d: desenho.caminho(f) ?? '' })) : []
-  }, [desenho, foco])
+  }, [desenho, foco, malhaFoco])
   const caminhoDe = useMemo(() => new Map(formasFoco.map((f) => [f.ibge, f.d])), [formasFoco])
 
   const valor = useMemo(() => new Map(municipios.map((m) => [m.ibge, m[campo]])), [municipios, campo])
@@ -166,11 +173,11 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
 
   // o 3D: o estado em foco (municípios) ou o Brasil (os estados carregados)
   const malha3D = useMemo<Malha | null>(() => {
-    if (foco) return (malhas as (Malha | undefined)[])[ufs.indexOf(foco)] ?? null
+    if (foco) return malhaFoco ?? null
     if (!brasil) return null
     const cods = new Set(ufs.map((s) => porSigla.get(s)?.cd_ibge))
     return { ...brasil, features: brasil.features.filter((f) => cods.has(f.properties.codarea)) }
-  }, [foco, malhas, ufs, brasil, porSigla])
+  }, [foco, malhaFoco, ufs, brasil, porSigla])
   const valor3D = useMemo(
     () => (foco ? valor : new Map(ufs.map((s) => [porSigla.get(s)?.cd_ibge ?? 0, mediaUF.get(s) ?? null]))),
     [foco, valor, ufs, porSigla, mediaUF],

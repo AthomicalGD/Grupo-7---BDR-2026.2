@@ -253,6 +253,13 @@ Contêineres com 16px de raio, painéis do mapa e do relevo com 20px, controles 
 ### Cédula de anos
 Grupo de rádio com quatro casas; a casa marcada desenha um X em dois traços (180ms cada). Setas mudam o ano; "Linha do tempo" percorre 2018 → 2024 a cada 1,6s.
 
+
+### Cargo na cédula (atlas, #10)
+Uma casa a mais na cédula de anos, separada por um picote: "Cargo / Todos", com a seta. Abre logo abaixo uma cédula de cargos (folha, sombra de papel, 20px de raio): "Todos os cargos" no topo e, abaixo de um picote, as eleições gerais (2018 e 2022: presidente, governador, senador, deputados federal e estadual) e as municipais (2020 e 2024: prefeito e vereador), cada cargo uma casa que se marca com X em dois traços, como os anos; a escolhida em oliva claro. Setas percorrem as opções, Esc fecha e devolve o foco. Escolhido um cargo, a casa fica no oliva de seleção com o nome do cargo, a cédula de anos mostra só os anos em que ele foi disputado (o ano pedido vai para o válido mais próximo), e sobre o mapa entra a pílula oliva clara "Só o voto para presidente" com o x que tira o filtro. Os textos do painel do Brasil, do estado e do boletim dizem o cargo.
+
+### Candidatos do partido (De onde vem o viés, #11)
+Dentro do partido aberto, e só nele: a busca em pílula ("Procurar entre os 312 do PT", com a lupa) aparece quando o partido tem mais de 6 candidatos; a lista mostra os 6 mais votados e, no pé, "Mostrar mais 6 · faltam 300" em link discreto, ao lado de "Nominais · legenda". A busca espera 250ms, ignora acento e diz quando não acha ninguém.
+
 ### Campos
 - **Busca:** pílula de 52px, borda 1,5px Linha 2, que vira Tinta no foco; combobox ARIA com lista em cartão de papel.
 

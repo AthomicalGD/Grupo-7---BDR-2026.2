@@ -135,6 +135,27 @@ def main() -> None:
     assert pt["sigla"] == "PT" and pt["candidatos"][0]["nome"].startswith("LUIZ IN"), pt["candidatos"][0]
     assert cliente.get("/api/ufs/XX/composicao?ano=2022").status_code == 404
 
+    # #10: o viés por cargo; presidente só existe nos anos gerais e a composição bate com o viés do cargo
+    cargos = {c["cod"]: c for c in get("/api/vies/cargos")}
+    assert cargos[1]["anos"] == [2018, 2022] and cargos[11]["anos"] == [2020, 2024] and 8 not in cargos
+    pres = next(u for u in get("/api/ufs?cargo=1") if u["sigla"] == "PI")
+    assert set(pres["vies"]) == {"2018", "2022"} and pres["vies"] != pi["vies"], pres["vies"]
+    assert get("/api/ufs/PI?cargo=1")["vies"] == pres["vies"]
+    comp_pres = get("/api/ufs/PI/composicao?ano=2022&cargo=1")
+    assert comp_pres["vies"] == pres["vies"]["2022"]
+    assert all(c["cargo"] == "PRESIDENTE" for p in comp_pres["partidos"] for c in p["candidatos"])
+    assert set(get("/api/municipios/2211001?cargo=11")["vies"]) <= {"2020", "2024"}
+    assert cliente.get("/api/ufs?cargo=99").status_code == 404
+
+    # #11: os candidatos de um partido, de 6 em 6 e com busca pelo nome sem acento
+    pagina = get("/api/ufs/PI/composicao/PT?ano=2022&limite=6")
+    assert pagina["total"] > 6 and len(pagina["candidatos"]) == 6 and pagina["candidatos"][0]["nome"].startswith("LUIZ IN")
+    seguinte = get("/api/ufs/PI/composicao/PT?ano=2022&limite=6&desde=6")
+    assert {c["id"] for c in seguinte["candidatos"]}.isdisjoint({c["id"] for c in pagina["candidatos"]})
+    achado = get("/api/ufs/PI/composicao/PT?ano=2022&q=lula")
+    assert achado["achados"] >= 1 and all("LULA" in c["nome"] or "LUIZ" in c["nome"] for c in achado["candidatos"]), achado
+    assert get("/api/ufs/PI/composicao/PT?ano=2022&q=zzzzzz")["achados"] == 0
+
     # P4: os números de respostas/04_escolaridade.txt (vereador 2024, superior completo: 6.763 de 33.147)
     esc = get("/api/escola?ano=2024")
     vereador = next(c for c in esc["cargos"] if c["cod"] == 13)
