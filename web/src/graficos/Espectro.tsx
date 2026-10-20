@@ -39,7 +39,7 @@ export function Espectro({ espectro, anoAtivo }: { espectro: PorAno<Partido[]>; 
                       <div
                         key={p.sigla + p.numero}
                         className="relative flex min-w-[1.5px] items-center justify-center overflow-hidden transition-[filter] hover:brightness-110"
-                        style={{ flex: `${p.pct} 0 0`, background: p.vies === 0 ? 'var(--color-neutro)' : corVies(p.vies) }}
+                        style={{ flex: `${p.pct} 0 0`, background: p.vies == null ? 'var(--color-neutro)' : corVies(p.vies) }}
                         onPointerEnter={() => setFoco({ ano: a.toString(), p, x: inicio + p.pct / 2 })}
                       >
                         {largo && maiores.has(p.sigla) && (
@@ -78,14 +78,14 @@ export function Espectro({ espectro, anoAtivo }: { espectro: PorAno<Partido[]>; 
             <p className="mt-1 tabular">
               {pct(foco.p.pct)} dos votos válidos · {inteiro(foco.p.votos)}
             </p>
-            <p className="tabular text-tinta-2">{foco.p.vies === 0 ? 'Viés não informado (conta como 0)' : `Viés do partido: ${fmtVies(foco.p.vies)}`}</p>
+            <p className="tabular text-tinta-2">{foco.p.vies == null ? 'Sem viés (fica fora da média)' : `Viés do partido: ${fmtVies(foco.p.vies)}`}</p>
           </div>
         )}
       </div>
       <TabelaAlternavel
         titulo={`Votos válidos por partido em ${anoAtivo}`}
         colunas={['Partido', 'Viés', 'Votos', '%']}
-        linhas={(espectro[anoAtivo] ?? []).map((p) => [p.sigla, p.vies === 0 ? 'não informado' : fmtVies(p.vies), inteiro(p.votos), pct(p.pct)])}
+        linhas={(espectro[anoAtivo] ?? []).map((p) => [p.sigla, p.vies == null ? 'sem viés' : fmtVies(p.vies), inteiro(p.votos), pct(p.pct)])}
       />
     </figure>
   )

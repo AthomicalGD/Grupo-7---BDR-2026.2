@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Cube, MapTrifold } from '@phosphor-icons/react'
 import type { Ano, MunicipioBusca, UFDetalhe } from '../api'
+import { AlinhamentoCamara } from '../graficos/AlinhamentoCamara'
 import { BarrasDivergentes } from '../graficos/BarrasDivergentes'
 import { ViesTempo } from '../graficos/ViesTempo'
 import { inteiro, pct, vies as fmtVies } from '../lib/formato'
@@ -111,9 +112,15 @@ export function PainelEstado({ uf, ano, relativo, relevo, aoMudarRelativo, aoMud
         <h2 id="estado-tempo" className="t-h3">O estado na linha do tempo</h2>
         <ViesTempo principal={{ nome: uf.nome, valores: uf.vies }} anoAtivo={ano} />
         <p className="text-[0.82rem] leading-relaxed text-tinta-3">
-          2018 e 2022 somam presidente, governador, senado e deputados; 2020 e 2024, prefeito e vereador. Compare anos do
-          mesmo tipo.
+          2018 e 2022 somam presidente, governador, senado e deputados; 2020 e 2024, prefeito e vereador, cada cargo com o
+          mesmo peso. Compare anos do mesmo tipo. 2024 usa a classificação dos especialistas de 2022, estendida por dois
+          anos.
         </p>
+      </section>
+
+      <section aria-labelledby="estado-alinhamento" className="space-y-3">
+        <h2 id="estado-alinhamento" className="t-h3">Alinhamento na Câmara</h2>
+        <AlinhamentoCamara nome={uf.nome} valores={uf.alinhamento} anoAtivo={ano} />
       </section>
 
       <section aria-labelledby="estado-conta" className="space-y-3">
@@ -152,8 +159,8 @@ export function PainelEstado({ uf, ano, relativo, relevo, aoMudarRelativo, aoMud
       </section>
 
       <p className="border-t border-linha pt-4 text-[0.82rem] leading-relaxed text-tinta-3">
-        {pct(semVies)} dos votos válidos de {ano} foram para partidos sem viés informado, que contam como 0 e puxam a média
-        para o centro. Eleitores aptos no estado em {ano}:{' '}
+        {pct(semVies)} dos votos válidos de {ano} foram para partidos sem viés na classificação dos especialistas; eles
+        ficam fora da média. Eleitores aptos no estado em {ano}:{' '}
         {inteiro(uf.municipios.reduce((s, m) => s + (m.aptos[ano] ?? 0), 0))}.
       </p>
     </div>

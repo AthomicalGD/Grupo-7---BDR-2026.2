@@ -13,7 +13,10 @@ export interface UF {
   regiao: string
   municipios: number
   carregada: boolean
+  /** Viés ideológico (artigo de especialistas), −100 a +100. */
   vies: PorAno<number>
+  /** Alinhamento nas votações da Câmara (SVD), −100 a +100: segue a coalizão de governo, não é o viés. */
+  alinhamento: PorAno<number>
 }
 
 export interface MunicipioResumo {
@@ -21,11 +24,14 @@ export interface MunicipioResumo {
   nome: string
   regiao: string
   vies: PorAno<number>
+  alinhamento: PorAno<number>
   aptos: PorAno<number>
 }
 
 export interface UFDetalhe extends Omit<UF, 'municipios'> {
+  /** % dos votos válidos em partidos sem viés (ficam fora da média). */
   sem_vies_pct: PorAno<number>
+  sem_alinhamento_pct: PorAno<number>
   regioes: { nome: string; vies: PorAno<number> }[]
   municipios: MunicipioResumo[]
 }
@@ -39,7 +45,8 @@ export interface ComposicaoVies {
   partidos: {
     sigla: string
     nome: string | null
-    vies: number
+    /** viés do partido naquela eleição; null = sem viés (fica fora da média, contribuição 0) */
+    vies: number | null
     votos: number
     pct: number
     /** pontos que o partido soma ao viés do estado (a soma de todos dá o viés) */
@@ -62,7 +69,8 @@ export interface Partido {
   sigla: string
   nome: string | null
   numero: number
-  vies: number
+  /** viés do partido naquela eleição; null = sem viés */
+  vies: number | null
   votos: number
   pct: number
 }
@@ -101,6 +109,8 @@ export interface Municipio {
   vies: PorAno<number>
   vies_uf: PorAno<number>
   sem_vies_pct: PorAno<number>
+  alinhamento: PorAno<number>
+  alinhamento_uf: PorAno<number>
   espectro: PorAno<Partido[]>
   indicadores: Partial<Record<'pib_per_capita' | 'idhm' | 'populacao' | 'eleitores_populacao' | 'isentos', Indicador | null>>
   comparecimento: PorAno<Comparecimento>
@@ -443,7 +453,7 @@ export const consultas = {
       ...sempre,
     }),
   partidos: () =>
-    queryOptions({ queryKey: ['partidos'], queryFn: ({ signal }) => get<{ sigla: string; candidaturas: number; vies: number }[]>('/api/partidos', signal), ...sempre }),
+    queryOptions({ queryKey: ['partidos'], queryFn: ({ signal }) => get<{ sigla: string; candidaturas: number; vies: number | null }[]>('/api/partidos', signal), ...sempre }),
   politico: (id: number) =>
     queryOptions({ queryKey: ['politico', id], queryFn: ({ signal }) => get<Politico>(`/api/politicos/${id}`, signal), ...sempre }),
   cadeira: (ano: number, cargo: number, uf = '', municipio?: number) =>

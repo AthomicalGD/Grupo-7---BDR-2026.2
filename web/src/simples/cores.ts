@@ -8,7 +8,7 @@ const DIR = [0.44, 0.13, 262] as const // azul
 
 const cache = new Map<number, string>()
 
-/** Cor do viés, de −60 (carmim) a +60 (azul), simétrica em 0; sem dado, o papel. */
+/** Cor do viés, de −SATURA (carmim) a +SATURA (azul), simétrica em 0; sem dado, o papel. */
 export function corVies(v: number | null | undefined): string {
   if (v == null || Number.isNaN(v)) return 'var(--color-papel-2)'
   const r = Math.round(v * 2) / 2

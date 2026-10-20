@@ -38,16 +38,22 @@ def main() -> None:
     ufs = get("/api/ufs")
     assert len(ufs) == 27
     pi = next(u for u in ufs if u["sigla"] == "PI")
-    assert pi["carregada"] and pi["municipios"] == 224 and abs(pi["vies"]["2022"] + 41.9) <= 0.5, pi
+    # viés do artigo, (média - 5) * 20, cargos com peso igual (antes -41,9 com os números do SVD da Câmara)
+    assert pi["carregada"] and pi["municipios"] == 224 and abs(pi["vies"]["2022"] - 2.8) <= 0.5, pi
+    assert set(pi["alinhamento"]) == {"2018", "2020", "2022", "2024"} and pi["alinhamento"] != pi["vies"], pi
     assert cliente.get("/api/ufs/XX").status_code == 404
 
     uf = get("/api/ufs/PI")
-    assert len(uf["municipios"]) == 224 and uf["regioes"] and uf["sem_vies_pct"]
+    assert len(uf["municipios"]) == 224 and uf["regioes"] and uf["sem_vies_pct"] and uf["sem_alinhamento_pct"]
+    assert all(0 <= x < 1 for x in uf["sem_vies_pct"].values()), uf["sem_vies_pct"]   # cobertura do artigo ~100%
 
     the = get("/api/municipios/2211001")
-    assert the["nome"] == "Teresina" and abs(the["vies"]["2022"] + 34.9) <= 0.5, the["vies"]
+    assert the["nome"] == "Teresina" and abs(the["vies"]["2022"] - 13.1) <= 0.5, the["vies"]
+    assert the["alinhamento_uf"] == pi["alinhamento"], (the["alinhamento_uf"], pi["alinhamento"])
     esp = the["espectro"]["2022"]
-    assert esp[0]["vies"] == min(p["vies"] for p in esp)
+    com_vies = [p["vies"] for p in esp if p["vies"] is not None]
+    assert esp[0]["vies"] == min(com_vies) and com_vies == sorted(com_vies)   # sem viés (NULL) vai para o fim
+    assert (esp[0]["sigla"], esp[-1]["sigla"]) == ("PSTU", "PL") and (esp[0]["vies"], esp[-1]["vies"]) == (-89.8, 76.0)
     assert abs(sum(p["pct"] for p in esp) - 100) < 1
     assert the["prefeitos"] and "sq" not in the["prefeitos"][0] and the["comparecimento"]["2022"]["aptos"] > 0
     assert all(the["indicadores"][k] for k in ("pib_per_capita", "idhm", "populacao", "eleitores_populacao", "isentos"))
@@ -55,23 +61,24 @@ def main() -> None:
     assert get("/api/municipios?q=teresi")[0]["ibge"] == 2211001
     assert get("/api/municipios?q=t") == []
 
-    assert 368990 in [p["id"] for p in get("/api/politicos?q=wellington barroso")]
-    wd = get("/api/politicos/368990")
+    # o id é serial e muda quando o banco é recriado: procura pelo nome
+    wd_id = next(p["id"] for p in get("/api/politicos?q=wellington barroso") if p["nome"].endswith("ARAUJO DIAS"))
+    wd = get(f"/api/politicos/{wd_id}")
     assert len(wd["candidaturas"]) == 11 and wd["resumo"]["candidaturas"] == 11
     reeleito = {c["ano"] for c in wd["candidaturas"] if c["cargo"] == "GOVERNADOR" and c["reeleito"]}
     assert reeleito == {2006, 2018}, reeleito
     # o santinho: número na urna, nome de urna e a cor do partido (viés do PT)
     senado = next(c for c in wd["candidaturas"] if c["ano"] == 2022)
-    assert (senado["numero"], senado["nome_urna"], senado["vies"]) == (131, "WELLINGTON DIAS", -68), senado
+    assert (senado["numero"], senado["nome_urna"], senado["vies"]) == (131, "WELLINGTON DIAS", -46.4), senado   # PT: (2,68 - 5) * 20
     assert not [k for k in chaves(wd) if "cpf" in k or "titulo" in k]
     assert "id" in get("/api/politicos/aleatorio")
     # busca com filtros (cédula de consulta): senador eleito no PI em 2022, sem nome
     filtrada = get("/api/politicos?cargo=5&ano=2022&uf=PI&resultado=eleito")
-    assert [p["id"] for p in filtrada] == [368990], filtrada
-    assert 368990 in [p["id"] for p in get("/api/politicos?q=wellington&partido=PT&cargo=3")]
+    assert [p["id"] for p in filtrada] == [wd_id], filtrada
+    assert wd_id in [p["id"] for p in get("/api/politicos?q=wellington&partido=PT&cargo=3")]
     assert cliente.get("/api/politicos?cargo=99").status_code == 422
     pt = next(p for p in get("/api/partidos") if p["sigla"] == "PT")
-    assert pt["vies"] == -68 and pt["candidaturas"] > 0
+    assert pt["vies"] == -46.4 and pt["candidaturas"] > 0
     # P10a: senador no PI, como em respostas/10a_taxa_reeleicao.txt (4 tentaram, 1 reeleito)
     assert wd["contexto_reeleicao"] == {"cargo": "SENADOR", "uf": "PI", "tentaram": 4, "reeleitos": 1, "taxa": 25.0}
 
