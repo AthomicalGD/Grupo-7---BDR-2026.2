@@ -2,32 +2,35 @@
 // (~40 KB no total) são baixados quando a página abre e decodificados no primeiro toque, porque o navegador só
 // libera o áudio depois de um gesto. Cada toque varia um pouco a velocidade (±6%) para nenhuma martelada soar
 // igual à outra. Se um arquivo não carregar, entra o som sintetizado de antes. Respeita o botão de som da urna.
+import { audio, preparaAudio } from '../lib/audio'
 import { somLigado } from '../urna/som'
 
 const ARQUIVOS = ['golpe1', 'golpe2', 'golpe3', 'chacoalho1', 'chacoalho2', 'quebra', 'moedas', 'tesoura', 'carimbo', 'tic'] as const
 type Som = (typeof ARQUIVOS)[number]
 
-let contexto: AudioContext | null = null
 const brutos = new Map<Som, Promise<ArrayBuffer | null>>()
 const prontos = new Map<Som, AudioBuffer>()
 
-function ctx() {
-  contexto ??= new AudioContext()
-  if (contexto.state === 'suspended') void contexto.resume()
-  return contexto
-}
+// o contexto é o do site (lib/audio.ts), aberto de antemão: a primeira martelada não espera o som do sistema abrir
+const ctx = audio
 
-/** Baixa os arquivos (sem tocar nada): chamado quando a página do cofrinho abre. */
+let preparado = false
+/**
+ * Baixa os arquivos (sem tocar nada): chamado quando a página do cofrinho abre. Num momento parado, o contexto de
+ * áudio abre (suspenso) e os arquivos são decodificados: a primeira martelada já toca a gravação.
+ */
 export function baixarSons() {
   for (const nome of ARQUIVOS) {
     if (!brutos.has(nome)) brutos.set(nome, fetch(`/sons/${nome}.mp3`).then((r) => (r.ok ? r.arrayBuffer() : null)).catch(() => null))
   }
+  if (preparado) return
+  preparado = true
+  preparaAudio((c) => void decodificar(c))
 }
 
-/** Decodifica tudo no primeiro gesto; os toques seguintes já acham o áudio pronto. */
-async function decodificar() {
+/** Decodifica tudo (de antemão ou no primeiro gesto); os toques seguintes já acham o áudio pronto. */
+async function decodificar(c = ctx()) {
   baixarSons()
-  const c = ctx()
   await Promise.all(ARQUIVOS.map(async (nome) => {
     if (prontos.has(nome)) return
     const bruto = await brutos.get(nome)

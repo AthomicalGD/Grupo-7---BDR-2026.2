@@ -1,43 +1,185 @@
 // O santinho da carreira como folha de papel de verdade, do jeito dos flipbooks em WebGL: a folha é uma malha contínua
 // que curva, não um cartão rígido (CSS só gira um bloco inteiro; recortar em tiras deixava retângulos à vista).
 //
-// Como funciona: a frente e o verso do santinho são "fotografados" pelo próprio navegador (html-to-image, que desenha o
-// HTML num SVG), uma vez por santinho, quando a pessoa chega perto dele. Durante a animação, um canvas WebGL único,
-// compartilhado por todos os santinhos, é posto sobre o santinho e desenha a folha: 48 colunas, cada uma com o seu
-// ângulo; a posição de cada coluna sai da integral do ângulo ao longo da folha, então a curva é lisa e o papel não
-// estica. A luz de cada ponto vem de quanto ele vira. Parado, nada disso existe: volta o HTML nítido de sempre.
-import { getFontEmbedCSS, toCanvas } from 'html-to-image'
-
+// Como funciona: a frente e o verso do santinho são "fotografados" pelo próprio navegador (o HTML desenhado num SVG),
+// uma vez por santinho, quando a pessoa chega perto dele. Durante a animação, um canvas WebGL único, compartilhado por
+// todos os santinhos, é posto sobre o santinho e desenha a folha: 48 colunas, cada uma com o seu ângulo; a posição de
+// cada coluna sai da integral do ângulo ao longo da folha, então a curva é lisa e o papel não estica. A luz de cada
+// ponto vem de quanto ele vira. Parado, nada disso existe: volta o HTML nítido de sempre.
 type THREE = typeof import('three')
 const COLUNAS = 48
 const MARGEM = 70                  // espaço em volta do santinho no canvas: a folha sobe e curva para fora dele
 const PERSPECTIVA = 900            // a mesma do CSS (.santinho: perspective 900px)
 
-/* ---------- as fotos das faces, uma vez por santinho ---------- */
-const fotos = new WeakMap<HTMLElement, Promise<[HTMLCanvasElement, HTMLCanvasElement]>>()
+const ocioso = (f: () => void, timeout = 2500) => {
+  const ric = (window as Window & { requestIdleCallback?: (f: () => void, o?: { timeout: number }) => void }).requestIdleCallback
+  if (ric) ric(f, { timeout }); else setTimeout(f, 300)
+}
+
+/* ---------- as fotos das faces, uma vez por santinho ----------
+   Uma cópia leve das duas faces num SVG (foreignObject), desenhado num canvas. Cada elemento leva só as propriedades
+   de estilo que um santinho usa, lidas do estilo calculado (sem folha de estilo no SVG, é isso que dá a aparência);
+   a cópia do html-to-image levava as ~370 de cada elemento, e cada santinho travava a página ~350 ms. As duas faces
+   vão numa imagem só, então as fontes embutidas são decodificadas uma vez por santinho. */
+// as que nunca herdam: fora quando estão no valor inicial (nenhuma é mudada pelo estilo do navegador nos elementos
+// de um santinho), o que deixa o SVG bem menor
+const INICIAL: Record<string, string> = {
+  top: 'auto', right: 'auto', bottom: 'auto', left: 'auto', 'z-index': 'auto', float: 'none',
+  'min-width': 'auto', 'min-height': 'auto', 'max-width': 'none', 'max-height': 'none',
+  opacity: '1', isolation: 'auto', 'mix-blend-mode': 'normal', 'background-image': 'none', 'background-size': 'auto',
+  'background-position-x': '0%', 'background-position-y': '0%', 'background-repeat': 'repeat', 'background-clip': 'border-box',
+  'background-origin': 'padding-box', 'box-shadow': 'none', filter: 'none', 'clip-path': 'none', transform: 'none',
+  rotate: 'none', scale: 'none', translate: 'none', 'text-overflow': 'clip', '-webkit-line-clamp': 'none',
+  '-webkit-box-orient': 'horizontal', 'flex-grow': '0', 'flex-shrink': '1', 'flex-basis': 'auto', order: '0',
+  'row-gap': 'normal', 'column-gap': 'normal', 'grid-template-columns': 'none', 'grid-template-rows': 'none',
+  'grid-auto-flow': 'row', 'grid-auto-columns': 'auto', 'grid-auto-rows': 'auto', 'grid-column-start': 'auto',
+  'grid-column-end': 'auto', 'grid-row-start': 'auto', 'grid-row-end': 'auto', 'object-fit': 'fill',
+  'object-position': '50% 50%', 'aspect-ratio': 'auto', 'outline-style': 'none', 'align-self': 'auto', 'justify-self': 'auto',
+}
+const PROPRIEDADES = [
+  ...Object.keys(INICIAL),
+  'display', 'position', 'box-sizing', 'width', 'height', 'overflow-x', 'overflow-y', 'vertical-align', 'appearance',
+  'margin-top', 'margin-right', 'margin-bottom', 'margin-left', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+  'border-top-width', 'border-right-width', 'border-bottom-width', 'border-left-width', 'border-top-style', 'border-right-style',
+  'border-bottom-style', 'border-left-style', 'border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color',
+  'border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius',
+  'background-color', 'transform-origin', 'text-decoration-line', 'text-decoration-color', 'text-decoration-style',
+  'text-decoration-thickness', 'text-underline-offset', 'flex-direction', 'flex-wrap', 'justify-content', 'align-items',
+  'align-content', 'justify-items',
+  // as que herdam vão sempre (um filho pode voltar ao valor inicial que o pai mudou)
+  'color', 'font-family', 'font-size', 'font-weight', 'font-style', 'font-stretch', 'font-variation-settings',
+  'font-feature-settings', 'font-variant-numeric', 'font-optical-sizing', 'font-kerning', 'line-height', 'letter-spacing',
+  'word-spacing', 'text-align', 'text-transform', 'text-indent', 'text-shadow', 'white-space-collapse', 'text-wrap-mode',
+  'text-wrap-style', 'word-break', 'overflow-wrap', 'hyphens', 'writing-mode', 'text-orientation', 'direction',
+  '-webkit-text-stroke-width', '-webkit-text-stroke-color', 'paint-order', 'visibility', 'list-style-type', 'fill', 'stroke',
+]
+
+function estilo(el: Element, extra = '') {
+  const cs = getComputedStyle(el)
+  let s = ''
+  for (const p of PROPRIEDADES) {
+    const v = cs.getPropertyValue(p)
+    if (v && INICIAL[p] !== v) s += `${p}:${v};`
+  }
+  return s + extra
+}
+
+// fotos do TSE e fontes viram data: (o SVG desenhado num canvas não busca nada fora dele); uma vez por endereço
+const dados = new Map<string, Promise<string>>()
+function comoDados(url: string) {
+  let p = dados.get(url)
+  if (!p) {
+    p = fetch(url).then((r) => r.blob()).then((b) => new Promise<string>((ok, erro) => {
+      const f = new FileReader()
+      f.onload = () => ok(f.result as string)
+      f.onerror = erro
+      f.readAsDataURL(b)
+    }))
+    dados.set(url, p)
+    p.catch(() => dados.delete(url))
+  }
+  return p
+}
+
+// só as fontes do santinho, e só o alfabeto latino (com os acentos, até o latino estendido B): as outras faixas
+// (cirílico, vietnamita...) não aparecem nele. O navegador escreve as faixas como "U+0-FF, U+131, U+4??"
+const latina = (faixa: string) => !faixa || faixa.split(',').some((parte) => {
+  const [a, b = a] = parte.trim().replace(/^U\+/i, '').split('-')
+  return parseInt(a.replace(/\?/g, '0'), 16) <= 0x24f && parseInt(b.replace(/\?/g, 'f'), 16) >= 0x20
+})
+// já codificadas para o endereço data: (são ~150 kB: codificar a cada foto custava mais que o resto do SVG)
 let fontes: Promise<string> | null = null
+function fontesEmbutidas() {
+  fontes ??= Promise.all(
+    Array.from(document.styleSheets).flatMap((folha) => {
+      let regras: CSSRule[] = []
+      try { regras = Array.from(folha.cssRules) } catch { /* folha de outra origem */ }
+      return regras.filter((r): r is CSSFontFaceRule => r instanceof CSSFontFaceRule).filter((r) =>
+        /Archivo|Red Hat Mono/i.test(r.style.getPropertyValue('font-family')) && latina(r.style.getPropertyValue('unicode-range')),
+      ).map(async (r) => {
+        const url = /url\(["']?([^"')]+)["']?\)/.exec(r.style.getPropertyValue('src'))?.[1]
+        if (!url) return ''
+        const d = await comoDados(new URL(url, folha.href ?? location.href).href)
+        return r.cssText.replace(/src:[^;]+;/, `src: url("${d}");`)
+      })
+    }),
+  ).then((partes) => encodeURIComponent(partes.join('\n'))).catch(() => '')
+  return fontes
+}
+
+/** A cópia de uma face com o estilo calculado de cada elemento; as fotos entram como data: depois. */
+function copiaFace(face: HTMLElement, imagens: Promise<void>[]) {
+  const copia = (no: Node): Node | null => {
+    if (no.nodeType === Node.TEXT_NODE) return no.cloneNode()
+    if (!(no instanceof Element)) return null
+    // a fibra do papel (ruído SVG em modo multiplicar) sai muito mais forte na foto que na página: fica de fora
+    if (no.classList.contains('santinho-reticula')) return null
+    // um desenho SVG (as fitas, a faixa, os ícones) vai inteiro: os atributos dele já dizem como ele é
+    if (no instanceof SVGSVGElement) {
+      const c = no.cloneNode(true) as SVGSVGElement
+      c.setAttribute('style', estilo(no))
+      return c
+    }
+    const c = no.cloneNode(false) as HTMLElement
+    c.setAttribute('style', estilo(no))
+    if (no instanceof HTMLImageElement) {
+      c.removeAttribute('loading')
+      c.removeAttribute('srcset')
+      imagens.push(comoDados(no.currentSrc || no.src).then((d) => c.setAttribute('src', d), () => undefined))
+    }
+    for (const f of Array.from(no.childNodes)) {
+      const x = copia(f)
+      if (x) c.appendChild(x)
+    }
+    return c
+  }
+  const c = copia(face) as HTMLElement
+  // a face do verso vem girada e com a face de trás escondida pelo CSS: na foto, as duas de frente e inteiras
+  c.style.cssText += 'position:absolute;inset:0;transform:none;backface-visibility:visible;visibility:visible;box-shadow:none;'
+  return c
+}
+
+const fotos = new WeakMap<HTMLElement, Promise<[HTMLCanvasElement, HTMLCanvasElement]>>()
 function fotografa(frente: HTMLElement, verso: HTMLElement) {
   let p = fotos.get(frente)
   if (!p) {
-    fontes ??= getFontEmbedCSS(frente).catch(() => '')
-    const opcoes = (css: string) => ({
-      pixelRatio: Math.min(2, window.devicePixelRatio || 1), fontEmbedCSS: css, cacheBust: false,
-      // a fibra do papel (ruído SVG em modo multiplicar) sai muito mais forte na foto que na página: fica de fora
-      filter: (no: HTMLElement) => !(no.classList && no.classList.contains('santinho-reticula')),
-      // a face do verso vem girada e com a face de trás escondida pelo CSS: na foto, as duas de frente e inteiras
-      style: { transform: 'none', backfaceVisibility: 'visible', visibility: 'visible', boxShadow: 'none', inset: '0' },
-    })
-    p = fontes.then((css) => Promise.all([toCanvas(frente, opcoes(css)), toCanvas(verso, opcoes(css))]))
+    p = (async () => {
+      const css = await fontesEmbutidas()
+      const imagens: Promise<void>[] = []
+      const w = frente.offsetWidth, h = frente.offsetHeight
+      const [cf, cv] = [copiaFace(frente, imagens), copiaFace(verso, imagens)]
+      await Promise.all(imagens)
+      const xml = new XMLSerializer()
+      const caixa = (x: number, c: HTMLElement) =>
+        `<foreignObject x="${x}" y="0" width="${w}" height="${h}"><div xmlns="http://www.w3.org/1999/xhtml" style="position:relative;width:${w}px;height:${h}px">${xml.serializeToString(c)}</div></foreignObject>`
+      const abre = `<svg xmlns="http://www.w3.org/2000/svg" width="${w * 2}" height="${h}"><style>`
+      const fecha = `</style>${caixa(0, cf)}${caixa(w, cv)}</svg>`
+      // como data: (um blob: deixa o canvas "contaminado" e o WebGL recusa a foto como textura)
+      const img = new Image()
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(abre) + css + encodeURIComponent(fecha)
+      await img.decode()
+      const pr = Math.min(2, window.devicePixelRatio || 1)
+      return [0, 1].map((i) => {
+        const c = document.createElement('canvas')
+        c.width = Math.round(w * pr); c.height = Math.round(h * pr)
+        c.getContext('2d')!.drawImage(img, i * w, 0, w, h, 0, 0, c.width, c.height)
+        return c
+      }) as [HTMLCanvasElement, HTMLCanvasElement]
+    })()
     fotos.set(frente, p)
     p.catch(() => fotos.delete(frente))
   }
   return p
 }
-/** Fotografa as faces no tempo ocioso, antes do primeiro toque (chamado quando o santinho chega perto da tela). */
+/**
+ * Fotografa as faces no tempo ocioso, antes do primeiro toque (chamado quando o santinho chega perto da tela). Uma
+ * foto por vez, cada uma no seu intervalo ocioso: várias juntas viravam um quadro de 100 ms no meio da rolagem.
+ */
+let filaFotos: Promise<unknown> = Promise.resolve()
 export function preparaFolha(frente: HTMLElement, verso: HTMLElement) {
-  const ocioso = (window as Window & { requestIdleCallback?: (f: () => void, o?: { timeout: number }) => void }).requestIdleCallback
-  if (ocioso) ocioso(() => void fotografa(frente, verso), { timeout: 2500 })
-  else setTimeout(() => void fotografa(frente, verso), 400)
+  filaFotos = filaFotos.then(() => new Promise<void>((pronto) => ocioso(() => {
+    fotografa(frente, verso).then(() => ocioso(aquecePalco)).catch(() => undefined).finally(pronto)
+  })))
 }
 
 /* ---------- o palco WebGL único ---------- */
@@ -75,6 +217,22 @@ function palco() {
     return { T, renderer, scene, camera, geo, matFrente, matVerso, ocupado: false }
   })
   return palcoP
+}
+// o palco nasce e os shaders da folha são compilados (em paralelo) no tempo ocioso, depois da primeira foto: o primeiro
+// giro não espera o WebGL ser criado nem compilar (~90 ms parados no clique)
+let aquecido = false
+function aquecePalco() {
+  if (aquecido) return
+  aquecido = true
+  void palco().then(async (P) => {
+    // uma textura qualquer no lugar das fotos: o programa compilado é o mesmo do giro (com mapa)
+    const provisoria = new P.T.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1)
+    provisoria.colorSpace = P.T.SRGBColorSpace
+    if (!P.ocupado) { P.matFrente.map = provisoria; P.matVerso.map = provisoria }
+    await P.renderer.compileAsync(P.scene, P.camera)
+    // o primeiro uso de cada programa lê os uniformes do driver (chamadas que esperam a GPU): agora, não no giro
+    ocioso(() => { for (const p of P.renderer.info.programs ?? []) p.getUniforms() })
+  })
 }
 
 /** Põe a folha na pose: `angulo(s)` é o ângulo (rad) da folha no ponto s ∈ [-1, 1] (do centro para cada borda). */

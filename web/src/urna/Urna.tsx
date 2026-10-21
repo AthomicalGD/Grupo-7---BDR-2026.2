@@ -144,21 +144,9 @@ function AreaGravada() {
   )
 }
 
-/** Grão fosco do plástico: ruído gerado uma vez num canvas pequeno e repetido como padrão
- *  (um filtro feTurbulence seria recalculado a cada repintura, ao apertar cada tecla). */
-function texturaGrao(): string {
-  const c = document.createElement('canvas')
-  c.width = c.height = 96
-  const g = c.getContext('2d')
-  if (!g) return ''
-  const img = g.createImageData(96, 96)
-  for (let i = 0; i < img.data.length; i += 4) {
-    const v = 80 + Math.random() * 90
-    img.data.set([v, v + 3, v + 6, Math.random() * 30], i)
-  }
-  g.putImageData(img, 0, 0)
-  return c.toDataURL()
-}
+/* O grão fosco do plástico é uma imagem fixa (public/texturas/grao-urna.png, 96×96, repetida como padrão): um
+   filtro feTurbulence seria recalculado a cada repintura, ao apertar cada tecla, e gerar o ruído num canvas a cada
+   abertura da urna custava ~50 ms (criar o contexto 2D e comprimir o PNG). */
 
 const DIGITOS: { id: IdTecla; col: number; lin: number }[] = [
   ...['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((d, i) => ({ id: d as IdTecla, col: i % 3, lin: Math.floor(i / 3) })),
@@ -172,7 +160,6 @@ export function Urna({ canvas, versao, pulsos, aoApertar }: {
   aoApertar: (id: IdTecla) => void
 }) {
   const visor = useRef<HTMLCanvasElement>(null)
-  const [grao] = useState(texturaGrao)
   useEffect(() => {
     visor.current?.getContext('2d')?.drawImage(canvas, 0, 0)
   }, [canvas, versao])
@@ -203,7 +190,7 @@ export function Urna({ canvas, versao, pulsos, aoApertar }: {
             <stop offset="1" stopColor="#101214" />
           </linearGradient>
           <pattern id="urna-grao" width="96" height="96" patternUnits="userSpaceOnUse">
-            <image href={grao} width="96" height="96" />
+            <image href="/texturas/grao-urna.png" width="96" height="96" />
           </pattern>
           <filter id="urna-sombra" x="-10%" y="-200%" width="120%" height="500%">
             <feGaussianBlur stdDeviation="9" />

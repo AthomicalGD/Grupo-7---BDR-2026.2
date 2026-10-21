@@ -7,6 +7,8 @@
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { clone as clonaEsqueleto } from 'three/examples/jsm/utils/SkeletonUtils.js'
+import { audio as abreSom, preparaAudio } from '../lib/audio'
+import { desisteDe, quandoParado } from '../lib/parado'
 
 /* ---------- tokens (DESIGN.md do Voto Aberto) ---------- */
 const TINTA = '#18202b', FOLHA = '#fcfdfd', CARIMBO = '#3f5419'
@@ -590,13 +592,16 @@ export function criaNuvem({ palco, canvas, dica, aoMudar = () => {} }) {
 
   /* ---------- som ----------
      Só a batida do bafo (o tapa das mãos): o papel caindo, pousando ou sendo pego não faz barulho. */
+  // o contexto de áudio é o do site (lib/audio.ts): aberto de antemão, num momento parado, e não no clique do bafo
   let audio = null, somLigado = true, ruido = null
   function liberaAudio() {
     try {
-      audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === 'suspended') audio.resume()
+      audio = abreSom()
       if (!ruido) { ruido = audio.createBuffer(1, audio.sampleRate * 0.5, audio.sampleRate); const d = ruido.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1 }
     } catch { /* sem áudio */ }
   }
+  preparaAudio()
+  const ocioso = (f) => (window.requestIdleCallback ? window.requestIdleCallback(f, { timeout: 3000 }) : setTimeout(f, 300))
   function ruidoFiltrado(tipo, freq, pico, ataque, fim, rampa) {
     if (!audio || audio.state !== 'running' || !ruido) return
     const t = audio.currentTime, src = audio.createBufferSource(); src.buffer = ruido
@@ -735,6 +740,8 @@ export function criaNuvem({ palco, canvas, dica, aoMudar = () => {} }) {
     maos.push(fazMao(g.scene, false), fazMao(g.scene, true))
     // a geometria é dividida pelas duas cópias; o material original (PBR) não é usado
     g.scene.traverse((o) => { if (o.isMesh) { descartaveis.push(o.geometry); o.material.dispose() } })
+    // os shaders das mãos (pele com ossos, contorno, sombra) ficam prontos antes do primeiro bafo
+    precompila().then(() => { ocioso(aquece); quandoParado(ensaia, () => acordado || !vivo) })
   }).catch((erro) => { console.warn('Voto Aberto: as mãos não carregaram (/modelos/mao-right.glb); o bafo vira o santinho sozinho.', erro) })
   // A mão nunca atravessa a mesa: depois de posta no quadro, se algum osso (descontada a espessura do dedo e da
   // palma em volta dele) fica abaixo do tampo, a mão inteira sobe o que falta. Vale para todas as fases.
@@ -777,7 +784,7 @@ export function criaNuvem({ palco, canvas, dica, aoMudar = () => {} }) {
     if (s.estado !== 'chao' || batida) return
     // se a cola está aberta, ela volta para o chão e só então a mão bate
     if (segura) { devolve(() => bate(s)); return }
-    if (!s.versoPronto) { s.u.mapVerso.value = texturaVerso(s); s.versoPronto = true }
+    preparaVerso(s)
     const e = Math.min(1.25, Math.max(0.75, s.L / 3.0))
     batida = { s, t0: relogio, e, bateu: false, c: new THREE.Vector3(s.x, 0, s.z), vaiPegar: !s.viraAlvo }
     maos.forEach(m => { maoNeutra(m); poseDedos(m, POSES.concha); m.mao.scale.setScalar(e); m.mao.visible = true })
@@ -1104,8 +1111,27 @@ export function criaNuvem({ palco, canvas, dica, aoMudar = () => {} }) {
     if (sob) sob.ergueAlvo = 0
     sob = s; if (s) s.ergueAlvo = 1
     canvas.style.cursor = s ? 'pointer' : 'default'
+    if (s) versoQuandoParar(s)
     avisa(); acorda()
   }
+  // o verso (a cola) é desenhado e enviado à GPU quando o ponteiro para sobre o santinho: no clique, a mão já o tem
+  // (antes, o primeiro bafo de cada santinho perdia um quadro nisso). Só os 4 últimos assim ficam guardados: cada um
+  // ocupa ~1,5 MB de memória de vídeo
+  const versosRecentes = []
+  function preparaVerso(s) {
+    if (!s.versoPronto) {
+      s.u.mapVerso.value = texturaVerso(s); s.versoPronto = true
+      renderer.initTexture(s.u.mapVerso.value)
+    }
+    const i = versosRecentes.indexOf(s); if (i >= 0) versosRecentes.splice(i, 1)
+    versosRecentes.push(s)
+    while (versosRecentes.length > 4) {
+      const v = versosRecentes.shift()
+      if (v === segura?.s || v === batida?.s || v.virado > 0.01 || !santinhos.includes(v)) continue // em uso: fica
+      v.u.mapVerso.value.dispose(); v.u.mapVerso.value = branco; v.versoPronto = false
+    }
+  }
+  const versoQuandoParar = (s) => setTimeout(() => ocioso(() => { if (vivo && sob === s && santinhos.includes(s)) preparaVerso(s) }), 150)
   function mostraDica(s, x, y) {
     const r = palco.getBoundingClientRect()
     dica.querySelector('b').textContent = s.palavra
@@ -1210,6 +1236,74 @@ export function criaNuvem({ palco, canvas, dica, aoMudar = () => {} }) {
     quadroId = requestAnimationFrame(quadro)
   }
 
+  /* ---------- shaders compilados antes de precisar ----------
+     Na primeira vez que um material aparece, o shader dele é compilado e o quadro espera: no D3D11 do Windows são
+     dezenas de ms por shader (a chuva começava com ~120 ms parada e as mãos entravam com ~250 ms). Aqui eles são
+     compilados em paralelo (KHR_parallel_shader_compile), antes de a cena precisar deles: os da tela e os do mapa de
+     sombra, estes com os mesmos parâmetros do passe de sombra (um alvo de desenho ligado, e o material de
+     profundidade com o lado, o mapa e o alphaTest que o WebGLShadowMap copia do material da malha). */
+  const LADO_SOMBRA = { [THREE.FrontSide]: THREE.BackSide, [THREE.BackSide]: THREE.FrontSide, [THREE.DoubleSide]: THREE.DoubleSide }
+  const alvoSombra = new THREE.WebGLRenderTarget(1, 1); descartaveis.push(alvoSombra)
+  const naSombra = new Set()
+  function precompila() {
+    const sombra = new THREE.Scene()
+    scene.traverse((o) => {
+      if (!o.isMesh || !o.castShadow) return
+      const m = o.material, lado = m.shadowSide ?? LADO_SOMBRA[m.side]
+      const chave = [o.customDepthMaterial ? o.customDepthMaterial.customProgramCacheKey() : 'comum', o.isSkinnedMesh, lado, !!m.map, m.alphaTest > 0].join('|')
+      if (naSombra.has(chave)) return
+      naSombra.add(chave)
+      const p = o.customDepthMaterial || new THREE.MeshDepthMaterial()
+      // o de cópia fica vivo até o fim: descartá-lo soltaria o programa antes de o passe de sombra usá-lo
+      if (!o.customDepthMaterial) descartaveis.push(p)
+      p.side = lado; p.map = m.map; p.alphaMap = m.alphaMap; p.alphaTest = m.alphaTest
+      const copia = o.isSkinnedMesh ? new THREE.SkinnedMesh(o.geometry, p) : new THREE.Mesh(o.geometry, p)
+      if (o.isSkinnedMesh) copia.bind(o.skeleton, o.bindMatrix)
+      sombra.add(copia)
+    })
+    const tela = renderer.compileAsync(scene, camera)
+    renderer.setRenderTarget(alvoSombra)
+    const passe = renderer.compileAsync(sombra, sol.shadow.camera, scene)
+    renderer.setRenderTarget(null)
+    return Promise.all([tela, passe])
+  }
+  // compilado não é usado ainda: o primeiro uso de cada programa lê do driver os uniformes, em chamadas que esperam o
+  // processo da GPU (até ~100 ms com ele ocupado). Feito com a cena parada, não no meio da chuva ou do bafo
+  const aquece = () => { if (vivo) for (const p of renderer.info.programs) p.getUniforms() }
+  // o ensaio: as mãos, a estrela e as nuvens do bafo desenhadas uma vez num único pixel (tesoura de 1×1), com a sombra:
+  // o driver de vídeo termina de montar os shaders, os ossos e as malhas no primeiro desenho de verdade, e o primeiro
+  // bafo da página parava ~100 ms nisso. O quadro normal é desenhado logo em seguida, na mesma tarefa
+  function ensaia() {
+    if (!vivo || batida || segura || !maos.length) return
+    const extras = [...maos.map((m) => m.mao), estrela, ...nuvens.map((n) => n.m)]
+    extras.forEach((o) => { o.visible = true })
+    renderer.shadowMap.needsUpdate = true
+    renderer.setScissorTest(true); renderer.setScissor(0, 0, 1, 1)
+    renderer.render(scene, camera)
+    renderer.setScissorTest(false)
+    extras.forEach((o) => { o.visible = false })
+    sombraSuja = true
+    desenha()
+  }
+  // as frentes dos santinhos são desenhadas e enviadas à GPU nos intervalos ociosos, os maiores (que caem antes)
+  // primeiro: na chuva, o quadro em que um santinho entra só o posiciona
+  function preparaFrentes() {
+    const fila = santinhos.filter((s) => !s.frentePronta).sort((a, b) => b.L - a.L)
+    const lote = (prazo) => {
+      const t0 = performance.now()
+      const resta = () => (prazo?.timeRemaining ? prazo.timeRemaining() : 8 - (performance.now() - t0))
+      while (fila.length && resta() > 3) {
+        const s = fila.shift()
+        if (!vivo || s.frentePronta || !santinhos.includes(s)) continue
+        frente(s)
+        renderer.initTexture(s.folha.material.map)
+      }
+      if (fila.length && vivo) ocioso(lote)
+    }
+    ocioso(lote)
+  }
+  let geracao = 0
+
   function assentaTodos() {
     for (const s of santinhos) {
       if (!passa(s)) continue
@@ -1224,7 +1318,16 @@ export function criaNuvem({ palco, canvas, dica, aoMudar = () => {} }) {
     /** Carrega os tipos e faz a chuva (ou já assenta, com movimento reduzido ou chuva = false). */
     mostra(itens, chuva = true) {
       const r = carrega(itens)
-      if (chuva && !reduzido.matches) joga(); else assentaTodos()
+      // a chuva começa quando os shaders ficam prontos (compilados em paralelo: o primeiro quadro não trava); uma
+      // troca de campanha no meio da espera vale só a última
+      const g = ++geracao
+      const comeca = () => {
+        if (!vivo || g !== geracao) return
+        aquece()
+        if (chuva && !reduzido.matches) joga(); else assentaTodos()
+      }
+      preparaFrentes()
+      precompila().then(comeca, comeca)
       return r
     },
     joga: () => { liberaAudio(); rearranja(); joga() },
@@ -1245,11 +1348,13 @@ export function criaNuvem({ palco, canvas, dica, aoMudar = () => {} }) {
     destaca(palavra) {
       const s = palavra ? santinhos.find(x => x.palavra === palavra && x.estado === 'chao') : null
       if (sob && sob !== s) sob.ergueAlvo = 0
-      sob = s || null; if (s) s.ergueAlvo = 1
+      sob = s || null; if (s) { s.ergueAlvo = 1; versoQuandoParar(s) }
       acorda()
     },
     som(ligado) { somLigado = ligado; if (ligado) liberaAudio() },
     get noChao() { return pousados },
+    // para medir: quantos programas de shader existem (um bafo que cria programa novo compilou no meio da animação)
+    get programas() { return renderer.info.programs.length },
     get fase() { return segura ? segura.fase : (batida ? 'bafo' : 'livre') },
     // para os testes das mãos: o ponto mais baixo dos ossos (acima de 0 = não atravessa a mesa) e, com um santinho
     // na mão, de que lado do papel estão as pontas dos dedos (negativo = atrás) e a do polegar (positivo = na frente)
@@ -1278,6 +1383,7 @@ export function criaNuvem({ palco, canvas, dica, aoMudar = () => {} }) {
       vivo = false; cancelAnimationFrame(quadroId); cancelAnimationFrame(quadroMouse); observador.disconnect(); vigia.disconnect()
       agendadas.length = 0
       window.removeEventListener('keydown', aoTeclar)
+      desisteDe(ensaia)
       canvas.removeEventListener('pointermove', aoMover); canvas.removeEventListener('pointerleave', aoSair); canvas.removeEventListener('click', aoClicar)
       palco.removeEventListener('pointermove', aoMoverPalco); palco.removeEventListener('pointerleave', aoSairPalco)
       santinhos.splice(0).forEach(descarta)
@@ -1288,7 +1394,6 @@ export function criaNuvem({ palco, canvas, dica, aoMudar = () => {} }) {
       sol.shadow.dispose()
       maos.forEach(m => m.esqueleto?.dispose())
       renderer.dispose()
-      try { audio?.close() } catch { /* já fechado */ }
       if (window.__nuvem === api) delete window.__nuvem
     },
   }

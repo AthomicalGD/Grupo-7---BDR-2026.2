@@ -1,7 +1,7 @@
 // Plenário em pé: cada cadeira sobe numa coluna com altura proporcional ao gasto (linear, para que
 // a diferença de dinheiro apareça do tamanho que é). Mesmo lugar e mesma cor do plano.
 // Colunas, assentos e encostos são InstancedMesh: até ~1.500 cadeiras sem pesar.
-import { AdaptiveDpr, ContactShadows, OrbitControls } from '@react-three/drei'
+import { ContactShadows, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { useReducedMotion } from 'motion/react'
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
@@ -128,8 +128,9 @@ export default function Plenario3D(props: Props) {
   return (
     <div className="relative h-full w-full">
       {/* câmera fixa: o Bounds mediria as colunas ainda com altura zero, no começo da animação */}
-      <Canvas frameloop="demand" shadows="percentage" dpr={[1, 1.5]} performance={{ min: 0.6 }} camera={{ position: [0, 13.5, 17.5], fov: 36 }} aria-label="Plenário em 3D: a altura de cada cadeira é o gasto da campanha">
-        <AdaptiveDpr />
+      {/* sem baixar a resolução ao girar (o regress do drei): redimensionar o canvas a cada giro custava mais que
+          desenhar as três malhas instanciadas em resolução cheia, e a cena borrava e voltava */}
+      <Canvas frameloop="demand" shadows="percentage" dpr={[1, 1.5]} camera={{ position: [0, 13.5, 17.5], fov: 36 }} aria-label="Plenário em 3D: a altura de cada cadeira é o gasto da campanha">
         <SombraAssentada chave={cena} ms={1600} />
         <hemisphereLight args={['#ffffff', '#cfd6e2', 1.1]} />
         <directionalLight position={[8, 18, 10]} intensity={1.5} castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-14} shadow-camera-right={14} shadow-camera-top={14} shadow-camera-bottom={-14} />
@@ -153,7 +154,7 @@ export default function Plenario3D(props: Props) {
         </mesh>
         {/* a sombra de contato refaz a cena inteira com desfoque a cada quadro: assentada, é feita uma vez */}
         <ContactShadows key={assentado ? 'fixa' : 'viva'} frames={assentado ? 1 : Infinity} position={[0, 0, 0]} opacity={0.25} scale={30} blur={2.4} far={8} />
-        <OrbitControls makeDefault regress target={[0, 1.6, -4]} enablePan={false} minDistance={10} maxDistance={40} minPolarAngle={0.35} maxPolarAngle={1.32} minAzimuthAngle={-1} maxAzimuthAngle={1} />
+        <OrbitControls makeDefault target={[0, 1.6, -4]} enablePan={false} minDistance={10} maxDistance={40} minPolarAngle={0.35} maxPolarAngle={1.32} minAzimuthAngle={-1} maxAzimuthAngle={1} />
       </Canvas>
       {foco && lista[foco.i] && <CartaoAssento a={lista[foco.i]} fator={props.fator} x={foco.x} y={foco.y} alvo={cartao} dica="Clique para abrir a carreira" />}
       <p className="pointer-events-none absolute left-3 top-3 rounded-full bg-folha/85 px-3 py-1 text-[0.75rem] font-semibold text-tinta-2">

@@ -7,6 +7,7 @@ import { Escolha } from '../componentes/Escolha'
 import { Retrato } from '../componentes/Retrato'
 import { inteiro, nomeProprio, plural } from '../lib/formato'
 import { alternarSom, somLigado, tocarConfirma, tocarCorrige, tocarTecla } from './som'
+import { preparaAudio } from '../lib/audio'
 import { Urna, type IdTecla } from './Urna'
 import { FiltroCandidatura } from './FiltroCandidatura'
 import { desenharVisor, filtroNoVisor, VISOR } from './visor'
@@ -83,10 +84,22 @@ export function UrnaPagina() {
 
   useEffect(() => {
     document.title = 'Urna de consulta · Voto Aberto'
-    campo.current?.focus({ preventScroll: true })
-    const piscar = setInterval(() => setCursor((c) => !c), 530)
-    return () => clearInterval(piscar)
+    // o foco depois do primeiro quadro: focar exige o layout pronto, e no meio da montagem ele era feito à força
+    const quadro = requestAnimationFrame(() => campo.current?.focus({ preventScroll: true }))
+    preparaAudio()
+    return () => cancelAnimationFrame(quadro)
   }, [])
+  // o cursor pisca enquanto a pessoa mexe na busca; parada há ~8 s, ele fica aceso e o relógio para (cada piscada
+  // redesenha o visor inteiro: com a página parada, eram ~20 ms de trabalho a cada meio segundo, sem fim)
+  useEffect(() => {
+    let n = 0
+    const piscar = setInterval(() => {
+      n++
+      setCursor(n > 15 || n % 2 === 0)
+      if (n > 15) clearInterval(piscar)
+    }, 530)
+    return () => clearInterval(piscar)
+  }, [texto, selecionado])
 
   // foto do selecionado no visor, como na urna
   useEffect(() => {

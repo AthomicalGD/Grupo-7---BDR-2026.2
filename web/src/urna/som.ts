@@ -2,7 +2,8 @@
 // da urna real: tom senoidal puro (sem harmônicos), ~2.300 Hz nas teclas, e o "pi-li-li-li"
 // do fim do voto como um trinado contínuo que alterna ~2.300 e ~2.200 Hz a cada ~100 ms.
 // Só tocam depois de um gesto do usuário (política de autoplay) e respeitam o botão de som.
-let contexto: AudioContext | null = null
+import { audio } from '../lib/audio'
+
 let ligado = (() => {
   try {
     return localStorage.getItem('va-som') !== 'desligado'
@@ -26,11 +27,8 @@ export function alternarSom() {
   return ligado
 }
 
-function ctx() {
-  contexto ??= new AudioContext()
-  if (contexto.state === 'suspended') void contexto.resume()
-  return contexto
-}
+// o contexto é o do site (lib/audio.ts), aberto de antemão: a primeira tecla não espera o som do sistema abrir
+const ctx = audio
 
 /**
  * Toca uma sequência de trechos [frequência, duração em s] num único oscilador senoidal:

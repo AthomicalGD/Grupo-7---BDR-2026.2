@@ -137,7 +137,16 @@ function Santinhos({ recentes, nome }: { recentes: Candidatura[]; nome: string }
     const inicio = t.scrollLeft < 8, fim = t.scrollLeft + t.clientWidth > t.scrollWidth - 8
     setPontas((p) => (p.inicio === inicio && p.fim === fim ? p : { inicio, fim }))
   }
-  useEffect(medir, [recentes])
+  // medir lê a largura da fileira, o que obriga o navegador a montar o layout dela: só quando ela chega à tela (na
+  // abertura da página, isso desfazia o adiamento da seção e custava ~60 ms)
+  useEffect(() => {
+    const t = trilho.current
+    if (!t) return
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) medir() })
+    io.observe(t)
+    return () => io.disconnect()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recentes])
   const rolar = (sentido: number) => trilho.current?.scrollBy({ left: sentido * 500, behavior: 'smooth' })
   const botao = 'grid size-10 place-items-center rounded-full border border-linha-2 bg-folha text-tinta transition hover:border-tinta disabled:opacity-35 disabled:hover:border-linha-2'
   return (

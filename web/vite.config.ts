@@ -37,7 +37,7 @@ export default defineConfig(({ mode }) => {
       include: [
         'react', 'react-dom', 'react-dom/client', '@tanstack/react-query', '@tanstack/react-router', 'motion/react',
         '@phosphor-icons/react', 'd3-array', 'd3-geo', 'd3-interpolate', 'd3-scale', 'd3-selection', 'd3-shape',
-        'd3-transition', 'd3-zoom', 'uqr', 'three', '@react-three/fiber', '@react-three/drei', 'html-to-image',
+        'd3-transition', 'd3-zoom', 'uqr', 'three', '@react-three/fiber', '@react-three/drei',
         'three/examples/jsm/loaders/GLTFLoader.js', 'three/examples/jsm/utils/SkeletonUtils.js',
       ],
     },
