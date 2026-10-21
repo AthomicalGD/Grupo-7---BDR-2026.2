@@ -113,58 +113,53 @@ export function cacos(cx: number, cy: number, n: number, semente: number): Caco[
   })
 }
 
-/** O desenho do porquinho: rosa, redondo, olhos grandes com brilho (as pupilas são um grupo à parte, que
- * segue o cursor), bochechas, sorriso, orelhas, patinhas e o rabinho em espiral; a coleira tem as sete fitas. */
+/** O desenho do porquinho, no estilo de ilustração chapada do cofrinho clássico: rosa salmão sem contorno
+ * escuro (as formas se separam por tons), olho pequeno e escuro com um brilho (o olho é um grupo à parte, que
+ * acompanha o cursor), bochecha corada, orelha dobrada para a frente, focinho com a ponta clara, rabinho
+ * enrolado, patinhas curtas, o R$ em relevo no corpo e a fenda das moedas em cima. Virado para a direita. */
+const ROSA = { corpo: '#f5a9ae', claro: '#fbd3d5', sombra: '#ea929a', fundo: '#e48890', detalhe: '#d8737d', fenda: '#b9566a', olho: '#3b2a30', bochecha: '#f07f8f' }
 export const Desenho = memo(function Desenho({ p, olhar = true }: { p: string; olhar?: boolean }) {
   return (
     <>
-      {/* patas e orelha do lado de lá */}
-      <rect x={62} y={156} width={26} height={40} rx={12} fill="#f2a0b8" stroke="#c9607f" strokeWidth={2} />
-      <rect x={150} y={156} width={26} height={40} rx={12} fill="#f2a0b8" stroke="#c9607f" strokeWidth={2} />
-      <path d="M176 58 Q182 22 210 32 Q206 56 194 70 Z" fill="#f2a0b8" stroke="#c9607f" strokeWidth={2} strokeLinejoin="round" />
-      {/* rabinho em espiral */}
-      <path d="M33 104 C18 98 12 116 22 121 C33 126 37 108 26 107 C20 106 19 113 24 114" fill="none" stroke="#c9607f" strokeWidth={3.4} strokeLinecap="round" />
+      {/* patas e orelha do lado de lá, um tom mais escuro */}
+      <path d="M66 150 h26 v38 a10 10 0 0 1 -10 10 h-6 a10 10 0 0 1 -10 -10 Z" fill={ROSA.fundo} />
+      <path d="M154 150 h26 v38 a10 10 0 0 1 -10 10 h-6 a10 10 0 0 1 -10 -10 Z" fill={ROSA.fundo} />
+      <path d="M172 62 C172 40 182 24 198 24 C208 25 212 36 207 47 C203 56 194 62 186 68 Z" fill={ROSA.fundo} />
+      {/* rabinho enrolado */}
+      <path d="M34 104 C16 96 4 112 12 121 C20 130 36 120 27 110 C20 103 11 110 17 116" fill="none" stroke={ROSA.sombra} strokeWidth={5} strokeLinecap="round" />
       <ellipse cx={CORPO.cx} cy={CORPO.cy} rx={CORPO.rx} ry={CORPO.ry} fill={`url(#${p}-corpo)`} />
       <g clipPath={`url(#${p}-silhueta)`}>
-        {/* barriga mais clara e a coleira das fitas */}
-        <ellipse cx={CORPO.cx + 6} cy={CORPO.cy + 46} rx={70} ry={30} fill="#ffe3ea" opacity={0.75} />
-        {['#5e881b', '#a2bd31', '#5d6b94', '#468baf', '#76acd0', '#f19929', '#fbc700'].map((cor, i) => {
-          const x = 160 + i * 2.6
-          return <path key={cor} d={`M${x} 40 C${x - 9} 90 ${x - 9} 140 ${x} 188`} stroke={cor} strokeWidth={2.8} fill="none" />
-        })}
+        {/* a barriga na sombra e o brilho do alto, em tons chapados */}
+        <ellipse cx={CORPO.cx + 4} cy={CORPO.cy + 70} rx={98} ry={34} fill={ROSA.sombra} opacity={0.55} />
+        <ellipse cx={92} cy={70} rx={34} ry={14} transform="rotate(-18 92 70)" fill={ROSA.claro} opacity={0.75} />
+        {/* o R$ em relevo: a sombra embaixo, o claro em cima */}
+        <text x={118} y={140} textAnchor="middle" fontSize={50} fontWeight={900} fill={ROSA.claro} opacity={0.65} style={{ fontStretch: '80%' }} transform="translate(-1.2 -1.4)">R$</text>
+        <text x={118} y={140} textAnchor="middle" fontSize={50} fontWeight={900} fill={ROSA.detalhe} opacity={0.85} style={{ fontStretch: '80%' }}>R$</text>
       </g>
-      <ellipse cx={CORPO.cx} cy={CORPO.cy} rx={CORPO.rx} ry={CORPO.ry} fill="none" stroke="#c9607f" strokeWidth={2.2} />
-      {/* brilho da porcelana */}
-      <ellipse cx={86} cy={70} rx={30} ry={11} transform="rotate(-20 86 70)" fill="#fff" opacity={0.75} />
-      <ellipse cx={116} cy={58} rx={7} ry={4} transform="rotate(-12 116 58)" fill="#fff" opacity={0.7} />
+      <ellipse cx={86} cy={62} rx={7} ry={3.6} transform="rotate(-20 86 62)" fill="#fff" opacity={0.7} />
       {/* patinhas da frente */}
-      <rect x={82} y={160} width={28} height={38} rx={13} fill={`url(#${p}-pata)`} stroke="#c9607f" strokeWidth={2} />
-      <rect x={172} y={160} width={28} height={38} rx={13} fill={`url(#${p}-pata)`} stroke="#c9607f" strokeWidth={2} />
-      <path d="M89 194 h14 M179 194 h14" stroke="#c9607f" strokeWidth={1.6} strokeLinecap="round" />
-      {/* focinho */}
-      <ellipse cx={224} cy={120} rx={19} ry={22} fill="#f7a6bd" stroke="#c9607f" strokeWidth={2.2} />
-      <ellipse cx={226} cy={111} rx={9} ry={5} fill="#fff" opacity={0.35} />
-      <ellipse cx={219} cy={121} rx={3.4} ry={5.4} fill="#b8506d" />
-      <ellipse cx={231} cy={121} rx={3.4} ry={5.4} fill="#b8506d" />
-      {/* bochecha e sorriso */}
-      <ellipse cx={190} cy={138} rx={13} ry={8} fill="#ff6f98" opacity={0.42} />
-      <path d="M196 148 Q205 155 213 147" fill="none" stroke="#a8475f" strokeWidth={2.2} strokeLinecap="round" />
-      {/* olho grande: o branco, a pupila que segue o cursor e os dois brilhos */}
+      <path d="M86 156 h28 v32 a10 10 0 0 1 -10 10 h-8 a10 10 0 0 1 -10 -10 Z" fill={`url(#${p}-pata)`} />
+      <path d="M170 156 h28 v32 a10 10 0 0 1 -10 10 h-8 a10 10 0 0 1 -10 -10 Z" fill={`url(#${p}-pata)`} />
+      {/* focinho: o cano do focinho e a ponta clara, com as narinas */}
+      <path d="M206 98 C222 96 234 104 236 120 C238 136 226 146 208 144 Z" fill={ROSA.corpo} />
+      <ellipse cx={234} cy={120} rx={11} ry={20} fill={ROSA.claro} />
+      <ellipse cx={233} cy={113} rx={2.6} ry={4} fill={ROSA.detalhe} />
+      <ellipse cx={233} cy={127} rx={2.6} ry={4} fill={ROSA.detalhe} />
+      {/* bochecha corada */}
+      <ellipse cx={196} cy={124} rx={11} ry={6.5} fill={ROSA.bochecha} opacity={0.55} />
+      {/* o olho: pequeno, escuro, com um brilho (o grupo da pupila acompanha o cursor) */}
       <g className="porco-olho">
-        <ellipse cx={186} cy={94} rx={11} ry={12.5} fill="#fff" stroke="#c9607f" strokeWidth={1.4} />
         <g className={olhar ? 'porco-pupila' : undefined}>
-          <ellipse cx={188} cy={96} rx={7} ry={8.4} fill="#2a1a20" />
-          <circle cx={191} cy={92} r={2.8} fill="#fff" />
-          <circle cx={185.5} cy={100} r={1.3} fill="#fff" />
+          <ellipse cx={192} cy={98} rx={6.2} ry={8} fill={ROSA.olho} />
+          <circle cx={194.4} cy={94.6} r={2.3} fill="#fff" />
         </g>
       </g>
-      <path d="M176 78 Q185 72 195 76" fill="none" stroke="#a8475f" strokeWidth={2} strokeLinecap="round" />
-      {/* orelha do lado de cá */}
-      <path d="M152 58 Q150 18 180 22 Q186 48 176 68 Z" fill="#f7b0c4" stroke="#c9607f" strokeWidth={2} strokeLinejoin="round" />
-      <path d="M158 54 Q158 30 176 28 Q179 46 173 60 Z" fill="#f07a9c" opacity={0.7} />
+      {/* orelha do lado de cá, dobrada para a frente */}
+      <path d="M150 64 C148 40 158 20 176 18 C190 17 196 30 190 44 C186 54 176 62 166 70 Z" fill={ROSA.corpo} />
+      <path d="M176 18 C190 17 196 30 190 44 C186 52 178 58 172 62 C178 50 182 36 176 18 Z" fill={ROSA.sombra} />
       {/* a fenda das moedas */}
-      <rect x={96} y={42} width={50} height={9} rx={4.5} fill="#5a2635" transform="rotate(-4 121 46)" />
-      <rect x={98} y={43} width={46} height={3} rx={1.5} fill="#2a1a20" transform="rotate(-4 121 46)" />
+      <rect x={96} y={42} width={50} height={9} rx={4.5} fill={ROSA.fenda} transform="rotate(-4 121 46)" />
+      <rect x={99} y={44} width={44} height={3.4} rx={1.7} fill="#7d3446" transform="rotate(-4 121 46)" />
     </>
   )
 })
@@ -173,14 +168,14 @@ export const Desenho = memo(function Desenho({ p, olhar = true }: { p: string; o
 export function Gradientes({ p }: { p: string }) {
   return (
     <>
-      <radialGradient id={`${p}-corpo`} cx="36%" cy="30%" r="80%">
-        <stop offset="0" stopColor="#ffe1e9" />
-        <stop offset=".45" stopColor="#fbb7ca" />
-        <stop offset="1" stopColor="#ef8fad" />
+      <radialGradient id={`${p}-corpo`} cx="38%" cy="32%" r="78%">
+        <stop offset="0" stopColor="#f9bcc0" />
+        <stop offset=".6" stopColor={ROSA.corpo} />
+        <stop offset="1" stopColor="#ef9da3" />
       </radialGradient>
       <linearGradient id={`${p}-pata`} x1="0" x2="1">
-        <stop offset="0" stopColor="#ffc6d5" />
-        <stop offset="1" stopColor="#f29ab4" />
+        <stop offset="0" stopColor="#f6b0b5" />
+        <stop offset="1" stopColor={ROSA.sombra} />
       </linearGradient>
       <clipPath id={`${p}-silhueta`}><ellipse cx={CORPO.cx} cy={CORPO.cy} rx={CORPO.rx} ry={CORPO.ry} /></clipPath>
     </>

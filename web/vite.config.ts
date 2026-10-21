@@ -30,6 +30,17 @@ export default defineConfig(({ mode }) => {
         configResolved: (c) => c.logger.info(`\n  Interface: ${nome}\n`),
       },
     ],
+    // Tudo o que as páginas importam, empacotado já na partida: sem isso o Vite descobre uma dependência no meio da
+    // sessão (o 3D, as mãos, a foto do santinho), reempacota com a página aberta e os módulos sob demanda passam a
+    // apontar para o pacote antigo ("Failed to fetch dynamically imported module", 504 Outdated Optimize Dep).
+    optimizeDeps: {
+      include: [
+        'react', 'react-dom', 'react-dom/client', '@tanstack/react-query', '@tanstack/react-router', 'motion/react',
+        '@phosphor-icons/react', 'd3-array', 'd3-geo', 'd3-interpolate', 'd3-scale', 'd3-selection', 'd3-shape',
+        'd3-transition', 'd3-zoom', 'uqr', 'three', '@react-three/fiber', '@react-three/drei', 'html-to-image',
+        'three/examples/jsm/loaders/GLTFLoader.js', 'three/examples/jsm/utils/SkeletonUtils.js',
+      ],
+    },
     resolve: { alias: { '@interface': fileURLToPath(new URL(escolhida.arquivo, import.meta.url)) } },
     // o 3D (three, drei) só é baixado nas telas que o usam; o aviso de 500 kB não vale para esse pedaço sob demanda
     build: { chunkSizeWarningLimit: 1000, outDir: nome === 'simples' ? 'dist-simples' : 'dist' },

@@ -1,0 +1,6 @@
+Modelos 3D das mãos (os santinhos dos gastos, P9).
+
+mao-right.glb   "generic-hand" (right.glb; a esquerda é ela espelhada), WebXR Input Profiles
+    https://github.com/immersive-web/webxr-input-profiles  (pacote npm @webxr-input-profiles/assets 1.0.20)
+    Licença MIT. Mão humana com esqueleto de 25 articulações (punho, metacarpos e falanges); pintada em
+    tons chapados e posada dedo a dedo no código (web/src/gastos/nuvem.js).

@@ -9,8 +9,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { consultas, semMunicipal, type Ano, type Escola } from '../api'
 import { CedulaAnos } from '../atlas/CedulaAnos'
 import { Alternador } from '../atlas/PainelEstado'
-import { silhueta } from '../atlas/geo'
-import { CirandaTela } from '../componentes/Ciranda'
+import { SeletorEstado } from '../componentes/SeletorEstado'
+import { Atrasado, EsqueletoPagina } from '../componentes/Esqueleto'
 import { ErroCarga } from '../componentes/ErroCarga'
 import { Escolha } from '../componentes/Escolha'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
@@ -53,7 +53,6 @@ export function EscolaPagina() {
   const { data: malha } = useQuery(consultas.malhaBrasil())
   // o DF não é um recorte aqui: os quintos dividem os municípios da UF e ele só tem Brasília (entra em todos)
   const carregadas = useMemo(() => semMunicipal((ufs ?? []).filter((u) => u.carregada && u.sigla !== 'BR'), true), [ufs])
-  const silhuetas = useMemo(() => new Map(malha ? carregadas.map((u) => [u.sigla, silhueta(malha, u.cd_ibge, 22)]) : []), [malha, carregadas])
   // antes da lista de UFs chegar vale o endereço; a API recusa UF sem dados
   const uf = busca.uf && busca.uf !== 'DF' && (!ufs || carregadas.some((u) => u.sigla === busca.uf)) ? busca.uf : ''
   const ufInfo = carregadas.find((u) => u.sigla === uf)
@@ -74,7 +73,7 @@ export function EscolaPagina() {
 
   const rotulos = useMemo(() => d?.niveis.map((n) => n.rotulo) ?? [], [d])
   if (q.error && !d) return <ErroCarga erro={q.error} />
-  if (!d) return <CirandaTela rotulo="Abrindo o caderno de votação..." />
+  if (!d) return <Atrasado><EsqueletoPagina rotulo="Abrindo o caderno de votação..." /></Atrasado>
 
   const cargoObjetos = d.cargos.find((c) => c.cod === busca.cargo)
   const recorte = somaCargos(d, cargoObjetos?.cod)
@@ -128,17 +127,7 @@ export function EscolaPagina() {
           </fieldset>
           <fieldset className="min-w-0">
             <legend className="t-rotulo mb-1.5 text-tinta-2">Estado</legend>
-            <div role="radiogroup" aria-label="Estado" className="-mx-4 flex snap-x gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 lg:grid lg:grid-cols-4 [&>button]:shrink-0 [&>button]:snap-start">
-              <Escolha ativo={!uf} aoClicar={() => mudar({ uf: undefined, ibge: undefined })}>Todos</Escolha>
-              {carregadas.map((u) => (
-                <Escolha key={u.sigla} rotulo={u.nome} ativo={u.sigla === uf} aoClicar={() => mudar({ uf: u.sigla, ibge: undefined })}>
-                  <svg width={20} height={20} viewBox="0 0 22 22" aria-hidden className="shrink-0">
-                    <path d={silhuetas.get(u.sigla)} fill="currentColor" opacity={0.85} />
-                  </svg>
-                  {u.sigla}
-                </Escolha>
-              ))}
-            </div>
+            <SeletorEstado malha={malha} ufs={carregadas} escolhida={uf ?? ''} aoEscolher={(s) => mudar({ uf: s, ibge: undefined })} />
           </fieldset>
         </div>
       </header>

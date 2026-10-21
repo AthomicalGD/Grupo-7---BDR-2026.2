@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'motion/react'
 import { lazy, Suspense, useCallback, useEffect } from 'react'
 import { ANOS, consultas, type Ano, type MunicipioBusca } from '../api'
-import { Ciranda, CirandaTela } from '../componentes/Ciranda'
+import { Atrasado, EsqueletoBloco, EsqueletoPagina, EsqueletoPalco } from '../componentes/Esqueleto'
 import { ErroCarga } from '../componentes/ErroCarga'
 import type { BuscaAtlas } from '../router'
 import { Boletim } from './Boletim'
@@ -78,7 +78,7 @@ export function Atlas() {
   }, [municipio.data?.nome, nomeUF])
 
   if (malhaBrasil.isError || ufs.isError) return <ErroCarga erro={malhaBrasil.error ?? ufs.error} />
-  if (!malhaBrasil.data || !ufs.data) return <CirandaTela rotulo="Abrindo o mapa do Brasil..." />
+  if (!malhaBrasil.data || !ufs.data) return <Atrasado><EsqueletoPagina variante="mapa" rotulo="Abrindo o mapa do Brasil..." /></Atrasado>
 
   const carregandoUF = !!sigla && (malhaUF.isLoading || detalheUF.isLoading)
   const chavePainel = ibge ? `m-${ibge}` : sigla ? `e-${sigla}` : 'brasil'
@@ -90,7 +90,7 @@ export function Atlas() {
     ) : municipio.isError ? (
       <ErroCarga erro={municipio.error} compacto />
     ) : (
-      <div className="grid min-h-[40dvh] place-items-center"><Ciranda rotulo="Imprimindo o boletim..." /></div>
+      <Atrasado><EsqueletoBloco altura="34dvh" linhas={3} rotulo="Imprimindo o boletim..." /></Atrasado>
     )
   } else if (sigla) {
     painel = detalheUF.data ? (
@@ -108,7 +108,7 @@ export function Atlas() {
     ) : detalheUF.isError ? (
       <ErroCarga erro={detalheUF.error} compacto />
     ) : (
-      <div className="grid min-h-[40dvh] place-items-center"><Ciranda rotulo={`Apurando ${nomeUF ?? sigla}...`} /></div>
+      <Atrasado><EsqueletoBloco altura="34dvh" linhas={3} rotulo={`Apurando ${nomeUF ?? sigla}...`} /></Atrasado>
     )
   } else {
     painel = <PainelBrasil ufs={ufs.data} malha={malhaBrasil.data} ano={ano} cargo={doCargo?.nome} aoEscolherUF={irUF} aoApontarUF={preverUF} aoEscolherMunicipio={escolherNaBusca} />
@@ -125,7 +125,7 @@ export function Atlas() {
         />
         <div className="relative h-[58dvh] min-h-[340px] lg:h-auto lg:min-h-0 lg:flex-1">
           {relevo && detalheUF.data && malhaUF.data ? (
-            <Suspense fallback={<div className="grid h-full place-items-center"><Ciranda rotulo="Levantando o relevo..." /></div>}>
+            <Suspense fallback={<EsqueletoPalco />}>
               <Relevo3D malha={malhaUF.data} uf={detalheUF.data} ano={ano} relativo={relativo} ibge={ibge} aoEscolher={(c) => irMunicipio(c)} />
             </Suspense>
           ) : (
@@ -150,9 +150,10 @@ export function Atlas() {
           )}
           <AnimatePresence>
             {carregandoUF && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pointer-events-none absolute inset-0 grid place-items-center bg-papel/40">
-                <Ciranda rotulo={`Carregando os municípios de ${nomeUF ?? sigla}...`} tamanho={96} />
-              </motion.div>
+              // sem aviso por cima do mapa: o estado já está desenhado e os municípios entram em anéis quando chegam
+              <motion.span initial={false} exit={{ opacity: 0 }} className="sr-only" role="status">
+                Carregando os municípios de {nomeUF ?? sigla}...
+              </motion.span>
             )}
           </AnimatePresence>
         </div>

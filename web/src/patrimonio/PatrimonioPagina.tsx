@@ -8,8 +8,8 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { animate } from 'motion/react'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CARGOS_P2, consultas, type Ano, type PanoramaPatrimonio, type Patrimonio } from '../api'
-import { Ciranda, CirandaTela } from '../componentes/Ciranda'
+import { CARGOS_P2, consultas, semMunicipal, type Ano, type PanoramaPatrimonio, type Patrimonio } from '../api'
+import { Atrasado, EsqueletoBloco, EsqueletoPagina } from '../componentes/Esqueleto'
 import { ErroCarga } from '../componentes/ErroCarga'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { inteiro, noEstado, pct, reais } from '../lib/formato'
@@ -156,9 +156,10 @@ export function PatrimonioPagina() {
   const cargo = CARGOS_P2.find((c) => c.cod === busca.cargo) ?? CARGOS_P2[CARGOS_P2.length - 1]
   const anos = cargo.municipal ? ANOS_MUNICIPAIS : ANOS_GERAIS
   const ano = busca.ano && anos.includes(busca.ano) ? busca.ano : anos[anos.length - 1]
-  const ufEscolhida = carregadas.find((u) => u.sigla === busca.uf)
+  const lugares = useMemo(() => semMunicipal(carregadas, cargo.municipal), [carregadas, cargo.municipal])
+  const ufEscolhida = lugares.find((u) => u.sigla === busca.uf)
   const uf = ufEscolhida?.sigla ?? ''
-  const noLugar = ufEscolhida ? noEstado(ufEscolhida.sigla, ufEscolhida.nome) : `nos ${carregadas.length} estados carregados`
+  const noLugar = ufEscolhida ? noEstado(ufEscolhida.sigla, ufEscolhida.nome) : `nos ${lugares.length} estados carregados`
   const q = useQuery({ ...consultas.patrimonio(ano, cargo.cod, cargo.nacional ? '' : uf), enabled: !!ufs, placeholderData: keepPreviousData })
   const qp = useQuery({ ...consultas.patrimonioPanorama(uf), enabled: !!ufs, placeholderData: keepPreviousData })
   const dados = q.data
@@ -182,7 +183,7 @@ export function PatrimonioPagina() {
   }, [mudar])
   const ativo = useMemo(() => ({ ano, cargo: cargo.cod }), [ano, cargo.cod])
 
-  if (!ufs) return <CirandaTela rotulo="Abrindo a página..." />
+  if (!ufs) return <Atrasado><EsqueletoPagina /></Atrasado>
 
   return (
     <div className="mx-auto max-w-[var(--casca-max)] px-4 pb-20 pt-8 md:px-[var(--casca-margem)] md:pt-12">
@@ -191,7 +192,7 @@ export function PatrimonioPagina() {
         <header>
           <h1 className="t-display titulo-p2">Quem declara mais bens se elege mais?</h1>
           <div className="mt-5">
-            <Recorte cargo={cargo} ano={ano} anos={anos} uf={uf} ufs={carregadas} malha={malha} panorama={qp.data} aoCargo={escolherCargo} aoAno={escolherAno} aoUf={escolherUf} />
+            <Recorte cargo={cargo} ano={ano} anos={anos} uf={uf} ufs={lugares} malha={malha} panorama={qp.data} aoCargo={escolherCargo} aoAno={escolherAno} aoUf={escolherUf} />
           </div>
         </header>
 
@@ -207,7 +208,7 @@ export function PatrimonioPagina() {
             </p>
           )}
           <div aria-busy={q.isPlaceholderData} className={`relative mt-4 transition-opacity duration-300 ${q.isPlaceholderData ? 'opacity-55' : ''}`}>
-            {q.isPlaceholderData && <div className="absolute right-12 top-0 z-10"><Ciranda rotulo="Somando os bens..." tamanho={56} /></div>}
+            {q.isPlaceholderData && <span className="sr-only" role="status">Somando os bens...</span>}
             {dados ? (
               <>
                 <Cofrinho dados={dados} rotulo={rotulo} fase={fase} aoMudarFase={setFase} palpite={palpite} aoPalpitar={palpitar} voce={grupoDoValor(dados, valor)?.id ?? null} />
@@ -218,7 +219,7 @@ export function PatrimonioPagina() {
             ) : q.error ? (
               <ErroCarga erro={q.error} compacto />
             ) : (
-              <div className="grid min-h-[420px] place-items-center"><Ciranda rotulo="Somando os bens..." /></div>
+              <Atrasado><EsqueletoBloco altura={420} linhas={0} rotulo="Somando os bens..." /></Atrasado>
             )}
           </div>
           {dados && fase > 0 && (
@@ -251,7 +252,7 @@ export function PatrimonioPagina() {
             ) : qp.error ? (
               <ErroCarga erro={qp.error} compacto />
             ) : (
-              <div className="grid min-h-[240px] place-items-center"><Ciranda rotulo="Juntando as disputas..." tamanho={72} /></div>
+              <Atrasado><EsqueletoBloco altura={240} linhas={0} rotulo="Juntando as disputas..." /></Atrasado>
             )}
           </div>
         </section>

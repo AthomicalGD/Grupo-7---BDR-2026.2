@@ -241,7 +241,7 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
         const dy = e.clientY - (c.top + c.height / 2)
         const d = Math.hypot(dx, dy) || 1
         const k = Math.min(1, d / 220)
-        pupila.style.transform = `translate(${(dx / d) * 3.4 * k}px, ${(dy / d) * 3.4 * k}px)`
+        pupila.style.transform = `translate(${(dx / d) * 1.6 * k}px, ${(dy / d) * 1.6 * k}px)`
       })
     }
     window.addEventListener('pointermove', mover, { passive: true })

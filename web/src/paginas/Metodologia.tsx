@@ -1,6 +1,9 @@
 import { ArrowRight, CaretRight, Check, Copy } from '@phosphor-icons/react'
+import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { useState, type ReactNode } from 'react'
+import { consultas } from '../api'
+import { cargo as fmtCargo, nomeProprio, reaisCurto } from '../lib/formato'
 // as consultas mostradas aqui são os mesmos arquivos que o teste da API roda contra o banco
 import p10Carreira from './consultas/p10_carreira.sql?raw'
 import p10Reeleicao from './consultas/p10_reeleicao.sql?raw'
@@ -36,6 +39,28 @@ function Secao({ id, titulo, resposta, children }: {
         {children}
       </div>
     </section>
+  )
+}
+
+/** P9: as campanhas que mais gastaram em cada eleição, cada uma abrindo a sua nuvem na ficha do político. */
+function ExemplosGastos() {
+  const { data } = useQuery(consultas.gastosDestaques())
+  if (!data?.length) return null
+  return (
+    <ul className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
+      {data.map((c) => (
+        <li key={c.id}>
+          <Link
+            to="/politico/$id" params={{ id: String(c.id_politico) }} search={{ gasto: c.id }}
+            className="flex items-baseline gap-3 rounded-lg px-2 py-1.5 hover:bg-selecao-claro"
+          >
+            <span className="tabular w-10 shrink-0 font-bold text-tinta">{c.ano}</span>
+            <span className="min-w-0 flex-1 truncate"><b>{nomeProprio(c.nome_urna || c.nome)}</b> <span className="text-tinta-3">{fmtCargo(c.cargo)}</span></span>
+            <span className="tabular shrink-0 font-semibold text-tinta">{c.gasto != null ? reaisCurto(c.gasto) : ''}</span>
+          </Link>
+        </li>
+      ))}
+    </ul>
   )
 }
 
@@ -349,6 +374,31 @@ export function Metodologia() {
         <Detalhe titulo="As consultas">
           <Consulta titulo="Na carga: votos de cada partido no município" sql={p7VotosPartido} />
           <Consulta titulo="O viés de cada município, ano a ano" sql={p7Vies} />
+        </Detalhe>
+      </Secao>
+
+      <Secao id="m-gastos" titulo="Onde a campanha investe em propaganda (P9)">
+        <p>
+          A resposta é por campanha e mora na <b>ficha de cada político</b>, em “Para onde foi o dinheiro das campanhas”: cada tipo de gasto vira um santinho
+          com área proporcional à soma das despesas <b>contratadas</b> daquele tipo, em reais do ano da eleição. Os tipos de propaganda e comunicação
+          levam o carimbo, e o número grande diz a parte do gasto que foi para eles.
+        </p>
+        <ul className="list-disc space-y-2 pl-5">
+          <li><b>Tipo do TSE primeiro:</b> quando <code>ds_origem_despesa</code> é específico, ele decide; tipos equivalentes são agrupados (adesivos e impressos viram “Propaganda impressa”).</li>
+          <li><b>Descrição só nos genéricos:</b> em “Serviços prestados por terceiros” e afins, expressões explícitas em <code>ds_despesa</code> identificam o serviço; sem elas, o gasto fica “não identificado”. O fornecedor nunca decide o tipo.</li>
+          <li><b>Fora da conta:</b> doações a outras campanhas (reaparecem na que recebeu), despesas de valor zero e eleições suplementares.</li>
+          <li><b>Limitação:</b> é o contratado, não o pago; uma despesa mista entra num tipo só, para não contar o dinheiro duas vezes.</li>
+        </ul>
+        <p>As campanhas que mais gastaram em cada eleição, para começar:</p>
+        <ExemplosGastos />
+        <Detalhe titulo="De onde vêm os dados">
+          <Origens
+            linhas={[
+              ['Despesas contratadas', ARQ('tse/despesas_contratadas_candidatos/'), ARQ('despesa_de_campanha')],
+              ['Fornecedores', ARQ('tse/despesas_contratadas_candidatos/'), ARQ('fornecedor')],
+              ['Classificação e auditoria', ARQ('scripts/09_nuvem_despesas.py'), ARQ('respostas/09_nuvem_despesas/')],
+            ]}
+          />
         </Detalhe>
       </Secao>
 

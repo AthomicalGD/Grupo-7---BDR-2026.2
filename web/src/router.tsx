@@ -1,7 +1,9 @@
 import { createRootRoute, createRoute, createRouter, lazyRouteComponent, Link } from '@tanstack/react-router'
 import { ANOS, ANOS_ELEICAO, CARGOS_BUSCA, ORDENS_BUSCA, type Ano, type FiltrosBusca, type OrdemBusca } from './api'
 import { Atlas } from './atlas/Atlas'
-import { CirandaTela } from './componentes/Ciranda'
+import { EsqueletoPagina } from './componentes/Esqueleto'
+import { ErroCarga } from './componentes/ErroCarga'
+import { ehFalhaDeModulo, recarregaUmaVez } from './lib/recarrega'
 import { Moldura } from './componentes/Moldura'
 
 export interface BuscaAtlas {
@@ -35,6 +37,11 @@ export interface BuscaEscola {
   ibge?: number
 }
 
+export interface BuscaPolitico {
+  /** id_politico_eleicao da campanha cuja nuvem de gastos abre (P9) */
+  gasto?: number
+}
+
 export interface BuscaPatrimonio {
   ano?: Ano
   cargo?: number
@@ -66,6 +73,7 @@ const atlas = createRoute({
   getParentRoute: () => raiz,
   id: 'atlas',
   component: Atlas,
+  pendingComponent: () => <EsqueletoPagina variante="mapa" rotulo="Abrindo o mapa..." />,
   validateSearch: (s: Record<string, unknown>): BuscaAtlas => ({
     ano: ANOS.includes(Number(s.ano) as Ano) ? (Number(s.ano) as Ano) : undefined,
     cargo: CARGOS_ATLAS.includes(Number(s.cargo)) ? Number(s.cargo) : undefined,
@@ -139,6 +147,10 @@ const politico = createRoute({
   getParentRoute: () => raiz,
   path: '/politico/$id',
   component: lazyRouteComponent(() => import('./politico/PoliticoPagina'), 'PoliticoPagina'),
+  // outro político, outra ficha: sem isto o React reaproveitava os santinhos (virados, com a foto do anterior)
+  remountDeps: ({ params }) => params,
+  pendingComponent: () => <EsqueletoPagina variante="carreira" rotulo="Abrindo a carreira..." />,
+  validateSearch: (s: Record<string, unknown>): BuscaPolitico => ({ gasto: numero(s.gasto) }),
 })
 const metodologia = createRoute({
   getParentRoute: () => raiz,
@@ -150,8 +162,14 @@ const arvore = raiz.addChildren([atlas.addChildren([inicio, estado, municipio]),
 
 export const router = createRouter({
   routeTree: arvore,
-  defaultPendingComponent: () => <CirandaTela rotulo="Abrindo a página..." />,
-  defaultPendingMs: 150,
+  // a troca de página: nada nos primeiros 300 ms (o código já foi baixado no tempo ocioso ou ao passar o mouse no link)
+  // e, se demorar, o esqueleto da página, que fica pelo menos 300 ms para não piscar
+  defaultPendingComponent: () => <EsqueletoPagina />,
+  defaultPendingMinMs: 300,
+  // uma página ou um 3D que não baixou: recarrega uma vez (ver lib/recarrega.ts); outro erro: a tela de erro do site
+  defaultErrorComponent: ({ error }) =>
+    ehFalhaDeModulo(error) && recarregaUmaVez() ? <EsqueletoPagina rotulo="Atualizando a página..." /> : <ErroCarga erro={error} />,
+  defaultPendingMs: 300,
   scrollRestoration: true,
   // baixa o código da página quando o ponteiro para sobre o link: a troca de tela fica imediata
   defaultPreload: 'intent',
@@ -162,3 +180,14 @@ declare module '@tanstack/react-router' {
     router: typeof router
   }
 }
+
+// Baixa o código das páginas no tempo ocioso, uma por vez, depois da primeira tela: trocar de página fica imediato
+// (sem esqueleto nem espera). O 3D não entra aqui: ele é baixado só quando a tela que o usa abre.
+const ocioso = (f: () => void) => ('requestIdleCallback' in window ? window.requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 1500))
+const paginas = [urna, cadeira, escola, patrimonio, reeleicao, politico, metodologia]
+const proxima = () => {
+  const r = paginas.shift()
+  const pre = r && (r.options.component as { preload?: () => Promise<void> } | undefined)?.preload
+  if (pre) void pre().catch(() => undefined).finally(() => ocioso(proxima))
+}
+if (typeof window !== 'undefined') window.addEventListener('load', () => ocioso(proxima), { once: true })

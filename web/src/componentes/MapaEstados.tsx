@@ -1,19 +1,27 @@
-// O seletor de estado da P2: um minimapa do Brasil. Os estados carregados acendem no oliva claro e são
+// O seletor de estado do site (P2 e as páginas com recorte por estado): um minimapa do Brasil. Os estados carregados acendem no oliva claro e são
 // botões (clique, toque, Tab e Enter); os outros ficam em papel, "sem dados". O escolhido fica no oliva cheio
 // com a sigla em branco e dá um pulo curto; passar o mouse levanta o estado e diz o nome embaixo.
-// "Todos" volta à soma dos estados carregados. Com Presidente (disputa nacional) o mapa fica esmaecido.
+// "Todos" volta à soma dos estados carregados (ou não existe, com `obrigatorio`). Com Presidente (disputa
+// nacional) o mapa fica esmaecido. As siglas dos estados pequenos (DF, SE, AL...) só aparecem no escolhido ou
+// sob o ponteiro: com os 27 acesos elas se atropelavam no Nordeste; o nome inteiro sempre aparece ao lado.
 import { memo, useMemo, useState } from 'react'
 import type { Malha, UF } from '../api'
 import { formas, projecaoBrasil } from '../atlas/geo'
 
-export const MapaEstados = memo(function MapaEstados({ malha, ufs, escolhida, aoEscolher, nacional }: {
+// abaixo deste lado (unidades do viewBox) a sigla não cabe no estado sem invadir os vizinhos
+const LADO_SIGLA = 62
+
+export const MapaEstados = memo(function MapaEstados({ malha, ufs, escolhida, aoEscolher, nacional = false, obrigatorio = false }: {
   malha: Malha | undefined
   ufs: UF[]
   escolhida: string
   aoEscolher: (sigla: string | undefined) => void
   /** Presidente: o recorte é sempre o Brasil inteiro */
-  nacional: boolean
+  nacional?: boolean
+  /** sempre há um estado escolhido (sem "Todos") */
+  obrigatorio?: boolean
 }) {
+  const alternar = (sigla: string, ativo: boolean) => aoEscolher(ativo ? (obrigatorio ? sigla : undefined) : sigla)
   const [sobre, setSobre] = useState<string | null>(null)
   const mapa = useMemo(() => (malha ? formas(malha, projecaoBrasil(malha), 1) : []), [malha])
   const porCodigo = useMemo(() => new Map(ufs.map((u) => [u.cd_ibge, u])), [ufs])
@@ -52,11 +60,11 @@ export const MapaEstados = memo(function MapaEstados({ malha, ufs, escolhida, ao
               aria-label={uf.nome}
               tabIndex={nacional ? -1 : 0}
               className={`estado-alvo ${ativo ? 'estado-ativo' : aceso ? 'estado-aceso' : 'estado-apagado'}`}
-              onClick={() => !nacional && aoEscolher(ativo ? undefined : uf.sigla)}
+              onClick={() => !nacional && alternar(uf.sigla, ativo)}
               onKeyDown={(e) => {
                 if (nacional || (e.key !== 'Enter' && e.key !== ' ')) return
                 e.preventDefault()
-                aoEscolher(ativo ? undefined : uf.sigla)
+                alternar(uf.sigla, ativo)
               }}
               onPointerEnter={() => setSobre(uf.sigla)}
               onPointerLeave={() => setSobre(null)}
@@ -72,6 +80,8 @@ export const MapaEstados = memo(function MapaEstados({ malha, ufs, escolhida, ao
           {mapa.map((f) => {
             const uf = porCodigo.get(f.codigo)
             if (!uf) return null
+            const [[x0, y0], [x1, y1]] = f.caixa
+            if (Math.min(x1 - x0, y1 - y0) < LADO_SIGLA && uf.sigla !== escolhida && uf.sigla !== sobre) return null
             return (
               <text key={f.codigo} x={f.centro[0]} y={f.centro[1]} textAnchor="middle" dominantBaseline="central" className={uf.sigla === escolhida ? 'sigla-ativa' : 'sigla'}>
                 {uf.sigla}
@@ -88,7 +98,7 @@ export const MapaEstados = memo(function MapaEstados({ malha, ufs, escolhida, ao
         <p className="mt-1 max-w-[18ch] text-[0.8rem] leading-snug text-tinta-3">
           {nacional ? 'Presidente é disputa nacional' : 'Toque num estado aceso'}
         </p>
-        {!nacional && escolhida && (
+        {!nacional && !obrigatorio && escolhida && (
           <button type="button" onClick={() => aoEscolher(undefined)} className="botao-contorno mt-3 h-10 px-4 text-[0.84rem]">
             Ver todos
           </button>

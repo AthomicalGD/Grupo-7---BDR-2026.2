@@ -5,7 +5,7 @@ import { AdaptiveDpr, Bounds, Html, OrbitControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { useMemo, useState, type ReactNode } from 'react'
 import type { Malha } from '../api'
-import { Coluna, construir, useCursorDeVolta } from '../relevo/Relevo3D'
+import { Coluna, construir, useCursorDeVolta, useEstavel } from '../relevo/Relevo3D'
 import { SombraAssentada } from '../relevo/sombra'
 
 const ALTURA_MAX = 16
@@ -23,6 +23,7 @@ export default function RelevoEscola3D({ malha, valor, cor, teto, rotulo, seleci
 }) {
   const blocos = useMemo(() => construir(malha), [malha])
   const [sobre, setSobre] = useState<number | null>(null)
+  const escolher = useEstavel(aoEscolher)
   useCursorDeVolta()
   const altura = (v: number | null | undefined) => 0.4 + (Math.min(teto, v ?? 0) / teto) * ALTURA_MAX
   const bSobre = sobre != null ? blocos.find((b) => b.ibge === sobre) : undefined
@@ -45,7 +46,7 @@ export default function RelevoEscola3D({ malha, valor, cor, teto, rotulo, seleci
                   cor={cor(v) ?? '#dfe3e7'}
                   selecionado={b.ibge === selecionado || b.ibge === sobre}
                   aoPassar={setSobre}
-                  aoClicar={() => aoEscolher(b.ibge)}
+                  aoEscolher={escolher}
                 />
               )
             })}

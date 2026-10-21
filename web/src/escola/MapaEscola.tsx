@@ -11,7 +11,7 @@ import { interpolateZoom, type ZoomView } from 'd3-interpolate'
 import { lazy, memo, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { consultas, type Malha, type MunicipioEscola } from '../api'
 import { Alternador } from '../atlas/PainelEstado'
-import { Ciranda } from '../componentes/Ciranda'
+import { EsqueletoPalco } from '../componentes/Esqueleto'
 import { pct } from '../lib/formato'
 import { cor, useLargura } from './escolaridade'
 
@@ -217,7 +217,7 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
       <div ref={ref} className="relative mx-auto max-w-[calc((100dvh-190px)*1.05)]" style={{ height: H }}>
         {modo === 'pe' ? (
           malha3D ? (
-            <Suspense fallback={<div className="grid h-full place-items-center"><Ciranda rotulo="Levantando o mapa..." /></div>}>
+            <Suspense fallback={<EsqueletoPalco />}>
               <RelevoEscola3D
                 malha={malha3D}
                 valor={valor3D}

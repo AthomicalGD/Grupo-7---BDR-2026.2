@@ -3,7 +3,7 @@
 import { AdaptiveDpr, Bounds, Html, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { geoConicEqualArea } from 'd3-geo'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import type { Ano, Malha, UFDetalhe } from '../api'
 import { inteiro, vies as fmtVies } from '../lib/formato'
@@ -75,30 +75,58 @@ export function useCursorDeVolta() {
   useEffect(() => () => void (document.body.style.cursor = ''), [])
 }
 
-export function Coluna({ bloco, altura, cor, selecionado, aoPassar, aoClicar }: {
+// O clique num município: vale a coluna onde o ponteiro APERTOU, se ele não andou mais que 6 px até soltar. Assim girar o
+// mapa (arrastar) não abre nada, e o clique não se perde quando a câmera ainda está deslizando do giro anterior (o
+// clique do three exige a mesma coluna sob o ponteiro ao apertar e ao soltar, e com a câmera andando ela muda).
+let apertou: { ibge: number; x: number; y: number; escolher: (ibge: number) => void } | null = null
+if (typeof window !== 'undefined') {
+  window.addEventListener('pointerup', (e) => {
+    const a = apertou
+    apertou = null
+    if (a && Math.hypot(e.clientX - a.x, e.clientY - a.y) < 6) a.escolher(a.ibge)
+  })
+}
+
+/** Guarda a função mais recente numa referência e devolve uma estável (as colunas memorizadas não se redesenham). */
+export function useEstavel<A extends unknown[]>(fn: (...a: A) => void) {
+  const ref = useRef(fn)
+  useEffect(() => { ref.current = fn })
+  return useCallback((...a: A) => ref.current(...a), [])
+}
+
+interface PropsColuna {
   bloco: Bloco
   altura: number
   cor: string
   selecionado: boolean
+  /** estáveis (setState ou useEstavel): a coluna só se redesenha quando altura, cor ou seleção mudam */
   aoPassar: (ibge: number | null) => void
-  aoClicar: () => void
-}) {
+  aoEscolher: (ibge: number) => void
+}
+
+function ColunaBase({ bloco, altura, cor, selecionado, aoPassar, aoEscolher }: PropsColuna) {
   const ref = useRef<THREE.Mesh>(null)
   const material = useRef<THREE.MeshStandardMaterial>(null)
   const alvo = useMemo(() => new THREE.Color(cor), [cor])
   const invalidar = useThree((s) => s.invalidate)
-  useEffect(() => invalidar(), [altura, cor, selecionado, invalidar])
+  // parada no alvo, a coluna não faz conta nenhuma por quadro (eram centenas de contas a cada quadro do giro)
+  const assentada = useRef(false)
+  useEffect(() => { assentada.current = false; invalidar() }, [altura, cor, selecionado, invalidar])
   // cresce do chão e acompanha a troca de ano com amortecimento; o canvas só desenha sob demanda,
   // então cada coluna pede o próximo quadro enquanto não chegou ao alvo
   useFrame((estado, dt) => {
     const m = ref.current
-    if (!m || !material.current) return
+    if (assentada.current || !m || !material.current) return
     const k = 1 - Math.exp(-Math.min(dt, 1 / 30) * 5.5)
     m.scale.z += (altura - m.scale.z) * k
     material.current.color.lerp(alvo, k)
     const brilho = selecionado ? 0.35 : 0
     material.current.emissiveIntensity += (brilho - material.current.emissiveIntensity) * k
-    if (Math.abs(altura - m.scale.z) > 0.01 || Math.abs(brilho - material.current.emissiveIntensity) > 0.01) estado.invalidate()
+    const c = material.current.color
+    const longe = Math.abs(altura - m.scale.z) > 0.01 || Math.abs(brilho - material.current.emissiveIntensity) > 0.01 ||
+      Math.abs(c.r - alvo.r) + Math.abs(c.g - alvo.g) + Math.abs(c.b - alvo.b) > 0.004
+    if (longe) estado.invalidate()
+    else { m.scale.z = altura; c.copy(alvo); material.current.emissiveIntensity = brilho; assentada.current = true }
   })
   return (
     <mesh
@@ -117,15 +145,17 @@ export function Coluna({ bloco, altura, cor, selecionado, aoPassar, aoClicar }: 
         aoPassar(null)
         document.body.style.cursor = ''
       }}
-      onClick={(e) => {
+      onPointerDown={(e) => {
         e.stopPropagation()
-        aoClicar()
+        apertou = { ibge: bloco.ibge, x: e.nativeEvent.clientX, y: e.nativeEvent.clientY, escolher: aoEscolher }
       }}
     >
       <meshStandardMaterial ref={material} color={cor} roughness={0.62} metalness={0.02} emissive="#f7c21a" emissiveIntensity={0} />
     </mesh>
   )
 }
+/** Uma coluna do relevo, memorizada: passar o mouse num município redesenhava todas (centenas) a cada movimento. */
+export const Coluna = memo(ColunaBase, (a, b) => a.bloco === b.bloco && a.altura === b.altura && a.cor === b.cor && a.selecionado === b.selecionado && a.aoPassar === b.aoPassar && a.aoEscolher === b.aoEscolher)
 
 interface Props {
   malha: Malha
@@ -141,6 +171,7 @@ export default function Relevo3D({ malha, uf, ano, relativo, ibge, aoEscolher }:
   const porIbge = useMemo(() => new Map(uf.municipios.map((m) => [m.ibge, m])), [uf])
   const maxAptos = useMemo(() => Math.max(1, ...uf.municipios.map((m) => m.aptos[ano] ?? 0)), [uf, ano])
   const [sobre, setSobre] = useState<number | null>(null)
+  const escolher = useEstavel(aoEscolher)
   useCursorDeVolta()
   const vUF = uf.vies[ano]
   const mSobre = sobre != null ? porIbge.get(sobre) : undefined
@@ -167,7 +198,7 @@ export default function Relevo3D({ malha, uf, ano, relativo, ibge, aoEscolher }:
                 cor={v == null ? '#dfe3e7' : corVies(v, relativo ? SATURA_RELATIVO : undefined)}
                 selecionado={b.ibge === ibge || b.ibge === sobre}
                 aoPassar={setSobre}
-                aoClicar={() => aoEscolher(b.ibge)}
+                aoEscolher={escolher}
               />
             )
           })}

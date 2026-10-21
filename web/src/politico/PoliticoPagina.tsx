@@ -1,18 +1,19 @@
 // Ficha da carreira (P10): retrato 3x4 com o carimbo da situação atual, a fita da carreira (uma
 // casa por eleição, preenchida quando venceu), a resposta em texto, a trajetória por cargo com a
-// faixa dos partidos, as campanhas com custo (P1) e os santinhos de cada eleição.
+// faixa dos partidos, as campanhas com custo (P1) e para onde foi o dinheiro (P9), e os santinhos.
 import { ArrowLeft, ArrowRight, CaretLeft, CaretRight } from '@phosphor-icons/react'
 import { useQuery } from '@tanstack/react-query'
-import { Link, useParams } from '@tanstack/react-router'
+import { Link, useParams, useSearch } from '@tanstack/react-router'
 import { motion, useReducedMotion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { consultas, type Candidatura, type Politico } from '../api'
-import { CirandaTela } from '../componentes/Ciranda'
+import { Atrasado, EsqueletoPagina } from '../componentes/Esqueleto'
 import { ErroCarga } from '../componentes/ErroCarga'
 import { Retrato } from '../componentes/Retrato'
 import { Trajetoria } from '../graficos/Trajetoria'
 import { duracaoMandato, situacao } from '../lib/carreira'
-import { cargo as fmtCargo, cargoPlural, inteiro, nomeProprio, plural, reaisCurto } from '../lib/formato'
+import { cargo as fmtCargo, cargoPlural, inteiro, nomeProprio, plural } from '../lib/formato'
+import { GastosCampanha } from '../gastos/GastosCampanha'
 import { Santinho } from './Santinho'
 
 const ANO_ATUAL = 2026
@@ -127,35 +128,6 @@ function Resposta({ p, l }: { p: Politico; l: Leitura }) {
   )
 }
 
-/** Campanhas com prestação de contas (2018 em diante): gasto e custo por voto, com a ponte para a P1. */
-function Campanhas({ ordem }: { ordem: Candidatura[] }) {
-  const comConta = ordem.filter((c) => c.gasto != null).reverse()
-  if (!comConta.length) return null
-  return (
-    <section aria-labelledby="campanhas" className="adiar mt-12">
-      <h2 id="campanhas" className="t-h2">Quanto custaram as campanhas</h2>
-      <p className="mt-2 max-w-[62ch] text-tinta-2">Despesa contratada declarada ao TSE, em valores da época. O TSE publica as contas por candidato desde 2018.</p>
-      <ul className="mt-5 grid max-w-[880px] grid-cols-1 gap-x-10 sm:grid-cols-2">
-        {comConta.map((c) => (
-          <li key={`${c.ano}-${c.cod_cargo}`} className="flex items-baseline gap-4 border-t border-linha py-3">
-            <span className="tabular w-11 shrink-0 font-bold">{c.ano}</span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-semibold">{fmtCargo(c.cargo)}</span>
-              <span className="block text-[0.82rem] text-tinta-3">
-                {situacao(c)}{c.votos ? ` · ${reaisCurto(c.gasto! / c.votos)} por voto` : ''}
-              </span>
-            </span>
-            <span className="t-numero text-[1.35rem]">{reaisCurto(c.gasto)}</span>
-          </li>
-        ))}
-      </ul>
-      <Link to="/cadeira" className="mt-4 inline-flex items-center gap-1.5 text-[0.88rem] font-semibold text-acao hover:underline">
-        Quanto custa uma cadeira <ArrowRight size={14} weight="bold" aria-hidden />
-      </Link>
-    </section>
-  )
-}
-
 function Santinhos({ recentes, nome }: { recentes: Candidatura[]; nome: string }) {
   const trilho = useRef<HTMLOListElement>(null)
   const [pontas, setPontas] = useState({ inicio: true, fim: false })
@@ -169,7 +141,7 @@ function Santinhos({ recentes, nome }: { recentes: Candidatura[]; nome: string }
   const rolar = (sentido: number) => trilho.current?.scrollBy({ left: sentido * 500, behavior: 'smooth' })
   const botao = 'grid size-10 place-items-center rounded-full border border-linha-2 bg-folha text-tinta transition hover:border-tinta disabled:opacity-35 disabled:hover:border-linha-2'
   return (
-    <section aria-labelledby="santinhos" className="adiar mt-12">
+    <section aria-labelledby="santinhos" className="fila-santinhos adiar mt-12">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 id="santinhos" className="t-h2">Santinhos de cada eleição</h2>
@@ -190,7 +162,7 @@ function Santinhos({ recentes, nome }: { recentes: Candidatura[]; nome: string }
         className="-mx-4 mt-5 flex snap-x snap-mandatory scroll-pl-4 items-stretch gap-5 overflow-x-auto px-4 pb-8 pt-3 md:-mx-[var(--casca-margem)] md:scroll-pl-[var(--casca-margem)] md:px-[var(--casca-margem)]"
       >
         {recentes.map((c, i) => (
-          <li key={`${c.ano}-${c.cod_cargo}-${i}`} id={idSantinho(c)} className="flex scroll-mt-20 list-none">
+          <li key={`${c.ano}-${c.cod_cargo}-${i}`} id={idSantinho(c)} className="flex scroll-mt-20 list-none" style={{ ['--i' as string]: Math.min(i, 6) }}>
             <Santinho c={c} nome={nome} inclinacao={i % 2 ? -1.2 : 0.9} />
           </li>
         ))}
@@ -201,6 +173,7 @@ function Santinhos({ recentes, nome }: { recentes: Candidatura[]; nome: string }
 
 export function PoliticoPagina() {
   const { id } = useParams({ from: '/politico/$id' })
+  const busca = useSearch({ from: '/politico/$id' })
   const { data: p, error, isLoading } = useQuery(consultas.politico(Number(id)))
   const { data: partidos } = useQuery(consultas.partidos())
   const viesPartido = useMemo(() => (partidos ? new Map(partidos.map((x) => [x.sigla, x.vies])) : undefined), [partidos])
@@ -211,7 +184,7 @@ export function PoliticoPagina() {
   }, [p])
 
   if (error) return <ErroCarga erro={error} />
-  if (isLoading || !p) return <CirandaTela rotulo="Abrindo a carreira..." />
+  if (isLoading || !p) return <Atrasado><EsqueletoPagina variante="carreira" rotulo="Abrindo a carreira..." /></Atrasado>
 
   const nome = nomeProprio(p.nome)
   const l = ler(p)
@@ -268,7 +241,7 @@ export function PoliticoPagina() {
         <Trajetoria candidaturas={p.candidaturas} viesPartido={viesPartido} />
       </section>
 
-      <Campanhas ordem={l.ordem} />
+      <GastosCampanha campanhas={[...l.ordem].reverse()} inicial={busca.gasto} />
       <Santinhos recentes={recentes} nome={p.nome} />
     </div>
   )

@@ -185,6 +185,8 @@ export interface Candidatura {
   votos: number | null
   /** Despesa contratada da campanha (P1); null antes de 2018. */
   gasto: number | null
+  /** id_politico_eleicao: abre a nuvem de gastos da campanha (P9) */
+  id_candidatura: number
   suplementar: boolean
   foto: string | null
 }
@@ -259,10 +261,10 @@ export interface Cadeira {
   receitas: Record<'fundo_eleitoral' | 'fundo_partidario' | 'pessoas_fisicas' | 'proprios' | 'outros', number>
 }
 
+// ───────── P2: patrimônio declarado e taxa de eleição ─────────
+
 /** O DF não tem eleição municipal: nos recortes de prefeito e vereador ele não é um estado escolhível. */
 export const semMunicipal = (ufs: UF[], municipal: boolean) => (municipal ? ufs.filter((u) => u.sigla !== 'DF') : ufs)
-
-// ───────── P2: patrimônio declarado e taxa de eleição ─────────
 
 export const CARGOS_P2 = [
   { cod: 1, nome: 'Presidente', municipal: false, nacional: true },
@@ -296,6 +298,48 @@ export interface Patrimonio {
   /** a fila dos que declararam bens em 100 passos: o valor de quem está em cada 1% (do menor ao maior) */
   fila: number[]
   sintese: { quartis: number; maior_supera_menor: boolean; diferenca_pp: number | null }
+}
+
+/** Uma candidatura de 2018 a 2024 (P9), com o gasto total da prestação de contas. */
+export interface CandidaturaGasto {
+  id: number
+  id_politico: number
+  nome: string
+  nome_urna: string | null
+  ano: number
+  cargo: string
+  cod_cargo: number
+  local: string
+  uf: string
+  partido: string | null
+  vies: number | null
+  eleito: boolean
+  foto: string | null
+  gasto?: number | null
+}
+
+/** Um tipo de gasto da nuvem (scripts/09_nuvem_despesas.py). */
+export interface TipoGasto {
+  rotulo: string
+  valor: number
+  quantidade: number
+  inferidas: number
+  propaganda: boolean
+  fornecedores: { nome: string; valor: number; quantidade: number }[]
+  n_fornecedores: number
+  origens: string[]
+  descricoes: string[]
+}
+
+export interface Gastos {
+  candidatura: CandidaturaGasto
+  total: number
+  despesas: number
+  zeradas: number
+  sem_fornecedor: number
+  cobertura: { fonte: string; quantidade: number; valor: number }[]
+  propaganda: { valor: number; pct: number }
+  tipos: TipoGasto[]
 }
 
 /** A P2 em todos os cargos e anos de uma vez (Presidente sempre nacional). */
@@ -571,6 +615,10 @@ export const consultas = {
       queryFn: ({ signal }) => get<Patrimonio>(`/api/patrimonio?ano=${ano}&cargo=${cargo}${uf ? `&uf=${uf}` : ''}`, signal),
       ...sempre,
     }),
+  gastos: (candidatura: number) =>
+    queryOptions({ queryKey: ['gastos', candidatura], queryFn: ({ signal }) => get<Gastos>(`/api/gastos?candidatura=${candidatura}`, signal), ...sempre }),
+  gastosDestaques: () =>
+    queryOptions({ queryKey: ['gastos-destaques'], queryFn: ({ signal }) => get<CandidaturaGasto[]>('/api/gastos/destaques', signal), ...sempre }),
   patrimonioPanorama: (uf = '') =>
     queryOptions({
       queryKey: ['patrimonio-panorama', uf],

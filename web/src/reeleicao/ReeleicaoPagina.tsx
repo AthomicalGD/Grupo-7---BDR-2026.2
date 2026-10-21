@@ -8,10 +8,9 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { consultas, type ContaReeleicao, type GrupoReeleicao, type Malha, type Reeleicao, type UF } from '../api'
-import { silhueta } from '../atlas/geo'
-import { Ciranda, CirandaTela } from '../componentes/Ciranda'
+import { SeletorEstado } from '../componentes/SeletorEstado'
+import { Atrasado, EsqueletoBloco, EsqueletoPagina } from '../componentes/Esqueleto'
 import { ErroCarga } from '../componentes/ErroCarga'
-import { Escolha } from '../componentes/Escolha'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { cargoPlural, inteiro, noEstado, pct } from '../lib/formato'
 import type { BuscaReeleicao } from '../router'
@@ -155,7 +154,7 @@ function Resposta({ dados, sigla, noUF, estados, malha, cargoPedido, mudar, erro
       )}
 
       <section aria-labelledby="caminho" aria-busy={trocando} className={`relative mt-10 max-w-[var(--miolo-max)] transition-opacity duration-300 ${trocando ? 'opacity-55' : ''}`}>
-        {trocando && <div className="absolute right-0 top-0 z-10"><Ciranda rotulo="Contando..." tamanho={56} /></div>}
+        {trocando && <span className="sr-only" role="status">Contando...</span>}
         <h2 id="caminho" className="t-h2">A urna da reeleição</h2>
         <p className="mt-1 max-w-[64ch] text-[0.95rem] text-tinta-2">
           Escolha um cargo, ponha na urna as cédulas de quem tentou se reeleger e apure. Toque em quem voltou, perdeu ou não tentou para ver quem são.
@@ -227,7 +226,6 @@ export function ReeleicaoPagina() {
   const { data: ufs } = useQuery(consultas.ufs())
   const { data: malha } = useQuery(consultas.malhaBrasil())
   const carregadas = useMemo(() => (ufs ?? []).filter((u) => u.carregada && u.sigla !== 'BR'), [ufs])
-  const silhuetas = useMemo(() => new Map(malha ? carregadas.map((u) => [u.sigla, silhueta(malha, u.cd_ibge, 22)]) : []), [malha, carregadas])
 
   // sem estado no endereço: todos os carregados somados
   const uf = carregadas.find((u) => u.sigla === busca.uf)
@@ -241,7 +239,7 @@ export function ReeleicaoPagina() {
   }, [])
 
   if (ufs && !carregadas.length) return <ErroCarga erro={new Error('Nenhum estado carregado no banco. Carregue um com: python -m loader PI')} />
-  if (!ufs) return <CirandaTela rotulo="Abrindo a página..." />
+  if (!ufs) return <Atrasado><EsqueletoPagina /></Atrasado>
 
   return (
     <div className="mx-auto max-w-[var(--casca-max)] px-4 pb-12 pt-6 md:px-[var(--casca-margem)] md:pt-7">
@@ -256,19 +254,7 @@ export function ReeleicaoPagina() {
           </p>
           <fieldset className="mt-5 min-w-0">
             <legend className="t-rotulo mb-2 text-tinta-2">Estado</legend>
-            <div role="radiogroup" aria-label="Estado" className="flex flex-wrap gap-2">
-              <Escolha rotulo="Todos os estados carregados" ativo={sigla === TODOS} aoClicar={() => mudar({ uf: undefined })}>
-                Todos
-              </Escolha>
-              {carregadas.map((u) => (
-                <Escolha key={u.sigla} rotulo={u.nome} ativo={u.sigla === sigla} aoClicar={() => mudar({ uf: u.sigla })}>
-                  <svg width={22} height={22} viewBox="0 0 22 22" aria-hidden className="shrink-0">
-                    <path d={silhuetas.get(u.sigla)} fill="currentColor" opacity={0.85} />
-                  </svg>
-                  {u.sigla}
-                </Escolha>
-              ))}
-            </div>
+            <SeletorEstado malha={malha} ufs={carregadas} escolhida={uf?.sigla ?? ''} aoEscolher={(s) => mudar({ uf: s })} />
           </fieldset>
         </div>
         {dados && <Lede dados={dados} nome={noUF} />}
@@ -289,7 +275,7 @@ export function ReeleicaoPagina() {
       ) : q.error ? (
         <div className="mt-8"><ErroCarga erro={q.error} compacto /></div>
       ) : (
-        <div className="grid min-h-[50dvh] place-items-center"><Ciranda rotulo="Contando as reeleições..." /></div>
+        <Atrasado><EsqueletoBloco altura="50dvh" linhas={0} rotulo="Contando as reeleições..." /></Atrasado>
       )}
     </div>
   )

@@ -9,8 +9,14 @@ test('P10a: a urna, todos os estados e quem são', async ({ page }) => {
 
   // sem estado no endereço, a página soma todos os carregados
   await page.goto('/reeleicao')
-  await expect(page.getByRole('radio', { name: 'Todos os estados carregados' })).toBeChecked({ timeout: 90_000 })
-  await expect(page.getByText(/^Nos \d estados carregados, dos /)).toBeVisible({ timeout: 90_000 })
+  await expect(page.getByRole('button', { name: /^Estado: todos os \d+ estados/ })).toBeVisible({ timeout: 90_000 })
+  await expect(page.getByText(/^Nos \d+ estados carregados, dos /)).toBeVisible({ timeout: 90_000 })
+
+  // o seletor de estado abre o minimapa; escolher um estado fecha a gaveta e vai para o endereço
+  await page.getByRole('button', { name: /^Estado: / }).click()
+  await page.getByRole('dialog', { name: 'Escolher o estado' }).getByRole('radio', { name: 'Piauí' }).click()
+  await expect(page).toHaveURL(/uf=PI/)
+  await expect(page.getByRole('button', { name: /^Estado: Piauí/ })).toBeVisible()
 
   await page.goto('/reeleicao?uf=PI&cargo=13')
   await expect(page.getByRole('radio', { name: /^Vereador: / })).toBeChecked({ timeout: 30_000 })

@@ -11,7 +11,7 @@ import { motion, MotionConfig } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { consultas, type Malha, type Reeleicao } from '../api'
 import { formas, LADO, projecaoBrasil, silhueta } from '../atlas/geo'
-import { Ciranda } from '../componentes/Ciranda'
+import { Atrasado, EsqueletoBloco } from '../componentes/Esqueleto'
 import { Escolha } from '../componentes/Escolha'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { cargoPlural, inteiro, noEstado } from '../lib/formato'
@@ -131,7 +131,7 @@ export function EstadoAEstado({ ufs, malha, aoAbrir }: { ufs: UFCarregada[]; mal
   return (
     <div ref={caixa}>
       {!prontos || !d ? (
-        <div className="grid h-40 place-items-center">{perto && <Ciranda rotulo="Contando os estados..." tamanho={72} />}</div>
+        <div className="h-40">{perto && <Atrasado><EsqueletoBloco altura={160} linhas={0} rotulo="Contando os estados..." /></Atrasado>}</div>
       ) : (
         <MotionConfig transition={MOLA} reducedMotion="user">
           <div role="radiogroup" aria-label="Estado" className="flex flex-wrap gap-2">

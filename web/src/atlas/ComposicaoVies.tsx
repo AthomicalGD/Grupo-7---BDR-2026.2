@@ -7,7 +7,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { useEffect, useId, useState } from 'react'
 import { consultas, type CargoVies, type ComposicaoVies as Dados } from '../api'
-import { Ciranda } from '../componentes/Ciranda'
+import { Atrasado, EsqueletoBloco } from '../componentes/Esqueleto'
 import { Retrato } from '../componentes/Retrato'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { cargo as fmtCargo, decimal, inteiro, nomeProprio, pct, vies as fmtVies } from '../lib/formato'
@@ -183,7 +183,7 @@ export function ComposicaoVies({ sigla, nome, ano, cargo }: { sigla: string; nom
   const { data: d, isLoading, error } = useQuery(consultas.composicao(sigla, ano, cargo?.cod))
   const [todos, setTodos] = useState(false)
   if (error) return <p className="text-[0.86rem] text-tinta-2">Não foi possível abrir a composição do viés.</p>
-  if (isLoading || !d) return <div className="grid place-items-center py-6"><Ciranda rotulo="Somando os votos..." tamanho={72} /></div>
+  if (isLoading || !d) return <Atrasado><EsqueletoBloco altura={140} linhas={2} className="py-4" rotulo="Somando os votos..." /></Atrasado>
   const lista = todos ? d.partidos : d.partidos.slice(0, VISIVEIS)
   return (
     <div className="space-y-4">

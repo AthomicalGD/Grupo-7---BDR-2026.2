@@ -7,13 +7,14 @@
 // campanha (a frente e o verso dizem isso).
 import { ArrowCounterClockwise, ArrowRight } from '@phosphor-icons/react'
 import { Link } from '@tanstack/react-router'
-import { useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import type { Candidatura } from '../api'
 import { Retrato } from '../componentes/Retrato'
 import { situacao } from '../lib/carreira'
 import { cargo as fmtCargo, inteiro, nomeProprio, reaisCurto, vies as fmtVies } from '../lib/formato'
 import { corVies } from '../lib/vies'
+import { giraFolha, preparaFolha } from './papel'
 
 const FITAS = ['#5E881B', '#A2BD31', '#5D6B94', '#468BAF', '#76ACD0', '#F19929', '#FBC700']
 
@@ -99,20 +100,6 @@ function Carimbo({ resultado }: { resultado: string }) {
   )
 }
 
-// O giro: o santinho sobe enquanto vira, passa um pouco do ponto e assenta como papel. Só `transform`
-// e `opacity`, pela Web Animations API (não roda ao montar e não pesa parado).
-const GIRO: KeyframeAnimationOptions = { duration: 780, easing: 'cubic-bezier(0.45, 0.05, 0.25, 1)' }
-
-function quadrosDoGiro(paraOVerso: boolean): Keyframe[] {
-  const [a, b, c, d] = paraOVerso ? [0, 80, 192, 180] : [180, 100, -12, 0]
-  return [
-    { transform: `translateY(0) rotateY(${a}deg) scale(1)` },
-    { transform: `translateY(-18px) rotateY(${b}deg) scale(1.07)`, offset: 0.42 },
-    { transform: `translateY(-3px) rotateY(${c}deg) scale(1.01)`, offset: 0.78 },
-    { transform: `translateY(0) rotateY(${d}deg) scale(1)` },
-  ]
-}
-
 /** A faixa presidencial sobre a foto de quem se elegeu Presidente, como a faixa de verdade: três faixas
  * largas de cetim (verde, amarelo, verde), do ombro ao quadril, com dobra de tecido e bordas douradas, e no
  * peito um emblema redondo com o globo azul da marca (não o brasão: nada aqui imita símbolo oficial).
@@ -191,13 +178,42 @@ export function Santinho({ c, nome, inclinacao }: { c: Candidatura; nome: string
   const verso = useRef<HTMLButtonElement>(null)
   const folha = useRef<HTMLDivElement>(null)
   const sombra = useRef<HTMLDivElement>(null)
+  const contato = useRef<HTMLDivElement>(null)
+  const caixa = useRef<HTMLElement>(null)
+  const faceFrente = useRef<HTMLDivElement>(null)
+  const faceVerso = useRef<HTMLDivElement>(null)
+  // uma animação de papel por vez (o giro manda: o toque não começa no meio dele)
+  const animando = useRef(false)
+  const papel = (fn: () => Promise<unknown>) => {
+    animando.current = true
+    fn().finally(() => { animando.current = false })
+  }
+  const parado = () => matchMedia('(prefers-reduced-motion: reduce)').matches
+  // fotografa as faces quando o santinho chega perto da tela, para a folha estar pronta no primeiro toque
+  useEffect(() => {
+    const el = caixa.current
+    if (!el || parado()) return
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && faceFrente.current && faceVerso.current) { preparaFolha(faceFrente.current, faceVerso.current); io.disconnect() }
+    }, { rootMargin: '300px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
   const virar = (v: boolean) => {
-    flushSync(() => setVirado(v))
-    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      folha.current?.animate(quadrosDoGiro(v), GIRO)
-      // a sombra no chão cresce enquanto ele sobe; o brilho do papel cruza a face que chega
-      sombra.current?.animate([{ opacity: 0, transform: 'scaleX(0.8)' }, { opacity: 0.55, transform: 'scaleX(1.12)', offset: 0.42 }, { opacity: 0, transform: 'scaleX(0.8)' }], GIRO)
-      folha.current?.querySelectorAll('.santinho-brilho')[v ? 1 : 0]?.animate([{ transform: 'translateX(-110%)' }, { transform: 'translateX(110%)' }], { duration: 640, delay: 340, easing: 'ease-out' })
+    // um giro por vez: o clique no meio dele não começa outro
+    if (animando.current) return
+    const [cx, fr, ve, fo] = [caixa.current, faceFrente.current, faceVerso.current, folha.current]
+    if (parado() || !cx || !fr || !ve || !fo) {
+      flushSync(() => setVirado(v))
+    } else {
+      // o santinho só vira (no HTML) no quadro em que a folha WebGL já cobre ele: sem o salto do verso aparecendo antes
+      let virou = false
+      const vira = () => { if (!virou) { virou = true; flushSync(() => setVirado(v)) } }
+      papel(() => giraFolha(cx, fr, ve, fo, v, vira).catch(() => undefined).finally(vira))
+      // a sombra de contato do papel fica durante o giro (não some na troca para a folha) e afina com ela de lado
+      contato.current?.animate([{ opacity: 1 }, { opacity: 0.12, offset: 0.5 }, { opacity: 1 }], { duration: 1000, easing: 'ease-in-out' })
+      // a sombra no chão cresce enquanto ele sobe
+      sombra.current?.animate([{ opacity: 0, transform: 'scaleX(0.8)' }, { opacity: 0.55, transform: 'scaleX(1.12)', offset: 0.46 }, { opacity: 0, transform: 'scaleX(0.8)' }], { duration: 980, easing: 'ease-in-out' })
     }
     // a face que tinha o foco fica inerte: o foco passa para o botão da outra
     const alvo = v ? verso : frente
@@ -211,15 +227,19 @@ export function Santinho({ c, nome, inclinacao }: { c: Candidatura; nome: string
 
   return (
     <article
+      ref={caixa}
       className="santinho relative h-[404px] w-[236px] shrink-0 snap-start [perspective:900px]"
       style={{ rotate: `${inclinacao}deg` }}
       aria-label={resumo}
     >
       <div ref={sombra} className="pointer-events-none absolute inset-x-5 -bottom-4 h-6 rounded-[50%] bg-tinta/40 opacity-0 blur-md" aria-hidden />
-      <div ref={folha} className="santinho-folha relative h-full w-full transition-[translate] duration-300 [transform-style:preserve-3d]" style={{ transform: virado ? 'rotateY(180deg)' : undefined }}>
+      {/* a sombra do papel na mesa, fora das faces: continua lá enquanto a folha anima */}
+      <div ref={contato} className="pointer-events-none absolute inset-0 rounded-[3px] shadow-[0_1px_1px_rgb(24_32_43/0.14),0_4px_10px_-6px_rgb(24_32_43/0.35)]" aria-hidden />
+      <div ref={folha} className="santinho-folha relative h-full w-full [transform-style:preserve-3d]" style={{ transform: virado ? 'rotateY(180deg)' : undefined }}>
         {/* FRENTE: o impresso */}
         <div
-          className="absolute inset-0 flex flex-col overflow-hidden rounded-[10px] shadow-[var(--shadow-cartao)] [backface-visibility:hidden]"
+          ref={faceFrente}
+          className="absolute inset-0 flex flex-col overflow-hidden rounded-[3px] [backface-visibility:hidden]"
           style={{ background: fundo, color: tinta }}
           inert={virado}
         >
@@ -264,19 +284,19 @@ export function Santinho({ c, nome, inclinacao }: { c: Candidatura; nome: string
             </div>
             <p className="mt-2 text-[0.56rem] leading-none opacity-75">Dados do TSE · não é material de campanha</p>
           </div>
-          <div className="santinho-brilho" aria-hidden />
           <button
             type="button"
             ref={frente}
             onClick={() => virar(true)}
-            className="absolute inset-0 z-10 cursor-pointer rounded-[10px] outline-none focus-visible:shadow-[inset_0_0_0_3px_var(--color-folha),inset_0_0_0_5px_var(--color-tinta)]"
+            className="absolute inset-0 z-10 cursor-pointer rounded-[3px] outline-none focus-visible:shadow-[inset_0_0_0_3px_var(--color-folha),inset_0_0_0_5px_var(--color-tinta)]"
             aria-label={`Virar o santinho de ${c.ano} e ver a cola`}
           />
         </div>
 
         {/* VERSO: a cola para a urna */}
         <div
-          className="absolute inset-0 flex flex-col overflow-hidden rounded-[10px] bg-folha text-tinta shadow-[var(--shadow-cartao)] [backface-visibility:hidden] [transform:rotateY(180deg)]"
+          ref={faceVerso}
+          className="absolute inset-0 flex flex-col overflow-hidden rounded-[3px] bg-folha text-tinta [backface-visibility:hidden] [transform:rotateY(180deg)]"
           inert={!virado}
         >
           <div className="flex h-[5px]" aria-hidden>
@@ -328,7 +348,6 @@ export function Santinho({ c, nome, inclinacao }: { c: Candidatura; nome: string
               </div>
             </div>
           </div>
-          <div className="santinho-brilho santinho-brilho-verso" aria-hidden />
         </div>
       </div>
     </article>

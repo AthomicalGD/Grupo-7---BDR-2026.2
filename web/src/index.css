@@ -410,27 +410,35 @@
   animation: surgir 480ms var(--ease-saida) both;
 }
 
-/* santinho: retícula de gráfica (pontos de meio-tom) sobre a cor do partido e um brilho de papel */
+/* santinho: papel impresso, fosco. A retícula de gráfica (pontos de meio-tom) e a fibra do papel (ruído fractal
+   estático, multiplicado: escurece de leve e sem brilho); nada de verniz nem reflexo, que liam como plástico */
 .santinho-reticula {
   background:
-    linear-gradient(160deg, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0) 42%),
-    radial-gradient(rgb(255 255 255 / 0.13) 0.9px, transparent 1.3px) 0 0 / 5px 5px;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .09 0 0 0 0 .08 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23f)'/%3E%3C/svg%3E") 0 0 / 160px 160px,
+    radial-gradient(rgb(255 255 255 / 0.1) 0.9px, transparent 1.3px) 0 0 / 5px 5px;
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+  /* a espessura do papel: um fio escuro na borda de baixo, como a de uma folha impressa */
+  box-shadow: inset 0 -1px 0 rgb(24 32 43 / 0.1);
 }
-.santinho:hover .santinho-folha { translate: 0 -4px; }
-/* o brilho do papel couchê que cruza a face no giro; parado fica fora da face */
-.santinho-brilho {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  transform: translateX(-110%);
-  background: linear-gradient(100deg, transparent 32%, rgb(255 255 255 / 0.5) 50%, transparent 68%);
+/* sem efeito de passar o mouse: o santinho só se mexe no giro (a folha de papel em politico/papel.ts) */
+.santinho { isolation: isolate; }
+/* a chegada: ao rolar até a fileira, cada santinho cai no lugar como papel solto, balançando antes de assentar
+   (guiado pela rolagem, uma vez por passagem; sem a linha do tempo de rolagem, ele só aparece) */
+@keyframes papel-cai {
+  0% { opacity: 0; transform: translateY(-40px) rotate(-8deg); }
+  40% { opacity: 1; transform: translateY(5px) rotate(4deg); }
+  65% { transform: translateY(-3px) rotate(-1.8deg); }
+  85% { transform: translateY(1px) rotate(0.6deg); }
+  100% { opacity: 1; transform: none; }
 }
-/* no verso branco a luz branca some: o reflexo é azulado, como papel plastificado */
-.santinho-brilho-verso {
-  background: linear-gradient(100deg, transparent 30%, rgb(70 139 175 / 0.16) 46%, rgb(255 255 255 / 0.7) 50%, rgb(251 199 0 / 0.14) 54%, transparent 70%);
+@supports (animation-timeline: view()) {
+  .fila-santinhos { view-timeline: --fila block; }
+  .fila-santinhos li > .santinho {
+    animation: papel-cai linear both; animation-timeline: --fila;
+    animation-range: entry calc(var(--i, 0) * 5%) cover calc(28% + var(--i, 0) * 5%);
+  }
 }
-.santinho { transition: rotate 300ms var(--ease-saida); }
-.santinho:hover { rotate: 0deg !important; }
 
 /* teclas da urna (SVG): afundam ao apertar, foco visível só no teclado */
 .tecla { cursor: pointer; outline: none; }
@@ -564,6 +572,10 @@
 .recorte-palavra:hover { background: var(--color-selecao-claro); text-decoration-color: var(--color-selecao); }
 @keyframes gaveta-abre { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: none; } }
 .gaveta { animation: gaveta-abre 220ms var(--ease-saida) both; transform-origin: top left; }
+/* o campo do seletor de estado (Cadeira, Escola, Reeleição): a borda escurece aberto e sob o ponteiro */
+.campo-estado { transition: border-color 160ms, box-shadow 200ms var(--ease-saida), transform 160ms var(--ease-saida); }
+.campo-estado:hover, .campo-estado[aria-expanded="true"] { box-shadow: 0 6px 16px -10px rgb(42 53 80 / .35); }
+.campo-estado:active { transform: scale(.985); }
 /* a régua do "E você?": trilho em degradê do papel ao oliva (mais bens à direita), botão grande no oliva */
 .regua-voce { -webkit-appearance: none; appearance: none; height: 28px; background: transparent; cursor: pointer; }
 .regua-voce::-webkit-slider-runnable-track { height: 8px; border-radius: 999px; background: linear-gradient(90deg, #e6eaed, #b9cd80 60%, var(--color-selecao)); }
@@ -592,3 +604,16 @@
 }
 .dica-fila b { font-weight: 800; }
 .dica-fila .dica-grupo { color: #c9d1e6; }
+@media (prefers-reduced-motion: reduce) { .fila-santinhos li > .santinho { animation: none !important; } }
+
+/* esqueletos (componentes/Esqueleto.tsx): o formato do conteúdo que vem, com um pulso suave só de opacidade
+   (compositor, sem custo de layout), que existe só enquanto carrega e para com o movimento reduzido */
+.osso { background: var(--color-papel-2); animation: osso 1.5s ease-in-out infinite; }
+@keyframes osso { 50% { opacity: 0.55; } }
+/* o palco vazio dos 3D: o mesmo céu claro da cena, para a cena "aparecer" nele em vez de substituir um aviso */
+.esqueleto-palco {
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 92%, #fff6d6 0%, transparent 70%),
+    linear-gradient(180deg, #e4edf3 0%, #f1f5f6 48%, #f6f8ef 100%);
+}
+@media (prefers-reduced-motion: reduce) { .osso { animation: none; } }

@@ -221,3 +221,16 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+def test_gastos_p9():
+    """A nuvem da P9 usa a classificação do script e soma exatamente as despesas da candidatura."""
+    destaques = cliente.get("/api/gastos/destaques").json()
+    assert destaques and all(d["gasto"] > 0 for d in destaques)
+    d = cliente.get(f"/api/gastos?candidatura={destaques[0]['id']}").json()
+    assert abs(d["total"] - sum(t["valor"] for t in d["tipos"])) < 0.01
+    assert d["despesas"] == sum(t["quantidade"] for t in d["tipos"])
+    assert abs(d["propaganda"]["valor"] - sum(t["valor"] for t in d["tipos"] if t["propaganda"])) < 0.01
+    assert [t["valor"] for t in d["tipos"]] == sorted((t["valor"] for t in d["tipos"]), reverse=True)
+    assert cliente.get("/api/gastos?candidatura=999999999").status_code == 404
+    assert cliente.get("/api/gastos?candidatura=-1").status_code == 422

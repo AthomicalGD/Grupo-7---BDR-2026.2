@@ -7,9 +7,9 @@ import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { CARGOS_P1, consultas, semMunicipal, type Ano, type Cadeira, type UF } from '../api'
 import { BuscaMunicipio } from '../atlas/BuscaMunicipio'
 import { CedulaAnos } from '../atlas/CedulaAnos'
-import { silhueta } from '../atlas/geo'
 import { Alternador } from '../atlas/PainelEstado'
-import { Ciranda, CirandaTela } from '../componentes/Ciranda'
+import { SeletorEstado } from '../componentes/SeletorEstado'
+import { Atrasado, EsqueletoPagina, EsqueletoPalco } from '../componentes/Esqueleto'
 import { ErroCarga } from '../componentes/ErroCarga'
 import { Escolha } from '../componentes/Escolha'
 import { Fita } from '../componentes/Fita'
@@ -75,14 +75,13 @@ export function CadeiraPagina() {
   const [aviso, setAviso] = useState('')
   // o destaque vale só para a seleção em que foi feito (cargo, ano, lugar)
   const [destaque, setDestaque] = useState<{ id: number; chave: string } | null>(null)
-  const silhuetas = useMemo(() => new Map(malha ? carregadas.map((u) => [u.sigla, silhueta(malha, u.cd_ibge, 22)]) : []), [malha, carregadas])
 
   useEffect(() => {
     document.title = 'Quanto custa uma cadeira? · Voto Aberto'
   }, [])
 
   if (q.error && !dados) return <ErroCarga erro={q.error} />
-  if (!dados || !ufs) return <CirandaTela rotulo="Contando as cadeiras..." />
+  if (!dados || !ufs) return <Atrasado><EsqueletoPagina rotulo="Contando as cadeiras..." /></Atrasado>
 
   const ufDados = carregadas.find((u) => u.sigla === dados.escopo.ufs[0])
   const lugarCurto = dados.escopo.municipio
@@ -130,27 +129,16 @@ export function CadeiraPagina() {
           <CedulaAnos ano={ano} anos={anos} linhaDoTempo={false} aoMudar={(a) => mudar({ ano: a })} />
         </fieldset>
         <fieldset className="min-w-0 xl:col-span-2">
-          <legend className="t-rotulo mb-2 text-tinta-2">{vereador ? 'Câmara municipal' : 'Onde'}</legend>
+          <legend className="t-rotulo mb-2 text-tinta-2">{vereador ? 'Câmara municipal' : 'Estado'}</legend>
           <div className="flex flex-wrap items-center gap-2">
-            <div role="radiogroup" aria-label="Estado" className="flex flex-wrap gap-2">
-              {!vereador && (
-                <Escolha ativo={!uf} aoClicar={() => mudar({ uf: undefined })}>
-                  {lugares.length} estados
-                </Escolha>
-              )}
-              {lugares.map((u) => (
-                <Escolha
-                  key={u.sigla}
-                  rotulo={u.nome}
-                  ativo={u.sigla === ufEscolhida}
-                  aoClicar={() => mudar(vereador ? { uf: u.sigla, municipio: CAPITAIS[u.sigla] } : { uf: u.sigla })}
-                >
-                  <svg width={22} height={22} viewBox="0 0 22 22" aria-hidden className="shrink-0">
-                    <path d={silhuetas.get(u.sigla)} fill="currentColor" opacity={0.85} />
-                  </svg>
-                  {u.sigla}
-                </Escolha>
-              ))}
+            <div className="w-full sm:w-[300px]">
+              <SeletorEstado
+                malha={malha}
+                ufs={lugares}
+                escolhida={ufEscolhida}
+                obrigatorio={vereador}
+                aoEscolher={(s) => mudar(vereador && s ? { uf: s, municipio: CAPITAIS[s] } : { uf: s })}
+              />
             </div>
             {vereador && (
               <div className="flex min-w-[min(100%,340px)] flex-1 flex-wrap items-center gap-3">
@@ -195,7 +183,7 @@ export function CadeiraPagina() {
         <div className={`relative mx-auto max-w-[min(var(--miolo-max),calc((100dvh-120px)*1.92))] transition-opacity duration-300 ${q.isPlaceholderData ? 'opacity-55' : ''}`}>
           {busca.pe ? (
             <div className="relative aspect-[16/10] overflow-hidden rounded-[20px] bg-[radial-gradient(ellipse_70%_55%_at_50%_92%,#fff6d6_0%,transparent_70%),linear-gradient(180deg,#e4edf3_0%,#f1f5f6_48%,#f6f8ef_100%)] sm:aspect-[16/8.5]">
-              <Suspense fallback={<div className="grid h-full place-items-center"><Ciranda rotulo="Levantando as cadeiras..." /></div>}>
+              <Suspense fallback={<EsqueletoPalco />}>
                 <Plenario3D chave={chave} cadeiras={dados.cadeiras} escala={escala} fator={fator} ordem={busca.ordem ?? 'gasto'} aoAbrir={abrir} />
               </Suspense>
               <div className="pointer-events-none absolute inset-x-0 bottom-4 text-center">
@@ -217,7 +205,7 @@ export function CadeiraPagina() {
               destaque={destaque?.chave === chave ? destaque.id : null}
             />
           )}
-          {q.isPlaceholderData && <div className="absolute right-2 top-2"><Ciranda rotulo="Contando..." tamanho={56} /></div>}
+          {q.isPlaceholderData && <span className="sr-only" role="status">Contando...</span>}
         </div>
 
         <div className="mx-auto mt-6 flex max-w-[var(--miolo-max)] flex-wrap items-center justify-between gap-x-8 gap-y-4">

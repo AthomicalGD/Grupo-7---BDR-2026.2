@@ -8,7 +8,7 @@ import { useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { consultas, type EleitoEscola, type EscolaLugar } from '../api'
 import { BuscaMunicipio } from '../atlas/BuscaMunicipio'
 import { hemiciclo } from '../cadeira/geometria'
-import { Ciranda } from '../componentes/Ciranda'
+import { Atrasado, EsqueletoBloco } from '../componentes/Esqueleto'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { nomeProprio } from '../lib/formato'
 import { cem, cor, SUPERIOR } from './escolaridade'
@@ -101,7 +101,7 @@ export function Lugar({ ibge, ano, uf, quintil, rotulos, aoMudar }: {
       />
       {aviso && <p role="status" className="mt-2 text-[0.86rem] text-tinta-2">{aviso}</p>}
       {!d ? (
-        <div className="grid h-64 place-items-center"><Ciranda rotulo="Imprimindo o boletim..." /></div>
+        <Atrasado><EsqueletoBloco altura={256} linhas={0} rotulo="Imprimindo o boletim..." /></Atrasado>
       ) : (
         <BoletimEscola key={`${d.ibge}-${d.ano}`} d={d} quintil={quintil} rotulos={rotulos} carregando={q.isPlaceholderData} />
       )}

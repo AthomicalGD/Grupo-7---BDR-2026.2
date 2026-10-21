@@ -90,10 +90,10 @@ function Cabecalho() {
   const caminho = useRouterState({ select: (s) => s.location.pathname })
   return (
     <header className="sticky top-0 z-30 bg-folha">
-      <div className="mx-auto flex h-14 max-w-[var(--casca-max)] items-center justify-between gap-2 px-4 sm:gap-6 md:px-[var(--casca-margem)]">
+      <div className="mx-auto flex h-14 max-w-[var(--casca-max)] items-center justify-between gap-2 px-4 max-[379px]:gap-1 max-[379px]:px-3 sm:gap-6 md:px-[var(--casca-margem)]">
         <Link to="/" className="shrink-0" aria-label="Voto Aberto, página inicial">
           <img src={letreiro} alt="Voto Aberto" className="hidden h-9 w-auto lg:block" />
-          <img src={simbolo} alt="Voto Aberto" className="h-8 w-auto lg:hidden" />
+          <img src={simbolo} alt="Voto Aberto" className="h-8 w-auto max-[379px]:h-7 lg:hidden" />
         </Link>
         <nav aria-label="Principal">
           <ul className="flex items-center gap-0 sm:gap-1.5">
@@ -115,7 +115,7 @@ function Cabecalho() {
                   )}
                   <Link
                     to={item.para}
-                    className={`nav-item relative flex items-center gap-1.5 rounded-full px-[4px] py-2 text-[0.8rem] transition-colors max-sm:[font-stretch:84%] sm:px-3 lg:max-xl:px-2 sm:text-[0.97rem] ${ativo ? 'font-semibold' : 'text-tinta-2 hover:bg-papel hover:text-tinta'}`}
+                    className={`nav-item relative flex items-center gap-1.5 rounded-full px-[3px] py-2 text-[0.8rem] transition-colors max-sm:text-[0.74rem] max-sm:[font-stretch:76%] max-[379px]:px-[2px] max-[379px]:text-[0.68rem] sm:px-3 lg:max-xl:px-2 sm:text-[0.97rem] ${ativo ? 'font-semibold' : 'text-tinta-2 hover:bg-papel hover:text-tinta'}`}
                     style={ativo ? { color: 'var(--color-selecao-tinta)' } : undefined}
                     aria-current={ativo ? 'page' : undefined}
                     aria-label={item.curto ? item.rotulo : undefined}

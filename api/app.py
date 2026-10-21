@@ -170,6 +170,11 @@ def carregadas() -> frozenset[str]:
 SOMAS_VIES = ("votos", "votos_com_vies", "votos_x_vies", "votos_com_alinhamento", "votos_x_alinhamento")
 
 
+@lru_cache(maxsize=1)
+def carga_nacional() -> bool:
+    return bool(consultar("SELECT 1 FROM carga_uf WHERE sg_uf = 'BR'"))
+
+
 # O deputado distrital (8, só o DF) conta como deputado estadual (7) em todo o site. Nos filtros, o cargo 7
 # vira a lista [7, 8] (e.cod_cargo = ANY(...), que usa o índice; um CASE sobre a coluna não usaria); nas
 # colunas devolvidas, CASE e.cod_cargo WHEN 8 THEN 7.
@@ -177,11 +182,6 @@ def sem_municipal(uf: str, municipal: bool) -> None:
     """O DF não tem municípios nem eleição municipal: prefeito e vereador lá são um recorte vazio."""
     if municipal and uf.upper() == "DF":
         raise HTTPException(404, "O Distrito Federal não tem eleição municipal: não elege prefeito nem vereador.")
-
-
-@lru_cache(maxsize=1)
-def carga_nacional() -> bool:
-    return bool(consultar("SELECT 1 FROM carga_uf WHERE sg_uf = 'BR'"))
 
 
 @lru_cache(maxsize=1)
@@ -803,7 +803,7 @@ def listar_partidos():
 SQL_CANDIDATURAS = """
 SELECT * FROM (
     SELECT DISTINCT ON (pe.id_eleicao)
-           e.ano, c.nome AS cargo, e.cod_cargo,
+           pe.id_politico_eleicao AS id_candidatura, e.ano, c.nome AS cargo, e.cod_cargo,
            COALESCE(m.nm_municipio || ' - ' || um.sigla, u.sigla, 'BRASIL') AS local,
            COALESCE(u.sigla, um.sigla) AS uf, m.cd_ibge AS municipio_ibge,
            pa.sigla AS partido, pa.vies_politico AS vies, pe.nr_candidato AS numero, pe.nm_urna AS nome_urna,
@@ -1452,7 +1452,7 @@ def _aquecer_patrimonio() -> None:
         for sigla in sorted(s for s in carregadas() if s != "BR"):
             patrimonio_panorama(sigla)
     except Exception:  # noqa: BLE001 - banco fora do ar: a conta é feita quando a página pedir
-        traceback.print_exc()
+        pass
 
 
 @app.get("/api/patrimonio/panorama")
@@ -1480,6 +1480,123 @@ def patrimonio_panorama(uf: str = ""):
     quatro = [r for r in recortes if r["sintese"]["quartis"] == 4]
     return {"uf": escolhida or None, "recortes": recortes,
             "com_quartis": len(quatro), "maior_supera": sum(r["sintese"]["maior_supera_menor"] for r in quatro)}
+
+
+# ───────── P9: onde a candidatura gasta (nuvem de santinhos) ─────────
+# A classificação é a de scripts/09_nuvem_despesas.py, importada sem cópia: o tipo do TSE primeiro, a
+# descrição só nas categorias genéricas, nunca o fornecedor. O peso de cada tipo é a soma das despesas
+# contratadas em reais do ano da eleição, sem as doações a outras campanhas.
+@lru_cache(maxsize=1)
+def p9():
+    import importlib.util
+    import sys
+    pasta = Path(__file__).resolve().parent.parent / "scripts"
+    sys.path.insert(0, str(pasta))   # o script importa comum.py da própria pasta
+    try:
+        spec = importlib.util.spec_from_file_location("p9_nuvem_despesas", pasta / "09_nuvem_despesas.py")
+        modulo = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(modulo)
+    finally:
+        sys.path.remove(str(pasta))
+    return modulo
+
+# Os tipos do script que são propaganda ou comunicação da campanha (a pergunta da P9)
+PROPAGANDA_P9 = {"Propaganda digital", "Propaganda audiovisual", "Propaganda sonora", "Propaganda impressa",
+                 "Outras propagandas", "Comunicação digital", "Comunicação e assessoria",
+                 "Produção e gestão de conteúdo", "Marketing de campanha"}
+
+SQL_CANDIDATURA_P9 = """
+SELECT {colunas}pe.id_politico_eleicao AS id, pe.id_politico, p.nome, pe.nm_urna AS nome_urna, e.ano, e.tipo,
+       c.nome AS cargo, e.cod_cargo, COALESCE(m.nm_municipio || ' - ' || um.sigla, u.sigla, 'BRASIL') AS local,
+       COALESCE(u.sigla, um.sigla, 'BR') AS uf, pa.sigla AS partido, pa.vies_politico AS vies,
+       pe.sq_candidato AS sq, e.cd_municipio AS cd_mun, ma.id_mandato IS NOT NULL AS eleito
+FROM politico_eleicao pe
+JOIN politico p       ON p.id_politico = pe.id_politico
+JOIN eleicao e        ON e.id_eleicao = pe.id_eleicao
+JOIN cargo c          ON c.cod_cargo = e.cod_cargo
+LEFT JOIN municipio m ON m.cd_municipio = e.cd_municipio
+LEFT JOIN uf um       ON um.cd_ibge = m.cd_uf
+LEFT JOIN uf u        ON u.cd_ibge = e.cd_uf
+LEFT JOIN mandato ma  ON ma.id_politico_eleicao = pe.id_politico_eleicao
+LEFT JOIN partido pa  ON pa.id_partido = COALESCE(pe.id_partido, ma.id_partido){juncoes}
+WHERE {filtro} AND e.ano = ANY(%(anos)s) AND e.tipo <> 1
+"""
+
+
+def _candidatura_p9(r: dict) -> dict:
+    r = dict(r)
+    r["foto"] = foto_url(r["ano"], r["uf"], r.pop("sq"), r.pop("cd_mun"))
+    r.pop("tipo", None)
+    return r
+
+
+@lru_cache(maxsize=256)
+@em_disco
+def gastos_candidatura(id_candidatura: int) -> dict:
+    P9 = p9()
+    cand = consultar(SQL_CANDIDATURA_P9.format(colunas="", juncoes="", filtro="pe.id_politico_eleicao = %(id)s"),
+                     {"id": id_candidatura, "anos": list(P9.ANOS)})
+    if not cand:
+        raise HTTPException(404, "Candidatura não encontrada, ou fora das eleições ordinárias de 2018 a 2024")
+    conn = pool().getconn()
+    try:
+        conn.autocommit = True
+        with conn.cursor() as cur:
+            cur.execute(P9.SQL_DESPESAS, (id_candidatura, P9.DOACAO))
+            grupos, zeradas, sem_fornecedor, cobertura = P9.calcular(cur.fetchall())
+    finally:
+        pool().putconn(conn, close=bool(conn.closed))
+    total = float(sum(g["valor"] for g in grupos.values()))
+    tipos = []
+    for rotulo, g in sorted(grupos.items(), key=lambda i: (-i[1]["valor"], i[0])):
+        fornecedores = sorted(g["fornecedores"].items(), key=lambda i: (-i[1][0], i[0][1]))
+        tipos.append({
+            "rotulo": rotulo, "valor": float(g["valor"]), "quantidade": g["quantidade"], "inferidas": g["inferidas"],
+            "propaganda": rotulo in PROPAGANDA_P9,
+            "fornecedores": [{"nome": nome, "valor": float(v), "quantidade": q} for (_, nome), (v, q) in fornecedores[:3]],
+            "n_fornecedores": len(fornecedores),
+            "origens": [o for o, _ in sorted(g["origens"].items(), key=lambda i: -i[1])[:3]],
+            "descricoes": [d for d, _ in sorted(g["descricoes_inferidas"].items(), key=lambda i: -i[1])[:2] if d],
+        })
+    propaganda = sum(t["valor"] for t in tipos if t["propaganda"])
+    return {"candidatura": _candidatura_p9(cand[0]), "total": total,
+            "despesas": sum(t["quantidade"] for t in tipos), "zeradas": zeradas, "sem_fornecedor": sem_fornecedor,
+            "cobertura": [{"fonte": f, "quantidade": q, "valor": float(v)} for f, (q, v) in cobertura.items()],
+            "propaganda": {"valor": propaganda, "pct": 100 * propaganda / total if total else 0},
+            "tipos": tipos}
+
+
+@app.get("/api/gastos")
+def gastos(candidatura: int = Query(ge=1)):
+    return gastos_candidatura(candidatura)
+
+
+@lru_cache(maxsize=1)
+@em_disco
+def destaques_gastos() -> list[dict]:
+    """As três campanhas que mais gastaram em cada ano: os exemplos da P9 na Metodologia."""
+    linhas = consultar("""
+        SELECT id_politico_eleicao FROM (
+            SELECT pe.id_politico_eleicao, row_number() OVER (PARTITION BY e.ano ORDER BY c.despesa DESC) AS pos
+            FROM campanha c
+            JOIN politico_eleicao pe USING (id_politico_eleicao)
+            JOIN eleicao e ON e.id_eleicao = pe.id_eleicao
+            WHERE e.tipo <> 1 AND e.ano = ANY(%(anos)s) AND c.despesa > 0) x
+        WHERE pos <= 3""", {"anos": list(p9().ANOS)})
+    ids = [r["id_politico_eleicao"] for r in linhas]
+    return _candidaturas_com_gasto("pe.id_politico_eleicao = ANY(%(ids)s)", {"ids": ids})
+
+
+def _candidaturas_com_gasto(filtro: str, params: dict) -> list[dict]:
+    sql = SQL_CANDIDATURA_P9.format(colunas="cp.despesa::float AS gasto, ", filtro=filtro,
+                                    juncoes="\nLEFT JOIN campanha cp ON cp.id_politico_eleicao = pe.id_politico_eleicao")
+    linhas = consultar(sql + " ORDER BY e.ano DESC, cp.despesa DESC NULLS LAST", {**params, "anos": list(p9().ANOS)})
+    return [_candidatura_p9(r) for r in linhas]
+
+
+@app.get("/api/gastos/destaques")
+def gastos_destaques():
+    return destaques_gastos()
 
 
 # ───────── Malhas (IBGE) ─────────
