@@ -1,0 +1,236 @@
+"""Confere a API contra o banco carregado (precisa de PI no banco).
+
+Uso (da pasta do projeto): python -m api.test_api
+"""
+import json
+from collections import defaultdict
+from pathlib import Path
+
+from fastapi.testclient import TestClient
+
+from api.app import IBGE, app, consultar
+
+cliente = TestClient(app)
+
+
+def get(url: str):
+    r = cliente.get(url)
+    assert r.status_code == 200, (url, r.status_code, r.text[:300])
+    return r.json()
+
+
+def chaves(x) -> set[str]:
+    if isinstance(x, dict):
+        return set(x) | set().union(*map(chaves, x.values()))
+    if isinstance(x, list):
+        return set().union(*map(chaves, x))
+    return set()
+
+
+def horario(anel: list) -> bool:
+    """Área com sinal (lon, lat) negativa = sentido horário."""
+    return sum(x0 * y1 - x1 * y0 for (x0, y0), (x1, y1) in zip(anel, anel[1:])) < 0
+
+
+def main() -> None:
+    assert get("/api/saude")["banco"]
+
+    ufs = get("/api/ufs")
+    assert len(ufs) == 27
+    pi = next(u for u in ufs if u["sigla"] == "PI")
+    # viés do artigo, (média - 5) * 20, cargos com peso igual (antes -41,9 com os números do SVD da Câmara)
+    assert pi["carregada"] and pi["municipios"] == 224 and abs(pi["vies"]["2022"] - 2.8) <= 0.5, pi
+    assert set(pi["alinhamento"]) == {"2018", "2020", "2022", "2024"} and pi["alinhamento"] != pi["vies"], pi
+    assert cliente.get("/api/ufs/XX").status_code == 404
+
+    uf = get("/api/ufs/PI")
+    assert len(uf["municipios"]) == 224 and uf["regioes"] and uf["sem_vies_pct"] and uf["sem_alinhamento_pct"]
+    assert all(0 <= x < 1 for x in uf["sem_vies_pct"].values()), uf["sem_vies_pct"]   # cobertura do artigo ~100%
+
+    the = get("/api/municipios/2211001")
+    assert the["nome"] == "Teresina" and abs(the["vies"]["2022"] - 13.1) <= 0.5, the["vies"]
+    assert the["alinhamento_uf"] == pi["alinhamento"], (the["alinhamento_uf"], pi["alinhamento"])
+    esp = the["espectro"]["2022"]
+    com_vies = [p["vies"] for p in esp if p["vies"] is not None]
+    assert esp[0]["vies"] == min(com_vies) and com_vies == sorted(com_vies)   # sem viés (NULL) vai para o fim
+    assert (esp[0]["sigla"], esp[-1]["sigla"]) == ("PSTU", "PL") and (esp[0]["vies"], esp[-1]["vies"]) == (-89.8, 76.0)
+    assert abs(sum(p["pct"] for p in esp) - 100) < 1
+    assert the["prefeitos"] and "sq" not in the["prefeitos"][0] and the["comparecimento"]["2022"]["aptos"] > 0
+    assert all(the["indicadores"][k] for k in ("pib_per_capita", "idhm", "populacao", "eleitores_populacao", "isentos"))
+
+    assert get("/api/municipios?q=teresi")[0]["ibge"] == 2211001
+    assert get("/api/municipios?q=t") == []
+
+    # o id é serial e muda quando o banco é recriado: procura pelo nome
+    wd_id = next(p["id"] for p in get("/api/politicos?q=wellington barroso") if p["nome"].endswith("ARAUJO DIAS"))
+    wd = get(f"/api/politicos/{wd_id}")
+    assert len(wd["candidaturas"]) == 11 and wd["resumo"]["candidaturas"] == 11
+    reeleito = {c["ano"] for c in wd["candidaturas"] if c["cargo"] == "GOVERNADOR" and c["reeleito"]}
+    assert reeleito == {2006, 2018}, reeleito
+    # o santinho: número na urna, nome de urna e a cor do partido (viés do PT)
+    senado = next(c for c in wd["candidaturas"] if c["ano"] == 2022)
+    assert (senado["numero"], senado["nome_urna"], senado["vies"]) == (131, "WELLINGTON DIAS", -46.4), senado   # PT: (2,68 - 5) * 20
+    assert not [k for k in chaves(wd) if "cpf" in k or "titulo" in k]
+    assert "id" in get("/api/politicos/aleatorio")
+    # busca com filtros (cédula de consulta): senador eleito no PI em 2022, sem nome
+    filtrada = get("/api/politicos?cargo=5&ano=2022&uf=PI&resultado=eleito")
+    assert [p["id"] for p in filtrada] == [wd_id], filtrada
+    assert wd_id in [p["id"] for p in get("/api/politicos?q=wellington&partido=PT&cargo=3")]
+    assert cliente.get("/api/politicos?cargo=99").status_code == 422
+    pt = next(p for p in get("/api/partidos") if p["sigla"] == "PT")
+    assert pt["vies"] == -46.4 and pt["candidaturas"] > 0
+    # P10a: senador no PI, como em respostas/10a_taxa_reeleicao.txt (4 tentaram, 1 reeleito)
+    assert wd["contexto_reeleicao"] == {"cargo": "SENADOR", "uf": "PI", "tentaram": 4, "reeleitos": 1, "taxa": 25.0}
+
+    # fotos (python -m crawler --fotos --ufs PI BR): antes de 2004 o TSE não publica
+    fotos = {c["ano"]: c["foto"] for c in wd["candidaturas"]}
+    assert fotos[1994] is None and fotos[2022] and wd["foto"] == fotos[2022], fotos
+    assert fotos[2010] and fotos[2012], fotos   # 2010-2014: zip sem o "F" no nome
+    p2004 = [p for p in the["prefeitos"] if p["ano"] == 2004]
+    assert p2004 and p2004[0]["foto"], p2004   # 2004: chave município_SQ
+    img = cliente.get(fotos[2022])
+    assert img.status_code == 200 and img.headers["content-type"].startswith("image/") and len(img.content) > 1000
+    assert get("/api/politicos?q=wellington barroso")[0]["foto"]
+    assert cliente.get("/api/fotos/2022/PI/1").status_code == 404
+
+    # P1: deputado federal no PI em 2022, como em respostas/01_custo_cadeira.txt (custo da cadeira de
+    # R$ 1,82 mi, o gasto médio dos eleitos; R$ 6,21 mi de todos os candidatos por cadeira)
+    cad = get("/api/cadeira?ano=2022&cargo=6&uf=PI")
+    assert cad["resumo"]["cadeiras"] == 10 and round(cad["resumo"]["custo_cadeira"]) == 1818535, cad["resumo"]
+    assert round(cad["resumo"]["gasto_por_cadeira"]) == 6212110, cad["resumo"]
+    gastos = [a["gasto"] for a in cad["cadeiras"]]
+    assert min(gastos) <= cad["resumo"]["custo_cadeira"] <= max(gastos)
+    assert len(cad["cadeiras"]) == 10 and cad["cadeiras"][0]["gasto"] >= cad["cadeiras"][-1]["gasto"]
+    assert abs(sum(p["gasto"] for p in cad["partidos"]) - cad["resumo"]["gasto_total"]) < 1
+    assert sum(f["candidatos"] for f in cad["curva"]) == cad["resumo"]["candidatos"]
+    assert cad["ipca"]["2024"] == 1 and cad["ipca"]["2018"] > 1.3 and set(cad["anos"]) == {"2018", "2022"}
+    assert cliente.get("/api/cadeira?ano=2022&cargo=13&municipio=2211001").status_code == 404   # sem eleição municipal
+    assert cliente.get("/api/cadeira?ano=2024&cargo=13&uf=PI").status_code == 422             # vereador pede município
+    vt = get("/api/cadeira?ano=2024&cargo=13&municipio=2211001")
+    assert vt["escopo"]["municipio"]["nome"] == "Teresina" and vt["resumo"]["cadeiras"] == 29
+    assert {(c["ano"], c["cod_cargo"]) for c in the["cadeiras"]} == {(2020, 11), (2020, 13), (2024, 11), (2024, 13)}
+    gasto = {c["ano"]: c["gasto"] for c in wd["candidaturas"]}
+    assert gasto[2022] > 0 and gasto[1994] is None, gasto
+    assert all(c["partido"] for c in wd["candidaturas"])   # partido também nas derrotas (migração 011)
+
+    # P2: quartis de patrimônio no recorte carregado e disputa presidencial nacional na carga BR
+    pat = get("/api/patrimonio?ano=2024&cargo=13")
+    assert pat["resumo"]["candidatos"] == 88707 and pat["resumo"]["sem_bens"] == 38145, pat["resumo"]
+    qs = [g for g in pat["grupos"] if g["tipo"] == "quartil"]
+    assert len(qs) == 4 and sum(g["candidatos"] for g in qs) == pat["resumo"]["com_bens"] - pat["resumo"]["zero_declarado"]
+    assert pat["sintese"]["maior_supera_menor"] and qs[-1]["taxa"] > qs[0]["taxa"]
+    presidente = get("/api/patrimonio?ano=2018&cargo=1")
+    assert presidente["escopo"] == {"uf": None, "ufs": ["BR"], "nacional": True}
+    assert presidente["resumo"]["candidatos"] == 13 and presidente["resumo"]["eleitos"] == 1
+    assert cliente.get("/api/patrimonio?ano=2024&cargo=1").status_code == 404
+    assert cliente.get("/api/patrimonio?ano=2018&cargo=1&uf=PI").status_code == 422
+    assert qs[0]["mediana"] <= qs[-1]["mediana"]
+    assert len(pat["fila"]) == 100 and pat["fila"] == sorted(pat["fila"]), pat["fila"][:5]
+    panorama = get("/api/patrimonio/panorama")
+    assert panorama["com_quartis"] == 14 and panorama["maior_supera"] == 13, panorama
+    assert {(r["ano"], r["cargo"]["cod"]) for r in panorama["recortes"]} >= {(2018, 1), (2024, 13)}
+
+    # malha simplificada sem frestas: ponto de fronteira compartilhada fica nos dois vizinhos ou em nenhum
+    original = json.loads((IBGE / "malhas" / "municipios_22.geojson").read_text(encoding="utf-8"))
+    def pontos(fc):
+        donos = defaultdict(set)
+        for i, f in enumerate(fc["features"]):
+            g = f["geometry"]
+            for pol in g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]]:
+                for anel in pol:
+                    for x, y in anel:
+                        donos[(x, y)].add(i)
+        return donos
+    antes, depois = pontos(original), pontos(get("/api/geo/uf/PI"))
+    assert sum(map(len, depois.values())) < 0.8 * sum(map(len, antes.values()))
+    assert all(not depois.get(p) or depois[p] == d for p, d in antes.items() if len(d) > 1)
+
+    # de onde vem o viés do PI em 2022: a soma do que cada partido puxa dá o viés do mapa
+    comp = get("/api/ufs/PI/composicao?ano=2022")
+    assert comp["vies"] == pi["vies"]["2022"] and abs(sum(p["contribuicao"] for p in comp["partidos"]) - comp["vies"]) < 0.2
+    pt = comp["partidos"][0]
+    assert pt["sigla"] == "PT" and pt["candidatos"][0]["nome"].startswith("LUIZ IN"), pt["candidatos"][0]
+    assert cliente.get("/api/ufs/XX/composicao?ano=2022").status_code == 404
+
+    # #10: o viés por cargo; presidente só existe nos anos gerais e a composição bate com o viés do cargo
+    cargos = {c["cod"]: c for c in get("/api/vies/cargos")}
+    assert cargos[1]["anos"] == [2018, 2022] and cargos[11]["anos"] == [2020, 2024] and 8 not in cargos
+    pres = next(u for u in get("/api/ufs?cargo=1") if u["sigla"] == "PI")
+    assert set(pres["vies"]) == {"2018", "2022"} and pres["vies"] != pi["vies"], pres["vies"]
+    assert get("/api/ufs/PI?cargo=1")["vies"] == pres["vies"]
+    comp_pres = get("/api/ufs/PI/composicao?ano=2022&cargo=1")
+    assert comp_pres["vies"] == pres["vies"]["2022"]
+    assert all(c["cargo"] == "PRESIDENTE" for p in comp_pres["partidos"] for c in p["candidatos"])
+    assert set(get("/api/municipios/2211001?cargo=11")["vies"]) <= {"2020", "2024"}
+    assert cliente.get("/api/ufs?cargo=99").status_code == 404
+
+    # #11: os candidatos de um partido, de 6 em 6 e com busca pelo nome sem acento
+    pagina = get("/api/ufs/PI/composicao/PT?ano=2022&limite=6")
+    assert pagina["total"] > 6 and len(pagina["candidatos"]) == 6 and pagina["candidatos"][0]["nome"].startswith("LUIZ IN")
+    seguinte = get("/api/ufs/PI/composicao/PT?ano=2022&limite=6&desde=6")
+    assert {c["id"] for c in seguinte["candidatos"]}.isdisjoint({c["id"] for c in pagina["candidatos"]})
+    achado = get("/api/ufs/PI/composicao/PT?ano=2022&q=lula")
+    assert achado["achados"] >= 1 and all("LULA" in c["nome"] or "LUIZ" in c["nome"] for c in achado["candidatos"]), achado
+    assert get("/api/ufs/PI/composicao/PT?ano=2022&q=zzzzzz")["achados"] == 0
+
+    # P4: os números de respostas/04_escolaridade.txt (vereador 2024, superior completo: 6.763 de 33.147)
+    esc = get("/api/escola?ano=2024")
+    vereador = next(c for c in esc["cargos"] if c["cod"] == 13)
+    assert (vereador["candidatos"][7], vereador["eleitos"][7]) == (33147, 6763), vereador
+    assert [q["eleitos"] for q in esc["quintis"]][::4] == [26.2, 46.8] and abs(esc["correlacao"] - 0.417) < 0.01
+    the = get("/api/escola/municipio/2211001?ano=2024")
+    assert len([e for e in the["eleitos"] if e["cargo"] == 13]) == 29 and the["quintil"] == 5
+    assert not [k for k in chaves(the) if "cpf" in k or "titulo" in k]
+    assert cliente.get("/api/escola?ano=2020").status_code == 404
+    # filtro por estado: os quintos dividem só os municípios da UF; UF sem dados é 404
+    pi = get("/api/escola?ano=2024&uf=PI")
+    assert pi["uf"] == "PI" and sum(q["municipios"] for q in pi["quintis"]) == 224, pi["quintis"]
+    assert cliente.get("/api/escola?ano=2024&uf=SP").status_code == 404
+    municipios = get("/api/escola/municipios?ano=2024&uf=PI")
+    assert len(municipios) == 224 and {m["uf"] for m in municipios} == {"PI"}
+    partidos = get("/api/escola/partidos?ano=2022")
+    vieses = [p["vies"] or 0 for p in partidos]
+    assert vieses == sorted(vieses)   # na ordem do viés, da esquerda para a direita
+    assert sum(p["eleitos"] for p in partidos) == sum(sum(c["eleitos"]) for c in get("/api/escola?ano=2022")["cargos"])
+    comp = get("/api/escola/comparar")
+    assert sum(comp["anos"]["2024"]["PI"]["cargos"]["13"]["eleitos"]) == sum(v["eleitos"][i] for v in [next(c for c in pi["cargos"] if c["cod"] == 13)] for i in range(8))
+
+    # P10a: o resumo do PI em respostas/10a_taxa_reeleicao.txt
+    ree = get("/api/reeleicao?uf=PI")
+    totais = {c["nome"]: c["total"] for c in ree["cargos"]}
+    assert [(t["eleitos"], t["tentaram"], t["reeleitos"]) for t in totais.values()] == [
+        (7, 4, 2), (9, 4, 1), (70, 51, 38), (210, 164, 126), (1558, 825, 562), (14709, 10934, 7070)], totais
+    assert (totais["Prefeito"]["media_municipios"], totais["Vereador"]["media_municipios"]) == (71.8, 64.8)
+    assert ree["municipais"]["taxa"] == 64.9 and ree["ligados_por_nome"] == 617
+    vere = next(c for c in ree["cargos"] if c["cod"] == 13)
+    assert sum(x["eleitos"] for x in vere["ciclos"]) == vere["total"]["eleitos"] and vere["ciclos"][-1]["eleitos_em"] == 2020
+    assert {"cod": 13, "cargo": "Vereador", "eleitos_em": 2024} in ree["fora"]
+    for uf in ("SP", "BR", "XX"):
+        assert cliente.get(f"/api/reeleicao?uf={uf}").status_code == 404
+
+    # as consultas mostradas na metodologia do site continuam válidas no esquema atual
+    for arquivo in sorted((Path(__file__).parent.parent / "web/src/paginas/consultas").glob("*.sql")):
+        consultar("EXPLAIN " + arquivo.read_text(encoding="utf-8"))
+
+    geo = get("/api/geo/uf/PI")
+    assert len(geo["features"]) == 224
+    assert horario(geo["features"][0]["geometry"]["coordinates"][0])
+    assert len(get("/api/geo/brasil")["features"]) == 27
+    print("ok")
+
+
+if __name__ == "__main__":
+    main()
+
+
+def test_gastos_p9():
+    """A nuvem da P9 usa a classificação do script e soma exatamente as despesas da candidatura."""
+    destaques = cliente.get("/api/gastos/destaques").json()
+    assert destaques and all(d["gasto"] > 0 for d in destaques)
+    d = cliente.get(f"/api/gastos?candidatura={destaques[0]['id']}").json()
+    assert abs(d["total"] - sum(t["valor"] for t in d["tipos"])) < 0.01
+    assert d["despesas"] == sum(t["quantidade"] for t in d["tipos"])
+    assert abs(d["propaganda"]["valor"] - sum(t["valor"] for t in d["tipos"] if t["propaganda"])) < 0.01
+    assert [t["valor"] for t in d["tipos"]] == sorted((t["valor"] for t in d["tipos"]), reverse=True)
+    assert cliente.get("/api/gastos?candidatura=999999999").status_code == 404
+    assert cliente.get("/api/gastos?candidatura=-1").status_code == 422

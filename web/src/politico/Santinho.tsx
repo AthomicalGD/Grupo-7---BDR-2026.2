@@ -1,0 +1,355 @@
+// Santinho de cada eleição, como o impresso de campanha: na frente, as cores do Brasil (a família de
+// cor vem do cargo e o viés do partido puxa um pouco o tom) com a retícula da gráfica, o ano em pé
+// numa faixa, a foto inteira sangrando no topo e na direita, as sete fitas da marca cruzando como a
+// faixa dos santinhos, o nome de urna, o cargo, o partido com a bolinha do viés, o número em casas
+// como no visor da urna e a letra miúda no rodapé; o carimbo do resultado por cima. Clicando, ele vira: o verso é a "cola" que o eleitor leva
+// para a urna, com os dados daquela eleição. É uma reconstrução com dados do TSE, não material de
+// campanha (a frente e o verso dizem isso).
+import { ArrowCounterClockwise, ArrowRight } from '@phosphor-icons/react'
+import { Link } from '@tanstack/react-router'
+import { useEffect, useId, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
+import type { Candidatura } from '../api'
+import { Retrato } from '../componentes/Retrato'
+import { situacao } from '../lib/carreira'
+import { cargo as fmtCargo, inteiro, nomeProprio, reaisCurto, vies as fmtVies } from '../lib/formato'
+import { corVies } from '../lib/vies'
+import { giraFolha, preparaFolha } from './papel'
+
+const FITAS = ['#5E881B', '#A2BD31', '#5D6B94', '#468BAF', '#76ACD0', '#F19929', '#FBC700']
+
+/** Família de cor de cada cargo (código do TSE), nas cores do Brasil, em oklch: luz, croma, matiz. */
+const COR_CARGO: Record<number, readonly [number, number, number]> = {
+  1: [0.42, 0.13, 262], // Presidência: azul-anil
+  2: [0.42, 0.13, 262],
+  3: [0.5, 0.14, 152], // Governo: verde-bandeira
+  4: [0.5, 0.14, 152],
+  5: [0.5, 0.12, 240], // Senado: azul
+  9: [0.5, 0.12, 240],
+  10: [0.5, 0.12, 240],
+  6: [0.45, 0.11, 165], // Câmara dos Deputados: verde-mata
+  7: [0.58, 0.15, 134], // Assembleia: verde-folha
+  8: [0.58, 0.15, 134],
+  11: [0.85, 0.16, 90], // Prefeitura: amarelo-ouro
+  12: [0.85, 0.16, 90],
+  13: [0.8, 0.16, 72], // Câmara Municipal: amarelo-sol
+}
+
+/** O viés puxa o matiz até 15°: esquerda para o lado quente, direita para o frio. */
+function corDoSantinho(codCargo: number, vies: number | null) {
+  const [l, c, h] = COR_CARGO[codCargo] ?? COR_CARGO[3]
+  const m = h + (vies ?? 0) * 0.15
+  return {
+    fundo: `linear-gradient(168deg, oklch(${l + 0.06} ${c} ${m - 8}), oklch(${l - 0.07} ${c} ${m + 8}))`,
+    tinta: l > 0.7 ? 'var(--color-tinta)' : 'var(--color-folha)',
+  }
+}
+
+/** As sete fitas em onda, subindo da esquerda para a direita: a faixa que cruza o santinho. */
+const ONDAS = FITAS.map((_, i) => {
+  const pontos: string[] = []
+  for (let x = -6; x <= 242; x += 6) {
+    const y = 6 + i * 5.5 + 22 * (1 - x / 236) + Math.sin((x / 170) * 2 * Math.PI + 0.8) * 4
+    pontos.push(`${x},${y.toFixed(1)}`)
+  }
+  return 'M' + pontos.join('L')
+})
+
+const CARIMBO: Record<string, string> = {
+  Eleito: 'var(--color-eleito)',
+  'Eleito no 2º turno': 'var(--color-eleito)',
+  Reeleito: 'var(--color-reeleito)',
+  'Não eleito': 'var(--color-tinta-3)',
+}
+
+/** Nos anos 90 o TSE cortava o nome de urna em 30 letras ("…BARROSO DE ARA"): fica até a última palavra inteira. */
+function nomeDeUrna(c: Candidatura, nome: string) {
+  const n = c.nome_urna
+  if (!n) return nomeProprio(nome).toUpperCase()
+  const civil = nome.normalize('NFD').replace(/\p{M}/gu, '').toUpperCase()
+  const cortado = n.length >= 30 && civil.startsWith(n) && /\S/.test(civil[n.length] ?? ' ')
+  return cortado ? n.replace(/\s+\S*$/, '').replace(/\s+(DE|DA|DO|DAS|DOS|E)$/, '') : n
+}
+
+/** O número em casas, como na tela de votação da urna. */
+function Casas({ numero, contorno }: { numero: number; contorno?: boolean }) {
+  return (
+    <span className="flex gap-1" aria-label={`número ${numero}`}>
+      {[...String(numero)].map((d, i) => (
+        <span
+          key={i}
+          className={`grid h-[46px] w-[33px] place-items-center rounded-[4px] bg-folha text-[2.15rem] font-black leading-none text-tinta tabular ${contorno ? 'border-[1.5px] border-tinta/75' : 'shadow-[inset_0_-3px_0_rgb(24_32_43/0.13),0_2px_6px_rgb(24_32_43/0.18)]'}`}
+          style={{ fontStretch: '78%' }}
+          aria-hidden
+        >
+          {d}
+        </span>
+      ))}
+    </span>
+  )
+}
+
+function Carimbo({ resultado }: { resultado: string }) {
+  return (
+    <span
+      className="inline-block -rotate-[8deg] rounded-[4px] border-[2.5px] bg-folha/92 px-2 py-0.5 text-[0.68rem] font-black uppercase tracking-[0.1em] shadow-[0_1px_0_rgb(24_32_43/0.08)]"
+      style={{ color: CARIMBO[resultado], borderColor: CARIMBO[resultado] }}
+    >
+      {resultado}
+    </span>
+  )
+}
+
+/** A faixa presidencial sobre a foto de quem se elegeu Presidente, como a faixa de verdade: três faixas
+ * largas de cetim (verde, amarelo, verde), do ombro ao quadril, com dobra de tecido e bordas douradas, e no
+ * peito um emblema redondo com o globo azul da marca (não o brasão: nada aqui imita símbolo oficial).
+ * Cai sobre o peito uma vez, quando o santinho aparece. */
+function FaixaPresidencial() {
+  const id = useId().replace(/:/g, '')
+  const L = 320
+  const A = 46
+  const t = A / 3
+  const url = (n: string) => `url(#${n}-${id})`
+  return (
+    <svg width={161} height={225} viewBox="0 0 161 225" className="faixa-presidencial pointer-events-none absolute inset-0" aria-hidden>
+      <defs>
+        {/* a dobra do cetim: cada faixa escurece nas bordas e clareia no meio */}
+        <linearGradient id={`verde-${id}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#00702b" />
+          <stop offset=".5" stopColor="#00a33f" />
+          <stop offset="1" stopColor="#006627" />
+        </linearGradient>
+        <linearGradient id={`amarelo-${id}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#f2c400" />
+          <stop offset=".5" stopColor="#ffe23a" />
+          <stop offset="1" stopColor="#e6b400" />
+        </linearGradient>
+        <linearGradient id={`cetim-${id}`} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#fff" stopOpacity="0" />
+          <stop offset=".38" stopColor="#fff" stopOpacity="0" />
+          <stop offset=".46" stopColor="#fff" stopOpacity=".26" />
+          <stop offset=".54" stopColor="#fff" stopOpacity="0" />
+          <stop offset=".8" stopColor="#000" stopOpacity="0" />
+          <stop offset=".9" stopColor="#000" stopOpacity=".16" />
+          <stop offset="1" stopColor="#000" stopOpacity="0" />
+        </linearGradient>
+        <radialGradient id={`ouro-${id}`} cx=".38" cy=".32" r=".75">
+          <stop offset="0" stopColor="#fff3b0" />
+          <stop offset=".5" stopColor="#f0c419" />
+          <stop offset="1" stopColor="#a87800" />
+        </radialGradient>
+        <radialGradient id={`globo-${id}`} cx=".4" cy=".35" r=".7">
+          <stop offset="0" stopColor="#3f68b5" />
+          <stop offset="1" stopColor="#1d3a78" />
+        </radialGradient>
+      </defs>
+      <g transform="translate(94 178) rotate(32)">
+        {/* a sombra que a faixa projeta no paletó */}
+        <rect x={-L / 2} y={-A / 2 + 5} width={L} height={A} fill="rgb(0 0 0 / .3)" style={{ filter: 'blur(3.5px)' }} />
+        <rect x={-L / 2} y={-A / 2} width={L} height={t + 0.5} fill={url('verde')} />
+        <rect x={-L / 2} y={-A / 2 + t} width={L} height={t + 0.5} fill={url('amarelo')} />
+        <rect x={-L / 2} y={-A / 2 + 2 * t} width={L} height={t} fill={url('verde')} />
+        {/* a costura entre as faixas e as bordas douradas */}
+        <rect x={-L / 2} y={-A / 2 + t - 0.4} width={L} height={0.8} fill="#00561f" opacity=".6" />
+        <rect x={-L / 2} y={-A / 2 + 2 * t - 0.4} width={L} height={0.8} fill="#00561f" opacity=".6" />
+        <rect x={-L / 2} y={-A / 2} width={L} height={1.4} fill="#d9a400" />
+        <rect x={-L / 2} y={A / 2 - 1.4} width={L} height={1.4} fill="#d9a400" />
+        <rect x={-L / 2} y={-A / 2} width={L} height={A} fill={url('cetim')} />
+        {/* o emblema no peito */}
+        <g transform="translate(-14 0) rotate(-32)">
+          <circle r={15.5} fill="rgb(0 0 0 / .3)" transform="translate(1 2.5)" style={{ filter: 'blur(1px)' }} />
+          <circle r={15} fill={url('ouro')} stroke="#a87800" strokeWidth={0.8} />
+          <circle r={12.2} fill="none" stroke="#00873a" strokeWidth={2.2} strokeDasharray="2.6 1.4" />
+          <circle r={9.4} fill={url('globo')} stroke="#f0c419" strokeWidth={0.9} />
+          {/* a faixa branca do globo e as estrelas, como no símbolo da marca */}
+          <path d="M-9.2 -1.8 Q0 -5.6 9.2 0.4 L9 2.4 Q0 -3.4 -9.3 0.2 Z" fill="#f4f5f2" />
+          {[[-4.5, 3.2], [-1, 5.6], [2.6, 3.6], [5.2, 6], [0.8, 1.6], [-6.4, -4.6], [4.6, -5]].map(([cx, cy], i) => (
+            <circle key={i} cx={cx} cy={cy} r={i % 2 ? 0.7 : 0.95} fill="#fff" />
+          ))}
+        </g>
+      </g>
+    </svg>
+  )
+}
+
+export function Santinho({ c, nome, inclinacao }: { c: Candidatura; nome: string; inclinacao: number }) {
+  const [virado, setVirado] = useState(false)
+  const frente = useRef<HTMLButtonElement>(null)
+  const verso = useRef<HTMLButtonElement>(null)
+  const folha = useRef<HTMLDivElement>(null)
+  const sombra = useRef<HTMLDivElement>(null)
+  const contato = useRef<HTMLDivElement>(null)
+  const caixa = useRef<HTMLElement>(null)
+  const faceFrente = useRef<HTMLDivElement>(null)
+  const faceVerso = useRef<HTMLDivElement>(null)
+  // uma animação de papel por vez (o giro manda: o toque não começa no meio dele)
+  const animando = useRef(false)
+  const papel = (fn: () => Promise<unknown>) => {
+    animando.current = true
+    fn().finally(() => { animando.current = false })
+  }
+  const parado = () => matchMedia('(prefers-reduced-motion: reduce)').matches
+  // fotografa as faces quando o santinho chega perto da tela, para a folha estar pronta no primeiro toque
+  useEffect(() => {
+    const el = caixa.current
+    if (!el || parado()) return
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && faceFrente.current && faceVerso.current) { preparaFolha(faceFrente.current, faceVerso.current); io.disconnect() }
+    }, { rootMargin: '300px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+  const virar = (v: boolean) => {
+    // um giro por vez: o clique no meio dele não começa outro
+    if (animando.current) return
+    const [cx, fr, ve, fo] = [caixa.current, faceFrente.current, faceVerso.current, folha.current]
+    if (parado() || !cx || !fr || !ve || !fo) {
+      flushSync(() => setVirado(v))
+    } else {
+      // o santinho só vira (no HTML) no quadro em que a folha WebGL já cobre ele: sem o salto do verso aparecendo antes
+      let virou = false
+      const vira = () => { if (!virou) { virou = true; flushSync(() => setVirado(v)) } }
+      papel(() => giraFolha(cx, fr, ve, fo, v, vira).catch(() => undefined).finally(vira))
+      // a sombra de contato do papel fica durante o giro (não some na troca para a folha) e afina com ela de lado
+      contato.current?.animate([{ opacity: 1 }, { opacity: 0.12, offset: 0.5 }, { opacity: 1 }], { duration: 1000, easing: 'ease-in-out' })
+      // a sombra no chão cresce enquanto ele sobe
+      sombra.current?.animate([{ opacity: 0, transform: 'scaleX(0.8)' }, { opacity: 0.55, transform: 'scaleX(1.12)', offset: 0.46 }, { opacity: 0, transform: 'scaleX(0.8)' }], { duration: 980, easing: 'ease-in-out' })
+    }
+    // a face que tinha o foco fica inerte: o foco passa para o botão da outra
+    const alvo = v ? verso : frente
+    alvo.current?.focus({ preventScroll: true })
+  }
+  const resultado = situacao(c)
+  const municipal = c.municipio_ibge != null && c.uf
+  const { fundo, tinta } = corDoSantinho(c.cod_cargo, c.vies)
+  const nomeUrna = nomeDeUrna(c, nome)
+  const resumo = `${c.ano}, ${fmtCargo(c.cargo)}${c.numero ? ` número ${c.numero}` : ''}, ${c.partido ?? 'sem partido'}, ${c.local}: ${resultado}`
+
+  return (
+    <article
+      ref={caixa}
+      className="santinho relative h-[404px] w-[236px] shrink-0 snap-start [perspective:900px]"
+      style={{ rotate: `${inclinacao}deg` }}
+      aria-label={resumo}
+    >
+      <div ref={sombra} className="pointer-events-none absolute inset-x-5 -bottom-4 h-6 rounded-[50%] bg-tinta/40 opacity-0 blur-md" aria-hidden />
+      {/* a sombra do papel na mesa, fora das faces: continua lá enquanto a folha anima */}
+      <div ref={contato} className="pointer-events-none absolute inset-0 rounded-[3px] shadow-[0_1px_1px_rgb(24_32_43/0.14),0_4px_10px_-6px_rgb(24_32_43/0.35)]" aria-hidden />
+      <div ref={folha} className="santinho-folha relative h-full w-full [transform-style:preserve-3d]" style={{ transform: virado ? 'rotateY(180deg)' : undefined }}>
+        {/* FRENTE: o impresso */}
+        <div
+          ref={faceFrente}
+          className="absolute inset-0 flex flex-col overflow-hidden rounded-[3px] [backface-visibility:hidden]"
+          style={{ background: fundo, color: tinta }}
+          inert={virado}
+        >
+          <div className="santinho-reticula pointer-events-none absolute inset-0" aria-hidden />
+          {/* a foto do TSE tem 161×225: inteira e no tamanho dela, sem esticar nem cortar */}
+          <div className="relative flex h-[225px] shrink-0">
+            <span className="flex w-[75px] shrink-0 items-start justify-center pt-3">
+              <span className="rotate-180 text-[2.6rem] font-black leading-none tabular [writing-mode:vertical-rl]" style={{ fontStretch: '72%' }}>
+                {c.ano}
+              </span>
+            </span>
+            <div className="relative h-[225px] w-[161px] shrink-0">
+              {/* sem foto (antes de 2004): santinho tipográfico, as iniciais enormes na cor do partido */}
+              <Retrato
+                foto={c.foto}
+                nome={nome}
+                tamanho={161}
+                className={`!h-full !w-full !rounded-none ${c.foto ? '' : '!bg-transparent !text-[6.5rem] !font-black ![font-stretch:72%] !text-current opacity-25'}`}
+              />
+              {c.cod_cargo === 1 && c.eleito && <FaixaPresidencial />}
+            </div>
+            <span className="absolute bottom-12 left-2"><Carimbo resultado={resultado} /></span>
+          </div>
+          <svg width={236} height={70} className="absolute left-0 top-[185px]" aria-hidden>
+            {ONDAS.map((d, i) => <path key={i} d={d} stroke={FITAS[i]} strokeWidth={6} fill="none" />)}
+          </svg>
+          <div className="relative mt-[26px] flex flex-1 flex-col px-3.5 pb-2">
+            <p className="line-clamp-2 text-[1.55rem] font-black uppercase leading-[0.92] tracking-[-0.01em] [text-wrap:balance]" style={{ fontStretch: '72%' }}>
+              {nomeUrna}
+            </p>
+            <div className="mt-1.5 flex items-center justify-between gap-2">
+              <span className="truncate text-[0.7rem] font-bold uppercase tracking-[0.14em] opacity-90">{fmtCargo(c.cargo)}</span>
+              {c.partido && (
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-folha py-0.5 pl-1.5 pr-2 text-[0.72rem] font-black text-tinta" style={{ fontStretch: '85%' }}>
+                  <i className="size-2 rounded-full" style={{ background: corVies(c.vies) }} aria-hidden />
+                  {c.partido}
+                </span>
+              )}
+            </div>
+            <div className="mt-auto pt-2">
+              {c.numero ? <Casas numero={c.numero} /> : <span className="text-[0.74rem] opacity-80">número não informado</span>}
+            </div>
+            <p className="mt-2 text-[0.56rem] leading-none opacity-75">Dados do TSE · não é material de campanha</p>
+          </div>
+          <button
+            type="button"
+            ref={frente}
+            onClick={() => virar(true)}
+            className="absolute inset-0 z-10 cursor-pointer rounded-[3px] outline-none focus-visible:shadow-[inset_0_0_0_3px_var(--color-folha),inset_0_0_0_5px_var(--color-tinta)]"
+            aria-label={`Virar o santinho de ${c.ano} e ver a cola`}
+          />
+        </div>
+
+        {/* VERSO: a cola para a urna */}
+        <div
+          ref={faceVerso}
+          className="absolute inset-0 flex flex-col overflow-hidden rounded-[3px] bg-folha text-tinta [backface-visibility:hidden] [transform:rotateY(180deg)]"
+          inert={!virado}
+        >
+          <div className="flex h-[5px]" aria-hidden>
+            {FITAS.map((f) => <span key={f} className="flex-1" style={{ background: f }} />)}
+          </div>
+          <div className="flex flex-1 flex-col px-3.5 pb-3 pt-3">
+            <p className="t-mono text-[0.68rem] tracking-[0.14em] text-tinta-3">COLA PARA A URNA</p>
+            <p className="mt-1.5 text-[0.8rem] text-tinta-2">Para {fmtCargo(c.cargo).toLowerCase()}, digite</p>
+            <div className="mt-1.5">{c.numero ? <Casas numero={c.numero} contorno /> : <span className="text-[0.8rem] text-tinta-3">número não informado</span>}</div>
+            <dl className="mt-3 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 border-t border-dashed border-linha-2 pt-2.5 text-[0.78rem]">
+              <dt className="text-tinta-3">Onde</dt><dd className="truncate text-right font-semibold">{c.local}</dd>
+              <dt className="text-tinta-3">Partido</dt><dd className="text-right font-semibold">{c.partido ?? 'não informado'}</dd>
+              {c.vies != null && (
+                <>
+                  <dt className="text-tinta-3">Viés do partido</dt>
+                  <dd className="flex items-center justify-end gap-1.5 font-semibold tabular">
+                    <i className="size-2 rounded-full" style={{ background: corVies(c.vies) }} aria-hidden />
+                    {fmtVies(c.vies)}
+                  </dd>
+                </>
+              )}
+              {c.votos != null && <><dt className="text-tinta-3">Votos</dt><dd className="text-right font-semibold tabular">{inteiro(c.votos)}</dd></>}
+              <dt className="text-tinta-3">Resultado</dt><dd className="text-right font-semibold">{resultado}</dd>
+              {c.gasto != null && <><dt className="text-tinta-3">Campanha</dt><dd className="text-right font-semibold tabular">{reaisCurto(c.gasto)}</dd></>}
+              {c.gasto != null && c.votos ? <><dt className="text-tinta-3">Por voto</dt><dd className="text-right font-semibold tabular">{reaisCurto(c.gasto / c.votos)}</dd></> : null}
+              {c.suplementar && <><dt className="text-tinta-3">Eleição</dt><dd className="text-right font-semibold">suplementar</dd></>}
+            </dl>
+            <div className="mt-auto space-y-2 pt-2">
+              {municipal && (
+                <Link
+                  to="/uf/$sigla/$ibge"
+                  params={{ sigla: c.uf!, ibge: String(c.municipio_ibge) }}
+                  className="inline-flex items-center gap-1 text-[0.78rem] font-semibold text-acao hover:underline"
+                >
+                  Abrir o boletim do município <ArrowRight size={12} weight="bold" aria-hidden />
+                </Link>
+              )}
+              <div className="flex items-end justify-between gap-2">
+                <p className="text-[0.62rem] leading-snug text-tinta-3">Santinho reconstruído com dados do TSE. Não é material de campanha.</p>
+                <button
+                  type="button"
+                  ref={verso}
+                  onClick={() => virar(false)}
+                  className="grid size-8 shrink-0 place-items-center rounded-full border border-linha-2 text-tinta-2 hover:border-tinta hover:text-tinta"
+                  aria-label="Desvirar o santinho"
+                >
+                  <ArrowCounterClockwise size={14} weight="bold" aria-hidden />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  )
+}

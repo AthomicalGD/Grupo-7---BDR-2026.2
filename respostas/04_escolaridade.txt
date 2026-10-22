@@ -1,0 +1,184 @@
+P4) Escolaridade do candidato x escolaridade de quem vota (2022 e 2024)
+(A) Existe relação entre a escolaridade do candidato e sua chance de ser eleito?
+(B) Locais com menor escolaridade costumam eleger pessoas de escolaridade semelhante?
+
+Fontes: candidaturas e eleitos (TSE, DS_GRAU_INSTRUCAO e DS_SIT_TOT_TURNO de cada candidatura);
+escolaridade de quem compareceu no 1º turno (TSE, perfil_comparecimento_abstencao, por zona);
+votos nominais por zona (TSE); Censo 2022 (IBGE, SIDRA 10061) como controle.
+UFs: AC, BA, GO, PE, PI, PR, RS. Os números valem para essas UFs, não para o Brasil.
+
+Observações:
+- Escolaridade da candidatura (a de cada eleição), em 8 graus do TSE; "não divulgável" fica de fora.
+- Candidaturas aptas: sem as que terminaram sem situação (#NULO: indeferidas, renúncias, cassadas).
+- Titulares de eleições ordinárias; sem Presidente (disputa nacional), vices e suplentes.
+- Quem votou = comparecimento do 1º turno (não o eleitorado apto). A escolaridade do eleitor é a
+  declarada no alistamento e raramente é atualizada, por isso fica abaixo da real (ver C).
+- Quintis: os municípios em 5 grupos de mesmo tamanho pela % de quem votou com superior completo;
+  as colunas são médias simples dos municípios do grupo.
+
+================================================================================================
+PARTE A: escolaridade do candidato e chance de ser eleito
+================================================================================================
+
+2022 · Governador (taxa média do cargo: 11.3%)
+  Escolaridade              Candidatos   Eleitos    Taxa   x média do cargo
+  --------------------------------------------------------------------------
+  Médio completo                     5         0    0.0%       -
+  Superior incompleto                2         0    0.0%       -
+  Superior completo                 55         7   12.7%    1.13x
+  Superior completo: 88.7% dos candidatos e 100.0% dos eleitos.  V de Cramér = 0.127
+
+2022 · Senador (taxa média do cargo: 12.1%)
+  Escolaridade              Candidatos   Eleitos    Taxa   x média do cargo
+  --------------------------------------------------------------------------
+  Fundamental completo               1         0    0.0%       -
+  Médio incompleto                   1         0    0.0%       -
+  Médio completo                     3         0    0.0%       -
+  Superior incompleto                3         0    0.0%       -
+  Superior completo                 50         7   14.0%    1.16x
+  Superior completo: 86.2% dos candidatos e 100.0% dos eleitos.  V de Cramér = 0.148
+
+2022 · Deputado Federal (taxa média do cargo: 5.5%)
+  Escolaridade              Candidatos   Eleitos    Taxa   x média do cargo
+  --------------------------------------------------------------------------
+  Lê e escreve                      38         0    0.0%    0.00x
+  Fundamental incompleto            62         3    4.8%    0.88x
+  Fundamental completo             117         5    4.3%    0.78x
+  Médio incompleto                  73         1    1.4%    0.25x
+  Médio completo                   699         9    1.3%    0.23x
+  Superior incompleto              279        13    4.7%    0.85x
+  Superior completo              1.650       129    7.8%    1.43x
+  Superior completo: 56.5% dos candidatos e 80.6% dos eleitos.  V de Cramér = 0.126
+
+2022 · Deputado Estadual (taxa média do cargo: 7.2%)
+  Escolaridade              Candidatos   Eleitos    Taxa   x média do cargo
+  --------------------------------------------------------------------------
+  Lê e escreve                      54         0    0.0%    0.00x
+  Fundamental incompleto           131         0    0.0%    0.00x
+  Fundamental completo             227         4    1.8%    0.25x
+  Médio incompleto                 158         3    1.9%    0.26x
+  Médio completo                 1.134        36    3.2%    0.44x
+  Superior incompleto              487        27    5.5%    0.77x
+  Superior completo              2.205       246   11.2%    1.55x
+  Superior completo: 50.2% dos candidatos e 77.8% dos eleitos.  V de Cramér = 0.160
+
+2024 · Prefeito (taxa média do cargo: 38.9%)
+  Escolaridade              Candidatos   Eleitos    Taxa   x média do cargo
+  --------------------------------------------------------------------------
+  Lê e escreve                      21         6   28.6%       -
+  Fundamental incompleto           208        71   34.1%    0.88x
+  Fundamental completo             229        90   39.3%    1.01x
+  Médio incompleto                 112        35   31.2%    0.80x
+  Médio completo                 1.322       516   39.0%    1.00x
+  Superior incompleto              268        87   32.5%    0.84x
+  Superior completo              2.942     1.178   40.0%    1.03x
+  Superior completo: 57.7% dos candidatos e 59.4% dos eleitos.  V de Cramér = 0.048
+
+2024 · Vereador (taxa média do cargo: 15.7%)
+  Escolaridade              Candidatos   Eleitos    Taxa   x média do cargo
+  --------------------------------------------------------------------------
+  Analfabeto                         2         0    0.0%       -
+  Lê e escreve                   2.840       204    7.2%    0.46x
+  Fundamental incompleto        14.315     1.886   13.2%    0.84x
+  Fundamental completo          15.012     2.023   13.5%    0.86x
+  Médio incompleto               6.311       701   11.1%    0.71x
+  Médio completo                51.877     7.972   15.4%    0.98x
+  Superior incompleto            6.114       817   13.4%    0.85x
+  Superior completo             33.147     6.763   20.4%    1.30x
+  Superior completo: 25.6% dos candidatos e 33.2% dos eleitos.  V de Cramér = 0.086
+
+Quem votou, quem se candidatou e quem se elegeu (% em cada grau; todos os cargos do ano)
+  Escolaridade              2022: votou  cand. eleito   2024: votou  cand. eleito   
+  --------------------------------------------------------------------------------------------
+  Analfabeto                     2.9%      -      -       3.2%   0.0%   0.0%
+  Lê e escreve                   7.5%   1.2%   0.0%       7.4%   2.1%   0.9%
+  Fundamental incompleto        23.5%   2.6%   0.6%      23.5%  10.8%   8.8%
+  Fundamental completo           6.2%   4.6%   1.8%       6.1%  11.3%   9.5%
+  Médio incompleto              15.5%   3.1%   0.8%      16.5%   4.8%   3.3%
+  Médio completo                27.4%  24.8%   9.2%      27.2%  39.5%  38.0%
+  Superior incompleto            6.0%  10.4%   8.2%       5.6%   4.7%   4.0%
+  Superior completo             11.2%  53.3%  79.4%      10.5%  26.8%  35.5%
+
+================================================================================================
+PARTE B: a escolaridade do lugar e a de quem ele elege
+================================================================================================
+
+B1. 2024: quem o município elegeu (prefeito + vereadores do próprio município)
+  Quintil       Municípios    % sup. votou  % sup. candid.  % sup. eleitos
+  ------------------------------------------------------------------------
+  1 (menos)            398            3.7%           19.9%           26.2%
+  2                    397            5.3%           22.8%           30.4%
+  3                    398            6.9%           23.3%           33.0%
+  4                    397            9.1%           25.2%           35.3%
+  5 (mais)             398           13.1%           31.5%           46.8%
+  Todos               1988            7.6%           24.6%           34.3%
+  Correlação entre municípios, % sup. candid.: Pearson +0.43, Spearman +0.39
+  Correlação entre municípios, % sup. eleitos: Pearson +0.42, Spearman +0.38
+
+  Os eleitos têm mais superior completo que os candidatos do próprio município em todos os quintis:
+  +6.3 p.p., +7.6 p.p., +9.6 p.p., +10.1 p.p., +15.3 p.p. (do menos ao mais escolarizado).
+  Em nível médio (1 a 8): quem votou 4.42, eleitos 6.18; Pearson +0.45.
+
+  Por UF (correlação entre os municípios de cada UF, % sup. votou x % sup. eleitos):
+    AC:   22 municípios, Pearson +0.47
+    BA:  417 municípios, Pearson +0.36
+    GO:  245 municípios, Pearson +0.35
+    PE:  184 municípios, Pearson +0.44
+    PI:  224 municípios, Pearson +0.28
+    PR:  399 municípios, Pearson +0.49
+    RS:  497 municípios, Pearson +0.49
+
+B2. Em quem o município votou: % dos votos nominais para candidatos com superior completo
+    (2022: deputados federal e estadual; 2024: vereador)
+  2022
+  Quintil       Municípios    % sup. votou    % votos sup.
+  --------------------------------------------------------
+  1 (menos)            398            3.8%           74.5%
+  2                    398            5.5%           76.1%
+  3                    398            7.2%           77.1%
+  4                    398            9.5%           79.0%
+  5 (mais)             398           13.6%           79.8%
+  Todos               1990            7.9%           77.3%
+  Correlação entre municípios, % votos sup.: Pearson +0.15, Spearman +0.13
+
+  2024
+  Quintil       Municípios    % sup. votou    % votos sup.
+  --------------------------------------------------------
+  1 (menos)            395            3.7%           22.4%
+  2                    394            5.3%           25.7%
+  3                    395            6.9%           27.2%
+  4                    394            9.1%           30.0%
+  5 (mais)             395           13.1%           39.3%
+  Todos               1973            7.6%           28.9%
+  Correlação entre municípios, % votos sup.: Pearson +0.47, Spearman +0.42
+
+C. Controle com o Censo 2022 (% de pessoas de 18+ anos com superior completo)
+  TSE x Censo, por município: quem votou em 2022 tem 7.9% com superior no TSE e a
+  população adulta 9.6% no Censo (média dos municípios); correlação +0.89.
+  O TSE subestima o nível, mas ordena os municípios quase do mesmo jeito. Refazendo a parte B com o Censo:
+    2024, % sup. eleitos:      Pearson +0.43 (TSE: +0.42)
+    2024, % votos em superior: Pearson +0.50 (TSE: +0.47)
+    2022, % votos em superior: Pearson +0.11 (TSE: +0.15)
+
+================================================================================================
+CONCLUSÃO
+(A) Sim. Em todos os cargos quem tem superior completo é quem mais se elege, mas o peso muda com
+o cargo. Para deputado (2022) é forte: com superior completo se elegeram 11.2% dos candidatos a
+deputado estadual e 7.8% a federal, contra 3.2% e 1.3% com médio completo; governador e senador
+eleitos têm todos superior. Para vereador (2024) é moderado: 20.4% com superior, 15.4% com médio
+e 7.2% entre os que só leem e escrevem. Para prefeito quase não existe (40.0% x 39.0%). O V de
+Cramér fica entre 0,05 e 0,16: a escolaridade ajuda, não decide.
+
+A filtragem aparece na composição: superior completo é 11% de quem votou em 2022, 53% dos
+candidatos e 79% dos eleitos; em 2024, 11%, 27% e 36% (vereador: 26% dos candidatos e 33% dos
+eleitos).
+
+(B) Sim na direção, não no nível. Os municípios em que quem vota é menos escolarizado elegem
+menos gente com superior (correlação +0.42 em 2024, igual com o Censo), mas mesmo neles os
+eleitos são muito mais escolarizados que o eleitorado. Não é só porque os candidatos locais se
+parecem com o eleitor: os eleitos superam os candidatos do próprio município em todos os
+quintis, e a distância cresce com a escolaridade do lugar (+6.3 -> +15.3 p.p.).
+
+No voto para deputado (2022) a relação é fraca (+0.15) e no voto para vereador (2024) é moderada
+(+0.47): na eleição local o eleitor escolhe entre vizinhos parecidos com ele; na estadual, quase
+todos os candidatos com voto têm diploma, em qualquer lugar.

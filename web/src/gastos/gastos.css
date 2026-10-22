@@ -1,0 +1,60 @@
+/* P9: a chuva de santinhos dos gastos (o mesmo desenho da nuvem de palavras do Voto Aberto). */
+.gastos-palco {
+  position: relative; overflow: hidden; border-radius: 20px;
+  height: clamp(500px, calc(100dvh - 250px), 780px);
+  /* o céu claro de todos os 3D do sistema, com o brilho dourado baixo */
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 92%, #fff6d6 0%, transparent 70%),
+    linear-gradient(180deg, #e4edf3 0%, #f1f5f6 48%, #f6f8ef 100%);
+  touch-action: pan-y;
+}
+.gastos-palco canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.gastos-palco .fita-pe { position: absolute; left: 0; right: 0; bottom: 0; pointer-events: none; }
+.gastos-palco .carregando { position: absolute; inset: 0; display: grid; place-items: center; background: rgb(242 244 245 / .55); }
+.gastos-dica {
+  position: absolute; left: 0; top: 0; pointer-events: none; z-index: 3; max-width: 260px;
+  min-width: 160px; padding: 7px 10px; border-radius: 10px; background: var(--color-tinta); color: var(--color-folha);
+  font-size: .78rem; line-height: 1.35; box-shadow: 0 1px 0 rgb(42 53 80 / .04), 0 12px 32px -12px rgb(42 53 80 / .22); display: grid;
+}
+.gastos-dica b { font-weight: 800; font-size: .95rem; }
+.gastos-dica span { color: #c9d1e6; }
+.gastos-dica[hidden] { display: none; }
+.gastos-vazio { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); margin: 0; max-width: 22rem; text-align: center; color: var(--color-tinta-2); pointer-events: none; }
+
+@media (min-width: 1024px) { .gastos-coluna-palco { position: sticky; top: 88px; } }
+@media (max-width: 1023px) { .gastos-palco { height: clamp(440px, 64svh, 620px); } }
+@media (max-width: 639px) { .gastos-palco { height: auto; aspect-ratio: 4 / 5; max-height: 72svh; border-radius: 16px; } }
+
+/* a lista dos maiores gastos: cada linha vira o santinho */
+.gastos-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.gastos-linha {
+  width: calc(100% + 16px); display: grid; grid-template-columns: minmax(7rem, 1.3fr) 1.4fr 5.6rem; align-items: center; gap: 12px;
+  background: none; border: 0; padding: 6px 8px; margin: 0 -8px; border-radius: 10px; color: var(--color-tinta); text-align: left;
+  transition: background-color 160ms;
+}
+.gastos-linha:hover, .gastos-linha[data-acesa="true"] { background: var(--color-selecao-claro); }
+.gastos-linha .palavra { font-weight: 650; line-height: 1.25; overflow-wrap: anywhere; }
+.gastos-linha .trilho { height: 10px; border-radius: 999px; overflow: hidden; }
+.gastos-linha .trilho i { display: block; height: 100%; border-radius: 999px; transform-origin: left; animation: gastos-barra 700ms var(--ease-saida) both; animation-delay: calc(var(--i) * 40ms); }
+.gastos-linha .conta { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 700; }
+@keyframes gastos-barra { from { transform: scaleX(0); } }
+.gastos-cabeca { display: grid; grid-template-columns: minmax(7rem, 1.3fr) 1.4fr 5.6rem; gap: 12px; color: var(--color-tinta-3); }
+.gastos-cabeca span:last-child { text-align: right; }
+.gastos-marca-p { display: inline-block; margin-left: 6px; padding: 0 5px; border: 1.5px solid currentColor; border-radius: 4px; color: var(--color-reeleito); font-size: .62rem; font-weight: 800; letter-spacing: .06em; line-height: 1.35; vertical-align: 2px; transform: rotate(-8deg); }
+
+.gastos-escala { display: flex; align-items: center; gap: 10px; color: var(--color-tinta-3); }
+.gastos-escala .faixas { display: flex; flex: 1; max-width: 18rem; height: 12px; border-radius: 999px; overflow: hidden; box-shadow: inset 0 0 0 1px rgb(24 32 43 / .08); }
+.gastos-escala .faixas i { flex: 1; }
+.gastos-legenda text { font: 600 12px var(--font-sans, "Archivo Variable", system-ui); fill: var(--color-tinta-3); font-variant-numeric: tabular-nums; }
+
+/* o alternador "Só propaganda" fica no oliva de seleção quando ligado */
+.gastos-alterna[aria-pressed="true"] { color: #fff; border-color: var(--color-selecao); background: var(--color-selecao); box-shadow: inset 0 -3px 0 var(--color-selecao-2); }
+.gastos-alterna[aria-pressed="true"]:hover { color: #fff; background: var(--color-selecao-2); }
+
+/* a cobertura da classificação: uma barra, a parte sem identificação em hachura (a Regra da Ausência Visível) */
+.gastos-hachura { background: repeating-linear-gradient(135deg, var(--color-linha-2) 0 2px, var(--color-papel-2) 2px 6px); }
+
+
+@media (prefers-reduced-motion: reduce) {
+  .gastos-linha .trilho i { animation: none; }
+}

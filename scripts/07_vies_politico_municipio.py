@@ -1,9 +1,17 @@
 """P7) Viés político de cada município/região na linha do tempo (E.P.: 2018, 2020, 2022, 2024).
 
-Viés do município num ano = média do viés dos partidos (partido.vies_politico, de -100 a +100)
-ponderada pelos votos válidos (nominais + legenda) que cada partido teve no município naquele
-ano, somando todos os cargos disputados (1º turno das eleições ordinárias).
-Região e estado: a mesma média ponderada, sobre os votos de todos os seus municípios.
+Viés do partido: média das notas dos especialistas (Bolognesi et al.; 0 = extrema esquerda,
+10 = extrema direita) na onda que vale para a eleição (eleicao_referencia), levada para -100 a +100
+por (média - 5) * 20 e com as regras de sucessão de banco/referencia/sucessao_partidos.csv
+(tabela vies_partido_onda, preenchida por python -m loader.vies).
+
+Viés do município num ano: em cada cargo do ano, média do viés dos partidos ponderada pelos votos
+válidos (nominais + legenda, 1º turno); depois, média dos cargos com peso igual. Partido sem viés
+fica fora do numerador e do denominador e aparece na cobertura. Região e estado: a mesma conta
+sobre os votos de todos os seus municípios. A base é a view vies_votos_cargo (migração 006).
+
+Alinhamento: a mesma conta com a posição dos partidos nas votações da Câmara (SVD, tabela
+partido_alinhamento). Acompanha a coalizão de governo e não é o viés ideológico.
 
 O resultado por município é gravado em vies_municipio.
 
@@ -19,18 +27,14 @@ from comum import RAIZ, conectar, consultar, escolher_ufs, gravar_txt
 
 ANOS = [2018, 2020, 2022, 2024]
 REGIOES = RAIZ / "dados" / "ibge" / "territorio" / "municipios.csv"
+SOMAS = ["votos", "votos_com_vies", "votos_x_vies", "votos_com_alinhamento", "votos_x_alinhamento"]
 
 SQL = """
-SELECT m.cd_municipio, m.nm_municipio, m.cd_ibge, v.ano_eleicao AS ano,
-       sum(v.qt_votos_validos * p.vies_politico) AS votos_x_vies,
-       sum(v.qt_votos_validos) AS votos,
-       COALESCE(sum(v.qt_votos_validos) FILTER (WHERE p.vies_politico = 0), 0) AS votos_sem_vies
-FROM votacao_partido_municipio v
-JOIN partido p ON p.id_partido = v.id_partido
+SELECT m.cd_municipio, m.nm_municipio, m.cd_ibge, v.ano, v.cod_cargo,
+       v.votos, v.votos_com_vies, v.votos_x_vies, v.votos_com_alinhamento, v.votos_x_alinhamento
+FROM vies_votos_cargo v
 JOIN municipio m ON m.cd_municipio = v.cd_municipio
-WHERE m.cd_uf = %(cd_uf)s AND v.ano_eleicao = ANY(%(anos)s)
-GROUP BY 1, 2, 3, 4
-HAVING sum(v.qt_votos_validos) > 0
+WHERE m.cd_uf = %(cd_uf)s AND v.ano = ANY(%(anos)s)
 """
 
 
@@ -42,10 +46,22 @@ def regioes() -> pd.DataFrame | None:
     return df[["cod_ibge", "regiao_intermediaria"]].rename(columns={"cod_ibge": "cd_ibge"})
 
 
-def vies(df: pd.DataFrame, por: list[str]) -> pd.DataFrame:
-    """Média ponderada pelos votos, em colunas por ano."""
-    g = df.groupby([*por, "ano"])[["votos_x_vies", "votos"]].sum()
-    return (g["votos_x_vies"] / g["votos"]).unstack("ano").reindex(columns=ANOS)
+def agregar(df: pd.DataFrame, por: list[str]) -> pd.DataFrame:
+    """Por recorte e ano: viés e alinhamento (cargos com peso igual), coberturas e número de cargos."""
+    c = df.groupby([*por, "ano", "cod_cargo"])[SOMAS].sum()
+    c["vies"] = c["votos_x_vies"] / c["votos_com_vies"].where(c["votos_com_vies"] > 0)
+    c["alinhamento"] = c["votos_x_alinhamento"] / c["votos_com_alinhamento"].where(c["votos_com_alinhamento"] > 0)
+    a = c.groupby([*por, "ano"]).agg(vies=("vies", "mean"), alinhamento=("alinhamento", "mean"),
+                                     n_cargos=("votos", "size"), votos=("votos", "sum"),
+                                     votos_com_vies=("votos_com_vies", "sum"),
+                                     votos_com_alinhamento=("votos_com_alinhamento", "sum"))
+    a["cobertura_vies"] = 100 * a["votos_com_vies"] / a["votos"]
+    a["cobertura_alinhamento"] = 100 * a["votos_com_alinhamento"] / a["votos"]
+    return a
+
+
+def por_ano(a: pd.DataFrame, coluna: str) -> pd.DataFrame:
+    return a[coluna].unstack("ano").reindex(columns=ANOS)
 
 
 def fmt(x) -> str:
@@ -60,14 +76,18 @@ def tabela(titulo: str, rotulo: str, df: pd.DataFrame, largura: int) -> list[str
     return linhas + [""]
 
 
-def gravar_banco(conn, cd_uf: int, df: pd.DataFrame) -> None:
-    linhas = [(int(r.cd_municipio), int(r.ano), float(r.votos_x_vies / r.votos)) for r in df.itertuples()]
+def gravar_banco(conn, cd_uf: int, mun: pd.DataFrame) -> None:
+    def num(x):
+        return None if pd.isna(x) else float(x)
+    linhas = [(int(cd), int(ano), num(r.vies), round(float(r.cobertura_vies), 2), num(r.alinhamento),
+               round(float(r.cobertura_alinhamento), 2), int(r.n_cargos))
+              for (cd, ano), r in mun.iterrows()]
     with conn.cursor() as cur:
         cur.execute("""DELETE FROM vies_municipio v USING municipio m
                        WHERE m.cd_municipio = v.cd_municipio AND m.cd_uf = %s AND v.ano_eleitoral = ANY(%s)""",
                     (cd_uf, ANOS))
-        execute_values(cur, "INSERT INTO vies_municipio (cd_municipio, ano_eleitoral, vies_calculado) VALUES %s",
-                       linhas)
+        execute_values(cur, """INSERT INTO vies_municipio (cd_municipio, ano_eleitoral, vies_calculado, cobertura_vies,
+                                   alinhamento, cobertura_alinhamento, n_cargos) VALUES %s""", linhas)
     conn.commit()
 
 
@@ -75,25 +95,28 @@ def secao_uf(conn, sigla: str, cd_uf: int, reg: pd.DataFrame | None) -> list[str
     df = consultar(conn, SQL, {"cd_uf": cd_uf, "anos": ANOS})
     if df.empty:
         return [f"{'=' * 70}", f"UF: {sigla} — sem votação por partido no banco", ""]
-    for c in ("votos_x_vies", "votos", "votos_sem_vies"):
+    for c in SOMAS:
         df[c] = df[c].astype(float)
-    gravar_banco(conn, cd_uf, df)
+    gravar_banco(conn, cd_uf, agregar(df, ["cd_municipio"]))
 
     out = [f"{'=' * 70}", f"UF: {sigla}", f"{'=' * 70}", ""]
-    estado = vies(df.assign(uf=sigla), ["uf"])
-    out += tabela("Estado", "", estado, 4)
-    cobertura = df.groupby("ano")[["votos_sem_vies", "votos"]].sum()
-    out += ["  Votos em partidos sem viés informado (contam como 0): "
-            + ", ".join(f"{a}: {100 * r.votos_sem_vies / r.votos:.1f}%" for a, r in cobertura.iterrows()), ""]
+    estado = agregar(df.assign(uf=sigla), ["uf"])
+    out += tabela("Estado: viés", "", por_ano(estado, "vies"), 4)
+    out += tabela("Estado: alinhamento na Câmara (SVD; não é o viés)", "", por_ano(estado, "alinhamento"), 4)
+    cob = estado.droplevel("uf")
+    out += ["  Cobertura dos votos válidos (votos em partidos com valor):",
+            "    viés:        " + ", ".join(f"{a}: {r.cobertura_vies:.2f}%" for a, r in cob.iterrows()),
+            "    alinhamento: " + ", ".join(f"{a}: {r.cobertura_alinhamento:.2f}%" for a, r in cob.iterrows()), ""]
 
     if reg is not None:
         d = df.merge(reg, on="cd_ibge", how="left")
         d["regiao_intermediaria"] = d["regiao_intermediaria"].fillna("(sem região)")
-        out += tabela("Regiões intermediárias (IBGE)", "Região", vies(d, ["regiao_intermediaria"]), 32)
+        out += tabela("Regiões intermediárias (IBGE): viés", "Região",
+                      por_ano(agregar(d, ["regiao_intermediaria"]), "vies"), 32)
 
-    mun = vies(df, ["nm_municipio", "cd_municipio"]).droplevel("cd_municipio").sort_index()
+    mun = por_ano(agregar(df, ["nm_municipio", "cd_municipio"]), "vies").droplevel("cd_municipio").sort_index()
     out += destaques(mun)
-    out += tabela(f"Municípios ({len(mun)})", "Município", mun, 32)
+    out += tabela(f"Municípios ({len(mun)}): viés", "Município", mun, 32)
     return out
 
 
@@ -130,16 +153,25 @@ def destaques(mun: pd.DataFrame) -> list[str]:
 CABECALHO = """\
 P7) Viés político dos municípios e regiões na linha do tempo (2018, 2020, 2022, 2024)
 
-Escala: -100 = esquerda, +100 = direita (viés de cada partido em partido.vies_politico).
-Viés do município no ano = média do viés dos partidos ponderada pelos votos válidos
-(nominais + legenda) que cada partido obteve ali, somando todos os cargos do 1º turno
+Viés do partido: média das notas de especialistas (Bolognesi et al., ondas de julho de 2018 e de 2022;
+0 = extrema esquerda, 10 = extrema direita), na escala -100 a +100 por (média - 5) * 20.
+Onda de cada eleição: 2018 e 2020 usam a onda 2018; 2022 e 2024, a onda 2022 (em 2024 a onda é
+estendida por dois anos, o que os autores desaconselham). Renomeados herdam o valor; fundidos depois
+da onda usam a média dos componentes (banco/referencia/sucessao_partidos.csv).
+
+Viés do município no ano: em cada cargo, média do viés dos partidos ponderada pelos votos válidos
+(nominais + legenda) do 1º turno; depois, média dos cargos com peso igual
 (2018/2022: presidente, governador, senador, deputados; 2020/2024: prefeito e vereador).
-Regiões e estado: a mesma média ponderada sobre os votos de todos os seus municípios.
+Regiões e estado: a mesma conta sobre os votos de todos os seus municípios.
+
+Alinhamento: a mesma conta com a posição de cada partido nas votações nominais do Plenário da Câmara
+(SVD, janela que termina antes de cada eleição). Ele acompanha a coalizão de governo, não a ideologia:
+o mesmo partido muda dezenas de pontos de um governo para outro.
 
 Observações:
-- Partidos sem viés informado entram com viés 0 e puxam a média para o centro; a parcela
-  desses votos aparece logo abaixo do estado.
-- Em 2018 cada eleitor tinha 2 votos para senador, então o Senado pesa o dobro nesse ano.
+- Partidos sem viés ficam fora da média; a cobertura (parcela dos votos válidos em partidos com
+  valor) aparece logo abaixo do estado.
+- Com os cargos de peso igual, o voto duplo para o Senado em 2018 não pesa mais que os outros cargos.
 - Anos gerais e municipais têm cargos diferentes: compare 2018 com 2022 e 2020 com 2024.
 - Variância: variância populacional dos 4 valores anuais do município (pontos²); entram só
   os municípios com viés nos 4 anos. Parte dela vem da troca entre anos gerais e municipais.

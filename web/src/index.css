@@ -1,0 +1,619 @@
+@import "tailwindcss";
+
+/* Tokens do sistema visual (design/PROMPT.md §3). */
+@theme {
+  --font-sans: "Archivo Variable", "Archivo", system-ui, sans-serif;
+  --font-mono: "Red Hat Mono Variable", "Red Hat Mono", ui-monospace, monospace;
+
+  --color-papel: #f2f4f5;
+  --color-papel-2: #e6eaed;
+  --color-folha: #fcfdfd;
+  --color-tinta: #18202b;
+  --color-tinta-2: #4b5566;
+  --color-tinta-3: #5f6878;
+  --color-linha: #d9dee2;
+  --color-linha-2: #aeb6bf;
+  /* Papéis de cor, como no app de Resultados do TSE (a mesma onda de fitas): uma cor por papel, nunca a
+     mesma cor em dois papéis.
+     - escolha (ação): o ouro dos botões principais, com texto em tinta e o degrau mais fechado;
+     - selecao: o oliva do que está escolhido (cargo, estado, aba, item do menu);
+     - acao: a ardósia dos links e do foco do teclado;
+     - marcador: o mesmo ouro (um amarelo só no sistema). */
+  --color-escolha: #ebb400;
+  --color-escolha-2: #cc9e00;
+  --color-escolha-claro: #fbf0c4;
+  --color-selecao: #5e7a29;
+  --color-selecao-2: #4a6120;
+  --color-selecao-claro: #eef3df;
+  --color-selecao-tinta: #3f5419;
+  --color-acao: #46598a;
+  --color-acao-2: #34436b;
+  --color-acao-claro: #e6e9f2;
+  --color-marcador: #ebb400;
+  --color-neutro: #e8eaec;
+
+  --color-fita-verde: #5e881b;
+  --color-fita-lima: #a2bd31;
+  --color-fita-ardosia: #5d6b94;
+  --color-fita-petroleo: #468baf;
+  --color-fita-celeste: #76acd0;
+  --color-fita-laranja: #f19929;
+  --color-fita-amarelo: #fbc700;
+
+  --color-confirma: #3f7f2a;
+  --color-corrige: #e5732a;
+  --color-branco-urna: #f4f5f2;
+  /* situação: eleito no oliva (texto e carimbos) e lima nas pílulas; não eleito em cinza quente */
+  --color-eleito: #5e7a29;
+  --color-eleito-fundo: #9eb735;
+  --color-nao-eleito: #eae8e4;
+  --color-reeleito: #3f5419;
+
+  --radius-cartao: 16px;
+  --ease-saida: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-camera: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --shadow-papel: 0 1px 0 rgb(42 53 80 / 0.04), 0 12px 32px -12px rgb(42 53 80 / 0.22);
+  --shadow-cartao: 0 1px 2px rgb(42 53 80 / 0.06), 0 6px 18px -8px rgb(42 53 80 / 0.18);
+}
+
+/* Hierarquia tipográfica: uma família, três larguras. */
+@utility t-display {
+  font-stretch: 112%;
+  font-weight: 780;
+  font-size: clamp(2rem, 1.1rem + 2vw, 3.1rem);
+  line-height: 0.98;
+  letter-spacing: -0.018em;
+  text-wrap: balance;
+}
+@utility t-h1 {
+  font-stretch: 106%;
+  font-weight: 760;
+  font-size: clamp(1.6rem, 1.1rem + 1.05vw, 2.1rem);
+  line-height: 1.04;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+}
+@utility t-h2 {
+  font-weight: 700;
+  font-size: 1.375rem;
+  line-height: 1.18;
+  letter-spacing: -0.006em;
+}
+@utility t-h3 {
+  font-weight: 650;
+  font-size: 1.125rem;
+  line-height: 1.25;
+}
+@utility t-rotulo {
+  font-weight: 600;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+}
+@utility t-numero {
+  font-stretch: 74%;
+  font-weight: 820;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+@utility t-mono {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    font-size: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+  html[data-fonte="1"] { font-size: 112.5%; }
+  html[data-fonte="2"] { font-size: 125%; }
+
+  /* O laço das sete fitas da marca sob o título de cada página e de cada seção: a cor da marca
+     aparece em toda tela sem carregar dado (as fitas nunca levam informação). */
+  html {
+    --laco: linear-gradient(90deg,
+      var(--color-fita-verde) 0 14.3%, var(--color-fita-lima) 0 28.6%, var(--color-fita-ardosia) 0 42.9%,
+      var(--color-fita-petroleo) 0 57.1%, var(--color-fita-celeste) 0 71.4%, var(--color-fita-laranja) 0 85.7%,
+      var(--color-fita-amarelo) 0);
+  }
+  main h1.t-display::after,
+  main :is(h2.t-h1, h2.t-h2)::after {
+    content: "";
+    display: block;
+    border-radius: 3px;
+    background: var(--laco);
+  }
+  main h1.t-display::after { width: 5.25rem; height: 6px; margin-top: 0.85rem; }
+  main :is(h2.t-h1, h2.t-h2)::after { width: 2.6rem; height: 4px; margin-top: 0.5rem; }
+
+  /* Margens laterais (botões Margem −/+): casca = contêiner da página, miolo = blocos de leitura dentro dela.
+     1 é o padrão; de 2 em diante a página ocupa a tela toda e só a margem diminui. */
+  html { --casca-max: 1440px; --casca-margem: 72px; --miolo-max: 1180px; }
+  html[data-margem="0"] { --casca-max: 1280px; --casca-margem: 120px; }
+  html[data-margem="2"] { --casca-max: 100%; --miolo-max: 100%; }
+  html[data-margem="3"] { --casca-max: 100%; --miolo-max: 100%; --casca-margem: 40px; }
+  html[data-margem="4"] { --casca-max: 100%; --miolo-max: 100%; --casca-margem: 16px; }
+
+  /* Interface simples: petróleo e âmbar (só existe no pacote dela; ver src/simples/cores.ts) */
+  .tema-simples {
+    --color-papel: #eef3f2;
+    --color-papel-2: #dfe8e6;
+    --color-folha: #fafcfc;
+    --color-tinta: #10272a;
+    --color-tinta-2: #3f5457;
+    --color-tinta-3: #56696c;
+    --color-linha: #d3dddc;
+    --color-linha-2: #a3b3b2;
+    --color-acao: #0a6b6f;
+    --color-marcador: #f2a33a;
+    --color-eleito: #0a6b6f;
+  }
+
+  html[data-contraste="alto"] {
+    --color-papel: #ffffff;
+    --color-papel-2: #e9ecef;
+    --color-folha: #ffffff;
+    --color-tinta: #000000;
+    --color-tinta-2: #1c2330;
+    --color-tinta-3: #2b3442;
+    --color-linha: #6b7480;
+    --color-linha-2: #3d4652;
+    /* a ardósia mais fechada, para o contraste alto, com o mesmo laço */
+    --color-acao: #2f3d66;
+    --color-acao-2: #222d4d;
+    --color-acao-claro: #e2e5ee;
+    --color-selecao: #46601e;
+    --color-selecao-2: #344816;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-papel);
+    color: var(--color-tinta);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.55;
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-linha-2) transparent;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--color-marcador) 70%, white);
+    color: var(--color-tinta);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-acao);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  button { cursor: pointer; }
+
+  /* O que o navegador desenharia por conta própria também segue a paleta: toque, cursor de texto,
+     controles nativos, texto de exemplo, marcadores de lista, sublinhados e o "x" da busca. */
+  html { -webkit-tap-highlight-color: transparent; }
+  body { caret-color: var(--color-acao); accent-color: var(--color-acao); }
+  ::placeholder { color: var(--color-tinta-3); opacity: 1; }
+  :where(p, li, figcaption, dd) { text-wrap: pretty; }
+  a { text-underline-offset: 0.22em; text-decoration-thickness: 1.5px; }
+  :where(ul) > li::marker { color: var(--color-fita-ardosia); }
+  :where(ol) > li::marker { color: var(--color-tinta-3); font-weight: 700; font-variant-numeric: tabular-nums; }
+  summary::-webkit-details-marker { display: none; }
+  input[type="search"]::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    background: center / contain no-repeat
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M3 3l8 8M11 3l-8 8' stroke='%235f6878' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  }
+  :where(table) { font-variant-numeric: tabular-nums; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--color-linha-2); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background-color: var(--color-tinta-3); }
+  ::-webkit-scrollbar-track { background: transparent; }
+}
+
+/* ---------- botões e vida ---------- */
+/* Botão principal: a ardósia viva de ação, com o degrau laranja embaixo; sobe 1px no hover e afunda no
+   clique, como as teclas da urna. O de contorno acende na ardósia. */
+@layer components {
+  .botao-vivo {
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    border-radius: 9999px; color: var(--color-tinta); font-weight: 800; letter-spacing: .01em;
+    background: var(--color-escolha);
+    box-shadow: 0 3px 0 var(--color-escolha-2), 0 8px 18px -10px rgb(204 158 0 / .7);
+    transition: transform 160ms var(--ease-saida), box-shadow 160ms var(--ease-saida), background-color 160ms;
+  }
+  .botao-vivo:hover { background: #f2c21f; transform: translateY(-1px); box-shadow: 0 4px 0 var(--color-escolha-2), 0 12px 22px -10px rgb(201 148 0 / .75); }
+  .botao-vivo:active { transform: translateY(3px); box-shadow: 0 0 0 var(--color-escolha-2); }
+  /* o escolhido: oliva com texto branco e uma borda de baixo mais fechada (o cargo ativo do TSE) */
+  .selecionado-fita {
+    color: #fff; border-color: var(--color-selecao);
+    background: var(--color-selecao);
+    box-shadow: inset 0 -3px 0 var(--color-selecao-2);
+  }
+  .botao-contorno {
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    border-radius: 9999px; border: 1.5px solid var(--color-linha-2); background: var(--color-folha);
+    color: var(--color-tinta); font-weight: 600;
+    transition: transform 160ms var(--ease-saida), border-color 160ms, color 160ms, background-color 160ms;
+  }
+  .botao-contorno:hover { border-color: var(--color-acao); color: var(--color-acao); background: var(--color-acao-claro); transform: translateY(-1px); }
+  .botao-contorno:active { transform: translateY(1px); }
+}
+
+/* A pílula escolhida dá um pulo curto ao ser marcada (só na troca: a regra começa a valer naquele momento). */
+@keyframes escolhido { 0% { transform: scale(.94); } 55% { transform: scale(1.05); } 100% { transform: scale(1); } }
+[role="radio"][aria-checked="true"] { animation: escolhido 300ms var(--ease-saida); }
+
+/* O laço sob os títulos se desenha da esquerda quando a seção entra na tela (onde houver linha do
+   tempo de rolagem; sem ela, fica parado e inteiro). */
+@supports (animation-timeline: view()) {
+  @keyframes laco-entra { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  main h1.t-display::after, main :is(h2.t-h1, h2.t-h2)::after {
+    transform-origin: left center;
+    animation: laco-entra linear both;
+    animation-timeline: view();
+    animation-range: entry 10% entry 70%;
+  }
+}
+
+/* A faixa presidencial cai sobre o peito uma vez, quando o santinho aparece. */
+@keyframes faixa-cai { from { opacity: 0; transform: translate(-14px, -18px) rotate(-4deg); } to { opacity: 1; transform: none; } }
+.faixa-presidencial { animation: faixa-cai 700ms var(--ease-saida) 250ms both; transform-origin: 20% 60%; }
+
+/* A câmera do Estado a estado: uma única transformação no grupo do mapa (ease in-out, como a do atlas);
+   os outros estados esmaecem e os rótulos somem ao aproximar. */
+.camera-estados { transition: transform 1000ms cubic-bezier(.65, 0, .35, 1); }
+.estado-forma { transition: opacity 600ms ease, fill 400ms ease; }
+.estado-forma:hover { filter: brightness(1.06); }
+.estado-rotulo { transition: opacity 300ms ease; }
+/* Escola: os municípios do estado acendem quando a câmera pousa nele. */
+.municipios-escola { opacity: 0; transition: opacity 120ms ease; }
+.municipios-escola.acesos { opacity: 1; transition: opacity 520ms var(--ease-saida); }
+
+/* A página entra subindo 6px ao trocar de módulo. */
+@keyframes pagina-entra { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.pagina-entra { animation: pagina-entra 360ms var(--ease-saida) both; }
+.revela { animation: pagina-entra 420ms var(--ease-saida) both; }
+
+/* Escola: os gráficos entram uma vez quando aparecem: as barras se revelam da esquerda, as fitas surgem depois. */
+@keyframes revela-esquerda { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.revela-esquerda { animation: revela-esquerda 900ms var(--ease-saida) both; }
+@keyframes cresce-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.cresce-x { transform-origin: left center; animation: cresce-x 800ms var(--ease-saida) both; }
+@keyframes surge { from { opacity: 0; } to { opacity: 1; } }
+.surge { animation: surge 600ms ease both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .revela-esquerda, .cresce-x, .surge { animation: none; }
+  [role="radio"][aria-checked="true"], .pagina-entra, .revela, .faixa-presidencial { animation: none; }
+  main h1.t-display::after, main :is(h2.t-h1, h2.t-h2)::after { animation: none; transform: none; }
+  .botao-vivo, .botao-contorno { transition: none; }
+}
+
+/* ---------- movimento ---------- */
+/* As cédulas da urna da reeleição: papel com três pautas; a cor do destino vem do estilo (verde ou amarelo). */
+.cedula-urna {
+  border-radius: 2px;
+  border: 1px solid #aeb6bf;
+  background:
+    linear-gradient(#c3cad1 0 0) 50% 30% / 64% 1px no-repeat,
+    linear-gradient(#c3cad1 0 0) 50% 48% / 64% 1px no-repeat,
+    linear-gradient(#c3cad1 0 0) 50% 66% / 64% 1px no-repeat,
+    #fcfdfd;
+  box-shadow: 0 1px 0 rgb(42 53 80 / .12);
+  transform-origin: 50% 50%;
+}
+.cedula-voltou, .cedula-perdeu { border-color: transparent; box-shadow: 0 1px 0 rgb(42 53 80 / .2); }
+.urna-rotulo { background: rgb(252 253 253 / .85); }
+/* P2: o cofrinho. O mouse em cima balança o porquinho e o olho pisca; a pupila segue o cursor. Cada martelada
+   desenha a rachadura a partir do golpe, com o martelo descendo e lascas rosadas voando (elementos criados e
+   removidos pelo script). */
+@keyframes balanca {
+  0%, 100% { transform: none; }
+  25% { transform: rotate(-3deg); }
+  60% { transform: rotate(2.5deg); }
+}
+@keyframes pisca { 0%, 100% { transform: scaleY(1); } 45%, 55% { transform: scaleY(.1); } }
+@keyframes racha { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes estala { 0% { transform: scale(1); } 40% { transform: scale(1.5) rotate(-18deg); } 100% { transform: none; } }
+[data-porco]:has(.porquinho-alvo:hover) > svg { animation: balanca 620ms ease-in-out; transform-origin: 50% 95%; }
+[data-porco]:has(.porquinho-alvo:hover) .porco-olho { animation: pisca 260ms ease-in-out 120ms; transform-box: fill-box; transform-origin: center; }
+.porco-pupila { transition: transform 140ms var(--ease-saida); }
+.racha-nova path { animation: racha 340ms cubic-bezier(.2,.8,.3,1) both; }
+.racha-nova ellipse { animation: surge 160ms ease both; }
+.martelada { animation: estala 360ms var(--ease-saida); }
+.porquinho-alvo { cursor: pointer; }
+.martelo-golpe {
+  position: absolute; width: 40px; height: 40px; margin: -20px 0 0 -8px; pointer-events: none; z-index: 2;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect x='17' y='14' width='6' height='24' rx='3' fill='%23c58a4f' stroke='%237a5230' stroke-width='1.2'/%3E%3Crect x='6' y='4' width='28' height='12' rx='3' fill='%235d6676' stroke='%2318202b' stroke-width='1.4'/%3E%3Crect x='8' y='6' width='24' height='3' rx='1.5' fill='%23fff' opacity='.35'/%3E%3C/svg%3E") center / contain no-repeat;
+  transform-origin: 50% 95%;
+}
+.lasca {
+  position: absolute; width: 7px; height: 6px; margin: -3px 0 0 -3px; pointer-events: none;
+  background: linear-gradient(135deg, #ffd3df, #ee8fac); clip-path: polygon(0 0, 100% 30%, 60% 100%);
+}
+.poeira {
+  width: 120px; height: 120px; border-radius: 50%; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle, transparent 48%, rgb(255 214 226 / .38) 56%, transparent 66%);
+}
+.moeda-voo {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff 0 12%, #e3e7ea 30%, #b7c0c8 75%, #98a2ac);
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / .55), 0 1px 0 rgb(42 53 80 / .25);
+}
+/* a fila: cada grupo anda inteiro (uma camada por grupo, não uma por barrinha) */
+.grupo-fila { transition: transform 720ms var(--ease-saida); }
+/* o palpite: as quatro áreas surgem uma depois da outra */
+@keyframes palpite-surge { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.palpite-alvo { animation: palpite-surge 380ms var(--ease-saida) both; animation-delay: calc(var(--i, 0) * 70ms); transition: background-color 160ms, border-color 160ms, transform 160ms var(--ease-saida); }
+.palpite-alvo:hover { transform: translateY(-3px); }
+.palpite-alvo:active { transform: translateY(1px); }
+/* os bonequinhos: os que não se elegeram são uma camada com a figura repetida a cada 14px; os eleitos são
+   células de 14px com a mesma figura, no oliva (3:1 sobre o papel), que acendem um a um */
+:root { --boneco: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Ccircle cx='7' cy='4.3' r='2.7'/%3E%3Cpath d='M2.6 14C2.6 9.4 4.4 7.6 7 7.6S11.4 9.4 11.4 14Z'/%3E%3C/svg%3E"); }
+.bonecos-eleitos { background: var(--color-eleito); -webkit-mask: var(--boneco) 0 0 / 14px 14px repeat; mask: var(--boneco) 0 0 / 14px 14px repeat; }
+@keyframes sobe-linhas { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes enche-linha { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.caco { background-size: 100% 100%; will-change: transform; }
+.bonecos-fundo { background: #c3cad1; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Ccircle cx='7' cy='4.3' r='2.7'/%3E%3Cpath d='M2.6 14C2.6 9.4 4.4 7.6 7 7.6S11.4 9.4 11.4 14Z'/%3E%3C/svg%3E") 0 0 / 14px 14px repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Ccircle cx='7' cy='4.3' r='2.7'/%3E%3Cpath d='M2.6 14C2.6 9.4 4.4 7.6 7 7.6S11.4 9.4 11.4 14Z'/%3E%3C/svg%3E") 0 0 / 14px 14px repeat; }
+/* o carimbo do veredito, na tinta dos carimbos dos santinhos */
+.carimbo {
+  color: var(--color-reeleito); border: 3px solid currentColor; border-radius: 6px; padding: 4px 9px 5px;
+  background: rgb(238 243 223 / .92); transform: rotate(-8deg);
+  box-shadow: 0 6px 16px -8px rgb(42 53 80 / .4);
+}
+@keyframes pino { 0% { transform: translateY(-14px) scale(.6); opacity: 0; } 60% { transform: translateY(2px); opacity: 1; } 100% { transform: none; } }
+.voce-pino { display: inline-block; animation: pino 420ms var(--ease-saida) both; }
+@media (prefers-reduced-motion: reduce) {
+  [data-porco]:has(.porquinho-alvo:hover) > svg, [data-porco]:has(.porquinho-alvo:hover) .porco-olho, .racha-nova path { animation: none; }
+  .grupo-fila, .palpite-alvo { transition: none; }
+}
+/* A subtela "Quem são" abre empurrando o conteúdo (linhas de grade de 0fr a 1fr). */
+.subtela { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 420ms cubic-bezier(.16, 1, .3, 1); }
+.subtela[data-aberta="true"] { grid-template-rows: 1fr; }
+.subtela > * { min-height: 0; overflow: hidden; }
+@media (prefers-reduced-motion: reduce) {
+  .subtela, .camera-estados, .estado-forma, .estado-rotulo { transition: none !important; }
+}
+@keyframes surgir {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+/* loading: as barras do símbolo contam e o globo gira (período da faixa = 100) */
+@keyframes apurar {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(var(--queda)); }
+}
+/* seções abaixo da dobra: o navegador só desenha quando chegam perto da tela */
+.adiar {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+/* plenário grande (centenas de cadeiras): uma animação de entrada para o conjunto, não uma por cadeira */
+.plenario-surge {
+  animation: surgir 480ms var(--ease-saida) both;
+}
+
+/* santinho: papel impresso, fosco. A retícula de gráfica (pontos de meio-tom) e a fibra do papel (ruído fractal
+   estático, multiplicado: escurece de leve e sem brilho); nada de verniz nem reflexo, que liam como plástico */
+.santinho-reticula {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .09 0 0 0 0 .08 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23f)'/%3E%3C/svg%3E") 0 0 / 160px 160px,
+    radial-gradient(rgb(255 255 255 / 0.1) 0.9px, transparent 1.3px) 0 0 / 5px 5px;
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+  /* a espessura do papel: um fio escuro na borda de baixo, como a de uma folha impressa */
+  box-shadow: inset 0 -1px 0 rgb(24 32 43 / 0.1);
+}
+/* sem efeito de passar o mouse: o santinho só se mexe no giro (a folha de papel em politico/papel.ts) */
+.santinho { isolation: isolate; }
+/* a chegada: ao rolar até a fileira, cada santinho cai no lugar como papel solto, balançando antes de assentar
+   (guiado pela rolagem, uma vez por passagem; sem a linha do tempo de rolagem, ele só aparece) */
+@keyframes papel-cai {
+  0% { opacity: 0; transform: translateY(-40px) rotate(-8deg); }
+  40% { opacity: 1; transform: translateY(5px) rotate(4deg); }
+  65% { transform: translateY(-3px) rotate(-1.8deg); }
+  85% { transform: translateY(1px) rotate(0.6deg); }
+  100% { opacity: 1; transform: none; }
+}
+@supports (animation-timeline: view()) {
+  .fila-santinhos { view-timeline: --fila block; }
+  .fila-santinhos li > .santinho {
+    animation: papel-cai linear both; animation-timeline: --fila;
+    animation-range: entry calc(var(--i, 0) * 5%) cover calc(28% + var(--i, 0) * 5%);
+  }
+}
+
+/* teclas da urna (SVG): afundam ao apertar, foco visível só no teclado */
+.tecla { cursor: pointer; outline: none; }
+.tecla-topo { transition: transform 70ms ease-out, filter 120ms ease-out; }
+.tecla:hover .tecla-topo { filter: brightness(1.06); }
+.tecla:active .tecla-topo,
+.tecla[data-apertada='true'] .tecla-topo { transform: translateY(2.4px); }
+.tecla-foco { opacity: 0; }
+.tecla:focus-visible .tecla-foco { opacity: 1; }
+
+/* P1: a cadeira procurada pulsa duas vezes ao ser achada */
+@keyframes destaque {
+  0%, 100% { stroke-width: 4; }
+  50% { stroke-width: 9; }
+}
+.destaque-anel { animation: destaque 700ms ease-in-out 2; }
+
+/* P1: cada cadeira "senta" no plenário */
+@keyframes sentar {
+  from { opacity: 0; transform: translateY(-0.6px) scale(0.3); }
+  to { opacity: 1; transform: none; }
+}
+.cadeira-senta {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sentar 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes globo {
+  to { transform: translateX(-100px); }
+}
+@keyframes onda {
+  to { transform: translateX(-240px); }
+}
+@keyframes imprimir {
+  from { clip-path: inset(0 0 100% 0); transform: translateY(-18px); }
+  to { clip-path: inset(0 0 0 0); transform: translateY(0); }
+}
+@keyframes linha-impressa {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.municipio-surge {
+  opacity: 0;
+  animation: surgir 520ms var(--ease-saida) forwards;
+}
+.mapa-forma {
+  transition: fill 260ms var(--ease-saida), opacity 420ms var(--ease-saida), stroke 160ms ease;
+}
+/* durante o voo da câmera: sem contornos (o traço que não escala é refeito a cada quadro) e sem transições */
+[data-voando] .mapa-forma {
+  stroke: none;
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* ---------- boletim: papel térmico saindo da fenda ---------- */
+.boletim-papel {
+  animation: imprimir 760ms var(--ease-saida) both;
+  /* borda serrilhada do picote do rolo */
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%;
+  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%;
+}
+.boletim-linha {
+  animation: linha-impressa 420ms var(--ease-saida) both;
+  animation-delay: calc(260ms + var(--i, 0) * 90ms);
+}
+
+/* Atlas (#10): a cédula de cargos abre logo abaixo da casa "Cargo" (desce e cresce do canto); a pílula do
+   cargo entra sobre o mapa; a lista de candidatos de um partido se abre empurrando o conteúdo. */
+@keyframes cedula-abre { from { opacity: 0; transform: translateY(-6px) scale(.97); } to { opacity: 1; transform: none; } }
+.cedula-cargos { animation: cedula-abre 220ms var(--ease-saida) both; transform-origin: top right; }
+@keyframes pilula-entra { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.pilula-cargo { animation: pilula-entra 260ms var(--ease-saida) both; }
+.gatilho-cargo { transition: background-color 180ms, color 180ms, transform 160ms var(--ease-saida); }
+.gatilho-cargo:active { transform: scale(.97); }
+@keyframes partido-abre { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.abre-partido { animation: partido-abre 240ms var(--ease-saida) both; }
+@media (prefers-reduced-motion: reduce) { .cedula-cargos, .pilula-cargo, .abre-partido { animation: none; } }
+
+/* P2: o minimapa dos estados. Os carregados são botões no oliva claro; o escolhido no oliva cheio, com a
+   sigla em branco e um pulo curto; passar o mouse levanta o estado. Os sem dados ficam em papel. */
+.mapa-estados .estado-sem-dados { fill: #e3e7eb; stroke: #fcfdfd; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.mapa-estados .estado-alvo { cursor: pointer; outline: none; }
+.mapa-estados .estado-alvo path {
+  stroke: #fcfdfd; stroke-width: 1.2; vector-effect: non-scaling-stroke;
+  transform-box: fill-box; transform-origin: center;
+  transition: fill 280ms var(--ease-saida), transform 260ms var(--ease-saida), filter 200ms;
+}
+.mapa-estados .estado-aceso path { fill: #b9cd80; }
+.mapa-estados .estado-apagado path { fill: #dfe8c4; }
+.mapa-estados .estado-ativo path { fill: var(--color-selecao); animation: estado-pula 420ms var(--ease-saida); }
+.mapa-estados .estado-alvo:hover path, .mapa-estados .estado-alvo:focus-visible path { transform: scale(1.1); filter: drop-shadow(0 3px 4px rgb(42 53 80 / .3)); }
+.mapa-estados .estado-alvo:focus-visible path { stroke: var(--color-acao); stroke-width: 2.5; }
+.mapa-estados .sigla, .mapa-estados .sigla-ativa { font-size: 44px; font-weight: 800; fill: var(--color-tinta); paint-order: stroke; stroke: rgb(252 253 253 / .7); stroke-width: 6px; }
+.mapa-estados .sigla-ativa { fill: #fff; stroke: none; }
+.mapa-estados[class*="opacity-45"] .estado-alvo { cursor: default; }
+@keyframes estado-pula { 0% { transform: scale(.85); } 55% { transform: scale(1.16); } 100% { transform: none; } }
+/* lembretes do fim: o ícone gira um pouco quando o mouse passa */
+.lembrete span:first-child { transition: transform 260ms var(--ease-saida); }
+.lembrete:hover span:first-child { transform: rotate(-8deg) scale(1.06); }
+@media (prefers-reduced-motion: reduce) {
+  .mapa-estados .estado-alvo path, .lembrete span:first-child { transition: none; }
+  .mapa-estados .estado-ativo path { animation: none; }
+}
+/* os degraus das escadinhas crescem quando entram na tela (linha do tempo de rolagem; sem ela, ficam inteiros) */
+@supports (animation-timeline: view()) {
+  @keyframes degrau-cresce { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  .degrau { transform-origin: bottom; animation: degrau-cresce linear both; animation-timeline: view(); animation-range: entry 10% entry 90%; }
+  .degrau:nth-child(2) { animation-range: entry 20% entry 95%; }
+  .degrau:nth-child(3) { animation-range: entry 30% entry 100%; }
+  .degrau:nth-child(4) { animation-range: entry 40% cover 30%; }
+}
+@media (prefers-reduced-motion: reduce) { .degrau { animation: none !important; } }
+
+/* P2: hierarquia da página. O título é a maior voz do sistema (a pergunta mais difícil merece); a frase do
+   recorte é o subtítulo e o filtro, com as palavras escolhidas sublinhadas por um traço do oliva. */
+.titulo-p2 { font-size: clamp(2.4rem, 1.3rem + 3vw, 4.2rem); line-height: .96; letter-spacing: -0.022em; max-width: 19ch; }
+.recorte-palavra {
+  text-decoration: underline; text-decoration-color: color-mix(in oklab, var(--color-selecao) 55%, transparent);
+  text-decoration-thickness: 3px; text-underline-offset: 6px; transition: background-color 160ms, text-decoration-color 160ms;
+}
+.recorte-palavra:hover { background: var(--color-selecao-claro); text-decoration-color: var(--color-selecao); }
+@keyframes gaveta-abre { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: none; } }
+.gaveta { animation: gaveta-abre 220ms var(--ease-saida) both; transform-origin: top left; }
+/* o campo do seletor de estado (Cadeira, Escola, Reeleição): a borda escurece aberto e sob o ponteiro */
+.campo-estado { transition: border-color 160ms, box-shadow 200ms var(--ease-saida), transform 160ms var(--ease-saida); }
+.campo-estado:hover, .campo-estado[aria-expanded="true"] { box-shadow: 0 6px 16px -10px rgb(42 53 80 / .35); }
+.campo-estado:active { transform: scale(.985); }
+/* a régua do "E você?": trilho em degradê do papel ao oliva (mais bens à direita), botão grande no oliva */
+.regua-voce { -webkit-appearance: none; appearance: none; height: 28px; background: transparent; cursor: pointer; }
+.regua-voce::-webkit-slider-runnable-track { height: 8px; border-radius: 999px; background: linear-gradient(90deg, #e6eaed, #b9cd80 60%, var(--color-selecao)); }
+.regua-voce::-moz-range-track { height: 8px; border-radius: 999px; background: linear-gradient(90deg, #e6eaed, #b9cd80 60%, var(--color-selecao)); }
+.regua-voce::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; margin-top: -10px; border-radius: 50%; background: var(--color-folha); border: 4px solid var(--color-selecao); box-shadow: 0 3px 8px -2px rgb(42 53 80 / .35); transition: transform 160ms var(--ease-saida); }
+.regua-voce::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--color-folha); border: 4px solid var(--color-selecao); }
+.regua-voce:active::-webkit-slider-thumb { transform: scale(1.15); }
+.exemplo-regua::before { content: ""; position: absolute; top: -8px; left: 50%; width: 2px; height: 8px; border-radius: 1px; background: var(--color-linha-2); }
+.exemplo-regua[aria-pressed="true"]::before { background: var(--color-selecao); height: 10px; }
+@media (prefers-reduced-motion: reduce) { .gaveta { animation: none; } }
+
+
+/* P2: a fila (parada dos bens). Barrinhas com topo arredondado e 2px de papel entre elas, que crescem da base
+   em onda depois que o porquinho quebra; o contorno e o balão da barrinha sob o cursor. */
+@keyframes barra-cresce { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.barrinha {
+  border-radius: 2px 2px 0 0; transform-origin: bottom;
+  animation: barra-cresce 560ms var(--ease-saida) both; animation-delay: calc(1250ms + var(--j, 0) * 7ms);
+  transition: background-color 420ms ease;
+}
+.eixo-fila { paint-order: stroke; -webkit-text-stroke: 3px var(--color-papel); }
+.realce-barra { border: 1.5px solid var(--color-tinta); border-bottom: 0; border-radius: 3px 3px 0 0; }
+.dica-fila {
+  min-width: 150px; padding: 7px 10px; border-radius: 10px; background: var(--color-tinta); color: var(--color-folha);
+  font-size: 0.78rem; line-height: 1.35; box-shadow: var(--shadow-papel); z-index: 3;
+}
+.dica-fila b { font-weight: 800; }
+.dica-fila .dica-grupo { color: #c9d1e6; }
+@media (prefers-reduced-motion: reduce) { .fila-santinhos li > .santinho { animation: none !important; } }
+
+/* esqueletos (componentes/Esqueleto.tsx): o formato do conteúdo que vem, com um pulso suave só de opacidade
+   (compositor, sem custo de layout), que existe só enquanto carrega e para com o movimento reduzido */
+.osso { background: var(--color-papel-2); animation: osso 1.5s ease-in-out infinite; }
+@keyframes osso { 50% { opacity: 0.55; } }
+/* o palco vazio dos 3D: o mesmo céu claro da cena, para a cena "aparecer" nele em vez de substituir um aviso */
+.esqueleto-palco {
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 92%, #fff6d6 0%, transparent 70%),
+    linear-gradient(180deg, #e4edf3 0%, #f1f5f6 48%, #f6f8ef 100%);
+}
+@media (prefers-reduced-motion: reduce) { .osso { animation: none; } }

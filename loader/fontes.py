@@ -48,6 +48,8 @@ def _decimal(s: pd.Series) -> pd.Series:
 
 def _data(s: pd.Series) -> pd.Series:
     d = pd.to_datetime(_texto(s), format="%d/%m/%Y", errors="coerce")
+    # ano com 2 dígitos ("09/01/54") vira o ano 54, que o strftime do Windows grava sem zeros ("54-01-09")
+    d = d.where(d.dt.year >= 1900)
     return d.dt.strftime("%Y-%m-%d").astype("string")
 
 
@@ -130,6 +132,7 @@ CONJUNTOS = [
         "NM_CANDIDATO": ("nome", "texto"), "NR_CPF_CANDIDATO": ("cpf", "cpf"),
         "NR_TITULO_ELEITORAL_CANDIDATO": ("titulo", "titulo"), "DT_NASCIMENTO": ("dt_nascimento", "data"),
         "DS_GRAU_INSTRUCAO": ("grau", "texto"), "NR_PARTIDO": ("nr_partido", "int"),
+        "NR_CANDIDATO": ("numero", "int"), "NM_URNA_CANDIDATO": ("nome_urna", "texto"),
         "SG_PARTIDO": ("sg_partido", "sigla"), "NM_PARTIDO": ("nm_partido", "texto"),
         "DS_SIT_TOT_TURNO": ("situacao", "sigla"),
     }, pos=_chave_pessoa, extras=(("chave", "texto"),)),

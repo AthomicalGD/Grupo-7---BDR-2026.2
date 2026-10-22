@@ -1,3 +1,8 @@
 dados/
+# gerado a cada carga por python -m loader.vies
+respostas/vies_partidos_auditoria.csv
 __pycache__/
 *.pyc
+.venv/
+.impeccable/review/
+RELATORIO_CORRECAO_VIES.md

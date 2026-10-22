@@ -1,0 +1,112 @@
+P9) Para onde foi o dinheiro da candidatura de HERÁCLITO DE SOUSA FORTES?
+Candidatura: 744743 | SQ_CANDIDATO: 180000604122 | DEPUTADO FEDERAL | PI | 2018
+
+Fonte: TSE, despesas contratadas declaradas pela candidatura; valores em reais do ano da eleição.
+Nuvem: tamanho da expressão proporcional à soma dos valores contratados por tipo de gasto.
+O tipo do TSE (DS_ORIGEM_DESPESA) prevalece; descrições livres (DS_DESPESA) só ajudam
+a identificar serviços nas categorias genéricas. Não se usa o nome/CNAE do fornecedor
+para inferir o tipo de gasto. Categorias sem identificação ficam explícitas.
+Fora da conta: 'Doações financeiras a outros candidatos/partidos' (transferência que reaparece na campanha recebedora).
+Despesas com valor zero: 0; registros com valor positivo sem fornecedor: 345.
+Total analisado: R$ 1.184.373,14 em 661 despesas.
+Cobertura da classificação por valor:
+  tipo TSE: 657 despesas, R$ 1.012.873,14 (85.5% do valor)
+  descrição: 3 despesas, R$ 170.000,00 (14.4% do valor)
+  sem identificação: 1 despesa, R$ 1.500,00 (0.1% do valor)
+
+Gastos por tipo (base da nuvem):
+  Tipo | despesas | valor | participação | inferidas da descrição
+  Propaganda impressa | 43 | R$ 442.980,15 | 37.4% | 0
+  Mobilização e militância | 213 | R$ 238.850,00 | 20.2% | 0
+  Transporte e veículos | 18 | R$ 201.158,56 | 17.0% | 0
+  Outras propagandas | 1 | R$ 80.000,00 | 6.8% | 1
+  Serviços advocatícios | 1 | R$ 60.000,00 | 5.1% | 1
+  Pessoal | 20 | R$ 47.920,00 | 4.0% | 0
+  Locação/cessão de bens móveis (exceto veículos) | 2 | R$ 32.210,00 | 2.7% | 0
+  Serviços contábeis | 1 | R$ 30.000,00 | 2.5% | 1
+  Locação/cessão de bens imóveis | 3 | R$ 19.483,33 | 1.6% | 0
+  Alimentação | 2 | R$ 12.211,00 | 1.0% | 0
+  Propaganda digital | 2 | R$ 7.500,00 | 0.6% | 0
+  Propaganda audiovisual | 2 | R$ 4.500,00 | 0.4% | 0
+  Materiais de expediente | 7 | R$ 3.135,30 | 0.3% | 0
+  Encargos financeiros, taxas bancárias e/ou op. cartão de crédito | 345 | R$ 2.924,80 | 0.2% | 0
+  Não especificado | 1 | R$ 1.500,00 | 0.1% | 0
+
+Fornecedores por tipo (até 5 maiores valores contratados em cada tipo):
+  Propaganda impressa — R$ 442.980,15:
+    MULTICAIXAS LTDA ME: R$ 194.920,00 (22 despesas)
+    GRÁFICA SP LTDA - ME: R$ 173.500,00 (4 despesas)
+    MELAO   MELAO COMUNICACAO VISUAL LTDA: R$ 52.860,15 (12 despesas)
+    M C ARCOVERDE COMERCIO DE TINTAS LTDA: R$ 13.600,00 (1 despesa)
+    L   E EDITORA E GRAFICA LTDA - ME: R$ 7.500,00 (3 despesas)
+    ... mais 1 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Publicidade por materiais impressos (R$ 382.620,00); Publicidade por adesivos (R$ 60.360,15)
+  Mobilização e militância — R$ 238.850,00:
+    DAVID ALVES DA SILVA: R$ 3.000,00 (1 despesa)
+    DIEGO DE OLIVEIRA ARAUJO: R$ 3.000,00 (1 despesa)
+    ERIKA FERNANDA DE MOURA SANTOS: R$ 3.000,00 (1 despesa)
+    JEAN DANIEL MARCIEL SOARES: R$ 3.000,00 (1 despesa)
+    JOAO BATISTA TEIXEIRA SANTOS: R$ 3.000,00 (1 despesa)
+    ... mais 208 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Atividades de militância e mobilização de rua (R$ 238.850,00)
+  Transporte e veículos — R$ 201.158,56:
+    TWO TAXI AEREO LTDA: R$ 71.191,49 (5 despesas)
+    POSTO HOMERO CASTELO BRANCO LTDA: R$ 30.170,41 (3 despesas)
+    REBELO E CARVALHO EMPREENDIMENTOS LTDA: R$ 27.166,66 (4 despesas)
+    TOP LINE TAXI AEREO LTDA: R$ 24.130,00 (2 despesas)
+    COMSERV COMPANHIA DE SERVICOS LTDA: R$ 21.600,00 (1 despesa)
+    ... mais 3 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Despesas com transporte ou deslocamento (R$ 111.221,49); Cessão ou locação de veículos (R$ 59.766,66); Combustíveis e lubrificantes (R$ 30.170,41)
+  Outras propagandas — R$ 80.000,00:
+    CASA VERDE  AUDIOVISUAL LTDA: R$ 80.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 80.000,00)
+    Descrição declarada (classificada): CRIAÇÃO E PRODUÇÃO DE PEÇAS PUBLICITÁRIAS (R$ 80.000,00)
+  Serviços advocatícios — R$ 60.000,00:
+    GEORGIA NUNES ADVOGADOS ASSOCIADOS: R$ 60.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 60.000,00)
+    Descrição declarada (classificada): SERVIÇOS ADVOCATÍCIOS (R$ 60.000,00)
+  Pessoal — R$ 47.920,00:
+    KATIA MARIA CARVALHO E MARTINS EVANGELISTA: R$ 7.000,00 (1 despesa)
+    CAMILLA CARDOSO RIBEIRO: R$ 4.000,00 (1 despesa)
+    IONE BRANDÃO DA PAZ: R$ 2.800,00 (1 despesa)
+    THÊMIS MARIA RAMOS LIMA: R$ 2.600,00 (1 despesa)
+    ADRIHAM KESLLEN DO NASCIMENTO SANTOS: R$ 2.120,00 (1 despesa)
+    ... mais 15 fornecedor(es) nesse tipo.
+    Categorias declaradas ao TSE: Despesas com pessoal (R$ 47.920,00)
+  Locação/cessão de bens móveis (exceto veículos) — R$ 32.210,00:
+    ROBSON CLEDIO ANDRADE RIBEIRO: R$ 27.106,00 (1 despesa)
+    COMERCIAL BEBIFESTAS LTDA: R$ 5.104,00 (1 despesa)
+    Categorias declaradas ao TSE: Locação/cessão de bens móveis (exceto veículos) (R$ 32.210,00)
+  Serviços contábeis — R$ 30.000,00:
+    CONTARE AUDITORIA PERICIA E CONSULTORIA CONTABIL LTDA: R$ 30.000,00 (1 despesa)
+    Categorias declaradas ao TSE: Serviços prestados por terceiros (R$ 30.000,00)
+    Descrição declarada (classificada): SERVIÇOS DE CONTABILIDADE (R$ 30.000,00)
+  Locação/cessão de bens imóveis — R$ 19.483,33:
+    ROBSON EULALIO ARAUJO: R$ 14.133,33 (1 despesa)
+    L PINHEIRO MENDES DE SOUSA ME: R$ 4.500,00 (1 despesa)
+    R ROCHA PORTELA E CIA LTDA: R$ 850,00 (1 despesa)
+    Categorias declaradas ao TSE: Locação/cessão de bens imóveis (R$ 19.483,33)
+  Alimentação — R$ 12.211,00:
+    ATANIEL A. DE ARAUJO - ME: R$ 8.670,00 (1 despesa)
+    COMERCIAL BEBIFESTAS LTDA: R$ 3.541,00 (1 despesa)
+    Categorias declaradas ao TSE: Alimentação (R$ 12.211,00)
+  Propaganda digital — R$ 7.500,00:
+    ADYEN DO BRASIL LTDA: R$ 7.500,00 (2 despesas)
+    Categorias declaradas ao TSE: Despesa com Impulsionamento de Conteúdos (R$ 7.500,00)
+  Propaganda audiovisual — R$ 4.500,00:
+    MARCELO DE BRITO DANTAS: R$ 4.500,00 (2 despesas)
+    Categorias declaradas ao TSE: Produção de jingles, vinhetas e slogans (R$ 4.500,00)
+  Materiais de expediente — R$ 3.135,30:
+    CONNECT COMPUTADORES E SISTEMAS LTDA: R$ 1.590,30 (3 despesas)
+    NEIDA MARQUES FERNANDES CIA LTDA: R$ 1.439,00 (3 despesas)
+    C J FREITAS DE SAMPAIO EIRELI-EPP: R$ 106,00 (1 despesa)
+    Categorias declaradas ao TSE: Materiais de expediente (R$ 3.135,30)
+  Encargos financeiros, taxas bancárias e/ou op. cartão de crédito — R$ 2.924,80:
+    (fornecedor não informado): R$ 2.924,80 (345 despesas)
+    Categorias declaradas ao TSE: Encargos financeiros, taxas bancárias e/ou op. cartão de crédito (R$ 2.924,80)
+  Não especificado — R$ 1.500,00:
+    JOÃO ELIAS DE SIQUEIRA: R$ 1.500,00 (1 despesa)
+    Categorias declaradas ao TSE: Diversas a especificar (R$ 1.500,00)
+
+Observação: o fornecedor é o vinculado ao documento cadastrado no banco;
+quando falta documento, o banco não associa um fornecedor à despesa.

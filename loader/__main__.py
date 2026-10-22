@@ -7,7 +7,7 @@ from pathlib import Path
 
 import psycopg2
 
-from . import carga, fontes
+from . import carga, fontes, vies
 
 RAIZ_PADRAO = Path(__file__).resolve().parent.parent / "dados"
 BANCO_PADRAO = "postgresql://eleicoes:eleicoes@localhost:5432/eleicoes"
@@ -113,6 +113,14 @@ def main(argv=None) -> int:
                 print(f"      {tabela:<28}{n:>12,}")
             for motivo, n in sorted(resumo["descartadas"].items()):
                 print(f"      descartadas: {motivo:<40}{n:>10,}")
+        print("\nAtualizando os resumos de campanha ...", end="", flush=True)
+        carga.atualizar_resumos(cur)
+        conn.commit()
+        print(" ok")
+        print("Atualizando o viés e o alinhamento dos partidos (loader.vies) ...", end="", flush=True)
+        cobertura = vies.atualizar(cur, raiz)
+        conn.commit()
+        print(f" ok. Cobertura dos votos válidos: {vies.resumo(cobertura)}")
         print(f"\nConcluído em {_duracao(time.monotonic() - inicio)}.")
     conn.close()
     return 0
