@@ -190,6 +190,12 @@ Fundo frio de papel e tinta ardósia; cor saturada só no dado, nas fitas da mar
 - **Escala do pau-brasil** (8 tons): do areia ao vermelho do pau-brasil, o corante que deu nome ao país, em OKLCH com a luminosidade sempre caindo (0,95 → 0,38), o croma subindo (0,035 → 0,145) e a matiz indo do amarelo ao vermelho (85° → 28°). Calculada em `web/src/escola/MapaEscola.tsx` (`TINTA_COLONIAL`), com a mesma régua de 8 níveis das outras vistas do mapa, de 0 a 80 ou mais.
 - É de propósito diferente da escala da bandeira: o mapa mostra escolaridade e exploração colonial lado a lado, e as duas não podem ser lidas como a mesma grandeza.
 
+### Data (2º turno, questão extra 12)
+- **Resultado, nunca lado:** o vencedor no verde de eleito (#5e7a29, claro #b9cf6e), o derrotado na ardósia neutra (#5f6878, claro #aeb6bf) e a virada no ouro do marcador (#ebb400; traço #cc9e00, fundo #fbf0c4). Nunca a escala do viés nem azul contra vermelho: os dois finalistas podem ser do mesmo lado, e o par de cores leria esquerda contra direita.
+- **A trança** (`segundo/Tranca.tsx`): uma linha por disputa, do 1º ao 2º turno, na altura da parte do vencedor entre os dois finalistas; a metade tracejada e, abaixo dela, um véu claro de ouro ("vencedor atrás"). As viradas ficam em ouro e por cima; as outras, verdes a 38%. É o único movimento da página: as linhas se desenham uma vez, da esquerda para a direita (900 ms, desligado com `prefers-reduced-motion`). No celular o desenho fica mais estreito e as letras 45% maiores.
+- **As fichas:** as duas linhas de cada disputa (vencedor e derrotado), espelhadas em torno da metade, numa faixa de 30% a 70%; cruzam quando há virada. Selo "Virou" no ouro com o ícone Intersect.
+- **Quem não foi votar** é hachurado, como o "sem dados" do mapa (a Regra da Ausência Visível).
+
 ### Tertiary (fitas, assinatura)
 - **Fitas** (#5e881b, #a2bd31, #5d6b94, #468baf, #76acd0, #f19929, #fbc700): a faixa ondulada do cabeçalho e do rodapé, a tira do santinho e da cédula de consulta. A do cabeçalho só ondula enquanto a API responde. Nunca carregam informação nem texto.
 - **Marca** (verde #1f9a4e, amarelo #fbc700, azul #2b4c8c): só no símbolo, que remete à bandeira (losango, globo, faixa e estrelas).

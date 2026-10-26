@@ -217,6 +217,19 @@ no Censo de 1872, na área comparável do IPEA, levada ao nível de 1819 pela ra
 e o estado em 1872). O método completo, as limitações e os links estão na página Metodologia do site
 (seção "Exploração colonial e escolaridade") e no cabeçalho do script.
 
+### O que muda no 2º turno (questão extra 12)
+
+Compara, em cada 2º turno de 2018 a 2024 (presidente, governador e prefeito das cidades com mais de 200 mil
+eleitores; antes de 2018 o banco não tem os votos por zona), os dois finalistas nos dois turnos: a parte de
+cada um, o crescimento dos votos e se houve **virada** (quem venceu o 2º turno não liderou o 1º). Os votos do
+2º turno ficam na mesma candidatura do 1º (`politico_eleicao`), então não precisa de carga nova: tudo vem de
+`votacao_candidato_munzona` e, para comparecimento, brancos, nulos e faltas, de `votacao_municipio`.
+
+`python scripts/12_segundo_turno.py` grava `respostas/12_segundo_turno.txt` com a mesma consulta que o site
+mostra em "Ver SQL" (`web/src/paginas/consultas/p12_segundo_turno.sql`). Resultado: 135 segundos turnos e
+36 viradas (26,7%); nenhuma na Presidência, 6 em 26 governos e 30 em 107 prefeituras. Ficam de fora as
+disputas sem os votos do 1º turno no banco (Piracicaba 2020 e Aracaju 2024) e os vices, que vão na chapa.
+
 ### Fotos dos candidatos
 
 O TSE publica a foto de registro de cada candidatura num zip por eleição e UF
@@ -271,6 +284,8 @@ python -m uvicorn api.app:app --port 8000
 | `GET /api/patrimonio?ano=&cargo=&uf=` | P2: candidatos e eleitos por faixa de patrimônio declarado (sem bens, R$ 0 e quartis, com limites e o candidato do meio) e a fila dos que declararam bens em 100 passos, como em `respostas/02_patrimonio.txt`; Presidente sempre nacional |
 | `GET /api/patrimonio/panorama?uf=` | P2: a taxa de cada faixa em todos os cargos e anos de uma vez, e em quantas disputas a faixa de mais bens supera a de menos |
 | `GET /api/reeleicao?uf=` | P10a: por cargo, eleitos, quantos tentaram a reeleição e quantos voltaram, ciclo a ciclo e somados (média das taxas municipais para prefeito e vereador), como em `respostas/10a_taxa_reeleicao.txt`; alguns segundos na primeira vez de cada UF |
+| `GET /api/segundo-turno` | P12: todos os 2º turnos de 2018 a 2024, cada um com os dois finalistas nos dois turnos (votos, parte, crescimento, quem liderou o 1º, quem venceu), se houve virada, os votos dos eliminados e o comparecimento, os brancos, os nulos e as faltas de cada turno; em `incompletas`, as disputas sem os votos de um dos turnos no banco |
+| `GET /api/segundo-turno/{id}` | P12: uma disputa pelo território (presidente por estado, governador por município, prefeito por zona eleitoral): os votos dos dois finalistas em cada lugar e turno e onde o líder mudou |
 | `GET /api/reeleicao/pessoas?uf=&cargo=&eleitos_em=&grupo=&limite=&desde=` | P10a: os eleitos de um cargo numa eleição que voltaram, perderam ou não tentaram na seguinte (`grupo`), os mais votados primeiro, com a contagem dos três grupos |
 | `GET /api/cadeira?ano=&cargo=&uf=&municipio=` | P1: custo da cadeira (gasto médio dos eleitos) e gasto da disputa por cadeira (gasto de todos os candidatos ÷ eleitos), cada eleito com gasto e votos, chance de vitória por faixa de gasto, preço por partido, despesas por tipo, receitas por fonte e o fator do IPCA |
 | `GET /api/cadeira/nao-eleitos?ano=&cargo=&uf=&municipio=` | P1: quem disputou e não se elegeu, do maior ao menor gasto (a galeria do plenário) |
@@ -388,6 +403,7 @@ O que protege o notebook, nos dois:
 | Boletim do município: viés, espectro do voto, alinhamento na Câmara, prefeitos, custo da cadeira, indicadores, QR code | `/uf/PI/2211001` | P7, P1, P3 |
 | Urna de consulta (UE2020 em vetor): busca pelo nome e cédula de filtros (cargo, ano, estado, partido, resultado) | `/urna` | P10 |
 | Ficha da carreira: situação atual, fita das eleições, trajetória com os partidos, custo das campanhas, santinhos | `/politico/{id}` (o id muda quando o banco é recriado) | P10, P1 |
+| O que muda no 2º turno: a trança das 135 disputas (as viradas em ouro), as fichas de cada uma com as linhas que se cruzam, filtros por cargo, ano e viradas, e a disputa aberta com os votos de um turno ao outro, de onde vieram os votos novos e o mapa de onde o líder mudou | `/segundo-turno` | 12 (extra) |
 | Fontes, método e limitações | `/metodologia` | todas |
 
 - Testes ponta a ponta (desktop 1440×900 e celular 390×844, contra os dados reais):
