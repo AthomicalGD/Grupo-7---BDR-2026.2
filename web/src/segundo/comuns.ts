@@ -7,7 +7,7 @@ import { doEstado, nomeProprio } from '../lib/formato'
 // ouro do marcador. Nunca a escala do viés: os dois finalistas podem ser do mesmo lado (PE 2022).
 export const COR = {
   vence: 'var(--color-eleito)',
-  venceClaro: '#b9cf6e',
+  venceClaro: 'color-mix(in oklab, var(--color-eleito) 42%, white)',
   perde: 'var(--color-tinta-3)',
   perdeClaro: 'var(--color-linha-2)',
   vira: 'var(--color-escolha)',

@@ -403,7 +403,7 @@ O que protege o notebook, nos dois:
 | Boletim do município: viés, espectro do voto, alinhamento na Câmara, prefeitos, custo da cadeira, indicadores, QR code | `/uf/PI/2211001` | P7, P1, P3 |
 | Urna de consulta (UE2020 em vetor): busca pelo nome e cédula de filtros (cargo, ano, estado, partido, resultado) | `/urna` | P10 |
 | Ficha da carreira: situação atual, fita das eleições, trajetória com os partidos, custo das campanhas, santinhos | `/politico/{id}` (o id muda quando o banco é recriado) | P10, P1 |
-| O que muda no 2º turno: a trança das 135 disputas (as viradas em ouro), as fichas de cada uma com as linhas que se cruzam, filtros por cargo, ano e viradas, e a disputa aberta com os votos de um turno ao outro, de onde vieram os votos novos e o mapa de onde o líder mudou | `/segundo-turno` | 12 (extra) |
+| O que muda no 2º turno: a largada das 135 disputas (um ponto por disputa, na parte do vencedor no 1º turno; as viradas em ouro, à esquerda da metade), as fichas de cada uma com as linhas que se cruzam, filtros por cargo, ano e viradas, e a disputa aberta com os votos de um turno ao outro, de onde vieram os votos novos e o mapa de onde o líder mudou | `/segundo-turno` | 12 (extra) |
 | Fontes, método e limitações | `/metodologia` | todas |
 
 - Testes ponta a ponta (desktop 1440×900 e celular 390×844, contra os dados reais):

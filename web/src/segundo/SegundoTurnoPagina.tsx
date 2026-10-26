@@ -1,5 +1,5 @@
 // P12: o que muda no 2º turno. Todas as disputas de 2º turno de 2018 a 2024 (Presidência, governos e as
-// prefeituras das cidades com mais de 200 mil eleitores): a trança mostra todas juntas, as fichas uma a uma (as
+// prefeituras das cidades com mais de 200 mil eleitores): a largada mostra todas juntas, as fichas uma a uma (as
 // linhas se cruzam quando há virada) e a disputa aberta vem com os votos, o comparecimento e o território.
 import { Intersect, MagnifyingGlass, X } from '@phosphor-icons/react'
 import { useQuery } from '@tanstack/react-query'
@@ -12,36 +12,12 @@ import { Atrasado, EsqueletoPagina } from '../componentes/Esqueleto'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { cargo as cargoBonito, decimal, inteiro, nomeProprio, pct, semAcento } from '../lib/formato'
 import type { BuscaSegundoTurno } from '../router'
-import { CARGOS, COR, chaveDoCargo, disputaNome, lugar, nomeUrna, parteVencedor, type ChaveCargo } from './comuns'
+import { CARGOS, COR, disputaNome, lugar, nomeUrna, parteVencedor, type ChaveCargo } from './comuns'
 import { Disputa } from './Disputa'
-import { Tranca } from './Tranca'
+import { Largada } from './Largada'
 
 const ROTULO_CARGO: Record<ChaveCargo, string> = { presidente: 'Presidente', governador: 'Governador', prefeito: 'Prefeito' }
 const LOTE = 24
-
-/** Quanto do total virou, por cargo: uma régua de viradas (ouro) e confirmações (verde). */
-function PorCargo({ disputas }: { disputas: SegundoTurno[] }) {
-  const linhas = (Object.keys(CARGOS) as ChaveCargo[]).map((k) => {
-    const ds = disputas.filter((d) => chaveDoCargo(d.cod_cargo) === k)
-    return { k, n: ds.length, viradas: ds.filter((d) => d.virada).length }
-  }).filter((l) => l.n)
-  return (
-    <ul className="space-y-4">
-      {linhas.map((l) => (
-        <li key={l.k}>
-          <div className="flex items-baseline justify-between gap-3 text-[0.92rem]">
-            <span className="font-bold">{l.k === 'prefeito' ? 'Prefeituras' : l.k === 'governador' ? 'Governos estaduais' : 'Presidência'}</span>
-            <span className="tabular text-tinta-2"><b className="text-tinta">{l.viradas}</b> viradas em {l.n}</span>
-          </div>
-          <div className="mt-1.5 flex h-3.5 overflow-hidden rounded-full bg-linha" role="img" aria-label={`${l.viradas} viradas em ${l.n} disputas`}>
-            <span style={{ width: `${(100 * l.viradas) / l.n}%`, background: COR.vira }} />
-            <span style={{ width: `${(100 * (l.n - l.viradas)) / l.n}%`, background: COR.vence, opacity: 0.55 }} />
-          </div>
-        </li>
-      ))}
-    </ul>
-  )
-}
 
 /** Uma disputa em miniatura: as duas linhas (vencedor e derrotado) do 1º ao 2º turno; cruzam quando virou. */
 function Placar({ d, ufs, aberta, aoAbrir }: { d: SegundoTurno; ufs: Map<string, string>; aberta: boolean; aoAbrir: () => void }) {
@@ -132,7 +108,7 @@ export function SegundoTurnoPagina() {
 
   return (
     <div className="mx-auto max-w-[var(--casca-max)] px-4 pb-12 pt-6 md:px-[var(--casca-margem)] md:pt-7">
-      <header className="grid gap-x-12 gap-y-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-end">
+      <header>
         <div>
           <h1 className="t-display">O que muda no 2º turno?</h1>
           <p className="mt-4 max-w-[58ch] text-[1.08rem] text-tinta-2">
@@ -141,13 +117,10 @@ export function SegundoTurnoPagina() {
             liderou o 1º turno perdeu: houve <b className="text-tinta">virada</b>.
           </p>
         </div>
-        <div className="rounded-[16px] border border-linha bg-folha p-5">
-          <PorCargo disputas={todas} />
-        </div>
       </header>
 
-      <section aria-label="Todas as disputas juntas" className="mt-10">
-        <Tranca disputas={todas} ufs={ufs} aoAbrir={abrir} />
+      <section aria-label="De onde o vencedor partiu" className="mt-8">
+        <Largada disputas={todas} ufs={ufs} aoAbrir={abrir} />
       </section>
 
       {aberta && (

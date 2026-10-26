@@ -483,7 +483,7 @@ export function Metodologia() {
         <ul className="list-disc space-y-2 pl-5">
           <li><b>As disputas:</b> cada eleição de 2º turno é ligada ao 1º turno da mesma disputa (mesmo ano, cargo e lugar). Os votos do 2º turno ficam na mesma candidatura do 1º, então cada finalista tem os dois números sem nenhuma carga a mais.</li>
           <li><b>Virada:</b> quem venceu o 2º turno não foi o mais votado do 1º.</li>
-          <li><b>A parte do vencedor:</b> nas linhas que se cruzam (a trança e as fichas), a altura é a parte do vencedor nos votos dos dois finalistas, em cada turno; abaixo da metade no 1º turno, ele começou atrás. Na ficha de cada candidato, a parte do 1º turno é entre todos os candidatos.</li>
+          <li><b>A parte do vencedor:</b> a parte dele nos votos dos dois finalistas. Na largada, cada ponto fica na parte do 1º turno: à esquerda da metade, ele começou atrás e virou. Nas fichas, as duas linhas vão do 1º ao 2º turno e se cruzam quando há virada. Na ficha de cada candidato, a parte do 1º turno é entre todos os candidatos.</li>
           <li><b>De onde vieram os votos novos:</b> só os totais de cada turno, na mesma régua dos eleitores aptos (os dois finalistas, os outros candidatos, brancos e nulos, e quem não foi votar). O voto é secreto: dá para comparar os totais, não seguir cada eleitor.</li>
           <li><b>Onde o líder mudou:</b> presidente por estado, governador por município e prefeito por zona eleitoral, somando os votos por zona.</li>
           <li><b>Fora da conta:</b> antes de 2018 (o banco não tem os votos por zona), os vices (vão na chapa do titular) e as disputas sem os votos do 1º turno no banco (Piracicaba 2020 e Aracaju 2024).</li>

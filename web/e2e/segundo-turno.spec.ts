@@ -1,17 +1,17 @@
 import { expect, registrar, test } from './base'
 
-test('P12: a trança, as fichas e a disputa aberta do 2º turno', async ({ page }) => {
+test('P12: a largada, as fichas e a disputa aberta do 2º turno', async ({ page }) => {
   // a primeira conta junta os dois turnos de todas as disputas (alguns segundos na API)
   test.setTimeout(150_000)
   const api = await (await page.request.get('/api/segundo-turno', { timeout: 120_000 })).json()
   const total = api.disputas.length
   const viradas = api.disputas.filter((d: { virada: boolean }) => d.virada).length
 
-  // a abertura diz quantas disputas e quantas viradas, e a trança tem uma linha por disputa
+  // a abertura diz quantas disputas e quantas viradas, e a largada tem um ponto por disputa
   await page.goto('/segundo-turno')
   await expect(page.getByRole('heading', { name: 'O que muda no 2º turno?' })).toBeVisible({ timeout: 90_000 })
   await expect(page.getByText(`${total} segundos turnos`)).toBeVisible()
-  await expect(page.getByRole('img', { name: new RegExp(`${viradas} das ${total} linhas`) })).toBeVisible()
+  await expect(page.getByRole('img', { name: new RegExp(`${viradas} das ${total} disputas ficam à esquerda da metade`) })).toBeVisible()
   // sem disputa no endereço, abre a maior virada
   await expect(page.locator('#disputa-titulo')).toBeVisible()
   await registrar(page, 'segundo-turno')
