@@ -77,7 +77,7 @@ export function Atlas() {
     document.title = partes.length ? `${partes.join(', ')} · Voto Aberto` : 'Voto Aberto · para onde o voto pendeu'
   }, [municipio.data?.nome, nomeUF])
 
-  if (malhaBrasil.isError || ufs.isError) return <ErroCarga erro={malhaBrasil.error ?? ufs.error} />
+  if (malhaBrasil.isError || ufs.isError) return <ErroCarga erro={malhaBrasil.error ?? ufs.error} aoTentar={() => Promise.all([malhaBrasil.refetch(), ufs.refetch()])} />
   if (!malhaBrasil.data || !ufs.data) return <Atrasado><EsqueletoPagina variante="mapa" rotulo="Abrindo o mapa do Brasil..." /></Atrasado>
 
   const carregandoUF = !!sigla && (malhaUF.isLoading || detalheUF.isLoading)
@@ -88,7 +88,7 @@ export function Atlas() {
     painel = municipio.data ? (
       <Boletim m={municipio.data} ano={ano} cargo={doCargo?.nome} aoFechar={() => irUF(sigla!)} />
     ) : municipio.isError ? (
-      <ErroCarga erro={municipio.error} compacto />
+      <ErroCarga erro={municipio.error} compacto aoTentar={municipio.refetch} />
     ) : (
       <Atrasado><EsqueletoBloco altura="34dvh" linhas={3} rotulo="Imprimindo o boletim..." /></Atrasado>
     )
@@ -106,12 +106,12 @@ export function Atlas() {
         aoAbrirMunicipio={(c) => irMunicipio(c)}
       />
     ) : detalheUF.isError ? (
-      <ErroCarga erro={detalheUF.error} compacto />
+      <ErroCarga erro={detalheUF.error} compacto aoTentar={detalheUF.refetch} />
     ) : (
       <Atrasado><EsqueletoBloco altura="34dvh" linhas={3} rotulo={`Apurando ${nomeUF ?? sigla}...`} /></Atrasado>
     )
   } else {
-    painel = <PainelBrasil ufs={ufs.data} malha={malhaBrasil.data} ano={ano} cargo={doCargo?.nome} aoEscolherUF={irUF} aoApontarUF={preverUF} aoEscolherMunicipio={escolherNaBusca} />
+    painel = <PainelBrasil ufs={ufs.data} malha={malhaBrasil.data} ano={ano} anos={anos} aoMudarAno={mudarAno} cargo={doCargo?.nome} aoEscolherUF={irUF} aoApontarUF={preverUF} aoEscolherMunicipio={escolherNaBusca} />
   }
 
   return (
@@ -157,7 +157,7 @@ export function Atlas() {
             )}
           </AnimatePresence>
         </div>
-        <Legenda relativo={relativo && !!sigla} />
+        <Legenda relativo={relativo && !!sigla} brasil={!sigla} />
       </section>
 
       <section aria-live="polite" className="min-w-0 pb-8">

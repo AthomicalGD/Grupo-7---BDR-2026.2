@@ -6,6 +6,7 @@ import { MagnifyingGlass, X } from '@phosphor-icons/react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
+import { useLembrado } from '../lib/pilha'
 import { consultas, type GrupoReeleicao, type Reeleicao } from '../api'
 import { Escolha } from '../componentes/Escolha'
 import { Retrato } from '../componentes/Retrato'
@@ -23,7 +24,7 @@ const GRUPOS: { chave: GrupoReeleicao; rotulo: string; fundo: string; borda: str
 ]
 
 function Coluna({ uf, cargo, eleitosEm, grupo, marcada, busca }: { uf: string; cargo: Cargo; eleitosEm: number; grupo: (typeof GRUPOS)[number]; marcada: boolean; busca: string }) {
-  const [limite, setLimite] = useState(POR_VEZ)
+  const [limite, setLimite] = useLembrado(`reeleicao:limite:${grupo.chave}`, POR_VEZ)
   const q = useQuery({ ...consultas.pessoasReeleicao(uf, cargo.cod, eleitosEm, grupo.chave, limite, busca), placeholderData: keepPreviousData })
   const d = q.data
   return (
@@ -103,12 +104,12 @@ export function QuemSao({ uf, ufNome, cargo, eleitosEm, destaque, aoEscolherCicl
   if (aberta && !jaAbriu) setJaAbriu(true)
   const ciclo = cargo.ciclos.find((c) => c.eleitos_em === eleitosEm) ?? cargo.ciclos.at(-1)!
   // a busca espera a pessoa parar de digitar (250ms) antes de consultar a API
-  const [texto, setTexto] = useState('')
-  const [busca, setBusca] = useState('')
+  const [texto, setTexto] = useLembrado('reeleicao:texto', '')
+  const [busca, setBusca] = useLembrado('reeleicao:busca', '')
   useEffect(() => {
     const t = setTimeout(() => setBusca(texto.trim().length >= 2 ? texto.trim() : ''), 250)
     return () => clearTimeout(t)
-  }, [texto])
+  }, [texto, setBusca])
   return (
     <div id="quem-sao" className="subtela scroll-mt-24" data-aberta={aberta} inert={!aberta}>
       <div>

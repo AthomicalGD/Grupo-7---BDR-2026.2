@@ -65,7 +65,7 @@ function Balanca({ d }: { d: Dados }) {
           </p>
         </div>
       )}
-      <figcaption className="flex justify-between text-[0.74rem] text-tinta-3">
+      <figcaption className="flex justify-between text-[0.78rem] text-tinta-3">
         <span>puxam para a esquerda: <b className="tabular text-tinta-2">{fmtVies(-somaE)}</b></span>
         <span>para a direita: <b className="tabular text-tinta-2">{fmtVies(somaD)}</b></span>
       </figcaption>
@@ -82,7 +82,7 @@ function LinhaCandidato({ c }: { c: Candidato }) {
         <Retrato foto={c.foto} nome={c.nome} tamanho={30} className="!rounded-md" />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[0.84rem] font-semibold">{nomeProprio(c.nome)}</span>
-          <span className="block truncate text-[0.74rem] text-tinta-3">
+          <span className="block truncate text-[0.78rem] text-tinta-3">
             {fmtCargo(c.cargo)}{c.local ? ` · ${c.local}` : ''}{c.eleito ? ' · eleito' : ''}
           </span>
         </span>
@@ -142,7 +142,7 @@ function CandidatosDoPartido({ p, sigla, ano, cargo }: { p: Dados['partidos'][nu
             Mostrar mais {Math.min(PAGINA, faltam)} <span className="font-normal text-tinta-3">· faltam {inteiro(faltam)}</span>
           </button>
         ) : <span />}
-        <span className="text-[0.74rem] text-tinta-3">Nominais {inteiro(p.nominais)} · legenda {inteiro(p.legenda)}</span>
+        <span className="text-[0.78rem] text-tinta-3">Nominais {inteiro(p.nominais)} · legenda {inteiro(p.legenda)}</span>
       </div>
     </div>
   )
@@ -198,7 +198,7 @@ export function ComposicaoVies({ sigla, nome, ano, cargo }: { sigla: string; nom
       </p>
       <Balanca d={d} />
       <div>
-        <div className="grid grid-cols-[minmax(0,1fr)_3.6rem_3.6rem_3.6rem_1rem] gap-2 px-1.5 pb-1 text-[0.72rem] font-semibold text-tinta-3" aria-hidden>
+        <div className="grid grid-cols-[minmax(0,1fr)_3.6rem_3.6rem_3.6rem_1rem] gap-2 px-1.5 pb-1 text-[0.78rem] font-semibold text-tinta-3" aria-hidden>
           <span>Partido</span>
           <span className="text-right">% votos</span>
           <span className="text-right">Viés</span>
@@ -212,7 +212,7 @@ export function ComposicaoVies({ sigla, nome, ano, cargo }: { sigla: string; nom
           </button>
         )}
       </div>
-      <TabelaAlternavel
+      <TabelaAlternavel sql="p7Vies"
         titulo={`Partidos e o viés de ${nome} em ${ano}`}
         colunas={['Partido', 'Votos válidos', '% dos votos', 'Viés', 'Puxa a média']}
         linhas={() => d.partidos.map((p) => [p.sigla, inteiro(p.votos), pct(p.pct), fmtVies(p.vies), fmtVies(p.contribuicao)])}

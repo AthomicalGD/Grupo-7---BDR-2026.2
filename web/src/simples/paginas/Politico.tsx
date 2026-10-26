@@ -21,15 +21,15 @@ function Trajetoria({ candidaturas }: { candidaturas: Candidatura[] }) {
           return (
             <li key={a} className="flex flex-col items-center gap-1.5 text-center">
               <span
-                className={`grid h-9 w-full place-items-center rounded-[4px] border text-[0.7rem] font-bold ${
+                className={`grid h-9 w-full place-items-center rounded-[4px] border text-[0.78rem] font-bold ${
                   doAno.length === 0 ? 'border-dashed border-linha text-transparent' : venceu ? 'border-eleito bg-eleito text-folha' : 'border-linha-2 bg-folha text-tinta-2'
                 }`}
                 title={doAno.map((c) => `${cargo(c.cargo)}: ${resultado(c)}`).join('; ') || 'Não concorreu'}
               >
                 {doAno.length > 0 && (venceu ? 'eleito' : 'não')}
               </span>
-              <span className="text-[0.72rem] tabular-nums text-tinta-3">’{String(a).slice(2)}</span>
-              <span className="text-[0.7rem] leading-tight text-tinta-2">{doAno.map((c) => cargo(c.cargo).split(' ')[0]).join(', ')}</span>
+              <span className="text-[0.78rem] tabular-nums text-tinta-3">’{String(a).slice(2)}</span>
+              <span className="text-[0.78rem] leading-tight text-tinta-2">{doAno.map((c) => cargo(c.cargo).split(' ')[0]).join(', ')}</span>
             </li>
           )
         })}

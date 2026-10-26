@@ -43,7 +43,7 @@ export function Espectro({ espectro, anoAtivo }: { espectro: PorAno<Partido[]>; 
                         onPointerEnter={() => setFoco({ ano: a.toString(), p, x: inicio + p.pct / 2 })}
                       >
                         {largo && maiores.has(p.sigla) && (
-                          <span className="truncate px-1 text-[0.7rem] font-bold" style={{ color: tintaSobre(p.vies) }}>
+                          <span className="truncate px-1 text-[0.78rem] font-bold" style={{ color: tintaSobre(p.vies) }}>
                             {p.sigla}
                           </span>
                         )}
@@ -55,7 +55,7 @@ export function Espectro({ espectro, anoAtivo }: { espectro: PorAno<Partido[]>; 
             </div>
           )
         })}
-        <div className="grid grid-cols-[44px_1fr] gap-3 text-[0.72rem] text-tinta-3">
+        <div className="grid grid-cols-[44px_1fr] gap-3 text-[0.78rem] text-tinta-3">
           <span />
           <span className="flex justify-between">
             <span className="inline-flex items-center gap-1"><ArrowLeft size={12} weight="bold" aria-hidden /> esquerda</span>
@@ -82,7 +82,7 @@ export function Espectro({ espectro, anoAtivo }: { espectro: PorAno<Partido[]>; 
           </div>
         )}
       </div>
-      <TabelaAlternavel
+      <TabelaAlternavel sql="p7VotosPartido"
         titulo={`Votos válidos por partido em ${anoAtivo}`}
         colunas={['Partido', 'Viés', 'Votos', '%']}
         linhas={(espectro[anoAtivo] ?? []).map((p) => [p.sigla, p.vies == null ? 'sem viés' : fmtVies(p.vies), inteiro(p.votos), pct(p.pct)])}

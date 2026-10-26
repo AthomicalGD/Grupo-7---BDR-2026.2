@@ -3,6 +3,7 @@ import { ANOS, ANOS_ELEICAO, CARGOS_BUSCA, ORDENS_BUSCA, type Ano, type FiltrosB
 import { Atlas } from './atlas/Atlas'
 import { EsqueletoPagina } from './componentes/Esqueleto'
 import { ErroCarga } from './componentes/ErroCarga'
+import { registraOrigem } from './lib/pilha'
 import { ehFalhaDeModulo, recarregaUmaVez } from './lib/recarrega'
 import { Moldura } from './componentes/Moldura'
 
@@ -25,6 +26,8 @@ export interface BuscaCadeira {
   epoca?: boolean
   ordem?: 'partido'
   pe?: boolean
+  /** a galeria de quem não se elegeu em volta do plenário */
+  todos?: boolean
 }
 
 export interface BuscaEscola {
@@ -35,6 +38,10 @@ export interface BuscaEscola {
   santinho?: number
   uf?: string
   ibge?: number
+  /** "Pintar por" do mapa (sem ele, os políticos) */
+  pintar?: 'eleitores' | 'colonial'
+  /** a dispersão no lugar do mapa */
+  vista?: 'dispersao'
 }
 
 export interface BuscaPolitico {
@@ -110,6 +117,7 @@ const cadeira = createRoute({
     epoca: sim(s.epoca),
     ordem: s.ordem === 'partido' ? 'partido' : undefined,
     pe: sim(s.pe),
+    todos: sim(s.todos),
   }),
 })
 const escola = createRoute({
@@ -122,6 +130,8 @@ const escola = createRoute({
     santinho: numero(s.santinho),
     uf: typeof s.uf === 'string' && /^[A-Z]{2}$/.test(s.uf) ? s.uf : undefined,
     ibge: numero(s.ibge),
+    pintar: s.pintar === 'eleitores' || s.pintar === 'colonial' ? s.pintar : undefined,
+    vista: s.vista === 'dispersao' ? 'dispersao' : undefined,
   }),
 })
 const patrimonio = createRoute({
@@ -152,13 +162,19 @@ const politico = createRoute({
   pendingComponent: () => <EsqueletoPagina variante="carreira" rotulo="Abrindo a carreira..." />,
   validateSearch: (s: Record<string, unknown>): BuscaPolitico => ({ gasto: numero(s.gasto) }),
 })
+const comparar = createRoute({
+  getParentRoute: () => raiz,
+  path: '/comparar',
+  component: lazyRouteComponent(() => import('./comparar/CompararPagina'), 'CompararPagina'),
+  validateSearch: (s: Record<string, unknown>): { a?: number; b?: number } => ({ a: numero(s.a), b: numero(s.b) }),
+})
 const metodologia = createRoute({
   getParentRoute: () => raiz,
   path: '/metodologia',
   component: lazyRouteComponent(() => import('./paginas/Metodologia'), 'Metodologia'),
 })
 
-const arvore = raiz.addChildren([atlas.addChildren([inicio, estado, municipio]), urna, cadeira, escola, patrimonio, reeleicao, politico, metodologia])
+const arvore = raiz.addChildren([atlas.addChildren([inicio, estado, municipio]), urna, cadeira, escola, patrimonio, reeleicao, politico, comparar, metodologia])
 
 export const router = createRouter({
   routeTree: arvore,
@@ -174,6 +190,11 @@ export const router = createRouter({
   // baixa o código da página quando o ponteiro para sobre o link: a troca de tela fica imediata
   defaultPreload: 'intent',
 })
+
+// a pilha de navegação: cada tela sabe de onde se chegou a ela (o Voltar da carreira leva para lá, não à urna)
+router.subscribe('onBeforeNavigate', ({ fromLocation, toLocation }) =>
+  registraOrigem(toLocation.state.__TSR_key, fromLocation && { pathname: fromLocation.pathname, href: fromLocation.href }),
+)
 
 declare module '@tanstack/react-router' {
   interface Register {

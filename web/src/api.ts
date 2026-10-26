@@ -195,6 +195,8 @@ export interface Politico {
   id: number
   nome: string
   nascimento_ano: number | null
+  /** gênero declarado ao TSE (migração 015); null quando não informado */
+  genero: 'masculino' | 'feminino' | null
   foto: string | null
   ufs: string[]
   candidaturas: Candidatura[]
@@ -232,6 +234,24 @@ export interface ResumoCadeira {
   gasto_por_cadeira: number | null
   mediana_eleito: number | null
   mediana_nao_eleito: number | null
+}
+
+/** As zonas eleitorais de um município num ano: eleitorado, comparecimento e o mais votado (prefeito ou presidente). */
+export interface Zonas {
+  ano: number
+  cargo: string
+  zonas: {
+    numero: number
+    aptos: number | null
+    foram: number | null
+    /** de quem foi votar, quantos têm superior completo */
+    superior: number | null
+    id_politico: number | null
+    nm_urna: string | null
+    sigla: string | null
+    votos: number | null
+    total: number | null
+  }[]
 }
 
 export interface Assento {
@@ -429,6 +449,8 @@ export interface Escola {
   quintis: (QuintilEscola & { q: number })[]
   todos: QuintilEscola
   correlacao: number | null
+  /** correlação do índice de exploração colonial com a escolaridade, município a município (questão extra) */
+  colonial: { municipios: number; votantes: number | null; candidatos: number | null; eleitos?: number | null; votados?: number | null }
 }
 
 /** Médias dos municípios do grupo: % com superior completo de quem votou, dos candidatos, dos eleitos e dos votos. */
@@ -478,6 +500,9 @@ export interface MunicipioEscola {
   candidatos: number | null
   eleitos: number | null
   votados: number | null
+  /** a questão extra: exploração colonial (0 a 100) = metade economia (o ciclo mais forte, 0 a 1) e metade trabalho
+   *  escravizado (1872 levado a 1819, 0 a 1); os ciclos: açúcar, mineração, gado e Norte */
+  colonial: { indice: number; economia: number; escravidao: number; ciclos: [number, number, number, number] } | null
 }
 
 export interface PartidoEscola {
@@ -578,6 +603,12 @@ export const consultas = {
       queryFn: ({ signal }) => get<Municipio>(`/api/municipios/${ibge}${comCargo(cargo, '?')}`, signal),
       ...sempre,
     }),
+  zonas: (ibge: number, ano: number) =>
+    queryOptions({
+      queryKey: ['zonas', ibge, ano],
+      queryFn: ({ signal }) => get<Zonas>(`/api/municipios/${ibge}/zonas?ano=${ano}`, signal),
+      ...sempre,
+    }),
   buscaMunicipios: (q: string, uf = '') =>
     queryOptions({
       queryKey: ['busca-municipios', q, uf],
@@ -607,6 +638,13 @@ export const consultas = {
       queryKey: ['cadeira', ano, cargo, uf, municipio ?? null],
       queryFn: ({ signal }) =>
         get<Cadeira>(`/api/cadeira?ano=${ano}&cargo=${cargo}&uf=${uf}${municipio ? `&municipio=${municipio}` : ''}`, signal),
+      ...sempre,
+    }),
+  naoEleitos: (ano: number, cargo: number, uf = '', municipio?: number) =>
+    queryOptions({
+      queryKey: ['nao-eleitos', ano, cargo, uf, municipio ?? null],
+      queryFn: ({ signal }) =>
+        get<Assento[]>(`/api/cadeira/nao-eleitos?ano=${ano}&cargo=${cargo}&uf=${uf}${municipio ? `&municipio=${municipio}` : ''}`, signal),
       ...sempre,
     }),
   patrimonio: (ano: number, cargo: number, uf = '') =>

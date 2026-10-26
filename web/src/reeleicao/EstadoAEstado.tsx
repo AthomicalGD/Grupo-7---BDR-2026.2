@@ -14,7 +14,7 @@ import { formas, LADO, projecaoBrasil, silhueta } from '../atlas/geo'
 import { Atrasado, EsqueletoBloco } from '../componentes/Esqueleto'
 import { Escolha } from '../componentes/Escolha'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
-import { cargoPlural, inteiro, noEstado } from '../lib/formato'
+import { cargoPlural, inteiro, noEstado, ufsFrase } from '../lib/formato'
 import { COR, corDaTaxa, POUCOS, TODOS } from './conta'
 
 type UFCarregada = { sigla: string; nome: string; cd_ibge: number }
@@ -56,7 +56,7 @@ function Regua({ nome, taxa, media, reeleitos, tentaram, outros }: {
     <li className="grid grid-cols-[minmax(0,1fr)_3.5rem] items-center gap-x-4 gap-y-1 py-2.5 sm:grid-cols-[minmax(0,9.5rem)_minmax(0,1fr)_3.5rem]">
       <span className="min-w-0">
         <span className={`block truncate font-semibold ${poucos ? 'text-tinta-2' : 'text-tinta'}`}>{nome}</span>
-        <span className="block text-[0.74rem] tabular text-tinta-3">
+        <span className="block text-[0.78rem] tabular text-tinta-3">
           {inteiro(reeleitos)} de {inteiro(tentaram)}{poucos ? ', poucos casos' : ''}
         </span>
       </span>
@@ -184,13 +184,13 @@ export function EstadoAEstado({ ufs, malha, aoAbrir }: { ufs: UFCarregada[]; mal
                   })}
                 </g>
               </svg>
-              <p className="pointer-events-none absolute bottom-2 left-3 text-[0.72rem] text-tinta-3">
+              <p className="pointer-events-none absolute bottom-2 left-3 text-[0.78rem] text-tinta-3">
                 {uf ? 'Toque em Todos para voltar ao Brasil' : 'Toque num estado colorido para aproximar'}
               </p>
             </div>
 
             <div className="min-w-0">
-              <h3 key={escolhido} className="revela t-h1">{uf ? uf.nome : `Os ${ufs.length} estados carregados`}</h3>
+              <h3 key={escolhido} className="revela t-h1">{uf ? uf.nome : ufsFrase(ufs, 'Os')}</h3>
               <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-1">
                 <span className="t-numero text-[clamp(3.2rem,2.4rem+2.6vw,4.6rem)] leading-none tabular" style={{ color: COR.texto }}>{pct(geral(d).taxa)}</span>
                 <p className="max-w-[34ch] pb-1.5 text-[1.02rem] leading-snug text-tinta-2">
@@ -256,7 +256,7 @@ export function EstadoAEstado({ ufs, malha, aoAbrir }: { ufs: UFCarregada[]; mal
         </MotionConfig>
       )}
       {prontos && todos && (
-        <TabelaAlternavel
+        <TabelaAlternavel sql="p10Reeleicao"
           titulo="Taxa de reeleição por cargo e estado, somando todas as eleições"
           colunas={['Cargo', 'Todos', ...ufs.map((u) => u.sigla)]}
           linhas={() =>

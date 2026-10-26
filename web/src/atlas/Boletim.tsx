@@ -2,7 +2,7 @@
 // Responde a P7 (viés no tempo e espectro) e traz a P3 (indicadores) e os prefeitos (ponte para a P10).
 import { ArrowRight, X } from '@phosphor-icons/react'
 import { Link } from '@tanstack/react-router'
-import { useMemo, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import { encode } from 'uqr'
 import { enderecoParaOutroAparelho } from '../lib/rede'
 import type { Ano, Municipio } from '../api'
@@ -12,9 +12,21 @@ import { Espectro } from '../graficos/Espectro'
 import { ViesTempo } from '../graficos/ViesTempo'
 import { decimal, nomeProprio, pct, plural, reais, reaisCurto } from '../lib/formato'
 import { Trilha } from './Trilha'
+import { Zonas } from './Zonas'
 
+// O QR precisa ser lido por celular: correção L (o endereço do túnel é longo, e cada nível a mais deixava o código
+// mais denso), a margem clara de 4 módulos da norma, e no mínimo 3 px por módulo. Com o endereço público (~110
+// caracteres) eram 41 módulos em 92 px e 1 módulo de margem, e a câmera não focava. Um toque abre em tela cheia.
+const MARGEM_QR = 4
 function QR({ texto }: { texto: string }) {
-  const { data, size } = useMemo(() => encode(texto, { ecc: 'M', border: 0 }), [texto])
+  const { data, size } = useMemo(() => encode(texto, { ecc: 'L', border: 0 }), [texto])
+  const [grande, setGrande] = useState(false)
+  useEffect(() => {
+    if (!grande) return
+    const fecha = (e: KeyboardEvent) => e.key === 'Escape' && setGrande(false)
+    window.addEventListener('keydown', fecha)
+    return () => window.removeEventListener('keydown', fecha)
+  }, [grande])
   const d = useMemo(() => {
     let s = ''
     data.forEach((linha, y) => {
@@ -28,11 +40,30 @@ function QR({ texto }: { texto: string }) {
     })
     return s
   }, [data, size])
-  return (
-    <svg viewBox={`-1 -1 ${size + 2} ${size + 2}`} className="size-[92px] shrink-0" role="img" aria-label="QR code com o endereço deste boletim">
-      <rect x={-1} y={-1} width={size + 2} height={size + 2} fill="var(--color-folha)" />
-      <path d={d} fill="var(--color-tinta)" />
+  const lado = size + 2 * MARGEM_QR
+  const desenho = (
+    <svg viewBox={`${-MARGEM_QR} ${-MARGEM_QR} ${lado} ${lado}`} className="block h-full w-full" shapeRendering="crispEdges" aria-hidden>
+      <rect x={-MARGEM_QR} y={-MARGEM_QR} width={lado} height={lado} fill="#ffffff" />
+      <path d={d} fill="#000000" />
     </svg>
+  )
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setGrande(true)}
+        className="shrink-0 cursor-zoom-in rounded-[4px] outline-offset-2"
+        style={{ width: Math.max(108, lado * 3), height: Math.max(108, lado * 3) }}
+        aria-label="QR code com o endereço deste boletim. Abrir em tela cheia"
+      >
+        {desenho}
+      </button>
+      {grande && (
+        <div role="dialog" aria-modal="true" aria-label="QR code em tela cheia" onClick={() => setGrande(false)} className="fixed inset-0 z-50 grid cursor-zoom-out place-items-center bg-tinta/80 p-6">
+          <div className="size-[min(80vw,80vh)] rounded-xl bg-white p-3">{desenho}</div>
+        </div>
+      )}
+    </>
   )
 }
 
@@ -49,7 +80,7 @@ function Indicador({ valor, rotulo, fonte }: { valor: string; rotulo: string; fo
     <div>
       <p className="text-[1.6rem] font-bold leading-none tracking-tight" style={{ fontStretch: '104%' }}>{valor}</p>
       <p className="mt-1.5 text-[0.85rem] font-semibold">{rotulo}</p>
-      <p className="text-[0.74rem] text-tinta-3">{fonte}</p>
+      <p className="text-[0.75rem] text-tinta-3">{fonte}</p>
     </div>
   )
 }
@@ -63,13 +94,13 @@ export function Boletim({ m, ano, cargo, aoFechar }: { m: Municipio; ano: Ano; c
       <Trilha uf={m.uf_nome} municipio={m.nome} />
       <div className="relative mt-4">
         <div className="h-3 rounded-full bg-tinta shadow-[inset_0_-2px_0_rgb(255_255_255/0.08)]" aria-hidden />
-        <div className="mx-3 -mt-1.5 [filter:drop-shadow(0_14px_22px_rgb(42_53_80/0.16))_drop-shadow(0_1px_1px_rgb(42_53_80/0.08))]">
+        <div className="mx-3 -mt-1.5">
         <article aria-labelledby="boletim-titulo" className="boletim-papel relative bg-folha px-6 pb-12 pt-7 sm:px-9">
           <Linha i={0} className="flex items-start justify-between gap-4">
             <div>
               <p className="t-mono text-[0.78rem] tracking-[0.2em] text-tinta-2">BOLETIM DO MUNICÍPIO</p>
               <h2 id="boletim-titulo" className="t-h1 mt-2">{m.nome}</h2>
-              <p className="t-mono mt-2 text-[0.74rem] uppercase tracking-[0.06em] text-tinta-3">
+              <p className="t-mono mt-2 text-[0.75rem] uppercase tracking-[0.06em] text-tinta-3">
                 {m.uf} · Região intermediária {m.regiao_intermediaria} · IBGE {m.ibge}
               </p>
             </div>
@@ -121,7 +152,7 @@ export function Boletim({ m, ano, cargo, aoFechar }: { m: Municipio; ano: Ano; c
                         <Retrato foto={p.foto} nome={p.nome} tamanho={52} className="transition-transform group-hover:-translate-y-0.5" />
                         <p className="mt-1.5 tabular text-[0.78rem] font-bold">{p.ano}{p.turno === 2 ? ' · 2º turno' : ''}</p>
                         <p className="line-clamp-2 text-[0.8rem] leading-snug group-hover:underline">{nomeProprio(p.nome)}</p>
-                        <p className="t-mono text-[0.7rem] text-tinta-3">{p.partido}</p>
+                        <p className="t-mono text-[0.78rem] text-tinta-3">{p.partido}</p>
                       </Link>
                     </li>
                   ))}
@@ -154,7 +185,7 @@ export function Boletim({ m, ano, cargo, aoFechar }: { m: Municipio; ano: Ano; c
                                 return (
                                   <td key={a} className="py-2.5 text-right">
                                     <span className="block font-bold">{c?.custo_cadeira != null ? reaisCurto(c.custo_cadeira * c.fator_ipca) : '-'}</span>
-                                    {c && <span className="block text-[0.74rem] text-tinta-3">{plural(c.candidatos, 'candidato', 'candidatos')}, {plural(c.cadeiras, 'vaga', 'vagas')}</span>}
+                                    {c && <span className="block text-[0.75rem] text-tinta-3">{plural(c.candidatos, 'candidato', 'candidatos')}, {plural(c.cadeiras, 'vaga', 'vagas')}</span>}
                                   </td>
                                 )
                               })}
@@ -176,6 +207,12 @@ export function Boletim({ m, ano, cargo, aoFechar }: { m: Municipio; ano: Ano; c
 
               <Picote />
               <Linha i={5}>
+                <h3 className="t-h3 mb-3">Onde se vota</h3>
+                <Zonas ibge={m.ibge} ano={ano} />
+              </Linha>
+
+              <Picote />
+              <Linha i={5}>
                 <h3 className="t-h3 mb-4">Indicadores do município</h3>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-6">
                   <Indicador valor={reais(ind.pib_per_capita?.valor)} rotulo="PIB per capita" fonte={`${ind.pib_per_capita?.ano ?? '-'} · IBGE`} />
@@ -192,7 +229,8 @@ export function Boletim({ m, ano, cargo, aoFechar }: { m: Municipio; ano: Ano; c
             <QR texto={url} />
             <div className="space-y-1">
               <p className="font-semibold">Aponte a câmera para abrir este boletim</p>
-              <p className="t-mono text-[0.72rem] uppercase tracking-[0.06em] text-tinta-3">Emitido em {emitido} · Fontes: TSE, IBGE, Atlas Brasil</p>
+              <p className="text-[0.78rem] text-tinta-3">Toque no código para aumentar.</p>
+              <p className="t-mono text-[0.75rem] uppercase tracking-[0.06em] text-tinta-3">Emitido em {emitido} · Fontes: TSE, IBGE, Atlas Brasil</p>
               <p className="text-[0.78rem] text-tinta-3">Viés: média do viés dos partidos ponderada pelos votos válidos, {cargo ? `só o voto para ${cargo.toLowerCase()}` : 'todos os cargos do 1º turno'}.</p>
             </div>
           </Linha>

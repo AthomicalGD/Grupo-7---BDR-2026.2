@@ -18,8 +18,8 @@ function Lista({ titulo, nota, linhas, valor, aoEscolher, selecionado }: {
 }) {
   return (
     <section className="min-w-0">
-      <h4 className="t-mono border-b-[1.5px] border-dashed border-linha-2 pb-2 text-[0.7rem] uppercase tracking-[0.12em] text-tinta-2">{titulo}</h4>
-      {nota && <p className="t-mono mt-2 text-[0.7rem] uppercase tracking-[0.04em] text-tinta">{nota}</p>}
+      <h4 className="t-mono border-b-[1.5px] border-dashed border-linha-2 pb-2 text-[0.78rem] uppercase tracking-[0.12em] text-tinta-2">{titulo}</h4>
+      {nota && <p className="t-mono mt-2 text-[0.78rem] uppercase tracking-[0.04em] text-tinta">{nota}</p>}
       <ol className="mt-1">
         {linhas.map((m, i) => (
           <li key={m.ibge}>
@@ -29,10 +29,10 @@ function Lista({ titulo, nota, linhas, valor, aoEscolher, selecionado }: {
               aria-label={`${m.nome} (${m.uf}): ${valor(m)}. Abrir o boletim`}
               className={`grid w-full grid-cols-[1.2rem_minmax(0,1fr)_auto] items-baseline gap-2 rounded px-1 py-1.5 text-left hover:bg-folha focus-visible:outline-2 focus-visible:outline-acao ${m.ibge === selecionado ? 'bg-folha font-bold' : ''}`}
             >
-              <span className="t-mono tabular text-[0.72rem] text-tinta-3">{i + 1}</span>
+              <span className="t-mono tabular text-[0.78rem] text-tinta-3">{i + 1}</span>
               <span className="flex min-w-0 items-baseline gap-1.5 text-[0.86rem] text-tinta">
                 <span className="truncate">{m.nome}</span>
-                <span className="t-mono shrink-0 text-[0.7rem] text-tinta-3">{m.uf}</span>
+                <span className="t-mono shrink-0 text-[0.78rem] text-tinta-3">{m.uf}</span>
                 <span className="mx-1 hidden min-w-4 flex-1 border-b border-dotted border-linha-2 sm:block" aria-hidden />
               </span>
               <span className="t-mono tabular text-[0.82rem] text-tinta">{valor(m)}</span>

@@ -1,4 +1,5 @@
-// Plenário da P1: cada cadeira é um eleito, a cor é quanto a campanha dele gastou (escala log).
+// Plenário da P1: cada cadeira é um eleito, a cor é quanto a campanha dele gastou (escala log). Com a galeria
+// ligada, quem disputou e não se elegeu senta num arco por fora, em banquinhos sem encosto nem braços.
 // As cadeiras se sentam da esquerda para a direita quando a seleção muda e deslizam para o novo
 // lugar quando a ordem muda (por gasto ou por partido). Teclado: setas percorrem, Enter abre.
 import { animate, useReducedMotion } from 'motion/react'
@@ -12,6 +13,8 @@ import { hemiciclo, medir, ordenar, posicionar, type EscalaGasto, type Ordem } f
 
 const W = 1000, H = 520, S = 468, CX = 500, CY = 500
 const MUITAS = 400 // acima disso (prefeitos de vários estados): posição por atributo, sem transição por cadeira
+// com a galeria, os eleitos ocupam o miolo do arco e ela a faixa de fora
+const ELEITOS_ATE = 0.66, GALERIA_DE = 0.73
 
 interface Posto {
   a: Assento
@@ -20,13 +23,14 @@ interface Posto {
   giro: number // graus: o encosto aponta para fora do hemiciclo
   d: number
   i: number
+  perdeu?: boolean
 }
 
-function postos(cadeiras: Assento[], ordem: Ordem): Posto[] {
-  const { lugares, diametro } = hemiciclo(cadeiras.length)
-  return ordenar(cadeiras, ordem).map((a, i) => {
-    const l = lugares[i]
-    return { a, i, x: CX + l.x * S, y: CY - l.y * S, giro: 90 - (l.ang * 180) / Math.PI, d: diametro * S }
+function postos(cadeiras: Assento[], ordem: Ordem, r0?: number, r1?: number, perdeu = false, inicio = 0): Posto[] {
+  const { lugares, diametro } = hemiciclo(cadeiras.length, r0, r1)
+  return ordenar(cadeiras, ordem).map((a, k) => {
+    const l = lugares[k]
+    return { a, i: inicio + k, x: CX + l.x * S, y: CY - l.y * S, giro: 90 - (l.ang * 180) / Math.PI, d: diametro * S, perdeu }
   })
 }
 
@@ -44,10 +48,10 @@ function encostosPorPartido(lista: Posto[]): Map<number, string> {
 }
 
 /** As fronteiras entre bancadas, marcadas só do lado de fora do arco, como os traços de uma régua. */
-function Fronteiras({ lista }: { lista: Posto[] }) {
+function Fronteiras({ lista, raio }: { lista: Posto[]; raio: number }) {
   const ang = (p: Posto) => Math.atan2(CY - p.y, p.x - CX)
   const cortes = lista.flatMap((p, i) => (i > 0 && p.a.partido !== lista[i - 1].a.partido ? [(ang(lista[i - 1]) + ang(p)) / 2] : []))
-  const r0 = S * 1.02, r1 = S * 1.065
+  const r0 = raio * 1.02, r1 = raio * 1.065
   return (
     <g aria-hidden className="pointer-events-none">
       {cortes.map((a, k) => (
@@ -70,15 +74,25 @@ const Cadeira = memo(function Cadeira({ p, cor, encosto, total, leve }: { p: Pos
   return (
     <g data-i={p.i} {...lugar}>
       <g className={leve ? undefined : 'cadeira-senta'} style={leve ? undefined : { animationDelay: atraso }}>
-        {p.d >= 11 ? (
+        {p.perdeu ? (
+          // banquinho sem encosto nem braços: quem disputou e não levou a cadeira
+          <circle
+            r={p.d >= 11 ? 0.36 : 0.44} fill={vazio ? 'var(--color-folha)' : cor} fillOpacity={0.75}
+            stroke="var(--color-tinta)" strokeOpacity={0.4} strokeWidth={1} vectorEffect="non-scaling-stroke" strokeDasharray={vazio ? '2 1.5' : undefined}
+          />
+        ) : p.d >= 11 ? (
+          // poltrona vista de cima: sombra curta, encosto arredondado, dois braços e a almofada na cor do gasto
           <>
-            <rect x={-0.44} y={-0.5} width={0.88} height={0.22} rx={0.08} fill={encosto ?? 'var(--color-tinta)'} opacity={encosto ? 1 : 0.82} />
+            <rect x={-0.43} y={-0.44} width={0.94} height={0.94} rx={0.2} fill="var(--color-tinta)" opacity={0.13} />
+            <rect x={-0.48} y={-0.52} width={0.96} height={0.28} rx={0.14} fill={encosto ?? 'var(--color-tinta)'} opacity={encosto ? 1 : 0.88} />
+            <rect x={-0.48} y={-0.34} width={0.15} height={0.74} rx={0.075} fill="var(--color-tinta)" opacity={0.74} />
+            <rect x={0.33} y={-0.34} width={0.15} height={0.74} rx={0.075} fill="var(--color-tinta)" opacity={0.74} />
             <rect
-              x={-0.37} y={-0.24} width={0.74} height={0.62} rx={0.15}
+              x={-0.32} y={-0.3} width={0.64} height={0.68} rx={0.16}
               fill={vazio ? 'var(--color-folha)' : cor}
-              stroke="var(--color-tinta)" strokeOpacity={0.35} strokeWidth={1} vectorEffect="non-scaling-stroke"
-              strokeDasharray={vazio ? '2 2' : undefined}
+              stroke={vazio ? 'var(--color-tinta)' : undefined} strokeOpacity={0.35} strokeWidth={1} vectorEffect="non-scaling-stroke" strokeDasharray={vazio ? '2 2' : undefined}
             />
+            {!vazio && <rect x={-0.26} y={-0.25} width={0.52} height={0.22} rx={0.1} fill="#fff" opacity={0.22} />}
           </>
         ) : (
           <circle r={0.48} fill={vazio ? 'var(--color-folha)' : cor} stroke="var(--color-tinta)" strokeOpacity={0.3} strokeWidth={0.07} />
@@ -117,6 +131,20 @@ function rotulosPartidos(lista: Posto[]) {
   })
 }
 
+/** O piso da galeria: uma faixa clara por trás dos bancos, com o nome escrito na ponta. */
+function Galeria() {
+  const a = S * (GALERIA_DE - 0.035), b = S * 1.025
+  const arco = `M ${CX - b} ${CY} A ${b} ${b} 0 0 1 ${CX + b} ${CY} L ${CX + a} ${CY} A ${a} ${a} 0 0 0 ${CX - a} ${CY} Z`
+  return (
+    <g aria-hidden className="pointer-events-none">
+      <path d={arco} fill="var(--color-tinta)" fillOpacity={0.045} />
+      <text x={CX + (a + b) / 2} y={CY + 18} textAnchor="middle" className="fill-tinta-3 text-[12px] font-bold uppercase tracking-[0.08em]">
+        Galeria · não se elegeram
+      </text>
+    </g>
+  )
+}
+
 function NumeroAnimado({ valor }: { valor: number | null }) {
   const ref = useRef<HTMLSpanElement>(null)
   const anterior = useRef(valor ?? 0)
@@ -140,8 +168,9 @@ function NumeroAnimado({ valor }: { valor: number | null }) {
   return <span ref={ref}>{reaisCurto(valor)}</span>
 }
 
-export function CartaoAssento({ a, fator, x, y, dica, alvo }: {
+export function CartaoAssento({ a, fator, x, y, dica, alvo, perdeu }: {
   a: Assento
+  perdeu?: boolean
   fator: number
   x: number
   y: number
@@ -164,6 +193,7 @@ export function CartaoAssento({ a, fator, x, y, dica, alvo }: {
     >
       <Retrato foto={a.foto} nome={a.nome} tamanho={52} />
       <div className="min-w-0 text-[0.82rem]">
+        {perdeu && <SeloPerdeu />}
         <p className="font-bold leading-tight">{nomeProprio(a.nome)}</p>
         <p className="text-tinta-3">{[a.partido, a.local ?? a.uf].filter(Boolean).join(' · ')}</p>
         <p className="t-numero mt-1.5 text-[1.45rem]">{reaisCurto(a.gasto * fator)}</p>
@@ -171,10 +201,15 @@ export function CartaoAssento({ a, fator, x, y, dica, alvo }: {
           gastos na campanha
           {a.votos > 0 && <><br />{inteiro(a.votos)} votos · {reaisCurto((a.gasto * fator) / a.votos)} por voto</>}
         </p>
-        {dica && <p className="mt-1.5 text-[0.74rem] font-semibold text-acao">{dica}</p>}
+        {dica && <p className="mt-1.5 text-[0.78rem] font-semibold text-acao">{dica}</p>}
       </div>
     </div>
   )
+}
+
+/** A identificação de quem está na galeria. */
+function SeloPerdeu() {
+  return <p className="mb-1 inline-block rounded-full border border-dashed border-tinta-3 px-2 py-px text-[0.78rem] font-bold uppercase tracking-wide text-tinta-2">Não se elegeu</p>
 }
 
 /** Cartão da cadeira procurada, preso ao lado dela (posição em % do desenho, acompanha a rolagem). */
@@ -211,13 +246,23 @@ interface Props {
   aoAbrir: (id: number) => void
   /** eleito procurado pelo nome (id do político): a cadeira fica destacada até limpar a busca */
   destaque?: number | null
+  /** quem não se elegeu: senta na galeria, por fora */
+  galeria?: Assento[]
 }
 
-export function Plenario({ chave, cadeiras, escala, fator, ordem, custo, legenda, aoAbrir, destaque }: Props) {
+export function Plenario({ chave, cadeiras, escala, fator, ordem, custo, legenda, aoAbrir, destaque, galeria }: Props) {
   const id = useId()
-  const lista = useMemo(() => postos(cadeiras, ordem), [cadeiras, ordem])
-  const cores = useMemo(() => new Map(cadeiras.map((a) => [a.id, escala.cor(a.gasto)])), [cadeiras, escala])
-  const rotulos = useMemo(() => (ordem === 'partido' ? rotulosPartidos(lista) : []), [lista, ordem])
+  const com = !!galeria?.length
+  const eleitos = useMemo(() => postos(cadeiras, ordem, undefined, com ? ELEITOS_ATE : 1), [cadeiras, ordem, com])
+  const lista = useMemo(
+    () => (com ? [...eleitos, ...postos(galeria!, ordem, GALERIA_DE, 1, true, eleitos.length)] : eleitos),
+    [eleitos, galeria, ordem, com],
+  )
+  const cores = useMemo(() => new Map(lista.map((p) => [p.a.id, escala.cor(p.a.gasto)])), [lista, escala])
+  // com a galeria, os nomes dos partidos cairiam em cima dela: ficam só as marcas entre as bancadas
+  const rotulos = useMemo(() => (ordem === 'partido' && !com ? rotulosPartidos(eleitos) : []), [eleitos, ordem, com])
+  // anotação: a campanha mais cara (na ordem por gasto ela fecha o arco, embaixo à direita)
+  const cara = ordem === 'gasto' && !com && eleitos.length > 12 ? eleitos[eleitos.length - 1] : undefined
   const [foco, setFoco] = useState<{ i: number; x: number; y: number; toque?: boolean; teclado?: boolean } | null>(null)
   const svg = useRef<SVGSVGElement>(null)
   const cartao = useRef<HTMLDivElement>(null)
@@ -263,7 +308,7 @@ export function Plenario({ chave, cadeiras, escala, fator, ordem, custo, legenda
       <div
         tabIndex={0}
         role="group"
-        aria-label={`Plenário com ${cadeiras.length} cadeiras. Use as setas para percorrer e Enter para abrir a carreira.`}
+        aria-label={`Plenário com ${cadeiras.length} cadeiras${com ? ` e ${galeria!.length} candidatos que não se elegeram na galeria` : ''}. Use as setas para percorrer e Enter para abrir a carreira.`}
         aria-describedby={`${id}-vivo`}
         onKeyDown={teclado}
         onBlur={() => setFoco(null)}
@@ -295,10 +340,19 @@ export function Plenario({ chave, cadeiras, escala, fator, ordem, custo, legenda
             else aoAbrir(lista[Number(i)].a.id)
           }}
         >
+          {com && <Galeria />}
           <g key={chave}>
             <Bancada lista={lista} cores={cores} porPartido={ordem === 'partido'} />
           </g>
-          {ordem === 'partido' && <Fronteiras lista={lista} />}
+          {cara && (
+            <g aria-hidden className="pointer-events-none">
+              <line x1={cara.x} y1={cara.y + cara.d * 0.55} x2={cara.x} y2={CY + 10} stroke="var(--color-tinta-3)" strokeWidth={1.2} />
+              <text x={cara.x + cara.d * 0.5} y={CY + 26} textAnchor="end" className="fill-tinta-2 text-[13px] font-semibold">
+                a campanha mais cara: <tspan className="fill-tinta font-bold">{reaisCurto(cara.a.gasto * fator)}</tspan>
+              </text>
+            </g>
+          )}
+          {ordem === 'partido' && <Fronteiras lista={eleitos} raio={S * (com ? ELEITOS_ATE : 1)} />}
           {rotulos.map((r) => (
             <text
               key={r.sigla + r.x}
@@ -343,10 +397,10 @@ export function Plenario({ chave, cadeiras, escala, fator, ordem, custo, legenda
         <p className="mt-1.5 max-w-[30cqw] text-[clamp(0.72rem,1.6cqw,1rem)] font-semibold leading-snug text-tinta-2 @max-xl:max-w-none @max-xl:text-[0.9rem]">{legenda}</p>
       </div>
       <p id={`${id}-vivo`} className="sr-only" aria-live="polite">
-        {atual && foco?.teclado ? `${nomeProprio(atual.a.nome)}, ${atual.a.partido ?? ''}: gastou ${reaisCurto(atual.a.gasto * fator)}, ${inteiro(atual.a.votos)} votos.` : ''}
+        {atual && foco?.teclado ? `${nomeProprio(atual.a.nome)}, ${atual.a.partido ?? ''}${atual.perdeu ? ', não se elegeu' : ''}: gastou ${reaisCurto(atual.a.gasto * fator)}, ${inteiro(atual.a.votos)} votos.` : ''}
       </p>
       {atual && foco && (
-        <CartaoAssento a={atual.a} fator={fator} x={foco.x} y={foco.y} alvo={cartao} dica={foco.toque ? 'Toque de novo para abrir a carreira' : 'Clique para abrir a carreira'} />
+        <CartaoAssento a={atual.a} perdeu={atual.perdeu} fator={fator} x={foco.x} y={foco.y} alvo={cartao} dica={foco.toque ? 'Toque de novo para abrir a carreira' : 'Clique para abrir a carreira'} />
       )}
       {achado && !foco && <CartaoFixo a={achado.a} fator={fator} x={achado.x} y={achado.y} aoAbrir={aoAbrir} />}
     </div>

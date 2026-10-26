@@ -75,7 +75,7 @@ export function CedulaAnos({ ano, aoMudar, anos = ANOS, linhaDoTempo = true, ext
               </span>
               <span className="leading-tight">
                 <span className={`block tabular text-[1rem] ${marcado ? 'font-bold' : 'font-semibold text-tinta-2'}`}>{a}</span>
-                <span className="block text-[0.74rem] text-tinta-3">{TIPO[a]}</span>
+                <span className="block text-[0.75rem] text-tinta-3">{TIPO[a]}</span>
               </span>
             </button>
           )

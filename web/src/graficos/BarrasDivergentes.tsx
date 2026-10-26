@@ -31,7 +31,7 @@ export function BarrasDivergentes({ itens, titulo, destaque }: { itens: ItemBarr
                   style={{ left: `${a}%`, width: `${Math.max(0.6, b - a)}%`, background: corVies(v) }}
                 />
                 <span
-                  className="absolute top-0 text-[0.74rem] font-semibold tabular text-tinta-2"
+                  className="absolute top-0 text-[0.78rem] font-semibold tabular text-tinta-2"
                   style={v < 0 ? { right: `calc(${100 - a}% + 6px)` } : { left: `calc(${b}% + 6px)` }}
                 >
                   {fmtVies(v)}
@@ -41,7 +41,7 @@ export function BarrasDivergentes({ itens, titulo, destaque }: { itens: ItemBarr
           )
         })}
       </ul>
-      <TabelaAlternavel titulo={titulo} colunas={['Região', 'Viés']} linhas={validos.map((i) => [i.nome, fmtVies(i.valor)])} />
+      <TabelaAlternavel sql="p7Vies" titulo={titulo} colunas={['Região', 'Viés']} linhas={validos.map((i) => [i.nome, fmtVies(i.valor)])} />
     </figure>
   )
 }

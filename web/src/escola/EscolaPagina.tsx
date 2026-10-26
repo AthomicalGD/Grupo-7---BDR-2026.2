@@ -5,7 +5,8 @@
 import { ArrowRight, X } from '@phosphor-icons/react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
+import { useLembrado } from '../lib/pilha'
 import { consultas, semMunicipal, type Ano, type Escola } from '../api'
 import { CedulaAnos } from '../atlas/CedulaAnos'
 import { Alternador } from '../atlas/PainelEstado'
@@ -57,8 +58,9 @@ export function EscolaPagina() {
   const uf = busca.uf && busca.uf !== 'DF' && (!ufs || carregadas.some((u) => u.sigla === busca.uf)) ? busca.uf : ''
   const ufInfo = carregadas.find((u) => u.sigla === uf)
   const q = useQuery({ ...consultas.escola(ano, uf), placeholderData: keepPreviousData })
-  const [destaque, setDestaque] = useState(SUPERIOR)
-  const [vista, setVista] = useState<'mapa' | 'dispersao'>('mapa')
+  const [destaque, setDestaque] = useLembrado('escola:destaque', SUPERIOR)
+  const vista = busca.vista ?? 'mapa'
+  const setVista = (v: 'mapa' | 'dispersao') => mudar({ vista: v === 'dispersao' ? 'dispersao' : undefined })
   const d = q.data
   const { data: municipios } = useQuery({ ...consultas.escolaMunicipios(ano, uf), placeholderData: keepPreviousData })
   const { data: partidos } = useQuery({ ...consultas.escolaPartidos(ano, uf), placeholderData: keepPreviousData })
@@ -72,7 +74,7 @@ export function EscolaPagina() {
   }, [])
 
   const rotulos = useMemo(() => d?.niveis.map((n) => n.rotulo) ?? [], [d])
-  if (q.error && !d) return <ErroCarga erro={q.error} />
+  if (q.error && !d) return <ErroCarga erro={q.error} aoTentar={q.refetch} />
   if (!d) return <Atrasado><EsqueletoPagina rotulo="Abrindo o caderno de votação..." /></Atrasado>
 
   const cargoObjetos = d.cargos.find((c) => c.cod === busca.cargo)
@@ -177,7 +179,7 @@ export function EscolaPagina() {
                 ]}
               />
             </div>
-            <TabelaAlternavel
+            <TabelaAlternavel sql="p4Lugar"
               titulo="Quem votou, candidatos e eleitos por grau de escolaridade"
               colunas={['Escolaridade', 'Quem votou', 'Candidatos', 'Eleitos', 'Chance de se eleger']}
               linhas={() => {
@@ -244,7 +246,7 @@ export function EscolaPagina() {
               {!municipios ? (
                 <p className="text-tinta-3">Abrindo os municípios...</p>
               ) : vista === 'mapa' ? (
-                <MapaEscola municipios={municipios} ufs={d.ufs} medida={d.medida} selecionado={ibge} aoEscolher={(i) => mudar({ ibge: i })} />
+                <MapaEscola municipios={municipios} ufs={d.ufs} medida={d.medida} selecionado={ibge} aoEscolher={(i) => mudar({ ibge: i })} colonial={d.colonial} />
               ) : (
                 <Dispersao municipios={municipios} medida={d.medida} selecionado={ibge} aoEscolher={(i) => mudar({ ibge: i })} />
               )}

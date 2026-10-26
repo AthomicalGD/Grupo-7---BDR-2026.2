@@ -79,7 +79,7 @@ export function SeletorCargo({ cargos, cargo, aoMudar }: { cargos: CargoVies[]; 
         <Casa marcada={marcada} />
         <span className="min-w-0 leading-tight">
           <span className={`block text-[0.92rem] ${marcada ? 'font-bold text-selecao-tinta' : 'font-semibold text-tinta'}`}>{nome}</span>
-          {sub && <span className="block text-[0.74rem] text-tinta-3">{sub}</span>}
+          {sub && <span className="block text-[0.78rem] text-tinta-3">{sub}</span>}
         </span>
       </button>
     )
@@ -99,7 +99,7 @@ export function SeletorCargo({ cargos, cargo, aoMudar }: { cargos: CargoVies[]; 
         }`}
       >
         <span className="leading-tight">
-          <span className={`block text-[0.74rem] ${escolhido ? 'text-white' : 'text-tinta-3'}`}>Cargo</span>
+          <span className={`block text-[0.78rem] ${escolhido ? 'text-white' : 'text-tinta-3'}`}>Cargo</span>
           <span className={`block whitespace-nowrap text-[1rem] ${escolhido ? 'font-bold' : 'font-semibold text-tinta-2'}`}>{escolhido?.nome ?? 'Todos'}</span>
         </span>
         <CaretDown size={15} weight="bold" aria-hidden className={`transition-transform duration-200 ${aberto ? 'rotate-180' : ''} ${escolhido ? 'text-white' : 'text-tinta-3'}`} />

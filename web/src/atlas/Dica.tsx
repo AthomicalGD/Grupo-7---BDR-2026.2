@@ -1,9 +1,10 @@
 import { useLayoutEffect, useRef, useState } from 'react'
+import { Bandeira } from '../componentes/Bandeira'
 import type { Ano, MunicipioResumo, UF } from '../api'
 import { inteiro, vies as fmtVies } from '../lib/formato'
 import { useLoja } from '../lib/loja'
 import { corVies, ladoVies, SATURA } from '../lib/vies'
-import { SATURA_RELATIVO, valorMunicipio } from './valores'
+import { SATURA_RELATIVO, SATURA_UF, valorMunicipio } from './valores'
 
 import { hover } from './hover'
 
@@ -50,10 +51,15 @@ export function Dica({ ufPorCodigo, munPorIbge, ano, relativo, vUF }: Props) {
     const v = uf.vies[ano]
     conteudo = uf.carregada ? (
       <>
-        <p className="t-rotulo text-tinta-2">{uf.nome} · {ano}</p>
-        <p className="t-numero mt-1 text-[1.9rem]">{fmtVies(v)}</p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="t-rotulo text-tinta-2">{uf.nome} · {ano}</p>
+            <p className="t-numero mt-1 text-[1.9rem]">{fmtVies(v)}</p>
+          </div>
+          <Bandeira sigla={uf.sigla} nome={uf.nome} largura={58} />
+        </div>
         <p className="text-[0.82rem] text-tinta-2">{ladoVies(v)}</p>
-        {v != null && <div className="mt-2"><Regua valor={v} /></div>}
+        {v != null && <div className="mt-2"><Regua valor={v} satura={SATURA_UF} /></div>}
       </>
     ) : (
       <>

@@ -73,7 +73,7 @@ export function Partidos({ partidos, onde }: { partidos: PartidoEscola[]; onde: 
                   <span className="flex min-w-0 items-center gap-1 text-tinta">
                     <span className="size-2 shrink-0 rounded-full" style={{ background: corVies(p.vies) }} aria-hidden />
                     <span className="truncate font-semibold">{curta(p.sigla)}</span>
-                    <span className="tabular shrink-0 text-[0.68rem] text-tinta-3">{p.eleitos}</span>
+                    <span className="tabular shrink-0 text-[0.78rem] text-tinta-3">{p.eleitos}</span>
                   </span>
                   <span className="relative h-3.5 rounded-[3px] bg-papel-2" aria-hidden>
                     <span className="absolute inset-y-0 left-0 rounded-[3px]" style={{ width: `${(sup / topo) * 100}%`, background: corVies(p.vies) }} />
@@ -90,7 +90,7 @@ export function Partidos({ partidos, onde }: { partidos: PartidoEscola[]; onde: 
             {Array.from({ length: topo / 10 + 1 }, (_, i) => i * 10).map((v) => (
               <g key={v}>
                 <line x1={0} x2={largura} y1={yv(v)} y2={yv(v)} stroke="var(--color-linha)" strokeWidth={v ? 0.8 : 1.2} />
-                {v > 0 && v % 20 === 0 && <text x={2} y={yv(v) - 3} className="tabular fill-tinta-3 text-[0.66rem]">{v}</text>}
+                {v > 0 && v % 20 === 0 && <text x={2} y={yv(v) - 3} className="tabular fill-tinta-3 text-[0.78rem]">{v}</text>}
               </g>
             ))}
             {colunas.map(({ p, x: cx, w }) => {
@@ -114,7 +114,7 @@ export function Partidos({ partidos, onde }: { partidos: PartidoEscola[]; onde: 
                     </text>
                   )}
                   {rotulo(p.sigla, w) && (
-                    <text x={cx + w / 2} y={ALTURA + 22} textAnchor="middle" className={`text-[0.7rem] ${ativo ? 'fill-tinta font-bold' : 'fill-tinta-2'}`}>
+                    <text x={cx + w / 2} y={ALTURA + 22} textAnchor="middle" className={`text-[0.78rem] ${ativo ? 'fill-tinta font-bold' : 'fill-tinta-2'}`}>
                       {rotulo(p.sigla, w)}
                     </text>
                   )}
@@ -149,7 +149,7 @@ export function Partidos({ partidos, onde }: { partidos: PartidoEscola[]; onde: 
               <span className="size-2.5 rounded-full" style={{ background: corVies(f.p.vies) }} aria-hidden />
               {f.p.sigla} <span className="font-normal text-tinta-3">viés {fmtVies(f.p.vies)}</span>
             </p>
-            <p className="text-[0.74rem] text-tinta-3">{nomeProprio(f.p.nome)}</p>
+            <p className="text-[0.78rem] text-tinta-3">{nomeProprio(f.p.nome)}</p>
             <dl className="tabular mt-2 grid grid-cols-[1fr_auto] gap-x-3 gap-y-0.5">
               <dt className="text-tinta-2">Eleitos</dt><dd className="text-right font-semibold">{inteiro(f.p.eleitos)}</dd>
               <dt className="text-tinta-2">com superior</dt><dd className="text-right font-semibold">{Math.round(taxa(f.p.eleitos_superior, f.p.eleitos))}%</dd>
@@ -170,7 +170,7 @@ export function Partidos({ partidos, onde }: { partidos: PartidoEscola[]; onde: 
         {!estreito && <span className="flex items-center gap-1.5"><span className="w-5 border-t-[1.5px] border-dashed border-tinta" aria-hidden />média dos eleitos, {Math.round(media)}%</span>}
         <span>Só partidos que elegeram alguém{estreito ? '; o número miúdo é quantos, e os com menos de 5 ficam claros' : '; passe o mouse para ver os números'}.</span>
       </p>
-      <TabelaAlternavel
+      <TabelaAlternavel sql="p4Chance"
         titulo="Partidos na ordem do viés: candidatos e eleitos com superior completo"
         colunas={['Partido', 'Viés', 'Candidatos', 'Com superior', 'Eleitos', 'Com superior']}
         linhas={() =>

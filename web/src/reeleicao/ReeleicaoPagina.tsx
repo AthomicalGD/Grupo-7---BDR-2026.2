@@ -6,13 +6,15 @@
 import { ArrowRight, UsersThree } from '@phosphor-icons/react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
+import { useLembrado } from '../lib/pilha'
 import { consultas, type ContaReeleicao, type GrupoReeleicao, type Malha, type Reeleicao, type UF } from '../api'
+import { Compartilhar } from '../componentes/Compartilhar'
 import { SeletorEstado } from '../componentes/SeletorEstado'
 import { Atrasado, EsqueletoBloco, EsqueletoPagina } from '../componentes/Esqueleto'
 import { ErroCarga } from '../componentes/ErroCarga'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
-import { cargoPlural, inteiro, noEstado, pct } from '../lib/formato'
+import { cargoPlural, inteiro, noEstado, pct, ufsFrase } from '../lib/formato'
 import type { BuscaReeleicao } from '../router'
 import { EstadoAEstado } from './EstadoAEstado'
 import { CiclosUrnas } from './CiclosUrnas'
@@ -50,6 +52,18 @@ function Lede({ dados, nome }: { dados: Reeleicao; nome: string }) {
         <>
           {' '}Nos municípios, prefeitos e vereadores somados, {b(inteiro(m.reeleitos))} de {b(inteiro(m.tentaram))} voltaram ({b(taxa(m.taxa))}).
         </>
+      )}
+      {maior && (
+        <span className="mt-4 block">
+          <Compartilhar
+            cartao={{
+              pergunta: 'Quem tenta a reeleição, volta?',
+              numero: taxa(maior.total.taxa),
+              legenda: `dos ${cargoPlural(maior.nome)} que tentaram se reeleger conseguiram`,
+              recorte: Nome,
+            }}
+          />
+        </span>
       )}
     </p>
   )
@@ -126,10 +140,10 @@ function Resposta({ dados, sigla, noUF, estados, malha, cargoPedido, mudar, erro
 }) {
   const cargo = dados.cargos.find((c) => c.cod === cargoPedido) ?? dados.cargos[0]
   const tab = tabelaCiclos(cargo)
-  const [aberta, setAberta] = useState(false)
-  const [ciclo, setCiclo] = useState<number | null>(null)
-  const [destaque, setDestaque] = useState<GrupoReeleicao | null>(null)
-  const [fase, setFase] = useState<Fase>(0)
+  const [aberta, setAberta] = useLembrado('reeleicao:aberta', false)
+  const [ciclo, setCiclo] = useLembrado<number | null>('reeleicao:ciclo', null)
+  const [destaque, setDestaque] = useLembrado<GrupoReeleicao | null>('reeleicao:destaque', null)
+  const [fase, setFase] = useLembrado<Fase>('reeleicao:fase', 0)
 
   const abrir = (g: GrupoReeleicao | null, eleitosEm: number | null = ciclo) => {
     setCiclo(eleitosEm)
@@ -190,7 +204,7 @@ function Resposta({ dados, sigla, noUF, estados, malha, cargoPedido, mudar, erro
           <div className="mt-5">
             <CiclosUrnas cargo={cargo} ativo={aberta ? (ciclo ?? cargo.ciclos.at(-1)!.eleitos_em) : null} aoEscolher={(e) => abrir(null, e)} />
           </div>
-          <TabelaAlternavel titulo={`Reeleição de ${cargoPlural(cargo.nome)} ${noUF}, eleição a eleição`} colunas={tab.colunas} linhas={tab.linhas} />
+          <TabelaAlternavel sql="p10Reeleicao" titulo={`Reeleição de ${cargoPlural(cargo.nome)} ${noUF}, eleição a eleição`} colunas={tab.colunas} linhas={tab.linhas} />
         </section>
         <QuemSao
           key={`${sigla}-${cargo.cod}`}
@@ -230,7 +244,7 @@ export function ReeleicaoPagina() {
   // sem estado no endereço: todos os carregados somados
   const uf = carregadas.find((u) => u.sigla === busca.uf)
   const sigla = uf?.sigla ?? TODOS
-  const noUF = uf ? noEstado(uf.sigla, uf.nome) : `nos ${carregadas.length} estados carregados`
+  const noUF = uf ? noEstado(uf.sigla, uf.nome) : ufsFrase(carregadas, 'nos')
   const q = useQuery({ ...consultas.reeleicao(sigla), enabled: carregadas.length > 0, placeholderData: keepPreviousData })
   const dados = q.data
 
@@ -273,7 +287,7 @@ export function ReeleicaoPagina() {
           trocando={q.isPlaceholderData}
         />
       ) : q.error ? (
-        <div className="mt-8"><ErroCarga erro={q.error} compacto /></div>
+        <div className="mt-8"><ErroCarga erro={q.error} compacto aoTentar={q.refetch} /></div>
       ) : (
         <Atrasado><EsqueletoBloco altura="50dvh" linhas={0} rotulo="Contando as reeleições..." /></Atrasado>
       )}

@@ -51,7 +51,7 @@ export function Distancia({ dados, quintilDoLugar }: { dados: Escola; quintilDoL
             >
               <p className="min-w-0 max-sm:col-span-2">
                 <span className="block text-[0.92rem] font-semibold leading-tight text-tinta">{NOMES[i]}</span>
-                <span className="tabular block text-[0.74rem] text-tinta-3">
+                <span className="tabular block text-[0.78rem] text-tinta-3">
                   {decimal(q.de)} a {decimal(q.ate)}% votou com superior{marcado ? ' · o grupo do boletim' : ''}
                 </span>
               </p>
@@ -83,19 +83,19 @@ export function Distancia({ dados, quintilDoLugar }: { dados: Escola; quintilDoL
                 <span className="flex items-baseline justify-end gap-1">
                   <span className="t-numero tabular text-[1.6rem]">{Math.round(alvo ?? 0)}%</span>
                 </span>
-                <span className="tabular block text-[0.74rem] text-tinta-3">quem votou: {Math.round(q.votantes ?? 0)}%</span>
+                <span className="tabular block text-[0.78rem] text-tinta-3">quem votou: {Math.round(q.votantes ?? 0)}%</span>
               </p>
             </li>
           )
         })}
       </ol>
-      <div className="tabular relative mt-1 hidden h-4 text-[0.72rem] text-tinta-3 sm:ml-[13.5rem] sm:mr-[9rem] sm:block">
+      <div className="tabular relative mt-1 hidden h-4 text-[0.78rem] text-tinta-3 sm:ml-[13.5rem] sm:mr-[9rem] sm:block">
         {[0, 25, 50, 75, 100].map((t) => (
           <span key={t} className="absolute -translate-x-1/2" style={{ left: `${t}%` }}>{t}</span>
         ))}
       </div>
 
-      <TabelaAlternavel
+      <TabelaAlternavel sql="p4Lugar"
         titulo="% com superior completo, por quinto de municípios"
         colunas={municipal ? ['Grupo', 'Municípios', 'Quem votou', 'Candidatos', 'Eleitos'] : ['Grupo', 'Municípios', 'Quem votou', 'Votos para deputado']}
         linhas={() =>

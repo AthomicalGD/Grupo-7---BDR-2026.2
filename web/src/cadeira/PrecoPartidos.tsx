@@ -57,7 +57,7 @@ export const PrecoPartidos = memo(function PrecoPartidos({ partidos, fator }: { 
           {sem.length > 12 && ` e mais ${sem.length - 12}`}.
         </p>
       )}
-      <TabelaAlternavel
+      <TabelaAlternavel sql="p1Gasto"
         titulo="Gasto, cadeiras e preço por cadeira de cada partido"
         colunas={['Partido', 'Candidatos', 'Cadeiras', 'Gasto total', 'Preço por cadeira']}
         linhas={() => partidos.map((p) => [p.sigla, inteiro(p.candidatos), inteiro(p.cadeiras), reaisCurto(p.gasto * fator), p.cadeiras ? reaisCurto((p.gasto * fator) / p.cadeiras) : 'sem cadeira'])}

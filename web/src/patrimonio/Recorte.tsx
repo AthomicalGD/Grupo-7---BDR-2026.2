@@ -5,6 +5,7 @@
 import { CaretDown } from '@phosphor-icons/react'
 import { memo, useEffect, useRef, useState, type ReactNode } from 'react'
 import { CARGOS_P2, type Ano, type Malha, type PanoramaPatrimonio, type UF } from '../api'
+import { ufsFrase } from '../lib/formato'
 import { quartis, taxaCurta, tetoDe } from './conta'
 import { Degraus } from './Escadas'
 import { MapaEstados } from '../componentes/MapaEstados'
@@ -55,7 +56,7 @@ export const Recorte = memo(function Recorte({ cargo, ano, anos, uf, ufs, malha,
   }, [gaveta])
   const alternar = (g: Gaveta) => setGaveta((atual) => (atual === g ? null : g))
   const ufNome = ufs.find((u) => u.sigla === uf)?.nome
-  const onde = cargo.nacional ? 'no Brasil inteiro' : ufNome ? `em ${ufNome}` : `nos ${ufs.length} estados`
+  const onde = cargo.nacional ? 'no Brasil inteiro' : ufNome ? `em ${ufNome}` : ufsFrase(ufs, 'nos')
   const teto = panorama ? tetoDe(panorama.recortes) : 50
 
   return (

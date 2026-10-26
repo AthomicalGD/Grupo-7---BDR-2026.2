@@ -4,7 +4,9 @@ import { Cube, Square } from '@phosphor-icons/react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { useLembrado } from '../lib/pilha'
 import { CARGOS_P1, consultas, semMunicipal, type Ano, type Cadeira, type UF } from '../api'
+import { Compartilhar } from '../componentes/Compartilhar'
 import { BuscaMunicipio } from '../atlas/BuscaMunicipio'
 import { CedulaAnos } from '../atlas/CedulaAnos'
 import { Alternador } from '../atlas/PainelEstado'
@@ -14,7 +16,7 @@ import { ErroCarga } from '../componentes/ErroCarga'
 import { Escolha } from '../componentes/Escolha'
 import { Fita } from '../componentes/Fita'
 import { CAPITAIS } from '../lib/capitais'
-import { inteiro, noEstado as noEstadoUF, plural, reaisCurto } from '../lib/formato'
+import { inteiro, noEstado as noEstadoUF, plural, reaisCurto, ufsFrase } from '../lib/formato'
 import type { BuscaCadeira } from '../router'
 import { CurvaVitoria } from './CurvaVitoria'
 import { CustoVoto } from './CustoVoto'
@@ -24,6 +26,7 @@ import { BuscaAssento } from './BuscaAssento'
 import { Plenario } from './Plenario'
 import { PrecoPartidos } from './PrecoPartidos'
 
+const GALERIA_MAX = 800
 const Plenario3D = lazy(() => import('./Plenario3D'))
 
 const noEstado = (u: UF) => noEstadoUF(u.sigla, u.nome)
@@ -70,26 +73,29 @@ export function CadeiraPagina() {
   const municipio = vereador ? (busca.municipio ?? CAPITAIS[uf || 'PI']) : undefined
   const q = useQuery({ ...consultas.cadeira(ano, cargo.cod, vereador ? '' : uf, municipio), placeholderData: keepPreviousData })
   const dados = q.data
+  // a galeria de quem não se elegeu (só no plano); com milhares (o Brasil todo), os que mais gastaram
+  const perdedores = useQuery({ ...consultas.naoEleitos(ano, cargo.cod, vereador ? '' : uf, municipio), enabled: !!busca.todos && !busca.pe })
+  const galeria = useMemo(() => (busca.todos && !busca.pe ? perdedores.data?.slice(0, GALERIA_MAX) : undefined), [busca.todos, busca.pe, perdedores.data])
   const fator = busca.epoca || !dados ? 1 : (dados.ipca[String(dados.ano)] ?? 1)
-  const escala = useMemo(() => escalaGasto(dados?.cadeiras.map((a) => a.gasto) ?? []), [dados])
+  const escala = useMemo(() => escalaGasto([...(dados?.cadeiras ?? []), ...(galeria ?? [])].map((a) => a.gasto)), [dados, galeria])
   const [aviso, setAviso] = useState('')
   // o destaque vale só para a seleção em que foi feito (cargo, ano, lugar)
-  const [destaque, setDestaque] = useState<{ id: number; chave: string } | null>(null)
+  const [destaque, setDestaque] = useLembrado<{ id: number; chave: string } | null>('cadeira:destaque', null)
 
   useEffect(() => {
     document.title = 'Quanto custa uma cadeira? · Voto Aberto'
   }, [])
 
-  if (q.error && !dados) return <ErroCarga erro={q.error} />
+  if (q.error && !dados) return <ErroCarga erro={q.error} aoTentar={q.refetch} />
   if (!dados || !ufs) return <Atrasado><EsqueletoPagina rotulo="Contando as cadeiras..." /></Atrasado>
 
   const ufDados = carregadas.find((u) => u.sigla === dados.escopo.ufs[0])
   const lugarCurto = dados.escopo.municipio
     ? `${dados.escopo.municipio.nome} (${dados.escopo.ufs[0]})`
-    : dados.escopo.ufs.length === 1 && ufDados ? ufDados.nome : `${dados.escopo.ufs.length} estados`
+    : dados.escopo.ufs.length === 1 && ufDados ? ufDados.nome : ufsFrase(dados.escopo.ufs)
   const lugarFrase = dados.escopo.municipio
     ? `em ${dados.escopo.municipio.nome}`
-    : dados.escopo.ufs.length === 1 && ufDados ? noEstado(ufDados) : `nos ${dados.escopo.ufs.length} estados com dados`
+    : dados.escopo.ufs.length === 1 && ufDados ? noEstado(ufDados) : ufsFrase(dados.escopo.ufs, 'nos')
   const titulo = `${dados.cargo.nome} · ${dados.ano} · ${lugarCurto}`
   const chave = `${dados.ano}-${dados.cargo.cod}-${dados.escopo.ufs.join('')}-${dados.escopo.municipio?.ibge ?? ''}`
   const limiar = entrada(dados.curva)
@@ -203,6 +209,7 @@ export function CadeiraPagina() {
               legenda={`gasto médio de cada ${dados.cargo.nome.toLowerCase()} eleito`}
               aoAbrir={abrir}
               destaque={destaque?.chave === chave ? destaque.id : null}
+              galeria={galeria}
             />
           )}
           {q.isPlaceholderData && <span className="sr-only" role="status">Contando...</span>}
@@ -210,7 +217,7 @@ export function CadeiraPagina() {
 
         <div className="mx-auto mt-6 flex max-w-[var(--miolo-max)] flex-wrap items-center justify-between gap-x-8 gap-y-4">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.8rem] text-tinta-2">
-            <span className="font-semibold text-tinta">Gasto da campanha do eleito</span>
+            <span className="font-semibold text-tinta">{galeria ? 'Gasto da campanha' : 'Gasto da campanha do eleito'}</span>
             <span className="inline-flex items-center gap-2">
               <span className="tabular">{reaisCurto(escala.min * fator)}</span>
               <span
@@ -230,6 +237,12 @@ export function CadeiraPagina() {
               opcoes={[{ valor: 'gasto', rotulo: 'Por gasto' }, { valor: 'partido', rotulo: 'Por partido' }]}
             />
             <Alternador
+              rotulo="Quem aparece"
+              valor={busca.todos && !busca.pe ? 'todos' : 'eleitos'}
+              aoMudar={(v) => mudar(v === 'todos' ? { todos: true, pe: undefined } : { todos: undefined })}
+              opcoes={[{ valor: 'eleitos', rotulo: 'Eleitos' }, { valor: 'todos', rotulo: 'Todos os candidatos' }]}
+            />
+            <Alternador
               rotulo="Vista"
               valor={busca.pe ? 'pe' : 'plano'}
               aoMudar={(v) => mudar({ pe: v === 'pe' || undefined })}
@@ -240,6 +253,14 @@ export function CadeiraPagina() {
             />
           </div>
         </div>
+        {galeria && perdedores.data && (
+          <p className="mx-auto mt-3 max-w-[var(--miolo-max)] text-[0.8rem] text-tinta-3">
+            Na galeria, por fora, em banquinhos sem encosto: {perdedores.data.length > galeria.length
+              ? `os ${inteiro(galeria.length)} que mais gastaram entre os ${inteiro(perdedores.data.length)} que não se elegeram`
+              : `os ${inteiro(galeria.length)} candidatos que não se elegeram`}. A cor é o gasto, na mesma escala dos eleitos.
+          </p>
+        )}
+        {busca.todos && !busca.pe && perdedores.isFetching && <p className="sr-only" role="status">Buscando quem não se elegeu...</p>}
         {busca.ordem === 'partido' && (
           <p className="mx-auto mt-3 max-w-[var(--miolo-max)] text-[0.8rem] text-tinta-3">
             Partidos da esquerda para a direita pela escala de viés da P7; a cor continua sendo o gasto.
@@ -248,6 +269,15 @@ export function CadeiraPagina() {
 
         <div className="mx-auto mt-8 max-w-[var(--miolo-max)]">
           <Lede dados={dados} ano={dados.ano} outro={anos.find((a) => a !== dados.ano)!} cargo={dados.cargo.nome} lugar={lugarFrase} />
+          <Compartilhar
+            className="mt-4"
+            cartao={{
+              pergunta: 'Quanto custa uma cadeira?',
+              numero: reaisCurto((dados.resumo.custo_cadeira ?? 0) * fator),
+              legenda: `gasto médio de cada ${dados.cargo.nome.toLowerCase()} eleito${busca.epoca ? ', em valores da época' : ', em reais de 2024'}`,
+              recorte: titulo,
+            }}
+          />
           <p className="mt-4 text-[0.8rem] text-tinta-3">
             {busca.epoca ? 'Valores da época.' : 'Valores em reais de outubro de 2024, corrigidos pelo IPCA.'} Passe o mouse ou toque numa cadeira para ver quem é; clique para abrir a carreira.
           </p>
@@ -269,7 +299,7 @@ export function CadeiraPagina() {
             <p className="mt-6 text-tinta-2">Em nenhuma faixa de gasto a maioria dos candidatos se elegeu.</p>
           )}
         </div>
-        <CurvaVitoria curva={dados.curva} escala={escala} fator={fator} />
+        <CurvaVitoria key={chave} curva={dados.curva} escala={escala} fator={fator} />
       </section>
 
       <section aria-labelledby="partidos" className="adiar mx-auto mt-16 max-w-[var(--miolo-max)]">

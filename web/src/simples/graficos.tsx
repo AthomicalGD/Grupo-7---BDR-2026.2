@@ -76,7 +76,7 @@ export function LinhaVies({ series, altura = 240, mini = false }: { series: Seri
             [lim, lim / 2, 0, -lim / 2, -lim].map((v) => (
               <g key={v}>
                 <line x1={m.l} x2={m.l + w} y1={y(v)} y2={y(v)} stroke={v === 0 ? 'var(--color-linha-2)' : 'var(--color-linha)'} strokeDasharray={v === 0 ? undefined : '2 4'} />
-                <text x={m.l - 8} y={y(v)} dy="0.32em" textAnchor="end" className="fill-tinta-3 text-[11px] tabular-nums">
+                <text x={m.l - 8} y={y(v)} dy="0.32em" textAnchor="end" className="fill-tinta-3 text-[12px] tabular-nums">
                   {fmtVies(v).replace(',0', '')}
                 </text>
               </g>
@@ -84,12 +84,12 @@ export function LinhaVies({ series, altura = 240, mini = false }: { series: Seri
           {mini && <line x1={m.l} x2={m.l + w} y1={y(0)} y2={y(0)} stroke="var(--color-linha-2)" />}
           {!mini && (
             <>
-              <text x={m.l + 6} y={y(lim) + 14} className="fill-tinta-3 text-[11px]">↑ direita</text>
-              <text x={m.l + 6} y={y(-lim) - 6} className="fill-tinta-3 text-[11px]">↓ esquerda</text>
+              <text x={m.l + 6} y={y(lim) + 14} className="fill-tinta-3 text-[12px]">↑ direita</text>
+              <text x={m.l + 6} y={y(-lim) - 6} className="fill-tinta-3 text-[12px]">↓ esquerda</text>
             </>
           )}
           {ANOS.map((a, i) => (
-            <text key={a} x={x(i)} y={altura - (mini ? 4 : 8)} textAnchor="middle" className={`fill-tinta-3 tabular-nums ${mini ? 'text-[10px]' : 'text-[11.5px]'}`}>
+            <text key={a} x={x(i)} y={altura - (mini ? 4 : 8)} textAnchor="middle" className={`fill-tinta-3 tabular-nums ${mini ? 'text-[12px]' : 'text-[12px]'}`}>
               {mini ? `’${String(a).slice(2)}` : a}
             </text>
           ))}
@@ -164,12 +164,12 @@ export function Distribuicao({ pontos, aoEscolher, destaque }: { pontos: Ponto[]
           <line x1={x(0)} x2={x(0)} y1={0} y2={base} stroke="var(--color-linha-2)" strokeDasharray="2 3" />
           <line x1={m.l} x2={m.l + w} y1={base} y2={base} stroke="var(--color-linha-2)" />
           {[-lim, -lim / 2, 0, lim / 2, lim].map((v) => (
-            <text key={v} x={x(v)} y={base + 16} textAnchor={v === -lim ? 'start' : v === lim ? 'end' : 'middle'} className="fill-tinta-3 text-[11px] tabular-nums">
+            <text key={v} x={x(v)} y={base + 16} textAnchor={v === -lim ? 'start' : v === lim ? 'end' : 'middle'} className="fill-tinta-3 text-[12px] tabular-nums">
               {fmtVies(v).replace(',0', '')}
             </text>
           ))}
-          <text x={m.l} y={base + 28} className="fill-tinta-3 text-[11px]">← esquerda</text>
-          <text x={m.l + w} y={base + 28} textAnchor="end" className="fill-tinta-3 text-[11px]">direita →</text>
+          <text x={m.l} y={base + 28} className="fill-tinta-3 text-[12px]">← esquerda</text>
+          <text x={m.l + w} y={base + 28} textAnchor="end" className="fill-tinta-3 text-[12px]">direita →</text>
           {[...colunas.entries()].map(([c, ps]) =>
             ps.map((p, i) => (
               <circle

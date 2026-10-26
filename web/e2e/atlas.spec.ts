@@ -51,7 +51,7 @@ test('digitar o município leva ao boletim com as respostas da P7', async ({ pag
   // o espectro de cada ano vai da esquerda para a direita (viés da PR #9); o PT está em todos
   for (const ano of [2018, 2020, 2022, 2024]) await expect(boletim.getByRole('img', { name: new RegExp(`^${ano}: (.*, )?PT [0-9]`) })).toBeVisible()
   await expect(boletim.getByRole('link', { name: /Mendes/ }).first()).toBeVisible() // prefeitos levam à carreira
-  await expect(boletim.getByRole('img', { name: /QR code/ })).toBeVisible()
+  await expect(boletim.getByRole('button', { name: /QR code/ })).toBeVisible()
   await registrar(page, 'municipio')
 
   await boletim.getByRole('button', { name: 'Ver tabela' }).first().click()

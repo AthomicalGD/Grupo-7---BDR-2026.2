@@ -4,6 +4,7 @@
 import { CaretDown } from '@phosphor-icons/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Malha, UF } from '../api'
+import { ufsFrase } from '../lib/formato'
 import { silhueta, silhuetaBrasil } from '../atlas/geo'
 import { MapaEstados } from './MapaEstados'
 
@@ -53,14 +54,14 @@ export function SeletorEstado({ malha, ufs, escolhida, aoEscolher, obrigatorio =
         data-gatilho
         aria-haspopup="dialog"
         aria-expanded={aberto}
-        aria-label={`${rotulo}: ${uf?.nome ?? `todos os ${ufs.length} estados`}. Trocar`}
+        aria-label={`${rotulo}: ${uf?.nome ?? ufsFrase(ufs, 'todos os')}. Trocar`}
         onClick={() => setAberto((a) => !a)}
         className={`campo-estado flex h-12 w-full max-w-[320px] items-center gap-3 rounded-xl border bg-folha pl-2.5 pr-3.5 text-left ${aberto ? 'border-tinta' : 'border-linha hover:border-linha-2'}`}
       >
         <svg viewBox="0 0 26 26" className="size-[26px] shrink-0 overflow-visible" aria-hidden>
           <path d={desenho} fill={uf ? 'var(--color-selecao)' : '#a9c26a'} />
         </svg>
-        <span className="min-w-0 flex-1 truncate text-[0.98rem] font-semibold text-tinta">{uf?.nome ?? `Todos os ${ufs.length} estados`}</span>
+        <span className="min-w-0 flex-1 truncate text-[0.98rem] font-semibold text-tinta">{uf?.nome ?? ufsFrase(ufs, 'Todos os')}</span>
         <CaretDown size={15} weight="bold" aria-hidden className={`shrink-0 text-tinta-3 transition-transform duration-200 ${aberto ? 'rotate-180' : ''}`} />
       </button>
 

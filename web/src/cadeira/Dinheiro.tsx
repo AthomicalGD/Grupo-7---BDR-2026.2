@@ -73,7 +73,7 @@ export const Recibo = memo(function Recibo({ dados, fator, titulo }: Props) {
           <span className="tabular">{cadeiras ? reaisCurto((total * fator) / cadeiras) : '-'}</span>
         </p>
       </div>
-      <TabelaAlternavel
+      <TabelaAlternavel sql="p1Campanha"
         titulo="Despesa por tipo"
         colunas={['Tipo de despesa', 'Valor', '% do total']}
         linhas={() => dados.despesas.map((d) => [d.categoria, reaisCurto(d.valor * fator), pct((100 * d.valor) / total, 1)])}

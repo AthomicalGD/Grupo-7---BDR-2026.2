@@ -113,6 +113,12 @@
   }
   html[data-fonte="1"] { font-size: 112.5%; }
   html[data-fonte="2"] { font-size: 125%; }
+  /* sala de aula: a letra cresce de novo por cima da escolha de tamanho, e a página ocupa a tela toda */
+  html[data-aula="1"] { font-size: 131.25%; }
+  html[data-aula="1"][data-margem] { --casca-max: 100%; --miolo-max: 100%; --casca-margem: 40px; }
+  html[data-aula="1"][data-fonte="1"] { font-size: 143.75%; }
+  html[data-aula="1"][data-fonte="2"] { font-size: 156.25%; }
+  html[data-aula="1"] main { padding-bottom: 6rem; }
 
   /* O laço das sete fitas da marca sob o título de cada página e de cada seção: a cor da marca
      aparece em toda tela sem carregar dado (as fitas nunca levam informação). */
@@ -504,9 +510,21 @@
 }
 
 /* ---------- boletim: papel térmico saindo da fenda ---------- */
+/* Máscara e drop-shadow no boletim inteiro (milhares de px) faziam o navegador repintar a folha toda a cada
+   hover nos gráficos: a rolagem travava. Agora a sombra é box-shadow e só a faixa do picote leva máscara;
+   a animação usa "backwards" para o clip-path não ficar preso na folha depois de impressa. */
 .boletim-papel {
-  animation: imprimir 760ms var(--ease-saida) both;
-  /* borda serrilhada do picote do rolo */
+  animation: imprimir 760ms var(--ease-saida) backwards;
+  box-shadow: 0 14px 22px rgb(42 53 80 / 0.16), 0 1px 1px rgb(42 53 80 / 0.08);
+}
+/* borda serrilhada do picote do rolo */
+.boletim-papel::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 100%;
+  height: 7px;
+  background: inherit;
   -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%;
   mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%;
 }
@@ -592,7 +610,7 @@
    em onda depois que o porquinho quebra; o contorno e o balão da barrinha sob o cursor. */
 @keyframes barra-cresce { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 .barrinha {
-  border-radius: 2px 2px 0 0; transform-origin: bottom;
+  border-radius: 1px 1px 0 0; background-position: bottom; transform-origin: bottom;
   animation: barra-cresce 560ms var(--ease-saida) both; animation-delay: calc(1250ms + var(--j, 0) * 7ms);
   transition: background-color 420ms ease;
 }
@@ -617,3 +635,20 @@
     linear-gradient(180deg, #e4edf3 0%, #f1f5f6 48%, #f6f8ef 100%);
 }
 @media (prefers-reduced-motion: reduce) { .osso { animation: none; } }
+
+/* ---------- títulos em League Spartan ---------- */
+/* A fonte dos títulos, dos números grandes e do menu (a mesma da prévia), servida pelo próprio site: buscada no
+   Google Fonts ela segurava a primeira tela por segundos. O texto corrido continua em Archivo. */
+@font-face { font-family: "League Spartan"; font-style: normal; font-weight: 500 900; font-display: swap; src: url("/fontes/league-spartan-latin-ext.woff2") format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "League Spartan"; font-style: normal; font-weight: 500 900; font-display: swap; src: url("/fontes/league-spartan-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+:root { --font-display: "League Spartan", "Archivo Variable", "Archivo", system-ui, sans-serif; }
+.t-display, .t-h1, .t-h2, .t-h3, .t-numero { font-family: var(--font-display); font-stretch: 100%; }
+.t-display { font-weight: 900; letter-spacing: -0.03em; line-height: 0.95; font-size: clamp(2.2rem, 1.2rem + 2.4vw, 3.6rem); }
+.t-h1 { font-weight: 800; letter-spacing: -0.02em; }
+.t-numero { font-weight: 800; letter-spacing: -0.02em; }
+.nav-item { font-family: var(--font-display); font-weight: 600; letter-spacing: 0; }
+
+/* a bandeira do estado entra num pulo curto ao trocar de estado */
+@keyframes bandeira-entra { from { opacity: 0; transform: translateY(4px) rotate(-3deg) scale(.94); } to { opacity: 1; transform: none; } }
+.bandeira-entra { animation: bandeira-entra 220ms var(--ease-saida) both; transform-origin: 20% 80%; }
+@media (prefers-reduced-motion: reduce) { .bandeira-entra { animation: none; } }

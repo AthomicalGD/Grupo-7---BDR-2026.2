@@ -10,7 +10,7 @@ test('P10a: a urna, todos os estados e quem são', async ({ page }) => {
   // sem estado no endereço, a página soma todos os carregados
   await page.goto('/reeleicao')
   await expect(page.getByRole('button', { name: /^Estado: todos os \d+ estados/ })).toBeVisible({ timeout: 90_000 })
-  await expect(page.getByText(/^Nos \d+ estados carregados, dos /)).toBeVisible({ timeout: 90_000 })
+  await expect(page.getByText(/^Nos \d+ estados( e no DF)?, dos /)).toBeVisible({ timeout: 90_000 })
 
   // o seletor de estado abre o minimapa; escolher um estado fecha a gaveta e vai para o endereço
   await page.getByRole('button', { name: /^Estado: / }).click()

@@ -61,16 +61,29 @@ function voosDosCacos(lista: { centro: [number, number] }[], gx: number, gy: num
   })
 }
 
-/** As barrinhas de um grupo da fila; só mudam com o recorte. */
-const Barras = memo(function Barras({ hs, inicio, n, pitch, cor }: { hs: number[]; inicio: number; n: number; pitch: number; cor: string }) {
-  const largura = Math.max(1.5, pitch - 2)
+/** Um metal de moeda: a face, a borda escura entre uma moeda e outra e o brilho da de cima. */
+interface Metal { face: string; borda: string; brilho: string }
+const OURO: Metal = { face: '#e8b52a', borda: '#9c6f06', brilho: '#ffe486' }
+// do grupo com menos bens ao com mais: cobre, bronze, prata e ouro (a fila cortada em quatro)
+const METAIS: Metal[] = [
+  { face: '#c47a45', borda: '#7a4421', brilho: '#eab08a' },
+  { face: '#b08a3e', borda: '#6e5320', brilho: '#ddc184' },
+  { face: '#b9c1c9', borda: '#6f7a86', brilho: '#eef1f4' },
+  OURO,
+]
+
+/** As pilhas de moedas de um grupo da fila (cada pilha é 1 em cada 100 candidatos, a altura são os bens);
+ * só mudam com o recorte. Cada moeda tem 3px: a borda escura embaixo e a face; a de cima leva o brilho. */
+const Barras = memo(function Barras({ hs, inicio, n, pitch, metal }: { hs: number[]; inicio: number; n: number; pitch: number; metal: Metal }) {
+  const largura = Math.max(2, pitch - 1)
+  const pilha = `linear-gradient(90deg, rgb(255 255 255 / .38), transparent 55%, rgb(0 0 0 / .12)), repeating-linear-gradient(to top, ${metal.borda} 0 1px, ${metal.face} 1px 3px)`
   return (
     <>
       {Array.from({ length: n }, (_, j) => (
         <span
           key={j}
           className="barrinha absolute bottom-0"
-          style={{ left: j * pitch, width: largura, height: hs[inicio + j] ?? 8, background: cor, ['--j' as string]: inicio + j }}
+          style={{ left: j * pitch, width: largura, height: hs[inicio + j] ?? 8, background: pilha, borderTop: `2px solid ${metal.brilho}`, ['--j' as string]: inicio + j }}
         />
       ))}
     </>
@@ -172,8 +185,7 @@ function escalaFila(fila: number[], alto: number) {
 
 // os grupos cortados, do que declarou menos ao que declarou mais: um tom da ardósia cada, do claro ao escuro
 // (rampa ordinal validada: claridade monótona, um só matiz, o mais claro a 2,2:1 do papel); a fila inteira é um tom só
-const ARDOSIA = ['#9aa6c8', '#7584b2', '#5d6b94', '#3a4670']
-const corDoGrupo = (i: number, total: number) => (total === 4 ? ARDOSIA[i] : ARDOSIA[Math.round((i / Math.max(1, total - 1)) * 3)])
+const metalDoGrupo = (i: number, total: number) => (total === 4 ? METAIS[i] : METAIS[Math.round((i / Math.max(1, total - 1)) * 3)])
 
 export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar, voce }: {
   dados: Patrimonio
@@ -636,7 +648,7 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
               <div aria-hidden className="pointer-events-none">
                 {escalaY.marcas.map(({ v, y }) => (
                   <div key={v} className="absolute h-px bg-linha" style={{ left: p.fila.x, width: p.fila.w, top: p.baseFila - y }}>
-                    <span className="eixo-fila absolute -top-[15px] left-0 whitespace-nowrap text-[0.7rem] font-semibold text-tinta-3">{reaisFaixa(v)}</span>
+                    <span className="eixo-fila absolute -top-[15px] left-0 whitespace-nowrap text-[0.78rem] font-semibold text-tinta-3">{reaisFaixa(v)}</span>
                   </div>
                 ))}
                 <div className="absolute h-px bg-linha-2" style={{ left: p.fila.x, width: p.fila.w, top: p.baseFila }} />
@@ -647,7 +659,7 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
                 <span className="absolute text-[0.8rem] text-tinta-2" style={{ left: x0, top: p.baseFila + 10 }}>menos bens</span>
                 <span className="absolute text-right text-[0.8rem] text-tinta-2" style={{ right: p.W - (x0 + largFila), top: p.baseFila + 10 }}>mais bens</span>
                 <span className="absolute text-center text-[0.8rem] text-tinta-2" style={{ left: x0, width: largFila, top: p.baseFila + 34 }}>
-                  cada barrinha é 1 em cada 100 candidatos que declararam bens
+                  cada pilha de moedas é 1 em cada 100 candidatos que declararam bens
                 </span>
               </div>
             )}
@@ -684,7 +696,7 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
                   {/* as barrinhas do grupo: andam juntas (uma transformação por grupo) */}
                   <div className="grupo-fila absolute left-0 top-0" style={{ width: w, height: p.alto, transform: `translate(${pos.x - w / 2}px, ${pos.base - p.alto}px)` }}>
                     <div data-barras className="absolute inset-0 origin-bottom transition-transform duration-500" style={{ transform: fase === 3 ? 'scaleY(.28)' : undefined }}>
-                      <Barras hs={hs} inicio={gr.inicio} n={gr.n} pitch={p.pitch} cor={fase >= 2 && !cortando ? corDoGrupo(gr.i, grupos.length) : '#5d6b94'} />
+                      <Barras hs={hs} inicio={gr.inicio} n={gr.n} pitch={p.pitch} metal={fase >= 2 && !cortando ? metalDoGrupo(gr.i, grupos.length) : OURO} />
                     </div>
                   </div>
 
@@ -742,7 +754,7 @@ export function Cofrinho({ dados, rotulo, fase, aoMudarFase, palpite, aoPalpitar
               return (
                 <div data-carimbo className="carimbo pointer-events-none absolute text-center" style={{ left: pos.x + (estreito ? -6 : 14), top: pos.base - 50 - linhasMax * CELULA + 14 }}>
                   <span className="t-numero block text-[1.6rem] leading-none">{(ultimo.g.taxa / primeiro.g.taxa).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}×</span>
-                  <span className="block whitespace-nowrap text-[0.66rem] font-bold uppercase tracking-[0.08em]">a chance</span>
+                  <span className="block whitespace-nowrap text-[0.78rem] font-bold uppercase tracking-[0.08em]">a chance</span>
                 </div>
               )
             })()}

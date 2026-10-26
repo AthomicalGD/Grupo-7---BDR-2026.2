@@ -35,7 +35,7 @@ function Secao({ id, titulo, resposta, children }: {
           </Link>
         )}
       </div>
-      <div className="min-w-0 space-y-4 leading-relaxed text-tinta-2 [&>ol]:max-w-[72ch] [&>p]:max-w-[72ch] [&>ul]:max-w-[72ch] [&_b]:text-tinta [&_:not(pre)>code]:t-mono [&_:not(pre)>code]:rounded [&_:not(pre)>code]:bg-papel-2 [&_:not(pre)>code]:px-1.5 [&_:not(pre)>code]:py-0.5 [&_:not(pre)>code]:text-[0.9em] [&_:not(pre)>code]:text-tinta">
+      <div className="min-w-0 space-y-4 leading-relaxed text-tinta-2 [&>ol]:max-w-[64ch] [&>p]:max-w-[64ch] [&>ul]:max-w-[64ch] [&_b]:text-tinta [&_:not(pre)>code]:t-mono [&_:not(pre)>code]:rounded [&_:not(pre)>code]:bg-papel-2 [&_:not(pre)>code]:px-1.5 [&_:not(pre)>code]:py-0.5 [&_:not(pre)>code]:text-[0.9em] [&_:not(pre)>code]:text-tinta">
         {children}
       </div>
     </section>
@@ -141,6 +141,7 @@ const INDICE = [
   ['m-vies', 'P7'],
   ['m-carreira', 'P10'],
   ['m-reeleicao', 'P10a'],
+  ['m-colonial', 'Extra'],
   ['m-fontes', 'Fontes'],
   ['m-limites', 'Limitações'],
   ['m-reproduzir', 'Para reproduzir'],
@@ -473,6 +474,53 @@ export function Metodologia() {
         </ul>
       </Secao>
 
+      <Secao id="m-colonial" titulo="Exploração colonial e escolaridade (questão extra)" resposta={{ para: '/escola', rotulo: 'Ver no mapa da escola' }}>
+        <p>
+          A pergunta: os lugares mais explorados pela Colônia (até 1822) têm hoje eleitores e eleitos com menos estudo? No mapa
+          da escola, “Pintar por: Exploração colonial” mostra o índice de cada município e, abaixo da legenda, a correlação dele
+          com a parte que tem superior completo, município a município.
+        </p>
+        <p>O índice vai de 0 a 100: metade economia, metade trabalho escravizado.</p>
+        <ul className="list-disc space-y-2 pl-5">
+          <li><b>Economia:</b> a força do ciclo colonial mais forte que o município viveu (o maior dos quatro, não a soma: quem viveu de um ciclo só não sai menor). Cada ciclo marca os municípios atingidos diretamente, e nos vizinhos a influência cai com a distância, como em Naritomi, Soares e Assunção (2012): <code>((200 − d) / 200)²</code> até 200 km.</li>
+          <li><b>Açúcar:</b> núcleos que já existiam em 1694 a menos de 200 km do litoral nas capitanias do açúcar (RN, PB, PE, AL, BA, ES e Campos dos Goytacazes), a regra do artigo, mais os municípios cujo histórico no IBGE fala de engenho ou cana antes de 1822.</li>
+          <li><b>Mineração:</b> histórico com ouro, lavras ou diamantes antes de 1822, ou ocorrência de ouro ou diamante do Serviço Geológico do Brasil num núcleo que já existia em 1822 (MG, GO, MT, BA e TO).</li>
+          <li><b>Gado:</b> presença colonial no semiárido, no Piauí e no sertão do Maranhão (os Pastos Bons, ao sul da latitude −5,5), mais o histórico com gado, currais ou fazendas de criar.</li>
+          <li><b>Norte:</b> presença colonial no Pará, Amazonas, Amapá e norte do Maranhão (a área da Companhia Geral do Grão-Pará e Maranhão, 1755–1778), o histórico com algodão, arroz, fumo ou drogas do sertão, e o Recôncavo do fumo.</li>
+          <li><b>Trabalho escravizado:</b> a parte da população escravizada no Censo de 1872, na área comparável de cada município (IPEA, 1872–2010). Como 1872 já é a época do café, cada valor é levado ao nível do fim da Colônia: multiplicado pela razão entre a parte escravizada da capitania em 1819 e a do estado em 1872. Dividido pelo percentil 99 do Brasil e limitado a 1.</li>
+          <li><b>“Presença colonial” e o histórico:</b> o texto de cada município na Biblioteca do IBGE é lido com palavras-chave, e a atividade só conta quando um ano até 1821 ou um século colonial aparece na mesma frase ou na vizinha.</li>
+          <li><b>No estado:</b> a média simples dos municípios. A exploração é do território, então a capital não pesa mais que o interior (nas vistas de escolaridade, a média é pesada pelo comparecimento).</li>
+          <li><b>Sem dado:</b> municípios criados depois de 2010 usam o centroide da malha do IBGE; os que não têm área de 1872 herdam o trabalho escravizado do município mais próximo que tem.</li>
+        </ul>
+        <p>
+          Nos estados, o índice dá Maranhão 70, Bahia 58, Pernambuco 56, Minas Gerais 54, Piauí 50 e São Paulo 45 (média simples dos
+          municípios). O Maranhão sobe pelo trabalho escravizado (dois terços da população em 1819); o Piauí, pelo gado.
+        </p>
+        <p>
+          <b>Limitações.</b> As zonas do gado e do Norte são regras tiradas da historiografia (Antonil, Caio Prado Jr., Naritomi
+          et al.), não produção medida; não há base municipal da economia colonial. A leitura do histórico do IBGE erra às vezes
+          (cita um ano colonial que não é da atividade) e enxerga menos onde os textos são curtos. O número do Maranhão em 1819 é
+          uma estimativa corrigida da época e pode estar alto. O raio de 200 km faz quase todo o Nordeste ter economia alta. A
+          população quilombola de 2022 ficou de fora de propósito: medida hoje, ela se misturaria com a escolaridade de hoje. E
+          andar junto não é causa.
+        </p>
+        <Detalhe titulo="De onde vêm os dados">
+          <Origens
+            linhas={[
+              [<>Coordenadas, distância do litoral e núcleos de 1694 e 1822: pacote de replicação de <i>Old But Gold</i> (Baerlocher, Firmino, Lambais, Reis e Veras, <i>Journal of Urban Economics</i>), CC BY 4.0</>, <><a className="text-acao underline underline-offset-4" target="_blank" rel="noreferrer" href="https://data.mendeley.com/datasets/ppxdfzt28d">Mendeley Data, ppxdfzt28d</a>, arquivo {ARQ('mun10data.csv')}</>, ARQ('dados/colonial/mun10data.csv')],
+              [<>População livre e escravizada de 1872, ligada aos municípios de 2010: IBGE, <i>Evolução da Divisão Territorial do Brasil 1872–2010</i></>, <><a className="text-acao underline underline-offset-4" target="_blank" rel="noreferrer" href="https://geoftp.ibge.gov.br/organizacao_do_territorio/estrutura_territorial/evolucao_da_divisao_territorial_do_brasil/evolucao_da_divisao_territorial_do_brasil_1872_2010/">IBGE, geoftp</a>, {ARQ('pop_mun_TUR_1872_a_2010.xls')}</>, ARQ('dados/colonial/pop_mun_TUR_1872_a_2010.xls')],
+              [<>Áreas mínimas comparáveis 1872–2010 (Ehrl, 2017)</>, <><a className="text-acao underline underline-offset-4" target="_blank" rel="noreferrer" href="https://www.ipea.gov.br/geobr/">IPEA, geobr</a>, {ARQ('AMC_1872_2010_simplified.gpkg')}</>, ARQ('dados/colonial/AMC_1872_2010.gpkg')],
+              [<>População de 1819 por capitania (Velloso de Oliveira), na tabela 1 de Motta (2022), <i>Revista USP</i> 132</>, <><a className="text-acao underline underline-offset-4" target="_blank" rel="noreferrer" href="https://periodicos.usp.br/revusp/article/view/196259">Revista USP</a></>, 'no script'],
+              [<>Histórico de cada município</>, <><a className="text-acao underline underline-offset-4" target="_blank" rel="noreferrer" href="https://servicodados.ibge.gov.br/api/docs/biblioteca">IBGE, API da Biblioteca</a></>, ARQ('dados/colonial/historico_ibge.json')],
+              [<>Ocorrências de ouro e diamante</>, <><a className="text-acao underline underline-offset-4" target="_blank" rel="noreferrer" href="https://geoservicos.sgb.gov.br/geoserver/ows">Serviço Geológico do Brasil, geoserviços</a></>, ARQ('dados/colonial/sgb_ouro_diamante.geojson')],
+              [<>Municípios do semiárido (2022)</>, <><a className="text-acao underline underline-offset-4" target="_blank" rel="noreferrer" href="https://geoftp.ibge.gov.br/organizacao_do_territorio/estrutura_territorial/semiarido_brasileiro/Situacao_2022/">IBGE, geoftp</a></>, ARQ('dados/colonial/semiarido_2022.xlsx')],
+              [<>Regra do açúcar e forma da influência: Naritomi, Soares e Assunção (2012), <i>Journal of Economic History</i></>, <><a className="text-acao underline underline-offset-4" target="_blank" rel="noreferrer" href="https://docs.iza.org/dp4276.pdf">versão de trabalho (IZA DP 4276)</a></>, 'no script'],
+              ['Índice, economia, trabalho escravizado e os quatro ciclos, por município', ARQ('scripts/11_exploracao_colonial.py'), ARQ('respostas/11_exploracao_colonial/municipios.csv')],
+            ]}
+          />
+        </Detalhe>
+      </Secao>
+
       <Secao id="m-fontes" titulo="Fontes">
         <ul className="space-y-2">
           <li><b>TSE, Portal de Dados Abertos</b> (<a className="text-acao underline underline-offset-4" href="https://dadosabertos.tse.jus.br" target="_blank" rel="noreferrer">dadosabertos.tse.jus.br</a>): candidaturas, votação por município e zona, comparecimento por escolaridade, prestação de contas, correspondência de municípios e fotos.</li>
@@ -480,6 +528,7 @@ export function Metodologia() {
           <li><b>IBGE, APIs de malhas e localidades:</b> contornos dos estados e municípios (GeoJSON) e regiões intermediárias.</li>
           <li><b>Atlas Brasil (PNUD, Ipea, FJP)</b>, pelo Ipeadata: IDHM; o mais recente é o do Censo 2010.</li>
           <li><b>Harvard Dataverse:</b> classificação ideológica dos partidos por especialistas (Bolognesi, Codato, Ribeiro e Silva).</li>
+          <li><b>Exploração colonial (questão extra):</b> pacote de replicação de <i>Old But Gold</i> no Mendeley Data (<a className="text-acao underline underline-offset-4" target="_blank" rel="noreferrer" href="https://data.mendeley.com/datasets/ppxdfzt28d">ppxdfzt28d</a>, CC BY 4.0), Censo de 1872 e evolução da divisão territorial do IBGE, áreas comparáveis do IPEA, histórico dos municípios (IBGE), ocorrências minerais do Serviço Geológico do Brasil, semiárido (IBGE) e a população de 1819 por capitania (Velloso de Oliveira).</li>
         </ul>
       </Secao>
 

@@ -7,6 +7,7 @@ import { useId, useState } from 'react'
 import { ANOS, type Ano, type PorAno } from '../api'
 import { vies as fmtVies } from '../lib/formato'
 import { corVies, ladoVies } from '../lib/vies'
+import { Ouvir } from '../componentes/Ouvir'
 import { TabelaAlternavel } from './TabelaAlternavel'
 
 interface Serie {
@@ -67,15 +68,15 @@ export function ViesTempo({ principal, contexto, anoAtivo, medida = MEDIDA_VIES 
           {marcas.map((v) => (
             <g key={v}>
               <line x1={m.e} x2={W - m.d + 8} y1={y(v)} y2={y(v)} stroke={v === 0 ? 'var(--color-linha-2)' : 'var(--color-linha)'} strokeWidth={1} />
-              <text x={m.e - 8} y={y(v) + 3.5} textAnchor="end" className="tabular fill-tinta-3 text-[10px]">
+              <text x={m.e - 8} y={y(v) + 3.5} textAnchor="end" className="tabular fill-tinta-3 text-[12px]">
                 {v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0'}
               </text>
             </g>
           ))}
-          <text x={W - m.d + 8} y={y(L) + 12} textAnchor="end" className="fill-tinta-3 text-[10px]">{medida.positivo}</text>
-          <text x={W - m.d + 8} y={y(-L) - 5} textAnchor="end" className="fill-tinta-3 text-[10px]">{medida.negativo}</text>
+          <text x={W - m.d + 8} y={y(L) + 12} textAnchor="end" className="fill-tinta-3 text-[12px]">{medida.positivo}</text>
+          <text x={W - m.d + 8} y={y(-L) - 5} textAnchor="end" className="fill-tinta-3 text-[12px]">{medida.negativo}</text>
           {ANOS.map((a, i) => (
-            <text key={a} x={x(i)} y={H - 8} textAnchor="middle" className={`tabular text-[10.5px] ${a === anoAtivo ? 'fill-tinta font-bold' : 'fill-tinta-3'}`}>
+            <text key={a} x={x(i)} y={H - 8} textAnchor="middle" className={`tabular text-[12px] ${a === anoAtivo ? 'fill-tinta font-bold' : 'fill-tinta-3'}`}>
               {a}
             </text>
           ))}
@@ -92,7 +93,7 @@ export function ViesTempo({ principal, contexto, anoAtivo, medida = MEDIDA_VIES 
                 // perto do ponto principal, o rótulo desvia para não encostar nele
                 const desvio = vp != null && Math.abs(vc - vp) < 9 ? 15 : 3.5 // os valores do principal ficam acima dos pontos
                 return (
-                  <text x={x(ANOS.indexOf(a)) + 11} y={y(vc) + desvio} className="fill-tinta-3 text-[10.5px] font-semibold">
+                  <text x={x(ANOS.indexOf(a)) + 11} y={y(vc) + desvio} className="fill-tinta-3 text-[12px] font-semibold">
                     {contexto.nome}
                   </text>
                 )
@@ -108,7 +109,7 @@ export function ViesTempo({ principal, contexto, anoAtivo, medida = MEDIDA_VIES 
             return (
               <g key={a}>
                 <Marcador a={a} cx={x(i)} cy={y(v)} r={ativo ? 7.5 : 6} fill={medida.cor(v)} stroke="var(--color-folha)" strokeWidth={2.5} />
-                <text x={x(i) + (i === 0 ? -6 : i === ANOS.length - 1 ? 6 : 0)} y={y(v) - 13} textAnchor={i === 0 ? 'start' : i === ANOS.length - 1 ? 'end' : 'middle'} className={`tabular text-[11px] ${ativo ? 'fill-tinta font-bold' : 'fill-tinta-2 font-semibold'}`}>
+                <text x={x(i) + (i === 0 ? -6 : i === ANOS.length - 1 ? 6 : 0)} y={y(v) - 13} textAnchor={i === 0 ? 'start' : i === ANOS.length - 1 ? 'end' : 'middle'} className={`tabular text-[12px] ${ativo ? 'fill-tinta font-bold' : 'fill-tinta-2 font-semibold'}`}>
                   {fmtVies(v)}
                 </text>
               </g>
@@ -158,7 +159,10 @@ export function ViesTempo({ principal, contexto, anoAtivo, medida = MEDIDA_VIES 
           Municipais (2020, 2024)
         </span>
       </div>
-      <TabelaAlternavel
+      <div className="mt-1">
+        <Ouvir nome={`${medida.nome.toLowerCase()} de ${principal.nome}`} min={-L} max={L} pontos={ANOS.map((a) => ({ rotulo: String(a), valor: principal.valores[a] ?? null, texto: fmtVies(principal.valores[a]) }))} />
+      </div>
+      <TabelaAlternavel sql="p7Vies"
         titulo={`${medida.nome} de ${principal.nome} por ano`}
         colunas={['Ano', principal.nome, ...(contexto ? [contexto.nome] : [])]}
         linhas={ANOS.map((a) => [String(a), fmtVies(principal.valores[a]), ...(contexto ? [fmtVies(contexto.valores[a])] : [])])}

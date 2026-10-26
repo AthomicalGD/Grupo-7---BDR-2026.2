@@ -1,8 +1,9 @@
 import { gradienteVies, SATURA } from '../lib/vies'
-import { SATURA_RELATIVO } from './valores'
+import { SATURA_RELATIVO, SATURA_UF } from './valores'
 
-export function Legenda({ relativo = false }: { relativo?: boolean }) {
-  const satura = relativo ? SATURA_RELATIVO : SATURA
+/** `brasil`: o mapa mostra os estados (escala de ±40); dentro de um estado, os municípios (±75). */
+export function Legenda({ relativo = false, brasil = false }: { relativo?: boolean; brasil?: boolean }) {
+  const satura = relativo ? SATURA_RELATIVO : brasil ? SATURA_UF : SATURA
   const cores = gradienteVies(satura)
   return (
     <div className="flex flex-wrap items-end gap-x-6 gap-y-2 text-[0.78rem] text-tinta-2">

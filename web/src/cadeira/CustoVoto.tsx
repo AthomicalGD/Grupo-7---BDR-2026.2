@@ -32,7 +32,7 @@ function Lista({ titulo, linhas, fator }: { titulo: string; linhas: Linha[]; fat
               </span>
               <span className="text-right">
                 <span className="t-numero block text-[1.35rem]">{reaisCurto(l.porVoto)}</span>
-                <span className="block text-[0.72rem] text-tinta-3">por voto</span>
+                <span className="block text-[0.78rem] text-tinta-3">por voto</span>
               </span>
             </Link>
           </li>
@@ -69,7 +69,7 @@ export const CustoVoto = memo(function CustoVoto({ cadeiras, fator }: { cadeiras
           <Lista titulo="Voto mais barato" linhas={linhas.slice(-n).reverse()} fator={fator} />
         </div>
       )}
-      <TabelaAlternavel
+      <TabelaAlternavel sql="p1Campanha"
         titulo="Custo por voto de cada eleito"
         colunas={['Eleito', 'Partido', 'Gasto', 'Votos', 'Por voto']}
         linhas={() => linhas.map((l) => [nomeProprio(l.nome), l.partido ?? '-', reaisCurto(l.gasto * fator), inteiro(l.votos), reaisCurto(l.porVoto)])}

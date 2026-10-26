@@ -51,7 +51,7 @@ export function Trajetoria({ candidaturas, viesPartido }: { candidaturas: Candid
             </g>
           ))}
           {Array.from({ length: (FIM - INICIO) / 2 + 1 }, (_, i) => INICIO + i * 2).map((a) => (
-            <text key={a} x={x(a)} y={H - 10} textAnchor="middle" className="tabular fill-tinta-3 text-[11px]">{a}</text>
+            <text key={a} x={x(a)} y={H - 10} textAnchor="middle" className="tabular fill-tinta-3 text-[12px]">{a}</text>
           ))}
           {/* mandatos: começam em janeiro do ano seguinte à eleição */}
           {ordem.filter((c) => c.eleito).map((c, i) => (
@@ -78,7 +78,7 @@ export function Trajetoria({ candidaturas, viesPartido }: { candidaturas: Candid
                   <g key={i}>
                     <rect x={x0} y={yPartido - 4} width={Math.max(4, x1 - x0 - 2)} height={8} rx={4} fill={c.partido ? corVies(v) : 'var(--color-linha)'} />
                     {muda && (
-                      <text x={x0} y={yPartido - 10} className="fill-tinta text-[11.5px] font-bold" style={{ fontStretch: '92%' }}>{c.partido}</text>
+                      <text x={x0} y={yPartido - 10} className="fill-tinta text-[12px] font-bold" style={{ fontStretch: '92%' }}>{c.partido}</text>
                     )}
                   </g>
                 )
@@ -110,7 +110,7 @@ export function Trajetoria({ candidaturas, viesPartido }: { candidaturas: Candid
           </div>
         )}
       </div>
-      <TabelaAlternavel
+      <TabelaAlternavel sql="p7Vies"
         titulo="Candidaturas"
         colunas={['Ano', 'Cargo', 'Local', 'Partido', 'Resultado', 'Votos']}
         linhas={ordem.map((c) => [String(c.ano), fmtCargo(c.cargo), c.local, c.partido ?? '-', situacao(c), c.votos != null ? inteiro(c.votos) : '-'])}

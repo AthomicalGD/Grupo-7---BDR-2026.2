@@ -60,7 +60,8 @@ const CLOUDFLARED = process.env.CLOUDFLARED ?? (() => {
   return lugares.find((l) => existsSync(l)) ?? 'cloudflared'
 })()
 
-const chave = randomBytes(24).toString('base64url')
+// 128 bits: segura e curta (22 caracteres), para o QR do boletim não ficar denso demais para a câmera
+const chave = randomBytes(16).toString('base64url')
 const igual = (a) => typeof a === 'string' && a.length === chave.length && timingSafeEqual(Buffer.from(a), Buffer.from(chave))
 // no túnel, o cloudflared reescreve o Host para este mesmo valor (--http-host-header)
 const hostCerto = `${ip}:${PORTA}`

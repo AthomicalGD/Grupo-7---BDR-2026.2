@@ -1,11 +1,13 @@
 // Plenário em pé: cada cadeira sobe numa coluna com altura proporcional ao gasto (linear, para que
 // a diferença de dinheiro apareça do tamanho que é). Mesmo lugar e mesma cor do plano.
-// Colunas, assentos e encostos são InstancedMesh: até ~1.500 cadeiras sem pesar.
+// Em cima de cada coluna, a poltrona do plano: almofada na cor do gasto, encosto e dois braços em tinta.
+// Colunas, almofadas, encostos e braços são InstancedMesh: até ~1.500 cadeiras sem pesar.
 import { ContactShadows, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { useReducedMotion } from 'motion/react'
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import type { Assento } from '../api'
 import { CartaoAssento } from './Plenario'
 import { hemiciclo, ordenar, posicionar, type EscalaGasto, type Ordem } from './geometria'
@@ -23,7 +25,11 @@ interface Props {
 }
 
 const caixa = new THREE.BoxGeometry(1, 1, 1)
+// cantos arredondados nas peças da poltrona (a coluna fica reta: é a barra do dado)
+const almofada = new RoundedBoxGeometry(1, 1, 1, 2, 0.3)
+const peca = new RoundedBoxGeometry(1, 1, 1, 2, 0.22)
 const tmp = new THREE.Object3D()
+const BRANCO = new THREE.Color('#ffffff')
 
 function Bancada({ chave, cadeiras, escala, ordem, aoPassar, aoAbrir }: Omit<Props, 'fator'> & {
   aoPassar: (i: number | null, e?: ThreeEvent<PointerEvent>) => void
@@ -34,33 +40,40 @@ function Bancada({ chave, cadeiras, escala, ordem, aoPassar, aoAbrir }: Omit<Pro
   const colunas = useRef<THREE.InstancedMesh>(null)
   const assentos = useRef<THREE.InstancedMesh>(null)
   const encostos = useRef<THREE.InstancedMesh>(null)
+  const bracos = useRef<THREE.InstancedMesh>(null) // dois por cadeira
+  const tampos = useRef<THREE.InstancedMesh>(null) // a base clara da poltrona, que a separa da coluna
   const progresso = useRef(0)
   const reduz = useReducedMotion()
   const invalidar = useThree((s) => s.invalidate)
   const d = diametro * R
-  // com centenas de cadeiras os assentos viram uma mancha escura: fica só a coluna
+  // com centenas de cadeiras as poltronas viram uma mancha escura: fica só a coluna
   const assentosVisiveis = lista.length <= 300
 
   useLayoutEffect(() => {
     progresso.current = 0
     // seleção sem nenhuma cadeira (ex.: o DF não elege prefeito): sem instâncias, o three não cria a cor
     // por instância (instanceColor fica null) e não há o que desenhar
-    if (!lista.length || !colunas.current || !assentos.current || !encostos.current) return
+    const col = colunas.current, ass = assentos.current, enc = encostos.current, bra = bracos.current, tam = tampos.current
+    if (!lista.length || !col || !ass || !enc || !bra || !tam) return
     const cor = new THREE.Color()
     tmp.scale.setScalar(0)
     tmp.updateMatrix()
     lista.forEach((a, i) => {
-      colunas.current!.setColorAt(i, cor.set(escala.cor(a.gasto)))
-      for (const m of [colunas, assentos, encostos]) m.current!.setMatrixAt(i, tmp.matrix)
+      col.setColorAt(i, cor.set(escala.cor(a.gasto)))
+      // a almofada é a mesma cor um pouco mais clara, como o brilho do plano
+      ass.setColorAt(i, cor.lerp(BRANCO, 0.3))
+      for (const m of [col, ass, enc, tam]) m.setMatrixAt(i, tmp.matrix)
+      bra.setMatrixAt(2 * i, tmp.matrix)
+      bra.setMatrixAt(2 * i + 1, tmp.matrix)
     })
-    if (colunas.current.instanceColor) colunas.current.instanceColor.needsUpdate = true
+    for (const m of [col, ass]) if (m.instanceColor) m.instanceColor.needsUpdate = true
     invalidar()
   }, [lista, escala, chave, invalidar])
 
   // as colunas crescem do chão (com movimento reduzido, já nascem prontas)
   useFrame((estado, dt) => {
-    const col = colunas.current, ass = assentos.current, enc = encostos.current
-    if (progresso.current >= 1 || !lista.length || !col || !ass || !enc) return
+    const col = colunas.current, ass = assentos.current, enc = encostos.current, bra = bracos.current, tam = tampos.current
+    if (progresso.current >= 1 || !lista.length || !col || !ass || !enc || !bra || !tam) return
     progresso.current = reduz ? 1 : Math.min(1, progresso.current + Math.min(dt, 1 / 30) / 0.9)
     if (progresso.current < 1) estado.invalidate() // o canvas só desenha sob demanda
     const k = 1 - (1 - progresso.current) ** 3
@@ -69,29 +82,33 @@ function Bancada({ chave, cadeiras, escala, ordem, aoPassar, aoAbrir }: Omit<Pro
       const x = l.x * R, z = -l.y * R
       const h = (0.06 + (ALTURA * a.gasto) / max) * k
       const giro = Math.atan2(-z, x) // o encosto fica do lado de fora
-      tmp.position.set(x, h / 2, z)
-      tmp.rotation.set(0, giro + Math.PI / 2, 0)
-      tmp.scale.set(d * 0.62, h, d * 0.62)
-      tmp.updateMatrix()
-      col.setMatrixAt(i, tmp.matrix)
-      tmp.position.set(x, h + 0.06, z)
-      tmp.scale.set(d * 0.66, 0.12, d * 0.66)
-      tmp.updateMatrix()
-      ass.setMatrixAt(i, tmp.matrix)
-      tmp.position.set(x + Math.cos(giro) * d * 0.3, h + 0.28, z - Math.sin(giro) * d * 0.3)
-      tmp.scale.set(d * 0.7, 0.44, d * 0.12)
-      tmp.updateMatrix()
-      enc.setMatrixAt(i, tmp.matrix)
+      const fx = Math.cos(giro), fz = -Math.sin(giro) // para fora do hemiciclo
+      const lx = Math.sin(giro), lz = Math.cos(giro) // ao longo da fileira
+      const poe = (m: THREE.InstancedMesh, j: number, radial: number, lateral: number, y: number, sx: number, sy: number, sz: number) => {
+        tmp.position.set(x + fx * radial + lx * lateral, y, z + fz * radial + lz * lateral)
+        tmp.scale.set(sx, sy, sz)
+        tmp.updateMatrix()
+        m.setMatrixAt(j, tmp.matrix)
+      }
+      tmp.rotation.set(0, giro + Math.PI / 2, 0) // x da peça ao longo da fileira, z para fora
+      poe(col, i, 0, 0, h / 2, d * 0.58, h, d * 0.58)
+      poe(tam, i, 0, 0, h + 0.03, d * 0.86, 0.06, d * 0.86)
+      poe(ass, i, -d * 0.03, 0, h + 0.13, d * 0.6, 0.17, d * 0.62)
+      poe(enc, i, d * 0.33, 0, h + 0.33, d * 0.84, 0.52, d * 0.16)
+      poe(bra, 2 * i, 0, -d * 0.37, h + 0.2, d * 0.13, 0.27, d * 0.62)
+      poe(bra, 2 * i + 1, 0, d * 0.37, h + 0.2, d * 0.13, 0.27, d * 0.62)
     })
-    col.instanceMatrix.needsUpdate = true
-    ass.instanceMatrix.needsUpdate = true
-    enc.instanceMatrix.needsUpdate = true
+    for (const m of [col, ass, enc, bra, tam]) m.instanceMatrix.needsUpdate = true
     col.computeBoundingSphere()
   })
 
   const passar = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation()
     aoPassar(e.instanceId ?? null, e)
+  }
+  const clicar = (e: ThreeEvent<MouseEvent>) => {
+    e.stopPropagation()
+    if (e.instanceId != null) aoAbrir(lista[e.instanceId].id)
   }
   return (
     <group>
@@ -102,18 +119,25 @@ function Bancada({ chave, cadeiras, escala, ordem, aoPassar, aoAbrir }: Omit<Pro
         castShadow
         onPointerMove={passar}
         onPointerOut={() => aoPassar(null)}
-        onClick={(e) => {
-          e.stopPropagation()
-          if (e.instanceId != null) aoAbrir(lista[e.instanceId].id)
-        }}
+        onClick={clicar}
       >
         <meshStandardMaterial roughness={0.55} metalness={0.02} />
       </instancedMesh>
-      <instancedMesh key={`a-${chave}-${lista.length}`} ref={assentos} args={[caixa, undefined, lista.length]} castShadow visible={assentosVisiveis}>
-        <meshStandardMaterial color="#2a313c" roughness={0.7} />
+      {/* a almofada também responde ao ponteiro: o índice da instância é o mesmo da coluna */}
+      <instancedMesh
+        key={`a-${chave}-${lista.length}`} ref={assentos} args={[almofada, undefined, lista.length]} castShadow visible={assentosVisiveis}
+        onPointerMove={passar} onPointerOut={() => aoPassar(null)} onClick={clicar}
+      >
+        <meshStandardMaterial roughness={0.8} />
       </instancedMesh>
-      <instancedMesh key={`e-${chave}-${lista.length}`} ref={encostos} args={[caixa, undefined, lista.length]} castShadow visible={assentosVisiveis}>
-        <meshStandardMaterial color="#18202b" roughness={0.7} />
+      <instancedMesh key={`e-${chave}-${lista.length}`} ref={encostos} args={[peca, undefined, lista.length]} castShadow visible={assentosVisiveis}>
+        <meshStandardMaterial color="#18202b" roughness={0.6} />
+      </instancedMesh>
+      <instancedMesh key={`t-${chave}-${lista.length}`} ref={tampos} args={[peca, undefined, lista.length]} castShadow visible={assentosVisiveis}>
+        <meshStandardMaterial color="#e6eaed" roughness={0.7} />
+      </instancedMesh>
+      <instancedMesh key={`b-${chave}-${lista.length}`} ref={bracos} args={[peca, undefined, lista.length * 2]} castShadow visible={assentosVisiveis}>
+        <meshStandardMaterial color="#2f3846" roughness={0.6} />
       </instancedMesh>
     </group>
   )

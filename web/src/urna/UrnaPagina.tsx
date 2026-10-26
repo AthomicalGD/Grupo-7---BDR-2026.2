@@ -8,6 +8,7 @@ import { Retrato } from '../componentes/Retrato'
 import { inteiro, nomeProprio, plural } from '../lib/formato'
 import { alternarSom, somLigado, tocarConfirma, tocarCorrige, tocarTecla } from './som'
 import { preparaAudio } from '../lib/audio'
+import { useLembrado } from '../lib/pilha'
 import { Urna, type IdTecla } from './Urna'
 import { FiltroCandidatura } from './FiltroCandidatura'
 import { desenharVisor, filtroNoVisor, VISOR } from './visor'
@@ -28,8 +29,9 @@ export function UrnaPagina() {
   const id = useId()
   const navegar = useNavigate()
   const campo = useRef<HTMLInputElement>(null)
-  const [texto, setTexto] = useState('')
-  const [selecionado, setSelecionado] = useState(0)
+  // a busca e a escolha voltam como estavam ao voltar da carreira (lib/pilha)
+  const [texto, setTexto] = useLembrado('urna:texto', '')
+  const [selecionado, setSelecionado] = useLembrado('urna:selecionado', 0)
   const [fim, setFim] = useState(false)
   const [cursor, setCursor] = useState(true)
   const [som, setSom] = useState(somLigado)
@@ -55,7 +57,7 @@ export function UrnaPagina() {
   const q = useAtrasado(texto.trim())
   // "mais" pede a mesma busca com 6 a mais (a API não tem deslocamento, só limite); volta a 6 quando a busca muda
   const chave = `${q}|${JSON.stringify(filtros)}|${ordem}`
-  const [pedido, setPedido] = useState({ chave, quantos: POR_PAGINA })
+  const [pedido, setPedido] = useLembrado('urna:pedido', { chave, quantos: POR_PAGINA })
   const quantos = pedido.chave === chave ? pedido.quantos : POR_PAGINA
   const busca = useQuery({ ...consultas.buscaPoliticos(q, filtros, quantos, ordem), placeholderData: (anterior) => anterior })
   // a API não garante a ordem entre empates: quem já estava na lista fica onde estava e os novos entram no fim
@@ -153,7 +155,7 @@ export function UrnaPagina() {
       }
       campo.current?.focus({ preventScroll: true })
     },
-    [confirmar, fim, inicio, resultados.length],
+    [confirmar, fim, inicio, resultados.length, setTexto, setSelecionado],
   )
 
   const aoApertar = useCallback((t: IdTecla) => void apertar(t), [apertar])

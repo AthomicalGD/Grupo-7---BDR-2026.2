@@ -55,11 +55,12 @@ const ONDAS = FITAS.map((_, i) => {
   return 'M' + pontos.join('L')
 })
 
+// tinta dos carimbos: fechadas o bastante para 4,5:1 sobre a folha mesmo no tamanho pequeno
 const CARIMBO: Record<string, string> = {
-  Eleito: 'var(--color-eleito)',
-  'Eleito no 2º turno': 'var(--color-eleito)',
-  Reeleito: 'var(--color-reeleito)',
-  'Não eleito': 'var(--color-tinta-3)',
+  Eleito: 'var(--color-selecao-tinta)',
+  'Eleito no 2º turno': 'var(--color-selecao-tinta)',
+  Reeleito: '#2c3c12',
+  'Não eleito': 'var(--color-tinta-2)',
 }
 
 /** Nos anos 90 o TSE cortava o nome de urna em 30 letras ("…BARROSO DE ARA"): fica até a última palavra inteira. */
@@ -92,7 +93,7 @@ function Casas({ numero, contorno }: { numero: number; contorno?: boolean }) {
 function Carimbo({ resultado }: { resultado: string }) {
   return (
     <span
-      className="inline-block -rotate-[8deg] rounded-[4px] border-[2.5px] bg-folha/92 px-2 py-0.5 text-[0.68rem] font-black uppercase tracking-[0.1em] shadow-[0_1px_0_rgb(24_32_43/0.08)]"
+      className="inline-block -rotate-[8deg] rounded-[4px] border-[2.5px] bg-folha px-2 py-0.5 text-[0.78rem] font-black uppercase tracking-[0.1em] shadow-[0_1px_0_rgb(24_32_43/0.08)]"
       style={{ color: CARIMBO[resultado], borderColor: CARIMBO[resultado] }}
     >
       {resultado}
@@ -271,16 +272,16 @@ export function Santinho({ c, nome, inclinacao }: { c: Candidatura; nome: string
               {nomeUrna}
             </p>
             <div className="mt-1.5 flex items-center justify-between gap-2">
-              <span className="truncate text-[0.7rem] font-bold uppercase tracking-[0.14em] opacity-90">{fmtCargo(c.cargo)}</span>
+              <span className="truncate text-[0.78rem] font-bold uppercase tracking-[0.14em] opacity-90">{fmtCargo(c.cargo)}</span>
               {c.partido && (
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-folha py-0.5 pl-1.5 pr-2 text-[0.72rem] font-black text-tinta" style={{ fontStretch: '85%' }}>
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-folha py-0.5 pl-1.5 pr-2 text-[0.75rem] font-black text-tinta" style={{ fontStretch: '85%' }}>
                   <i className="size-2 rounded-full" style={{ background: corVies(c.vies) }} aria-hidden />
                   {c.partido}
                 </span>
               )}
             </div>
             <div className="mt-auto pt-2">
-              {c.numero ? <Casas numero={c.numero} /> : <span className="text-[0.74rem] opacity-80">número não informado</span>}
+              {c.numero ? <Casas numero={c.numero} /> : <span className="text-[0.75rem] opacity-80">número não informado</span>}
             </div>
             <p className="mt-2 text-[0.56rem] leading-none opacity-75">Dados do TSE · não é material de campanha</p>
           </div>
@@ -303,7 +304,7 @@ export function Santinho({ c, nome, inclinacao }: { c: Candidatura; nome: string
             {FITAS.map((f) => <span key={f} className="flex-1" style={{ background: f }} />)}
           </div>
           <div className="flex flex-1 flex-col px-3.5 pb-3 pt-3">
-            <p className="t-mono text-[0.68rem] tracking-[0.14em] text-tinta-3">COLA PARA A URNA</p>
+            <p className="t-mono text-[0.75rem] tracking-[0.14em] text-tinta-3">COLA PARA A URNA</p>
             <p className="mt-1.5 text-[0.8rem] text-tinta-2">Para {fmtCargo(c.cargo).toLowerCase()}, digite</p>
             <div className="mt-1.5">{c.numero ? <Casas numero={c.numero} contorno /> : <span className="text-[0.8rem] text-tinta-3">número não informado</span>}</div>
             <dl className="mt-3 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 border-t border-dashed border-linha-2 pt-2.5 text-[0.78rem]">
@@ -335,7 +336,7 @@ export function Santinho({ c, nome, inclinacao }: { c: Candidatura; nome: string
                 </Link>
               )}
               <div className="flex items-end justify-between gap-2">
-                <p className="text-[0.62rem] leading-snug text-tinta-3">Santinho reconstruído com dados do TSE. Não é material de campanha.</p>
+                <p className="text-[0.75rem] leading-snug text-tinta-3">Santinho reconstruído com dados do TSE. Não é material de campanha.</p>
                 <button
                   type="button"
                   ref={verso}

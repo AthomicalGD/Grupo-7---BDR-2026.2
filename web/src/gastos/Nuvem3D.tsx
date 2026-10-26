@@ -149,7 +149,7 @@ export default function Nuvem3D({ c }: { c: Candidatura }) {
             )}
             {/* sem aviso por cima: o palco já está lá, e a chuva cai assim que as despesas chegam */}
             {(q.isFetching || !dados) && !q.error && <span className="sr-only" role="status">Somando as despesas...</span>}
-            {q.error && !dados && <div className="carregando"><ErroCarga erro={q.error} compacto /></div>}
+            {q.error && !dados && <div className="carregando"><ErroCarga erro={q.error} compacto aoTentar={q.refetch} /></div>}
             <div className="fita-pe"><Fita altura={14} /></div>
           </div>
         </div>

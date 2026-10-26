@@ -6,6 +6,8 @@
 // sob o ponteiro: com os 27 acesos elas se atropelavam no Nordeste; o nome inteiro sempre aparece ao lado.
 import { memo, useMemo, useState } from 'react'
 import type { Malha, UF } from '../api'
+import { ufsFrase } from '../lib/formato'
+import { Bandeira, useBandeiras } from './Bandeira'
 import { formas, projecaoBrasil } from '../atlas/geo'
 
 // abaixo deste lado (unidades do viewBox) a sigla não cabe no estado sem invadir os vizinhos
@@ -34,6 +36,9 @@ export const MapaEstados = memo(function MapaEstados({ malha, ufs, escolhida, ao
     return `${x0 - 8} ${y0 - 8} ${x1 - x0 + 16} ${y1 - y0 + 16}`
   }, [mapa])
   const nomeSobre = sobre ? ufs.find((u) => u.sigla === sobre)?.nome : null
+  useBandeiras(useMemo(() => ufs.map((u) => u.sigla), [ufs]))
+  // a bandeira do estado sob o mouse (ou do escolhido)
+  const naBandeira = nacional ? null : sobre ?? (escolhida || null)
   const nomeEscolhida = escolhida ? ufs.find((u) => u.sigla === escolhida)?.nome : null
   // o escolhido é desenhado por último, para o contorno dele ficar por cima dos vizinhos
   const ordem = useMemo(() => mapa.toSorted((a, b) => Number(porCodigo.get(a.codigo)?.sigla === escolhida) - Number(porCodigo.get(b.codigo)?.sigla === escolhida)), [mapa, porCodigo, escolhida])
@@ -91,9 +96,17 @@ export const MapaEstados = memo(function MapaEstados({ malha, ufs, escolhida, ao
         </g>
       </svg>
       <div className="min-w-0">
+        {/* o lugar da bandeira fica reservado: trocar de estado não empurra o texto */}
+        <div className="mb-2 h-[67px] w-[96px]">
+          {naBandeira ? (
+            <Bandeira key={naBandeira} sigla={naBandeira} nome={ufs.find((u) => u.sigla === naBandeira)?.nome} className="bandeira-entra" />
+          ) : (
+            <div aria-hidden className="size-full rounded-[6px] border-2 border-dashed border-linha-2" />
+          )}
+        </div>
         <p className="t-rotulo text-tinta-3">Estado</p>
         <p className="mt-0.5 min-h-[1.6em] text-[1.1rem] font-bold leading-tight text-tinta" aria-live="polite">
-          {nacional ? 'Brasil inteiro' : nomeSobre ?? nomeEscolhida ?? `Todos os ${ufs.length}`}
+          {nacional ? 'Brasil inteiro' : nomeSobre ?? nomeEscolhida ?? ufsFrase(ufs, 'Todos os')}
         </p>
         <p className="mt-1 max-w-[18ch] text-[0.8rem] leading-snug text-tinta-3">
           {nacional ? 'Presidente é disputa nacional' : 'Toque num estado aceso'}

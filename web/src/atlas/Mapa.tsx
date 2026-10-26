@@ -10,7 +10,7 @@ import { corVies } from '../lib/vies'
 import { formas, formasCedo, formasGuardadas, LADO, projecaoBrasil, type Caixa, type Forma } from './geo'
 import { Dica } from './Dica'
 import { hover, type Foco } from './hover'
-import { SATURA_RELATIVO, valorMunicipio } from './valores'
+import { SATURA_RELATIVO, SATURA_UF, valorMunicipio } from './valores'
 
 const ANEIS = 6
 
@@ -296,7 +296,7 @@ const CamadaUFs = memo(function CamadaUFs({
             data-codigo={f.codigo}
             data-tipo="uf"
             className="mapa-forma outline-none"
-            fill={ativa && vazarAtiva ? 'var(--color-papel)' : uf?.carregada ? corVies(v) : 'url(#hachura)'}
+            fill={ativa && vazarAtiva ? 'var(--color-papel)' : uf?.carregada ? corVies(v, SATURA_UF) : 'url(#hachura)'}
             opacity={outra ? 0.32 : 1}
             stroke="#fcfdfd"
             strokeWidth={1.1}

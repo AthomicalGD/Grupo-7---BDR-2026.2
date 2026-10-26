@@ -7,12 +7,13 @@ import { ArrowRight, ArrowSquareOut, ArrowsLeftRight, Receipt, Scissors, Shoppin
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { animate } from 'motion/react'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useLembrado } from '../lib/pilha'
 import { CARGOS_P2, consultas, semMunicipal, type Ano, type PanoramaPatrimonio, type Patrimonio } from '../api'
 import { Atrasado, EsqueletoBloco, EsqueletoPagina } from '../componentes/Esqueleto'
 import { ErroCarga } from '../componentes/ErroCarga'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
-import { inteiro, noEstado, pct, reais } from '../lib/formato'
+import { inteiro, noEstado, pct, reais, ufsFrase } from '../lib/formato'
 import type { BuscaPatrimonio } from '../router'
 import { BotaoSom, Cofrinho, Passos, type Fase } from './Cofrinho'
 import { COR, grupoDoValor, nomeFaixa, POUCOS, quartis, taxaCurta } from './conta'
@@ -145,13 +146,14 @@ export function PatrimonioPagina() {
   const { data: ufs } = useQuery(consultas.ufs())
   const { data: malha } = useQuery(consultas.malhaBrasil())
   const carregadas = useMemo(() => (ufs ?? []).filter((u) => u.carregada && u.sigla !== 'BR'), [ufs])
-  const [fase, setFase] = useState<Fase>(0)
-  const [palpite, setPalpite] = useState<string | null>(null)
-  const [valor, setValor] = useState<number | null>(null)
+  // o cofrinho quebrado, a fila cortada e o palpite ficam como estavam ao voltar de outra tela (lib/pilha)
+  const [fase, setFase] = useLembrado<Fase>('patrimonio:fase', 0)
+  const [palpite, setPalpite] = useLembrado<string | null>('patrimonio:palpite', null)
+  const [valor, setValor] = useLembrado<number | null>('patrimonio:valor', null)
   const palpitar = useCallback((id: string) => {
     setPalpite(id)
     setFase(3)
-  }, [])
+  }, [setPalpite, setFase])
 
   const cargo = CARGOS_P2.find((c) => c.cod === busca.cargo) ?? CARGOS_P2[CARGOS_P2.length - 1]
   const anos = cargo.municipal ? ANOS_MUNICIPAIS : ANOS_GERAIS
@@ -159,7 +161,7 @@ export function PatrimonioPagina() {
   const lugares = useMemo(() => semMunicipal(carregadas, cargo.municipal), [carregadas, cargo.municipal])
   const ufEscolhida = lugares.find((u) => u.sigla === busca.uf)
   const uf = ufEscolhida?.sigla ?? ''
-  const noLugar = ufEscolhida ? noEstado(ufEscolhida.sigla, ufEscolhida.nome) : `nos ${lugares.length} estados carregados`
+  const noLugar = ufEscolhida ? noEstado(ufEscolhida.sigla, ufEscolhida.nome) : ufsFrase(lugares, 'nos')
   const q = useQuery({ ...consultas.patrimonio(ano, cargo.cod, cargo.nacional ? '' : uf), enabled: !!ufs, placeholderData: keepPreviousData })
   const qp = useQuery({ ...consultas.patrimonioPanorama(uf), enabled: !!ufs, placeholderData: keepPreviousData })
   const dados = q.data
@@ -167,7 +169,7 @@ export function PatrimonioPagina() {
 
   // o palpite vale para um recorte: trocar cargo, ano ou estado o apaga
   const recorte = `${ano}-${cargo.cod}-${uf}`
-  const [recorteVisto, setRecorteVisto] = useState(recorte)
+  const [recorteVisto, setRecorteVisto] = useLembrado('patrimonio:recorte', recorte)
   if (recorteVisto !== recorte) {
     setRecorteVisto(recorte)
     setPalpite(null)
@@ -198,9 +200,18 @@ export function PatrimonioPagina() {
 
         {/* 2. o cofrinho */}
         <section id="cofrinho" aria-label="O cofrinho" className="mt-8 scroll-mt-24">
-          <div className="flex items-center justify-between gap-4">
+          {/* acima da cena do cofrinho, que sobe por cima desta linha quando o porquinho pula */}
+          <div className="relative z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <Passos fase={fase} aoMudar={setFase} />
-            <BotaoSom />
+            <div className="flex items-center gap-2">
+              {/* quem só quer o número não precisa jogar: pula direto para quem se elegeu */}
+              {fase < 3 && (
+                <button type="button" onClick={() => setFase(3)} className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 text-[0.88rem] font-semibold text-acao hover:bg-papel-2">
+                  Pular para a resposta <ArrowRight size={14} weight="bold" aria-hidden />
+                </button>
+              )}
+              <BotaoSom />
+            </div>
           </div>
           {q.error && dados && (
             <p role="alert" className="mt-4 rounded-xl border border-corrige/40 bg-folha px-4 py-3 text-[0.9rem]">
@@ -217,7 +228,7 @@ export function PatrimonioPagina() {
                 </p>
               </>
             ) : q.error ? (
-              <ErroCarga erro={q.error} compacto />
+              <ErroCarga erro={q.error} compacto aoTentar={q.refetch} />
             ) : (
               <Atrasado><EsqueletoBloco altura={420} linhas={0} rotulo="Somando os bens..." /></Atrasado>
             )}
@@ -225,7 +236,7 @@ export function PatrimonioPagina() {
           {dados && fase > 0 && (
             <div className="mt-6 border-t border-linha pt-6">
               <Legenda dados={dados} fase={fase} aoMudarFase={setFase} rotulo={rotulo} palpite={palpite} />
-              <TabelaAlternavel
+              <TabelaAlternavel sql="p2Patrimonio"
                 titulo={`Patrimônio declarado e eleição: ${cargo.nome.toLowerCase()}, ${ano}`}
                 colunas={['Faixa', 'Valores declarados', 'Candidato do meio', 'Candidatos', 'Eleitos', 'Se elegeram']}
                 linhas={() => tabela(dados)}
@@ -250,7 +261,7 @@ export function PatrimonioPagina() {
             {qp.data ? (
               <Escadas panorama={qp.data} ativo={ativo} aoAbrir={abrir} />
             ) : qp.error ? (
-              <ErroCarga erro={qp.error} compacto />
+              <ErroCarga erro={qp.error} compacto aoTentar={qp.refetch} />
             ) : (
               <Atrasado><EsqueletoBloco altura={240} linhas={0} rotulo="Juntando as disputas..." /></Atrasado>
             )}

@@ -122,12 +122,12 @@ function BoletimEscola({ d, quintil, rotulos, carregando }: { d: EscolaLugar; qu
   return (
     <div className={`relative mt-4 transition-opacity ${carregando ? 'opacity-60' : ''}`} aria-busy={carregando}>
       <div className="h-3 rounded-full bg-tinta shadow-[inset_0_-2px_0_rgb(255_255_255/0.08)]" aria-hidden />
-      <div className="mx-3 -mt-1.5 [filter:drop-shadow(0_14px_22px_rgb(42_53_80/0.16))_drop-shadow(0_1px_1px_rgb(42_53_80/0.08))]">
+      <div className="mx-3 -mt-1.5">
         <article aria-label={`Boletim da escolaridade de ${d.nome}`} className="boletim-papel relative bg-folha px-5 pb-10 pt-5 sm:px-7">
           <Linha i={0}>
-            <p className="t-mono text-[0.74rem] tracking-[0.2em] text-tinta-2">BOLETIM DA ESCOLARIDADE</p>
+            <p className="t-mono text-[0.78rem] tracking-[0.2em] text-tinta-2">BOLETIM DA ESCOLARIDADE</p>
             <h3 className="t-h1 mt-1">{d.nome}</h3>
-            <p className="t-mono mt-1 text-[0.72rem] uppercase tracking-[0.06em] text-tinta-3">
+            <p className="t-mono mt-1 text-[0.78rem] uppercase tracking-[0.06em] text-tinta-3">
               {d.uf} · {d.ano} · {municipal ? 'prefeito e vereadores' : 'deputados federal e estadual'}
               {quintil ? ` · ${quintil}º quinto` : ''}
             </p>
@@ -136,7 +136,7 @@ function BoletimEscola({ d, quintil, rotulos, carregando }: { d: EscolaLugar; qu
           <Linha i={1}>
             <table className="w-full text-[0.82rem]">
               <thead>
-                <tr className="t-mono text-left text-[0.66rem] tracking-[0.08em] text-tinta-3">
+                <tr className="t-mono text-left text-[0.78rem] tracking-[0.08em] text-tinta-3">
                   <th scope="col" className="pb-1.5 font-medium">GRAU</th>
                   <th scope="col" className="pb-1.5 text-right font-medium">VOTOU<span className="block">(%)</span></th>
                   <th scope="col" className="pb-1.5 text-right font-medium">{municipal ? <>CÂMARA<span className="block">CADEIRAS</span></> : <>VOTOS<span className="block">(%)</span></>}</th>
@@ -160,7 +160,7 @@ function BoletimEscola({ d, quintil, rotulos, carregando }: { d: EscolaLugar; qu
             <>
               <Picote />
             <Linha i={2}>
-              <p className="t-mono text-[0.68rem] tracking-[0.12em] text-tinta-3">A CÂMARA ELEITA</p>
+              <p className="t-mono text-[0.78rem] tracking-[0.12em] text-tinta-3">A CÂMARA ELEITA</p>
               <div className="mt-1 flex justify-center">
                 <Camara eleitos={d.eleitos} rotulos={rotulos} foco={foco} aoFocar={setFoco} />
               </div>
@@ -179,7 +179,7 @@ function BoletimEscola({ d, quintil, rotulos, carregando }: { d: EscolaLugar; qu
           )}
         </article>
       </div>
-      <TabelaAlternavel
+      <TabelaAlternavel sql="p4Lugar"
         titulo={`${d.nome}: escolaridade de quem votou e de ${municipal ? 'quem foi eleito' : 'quem recebeu os votos para deputado'}`}
         colunas={municipal ? ['Escolaridade', 'Quem votou (%)', 'Vereadores', 'Prefeito'] : ['Escolaridade', 'Quem votou (%)', 'Votos para deputado (%)']}
         linhas={() =>

@@ -48,7 +48,7 @@ export function Chance({ candidatos, eleitos, rotulos, destaque, aoDestacar }: {
                     {rotulos[n - 1]}
                     {n === SUPERIOR && <GraduationCap size={15} weight="fill" className="shrink-0 text-tinta" aria-hidden />}
                   </span>
-                  <span className="tabular block text-[0.74rem] text-tinta-3">{plural(candidatos[n - 1], 'candidato', 'candidatos')}</span>
+                  <span className="tabular block text-[0.78rem] text-tinta-3">{plural(candidatos[n - 1], 'candidato', 'candidatos')}</span>
                 </span>
                 <span className="relative block h-7 max-sm:mt-1">
                   <span className="absolute inset-0 rounded-md bg-papel-2" />
@@ -83,7 +83,7 @@ export function Chance({ candidatos, eleitos, rotulos, destaque, aoDestacar }: {
           {poucos.map((n) => `${rotulos[n - 1].toLowerCase()} (${plural(candidatos[n - 1], 'candidato', 'candidatos')}, ${eleitos[n - 1] ? plural(eleitos[n - 1], 'eleito', 'eleitos') : 'nenhum eleito'})`).join('; ')}.
         </p>
       )}
-      <TabelaAlternavel
+      <TabelaAlternavel sql="p4Chance"
         titulo="Candidatos e eleitos por grau de escolaridade"
         colunas={['Escolaridade', 'Candidatos', 'Eleitos', 'Se elegeram']}
         linhas={() =>

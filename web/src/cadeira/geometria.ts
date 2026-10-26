@@ -12,13 +12,14 @@ export interface Lugar {
 /**
  * Hemiciclo de `n` lugares, como os diagramas de parlamento: fileiras concêntricas, cada uma
  * com lugares proporcionais ao comprimento do arco, numerados da esquerda para a direita.
- * Devolve os lugares e o diâmetro de cada um (na mesma unidade do raio).
+ * Devolve os lugares e o diâmetro de cada um (na mesma unidade do raio). `r0` e `r1` são a faixa ocupada
+ * (com a galeria de quem não se elegeu, os eleitos ficam por dentro e ela por fora).
  */
-export function hemiciclo(n: number): { lugares: Lugar[]; diametro: number } {
+export function hemiciclo(n: number, r0 = 0.36, r1 = 1): { lugares: Lugar[]; diametro: number } {
   if (n <= 0) return { lugares: [], diametro: 0 }
   if (n <= 12) {
     // poucos lugares (governador, senador, uma câmara pequena): uma fileira só
-    const r = 0.74
+    const r = r0 + (r1 - r0) * 0.6
     const passo = Math.PI / n
     const lugares = Array.from({ length: n }, (_, j) => {
       const ang = Math.PI - (j + 0.5) * passo
@@ -26,13 +27,13 @@ export function hemiciclo(n: number): { lugares: Lugar[]; diametro: number } {
     })
     return { lugares, diametro: Math.min(0.15, r * passo * 0.72) }
   }
-  const r0 = 0.36 // o miolo fica livre para o número
+  // o miolo (até r0) fica livre para o número
   let fileiras = 1
-  const raios = (f: number) => Array.from({ length: f }, (_, i) => r0 + ((i + 0.5) * (1 - r0)) / f)
-  const capacidade = (f: number) => raios(f).reduce((s, r) => s + Math.floor((Math.PI * r) / ((1 - r0) / f)) + 1, 0)
+  const raios = (f: number) => Array.from({ length: f }, (_, i) => r0 + ((i + 0.5) * (r1 - r0)) / f)
+  const capacidade = (f: number) => raios(f).reduce((s, r) => s + Math.floor((Math.PI * r) / ((r1 - r0) / f)) + 1, 0)
   while (capacidade(fileiras) < n) fileiras++
   const rs = raios(fileiras)
-  const passo = (1 - r0) / fileiras
+  const passo = (r1 - r0) / fileiras
 
   // n dividido entre as fileiras pelo comprimento do arco (maiores restos)
   const soma = rs.reduce((s, r) => s + r, 0)
@@ -65,9 +66,11 @@ export function ordenar(cadeiras: Assento[], ordem: Ordem): Assento[] {
   return c.sort((a, b) => (a.vies ?? 0) - (b.vies ?? 0) || (a.partido ?? '').localeCompare(b.partido ?? '') || a.gasto - b.gasto)
 }
 
-// ColorBrewer YlGn (Cynthia Brewer): sequencial validado; de amarelo a verde, como a bandeira.
-const YLGN = interpolateRgbBasis(['#ffffe5', '#f7fcb9', '#d9f0a3', '#addd8e', '#78c679', '#41ab5d', '#238443', '#006837', '#004529'])
-const INICIO = 0.16 // o começo da rampa é quase branco e some no papel
+// Verde vivo, chegando no verde da bandeira (#009c3b): quanto mais verde, mais cara a campanha. Matiz OKLab entre
+// 130° e 151° (verde de fato, sem puxar para o amarelo) e claridade sempre caindo (0,95 → 0,85 → 0,73 → 0,60 →
+// 0,49 → 0,37).
+const YLGN = interpolateRgbBasis(['#e4f7d2', '#a8e27a', '#55c45a', '#009c3b', '#00742f', '#004d22'])
+const INICIO = 0.08 // o começo da rampa é quase papel e some nele
 
 export interface EscalaGasto {
   cor: (gasto: number) => string

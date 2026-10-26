@@ -37,6 +37,8 @@ export function Dispersao({ municipios, medida, selecionado, aoEscolher }: {
 
   const porIbge = useMemo(() => new Map(pontos.map((m) => [m.ibge, m])), [pontos])
   const sel = porIbge.get(selecionado)
+  // anotação fixa: o maior município do recorte leva o nome escrito (é por ele que a pessoa se acha no gráfico)
+  const maior = useMemo(() => pontos.reduce<MunicipioEscola | undefined>((a, m) => (!a || m.comparecimento > a.comparecimento ? m : a), undefined), [pontos])
   const h = hover != null ? porIbge.get(hover) : null
   const raio = (m: MunicipioEscola) => 2 + 7 * Math.sqrt(m.comparecimento / maxComp)
   const alvo = medida === 'eleitos' ? 'eleitos' : 'votos para deputado'
@@ -67,17 +69,17 @@ export function Dispersao({ municipios, medida, selecionado, aoEscolher }: {
             {[0, 25, 50, 75, 100].map((v) => (
               <g key={`y${v}`}>
                 <line x1={M.e} x2={W - M.d} y1={y(v)} y2={y(v)} stroke="var(--color-linha)" />
-                <text x={M.e - 8} y={y(v) + 4} textAnchor="end" className="tabular fill-tinta-3 text-[0.72rem]">{v}%</text>
+                <text x={M.e - 8} y={y(v) + 4} textAnchor="end" className="tabular fill-tinta-3 text-[0.78rem]">{v}%</text>
               </g>
             ))}
             {Array.from({ length: xMax / 5 + 1 }, (_, i) => i * 5).map((v) => (
-              <text key={`x${v}`} x={x(v)} y={ALTURA - M.b + 18} textAnchor="middle" className="tabular fill-tinta-3 text-[0.72rem]">{v}%</text>
+              <text key={`x${v}`} x={x(v)} y={ALTURA - M.b + 18} textAnchor="middle" className="tabular fill-tinta-3 text-[0.78rem]">{v}%</text>
             ))}
             <text x={(M.e + W - M.d) / 2} y={ALTURA - 4} textAnchor="middle" className="fill-tinta-2 text-[0.76rem]">quem votou com superior completo</text>
             <text x={12} y={y(50)} textAnchor="middle" transform={`rotate(-90 12 ${y(50)})`} className="fill-tinta-2 text-[0.76rem]">{alvo} com superior</text>
             {/* a diagonal: o eleito parecido com o eleitor */}
             <line x1={x(0)} y1={y(0)} x2={x(xMax)} y2={y(xMax)} stroke="var(--color-tinta-3)" strokeWidth={1.2} strokeDasharray="2 4" />
-            <text x={x(xMax) - 4} y={y(xMax) - 6} textAnchor="end" className="fill-tinta-3 text-[0.7rem]">eleito = eleitor</text>
+            <text x={x(xMax) - 4} y={y(xMax) - 6} textAnchor="end" className="fill-tinta-3 text-[0.78rem]">eleito = eleitor</text>
             <g className="cursor-pointer">
               {pontos.map((m) => (
                 <circle key={m.ibge} data-ibge={m.ibge} cx={x(m.votantes)} cy={y(m[medida] ?? 0)} r={raio(m)} fill={cor(SUPERIOR)} fillOpacity={0.28} stroke={cor(SUPERIOR)} strokeOpacity={0.5} strokeWidth={0.6} />
@@ -85,6 +87,12 @@ export function Dispersao({ municipios, medida, selecionado, aoEscolher }: {
             </g>
             <line x1={x(0)} y1={y(Math.max(0, Math.min(100, a)))} x2={x(xMax)} y2={y(Math.max(0, Math.min(100, a + b * xMax)))} stroke="var(--color-tinta)" strokeWidth={2} strokeDasharray="6 4" pointerEvents="none" />
             {h && <circle cx={x(h.votantes)} cy={y(h[medida] ?? 0)} r={raio(h) + 2} fill="none" stroke="var(--color-tinta)" strokeWidth={1.6} pointerEvents="none" />}
+            {maior && maior !== sel && (
+              <g pointerEvents="none">
+                <line x1={x(maior.votantes) + raio(maior)} y1={y(maior[medida] ?? 0)} x2={x(maior.votantes) + raio(maior) + 14} y2={y(maior[medida] ?? 0) - 10} stroke="var(--color-tinta-3)" />
+                <text x={x(maior.votantes) + raio(maior) + 17} y={y(maior[medida] ?? 0) - 7} className="fill-tinta-2 text-[0.78rem] font-semibold">{maior.nome}</text>
+              </g>
+            )}
             {sel && (
               <g pointerEvents="none">
                 <circle cx={x(sel.votantes)} cy={y(sel[medida] ?? 0)} r={raio(sel) + 3} fill="none" stroke="var(--color-marcador)" strokeWidth={3} />

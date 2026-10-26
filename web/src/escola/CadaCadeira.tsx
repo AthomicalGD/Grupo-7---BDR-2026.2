@@ -40,7 +40,7 @@ function Linha({ rotulo, sub, valores, rotulos, forte = false }: {
     <>
       <span className="min-w-0">
         <span className="block truncate text-[0.88rem] leading-tight text-tinta">{rotulo}</span>
-        <span className="tabular block text-[0.72rem] text-tinta-3">{sub}</span>
+        <span className="tabular block text-[0.78rem] text-tinta-3">{sub}</span>
       </span>
       <Faixa valores={valores} rotulos={rotulos} altura={forte ? 18 : 12} leve={!forte} />
       <span className="flex items-baseline justify-end gap-1">
@@ -55,10 +55,10 @@ function Linha({ rotulo, sub, valores, rotulos, forte = false }: {
 function Celula({ ano, eleitos, votou, rotulos }: { ano: string; eleitos: number[]; votou: number; rotulos: string[] }) {
   return (
     <span className="grid grid-cols-[2.4rem_minmax(0,1fr)_2rem_5.2rem] items-center gap-2 lg:grid-cols-[minmax(0,1fr)_2rem_5.2rem]">
-      <span className="tabular text-[0.72rem] text-tinta-3 lg:hidden">{ano}</span>
+      <span className="tabular text-[0.78rem] text-tinta-3 lg:hidden">{ano}</span>
       <Faixa valores={eleitos} rotulos={rotulos} altura={14} />
       <span className="t-numero tabular text-right text-[1.2rem] text-tinta">{cem(eleitos)[SUPERIOR - 1]}</span>
-      <span className="tabular text-[0.7rem] leading-tight text-tinta-3">
+      <span className="tabular text-[0.78rem] leading-tight text-tinta-3">
         {inteiro(soma(eleitos))} eleitos
         <span className="block">votou: {votou}%</span>
       </span>
@@ -117,7 +117,7 @@ export function CadaCadeira({ dados, uf, rotulos, aoEscolherUf }: {
 
       <section aria-label="Eleitos por estado, 2022 e 2024" className="mt-7">
         <div className="grid grid-cols-1 items-end gap-x-12 border-b border-linha px-2 pb-1.5 lg:grid-cols-[minmax(0,9rem)_minmax(0,1fr)_minmax(0,1fr)]">
-          <p className="t-rotulo text-tinta-2">Eleitos por estado<span className="block text-[0.72rem] font-normal text-tinta-3">clique para filtrar</span></p>
+          <p className="t-rotulo text-tinta-2">Eleitos por estado<span className="block text-[0.78rem] font-normal text-tinta-3">clique para filtrar</span></p>
           {ANOS.map((a) => (
             <p key={a} className="hidden items-baseline gap-2 lg:flex">
               <span className="t-numero tabular text-[1.1rem]">{a}</span>
@@ -152,7 +152,7 @@ export function CadaCadeira({ dados, uf, rotulos, aoEscolherUf }: {
         <span>{rotulos[SUPERIOR - 1]}</span>
         <span className="ml-3">A faixa de quem votou, mais fina e clara, é a régua; "votou" é o % de quem votou no estado com superior.</span>
       </div>
-      <TabelaAlternavel
+      <TabelaAlternavel sql="p4Chance"
         titulo="% dos eleitos com superior completo, por cargo e por estado"
         colunas={['Ano', 'Grupo', 'Eleitos', 'Com superior (%)']}
         linhas={() =>

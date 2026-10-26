@@ -4,23 +4,39 @@
 // pela parte com superior completo entre os políticos (eleitos em 2024, votos para deputado em 2022) ou
 // entre os eleitores (quem votou; aqui a régua vai até 25%, porque ninguém passa muito disso).
 // "Em pé" levanta o mesmo recorte em 3D. Estados sem dados ficam hachurados. Clicar num município abre o boletim.
+// "Exploração colonial" (a questão extra) pinta o mesmo mapa pelo índice de cada município (0 a 100: metade o ciclo
+// econômico colonial mais forte, metade o trabalho escravizado; scripts/11_exploracao_colonial.py), numa escala
+// própria, do areia ao vermelho do pau-brasil, para não ser lida como escolaridade.
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import { ArrowLeft, Cube, Square } from '@phosphor-icons/react'
 import { useQuery } from '@tanstack/react-query'
 import { geoConicEqualArea, geoPath } from 'd3-geo'
 import { interpolateZoom, type ZoomView } from 'd3-interpolate'
 import { lazy, memo, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { consultas, type Malha, type MunicipioEscola } from '../api'
+import { consultas, type Escola, type Malha, type MunicipioEscola } from '../api'
 import { Alternador } from '../atlas/PainelEstado'
 import { EsqueletoPalco } from '../componentes/Esqueleto'
-import { pct } from '../lib/formato'
+import { decimal, pct } from '../lib/formato'
+import { oklchParaHex } from '../lib/vies'
 import { cor, useLargura } from './escolaridade'
+import { useLembrado } from '../lib/pilha'
 
 const RelevoEscola3D = lazy(() => import('./RelevoEscola3D'))
 
-export type Quem = 'politicos' | 'eleitores'
-const TETO: Record<Quem, number> = { politicos: 100, eleitores: 25 }
-/** 8 níveis da escala da bandeira entre 0 e o teto da vista. */
-const corDe = (v: number | null | undefined, quem: Quem) => (v == null ? null : cor(Math.min(8, Math.floor((8 * v) / TETO[quem]) + 1)))
+export type Quem = 'politicos' | 'eleitores' | 'colonial'
+const TETO: Record<Quem, number> = { politicos: 100, eleitores: 25, colonial: 80 }
+/** A escala da exploração colonial: 8 tons do areia ao vermelho do pau-brasil, com a luz caindo sempre. */
+const TINTA_COLONIAL = Array.from({ length: 8 }, (_, i) => {
+  const t = i / 7
+  return oklchParaHex(0.95 - 0.57 * t, 0.035 + 0.11 * t, 85 - 57 * t)
+})
+const tom = (nivel: number, quem: Quem) => (quem === 'colonial' ? TINTA_COLONIAL[nivel - 1] : cor(nivel))
+/** 8 níveis da escala entre 0 e o teto da vista. */
+const corDe = (v: number | null | undefined, quem: Quem) => (v == null ? null : tom(Math.min(8, Math.floor((8 * v) / TETO[quem]) + 1), quem))
+/** O valor de um município na vista: a % com superior completo ou o índice colonial. */
+const valorDe = (m: MunicipioEscola, quem: Quem, medida: 'eleitos' | 'votados') =>
+  quem === 'colonial' ? (m.colonial?.indice ?? null) : m[quem === 'eleitores' ? 'votantes' : medida]
+const CICLOS = ['açúcar', 'mineração', 'gado', 'algodão, arroz, fumo e drogas do sertão']
 
 interface Forma { ibge: number; uf: string; d: string }
 
@@ -36,22 +52,28 @@ const Municipios = memo(function Municipios({ formas, valor, quem }: { formas: F
   )
 })
 
-export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }: {
+export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher, colonial }: {
   municipios: MunicipioEscola[]
   /** as UFs do recorte (uma, com filtro; as carregadas, sem) */
   ufs: string[]
   medida: 'eleitos' | 'votados'
   selecionado: number
   aoEscolher: (ibge: number) => void
+  /** correlação do índice colonial com a escolaridade, município a município (a questão extra) */
+  colonial?: Escola['colonial']
 }) {
   const [ref, largura] = useLargura<HTMLDivElement>()
   const { data: brasil } = useQuery(consultas.malhaBrasil())
   const { data: listaUfs } = useQuery(consultas.ufs())
   const [hover, setHover] = useState<{ tipo: 'uf' | 'mun'; cod: number } | null>(null)
-  const [quem, setQuem] = useState<Quem>('politicos')
-  const [modo, setModo] = useState<'plano' | 'pe'>('plano')
+  // no endereço: o link compartilhado abre pintado do mesmo jeito
+  const busca = useSearch({ from: '/escola' })
+  const navegar = useNavigate({ from: '/escola' })
+  const quem: Quem = busca.pintar ?? 'politicos'
+  const setQuem = (q: Quem) => navegar({ search: (a) => ({ ...a, pintar: q === 'politicos' ? undefined : q }), replace: true, resetScroll: false })
+  const [modo, setModo] = useLembrado<'plano' | 'pe'>('escola:modo', 'plano')
   const sozinho = ufs.length === 1
-  const [foco, setFoco] = useState<string | null>(sozinho ? ufs[0] : null)
+  const [foco, setFoco] = useLembrado<string | null>('escola:foco', sozinho ? ufs[0] : null)
   // só a malha de municípios do estado aberto: a vista do Brasil se enquadra pelo contorno dos estados
   // (baixar as 27 malhas de municípios para isso eram ~9 MB a cada visita)
   const { data: malhaFoco } = useQuery({ ...consultas.malhaUF(foco ?? ''), enabled: !!foco })
@@ -59,11 +81,17 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
   const porSigla = useMemo(() => new Map((listaUfs ?? []).map((u) => [u.sigla, u])), [listaUfs])
   const porCodigo = useMemo(() => new Map((listaUfs ?? []).map((u) => [u.cd_ibge, u])), [listaUfs])
   const prontas = !!brasil && !!listaUfs
-  const campo = quem === 'eleitores' ? 'votantes' : medida
   const porIbge = useMemo(() => new Map(municipios.map((m) => [m.ibge, m])), [municipios])
 
   // com filtro de estado, o mapa é só ele; sem, volta ao Brasil
-  useEffect(() => setFoco(sozinho ? ufs[0] : null), [sozinho, ufs])
+  // só quando o filtro muda de verdade: ao voltar para a página, o estado aberto fica (a montagem não o apaga)
+  const recorte = ufs.join()
+  const recorteVisto = useRef(recorte)
+  useEffect(() => {
+    if (recorteVisto.current === recorte) return
+    recorteVisto.current = recorte
+    setFoco(sozinho ? ufs[0] : null)
+  }, [recorte, sozinho, ufs, setFoco])
   // o município escolhido pelo boletim (busca, ranking) leva a câmera ao estado dele, se ela já está num estado
   const ultimoSelecionado = useRef(selecionado)
   useEffect(() => {
@@ -71,7 +99,7 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
     ultimoSelecionado.current = selecionado
     const m = porIbge.get(selecionado)
     if (m && foco && m.uf !== foco) setFoco(m.uf)
-  }, [selecionado, porIbge, foco])
+  }, [selecionado, porIbge, foco, setFoco])
 
   const desenho = useMemo(() => {
     if (!prontas || !largura || !brasil) return null
@@ -107,19 +135,23 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
   }, [desenho, foco, malhaFoco])
   const caminhoDe = useMemo(() => new Map(formasFoco.map((f) => [f.ibge, f.d])), [formasFoco])
 
-  const valor = useMemo(() => new Map(municipios.map((m) => [m.ibge, m[campo]])), [municipios, campo])
+  const valor = useMemo(() => new Map(municipios.map((m) => [m.ibge, valorDe(m, quem, medida)])), [municipios, quem, medida])
   // a média de cada estado: municípios pesados pelo comparecimento (ou pelos eleitos, para os eleitos)
   const mediaUF = useMemo(() => {
     const soma = new Map<string, [number, number]>()
     for (const m of municipios) {
-      const v = m[campo]
+      const v = valorDe(m, quem, medida)
       if (v == null) continue
-      const peso = campo === 'eleitos' ? (m.eleitos_n ?? 0) : m.comparecimento
+      // a exploração colonial é do território: no estado, a média simples dos municípios
+      const peso = quem === 'colonial' ? 1 : quem === 'politicos' && medida === 'eleitos' ? (m.eleitos_n ?? 0) : m.comparecimento
       const [a, b] = soma.get(m.uf) ?? [0, 0]
       soma.set(m.uf, [a + v * peso, b + peso])
     }
     return new Map([...soma].map(([uf, [a, b]]) => [uf, b ? a / b : null]))
-  }, [municipios, campo])
+  }, [municipios, quem, medida])
+  const colonialVista = quem === 'colonial'
+  /** O valor como se lê: % de superior completo, ou o índice colonial (sem %). */
+  const fmt = (v: number | null | undefined) => (colonialVista ? decimal(v, 0) : pct(v, 0))
 
   // a câmera: o voo suave do atlas (interpolateZoom, de van Wijk: afasta, desliza e aproxima), quadro a
   // quadro direto no grupo do SVG, sem render do React. O estado chega pintado pela média e os municípios
@@ -167,6 +199,7 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
   }, [alvo, W, H, desenho])
 
   const oQue = quem === 'eleitores' ? 'de quem votou' : medida === 'eleitos' ? 'dos eleitos' : 'dos votos para deputado'
+  const legenda = colonialVista ? 'índice de exploração colonial' : `% ${oQue} com superior completo`
   const hm = hover?.tipo === 'mun' ? porIbge.get(hover.cod) : null
   const hu = hover?.tipo === 'uf' ? porCodigo.get(hover.cod) : null
   const ufFoco = foco ? porSigla.get(foco) : null
@@ -188,7 +221,12 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
       <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
         <span className="flex items-center gap-2">
           <span className="text-[0.82rem] text-tinta-3">Pintar por</span>
-          <Alternador rotulo="Pintar o mapa por" valor={quem} aoMudar={setQuem} opcoes={[{ valor: 'politicos', rotulo: 'Políticos' }, { valor: 'eleitores', rotulo: 'Eleitores' }]} />
+          <Alternador
+            rotulo="Pintar o mapa por"
+            valor={quem}
+            aoMudar={setQuem}
+            opcoes={[{ valor: 'politicos', rotulo: 'Políticos' }, { valor: 'eleitores', rotulo: 'Eleitores' }, { valor: 'colonial', rotulo: 'Exploração colonial' }]}
+          />
         </span>
         <Alternador
           rotulo="Mapa plano ou em pé"
@@ -208,7 +246,9 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
         ) : null}
         <p className="text-[0.86rem] text-tinta-2">
           {ufFoco ? (
-            <><b className="text-tinta">{ufFoco.nome}</b>: {pct(mediaUF.get(ufFoco.sigla), 0)} {oQue} com superior completo</>
+            colonialVista
+              ? <><b className="text-tinta">{ufFoco.nome}</b>: índice {fmt(mediaUF.get(ufFoco.sigla))} de exploração colonial (de 0 a 100)</>
+              : <><b className="text-tinta">{ufFoco.nome}</b>: {pct(mediaUF.get(ufFoco.sigla), 0)} {oQue} com superior completo</>
           ) : (
             'Clique num estado para ver os municípios.'
           )}
@@ -224,14 +264,14 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
                 cor={(v) => corDe(v, quem)}
                 teto={TETO[quem]}
                 selecionado={foco ? selecionado : null}
-                legenda={`% ${oQue} com superior completo`}
+                legenda={legenda}
                 rotulo={(c) => {
                   const m = foco ? porIbge.get(c) : null
                   const u = foco ? null : porCodigo.get(c)
                   return (
                     <span className="block">
                       <b className="text-tinta">{m?.nome ?? u?.nome}</b>{' '}
-                      <span className="tabular text-tinta-2">{pct(foco ? valor.get(c) : mediaUF.get(u?.sigla ?? ''), 0)}</span>
+                      <span className="tabular text-tinta-2">{fmt(foco ? valor.get(c) : mediaUF.get(u?.sigla ?? ''))}</span>
                     </span>
                   )
                 }}
@@ -248,7 +288,9 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
             width={W}
             height={H}
             role="img"
-            aria-label={`Mapa: de cada 100 ${quem === 'eleitores' ? 'pessoas que votaram' : medida === 'eleitos' ? 'eleitos' : 'votos para deputado'} ${ufFoco ? `em cada município (${ufFoco.nome})` : 'em cada estado'}, quantos com superior completo`}
+            aria-label={colonialVista
+              ? `Mapa: índice de exploração colonial ${ufFoco ? `de cada município (${ufFoco.nome})` : 'de cada estado'}, de 0 a 100`
+              : `Mapa: de cada 100 ${quem === 'eleitores' ? 'pessoas que votaram' : medida === 'eleitos' ? 'eleitos' : 'votos para deputado'} ${ufFoco ? `em cada município (${ufFoco.nome})` : 'em cada estado'}, quantos com superior completo`}
             onPointerMove={(e) => {
               const t = e.target as SVGElement
               const i = Number(t.getAttribute?.('data-ibge'))
@@ -311,7 +353,7 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
                 return (
                   <text key={e.cd} x={e.centro[0]} y={e.centro[1]} textAnchor="middle" pointerEvents="none" opacity={foco ? 0 : 1} className="estado-rotulo t-numero" style={{ paintOrder: 'stroke', stroke: 'rgb(252 253 253 / .85)', strokeWidth: 3, transitionDuration: foco ? '200ms' : '600ms', transitionDelay: foco ? '0ms' : '500ms' }}>
                     <tspan x={e.centro[0]} fontSize={13} fontWeight={700} fill="var(--color-tinta)">{u.sigla}</tspan>
-                    <tspan x={e.centro[0]} dy={15} fontSize={12} fill="var(--color-tinta-2)">{pct(mediaUF.get(u.sigla), 0)}</tspan>
+                    <tspan x={e.centro[0]} dy={15} fontSize={12} fill="var(--color-tinta-2)">{fmt(mediaUF.get(u.sigla))}</tspan>
                   </text>
                 )
               })}
@@ -319,7 +361,22 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
         )}
         {modo === 'plano' && (hm || hu) && (
           <div className="pointer-events-none absolute left-2 top-2 rounded-xl border border-linha bg-folha px-3 py-2 text-[0.8rem] shadow-[var(--shadow-papel)]">
-            {hm ? (
+            {hm && colonialVista ? (
+              <>
+                <p className="font-bold text-tinta">{hm.nome} <span className="font-normal text-tinta-3">({hm.uf})</span></p>
+                <p className="tabular text-tinta-2">exploração colonial: <b className="text-tinta">{fmt(hm.colonial?.indice)}</b> de 100</p>
+                {hm.colonial && (() => {
+                  const c = hm.colonial
+                  const forte = c.ciclos.indexOf(Math.max(...c.ciclos))
+                  return (
+                    <>
+                      <p className="tabular text-tinta-3">economia {pct(100 * c.economia, 0)}{c.economia > 0 ? ` · ciclo mais forte: ${CICLOS[forte]}` : ''}</p>
+                      <p className="tabular text-tinta-3">trabalho escravizado {pct(100 * c.escravidao, 0)}</p>
+                    </>
+                  )
+                })()}
+              </>
+            ) : hm ? (
               <>
                 <p className="font-bold text-tinta">{hm.nome} <span className="font-normal text-tinta-3">({hm.uf})</span></p>
                 <p className="tabular text-tinta-2">{medida === 'eleitos' ? 'eleitos' : 'votos para deputado'} com superior: <b className="text-tinta">{pct(hm[medida], 0)}</b></p>
@@ -328,7 +385,7 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
             ) : (
               <>
                 <p className="font-bold text-tinta">{hu!.nome}</p>
-                <p className="tabular text-tinta-2">{oQue} com superior: <b className="text-tinta">{pct(mediaUF.get(hu!.sigla), 0)}</b></p>
+                <p className="tabular text-tinta-2">{colonialVista ? 'exploração colonial' : `${oQue} com superior`}: <b className="text-tinta">{fmt(mediaUF.get(hu!.sigla))}</b></p>
                 <p className="text-tinta-3">clique para ver os municípios</p>
               </>
             )}
@@ -336,11 +393,23 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher }:
         )}
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.76rem] text-tinta-3">
-        <span>0%</span>
-        {Array.from({ length: 8 }, (_, i) => <span key={i} className="h-3 w-6 rounded-[2px]" style={{ background: cor(i + 1) }} aria-hidden />)}
-        <span>{TETO[quem]}%{quem === 'eleitores' ? ' ou mais' : ''} {oQue} com superior completo</span>
+        <span>{colonialVista ? '0' : '0%'}</span>
+        {Array.from({ length: 8 }, (_, i) => <span key={i} className="h-3 w-6 rounded-[2px]" style={{ background: tom(i + 1, quem) }} aria-hidden />)}
+        <span>
+          {colonialVista ? `${TETO.colonial} ou mais no índice de exploração colonial` : `${TETO[quem]}%${quem === 'eleitores' ? ' ou mais' : ''} ${oQue} com superior completo`}
+        </span>
         <span className="ml-2 flex items-center gap-1.5"><span className="size-3 rounded-[2px] border-2 border-marcador" aria-hidden />no boletim</span>
       </div>
+      {colonialVista && colonial && (
+        <p className="mt-3 max-w-[70ch] text-[0.86rem] text-tinta-2">
+          Nos {colonial.municipios.toLocaleString('pt-BR')} municípios, a correlação do índice com a parte que tem superior completo é de{' '}
+          <b className="tabular text-tinta">{decimal(colonial.votantes, 2)}</b> entre quem votou
+          {colonial.candidatos != null && <>, <b className="tabular text-tinta">{decimal(colonial.candidatos, 2)}</b> entre os candidatos</>} e{' '}
+          <b className="tabular text-tinta">{decimal(colonial[medida], 2)}</b> {medida === 'eleitos' ? 'entre os eleitos' : 'nos votos para deputado'}.
+          Perto de 0 é nenhuma relação; negativa, menos superior onde a Colônia explorou mais. Anda junto não quer dizer que causa
+          (o método e as limitações estão na Metodologia).
+        </p>
+      )}
     </div>
   )
 }

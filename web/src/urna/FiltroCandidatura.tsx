@@ -124,7 +124,7 @@ export function FiltroCandidatura({ filtros, aoMudar }: { filtros: FiltrosBusca;
         <div className="grid grid-cols-2 gap-x-1">
           {([['Gerais', GERAIS], ['Municipais', MUNICIPAIS]] as const).map(([tipo, anos]) => (
             <div key={tipo}>
-              <p className="px-2 pb-0.5 pt-1 text-[0.72rem] font-semibold text-tinta-3">{tipo}</p>
+              <p className="px-2 pb-0.5 pt-1 text-[0.78rem] font-semibold text-tinta-3">{tipo}</p>
               {anos.map((a) => (
                 <Opcao key={a} marcada={filtros.eleicao === a} aoEscolher={() => escolher('eleicao', a)}><span className="tabular">{a}</span></Opcao>
               ))}
@@ -138,7 +138,7 @@ export function FiltroCandidatura({ filtros, aoMudar }: { filtros: FiltrosBusca;
       </Ficha>
 
       <Ficha rotulo="Partido" valor={filtros.partido} {...ficha('partido')}>
-        <p className="px-2 pb-1 pt-0.5 text-[0.72rem] text-tinta-3">Da esquerda para a direita</p>
+        <p className="px-2 pb-1 pt-0.5 text-[0.78rem] text-tinta-3">Da esquerda para a direita</p>
         {porVies.map((p) => (
           <Opcao key={p.sigla} marcada={filtros.partido === p.sigla} aoEscolher={() => escolher('partido', p.sigla)}>
             <span className="size-3 shrink-0 rounded-[3px] border border-tinta/20" style={{ background: corVies(p.vies) }} aria-hidden />

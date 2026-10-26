@@ -8,6 +8,9 @@ import letreiro from '../assets/marca/letreiro-horizontal.svg'
 import letreiroNegativo from '../assets/marca/letreiro-horizontal-negativo.svg'
 import simbolo from '../assets/marca/simbolo.svg'
 import { Fita } from './Fita'
+import { ModoAula } from './ModoAula'
+import { NestaPagina } from './NestaPagina'
+import { Tour, useTour } from './Tour'
 
 // Preferências de leitura (alto contraste, tamanho da fonte e margens), guardadas só neste navegador.
 function usePreferencia(chave: string, atributo: string, inicial: string) {
@@ -43,7 +46,7 @@ const NAV: ItemNav[] = [
   { para: '/metodologia', rotulo: 'Metodologia', curto: 'Método', icone: BookOpenText, ativo: (p) => p.startsWith('/metodologia') },
 ]
 
-function BarraUtilitaria() {
+function BarraUtilitaria({ aula, aoAula, aoTour }: { aula: boolean; aoAula: (v: boolean) => void; aoTour: () => void }) {
   const [contraste, setContraste] = usePreferencia('va-contraste', 'data-contraste', 'normal')
   const [fonte, setFonte] = usePreferencia('va-fonte', 'data-fonte', '0')
   const [margem, setMargem] = usePreferencia('va-margem', 'data-margem', '1')
@@ -53,7 +56,14 @@ function BarraUtilitaria() {
       {/* largura fixa, fora das margens ajustáveis: assim os botões não fogem do cursor ao clicar */}
       <div className="mx-auto flex h-7 max-w-[1440px] items-center justify-between gap-4 px-4 text-[0.76rem] md:px-[72px]">
         <p className="truncate">Projeto acadêmico de Banco de Dados · Grupo 7 · 2026.2</p>
-        <div className="flex shrink-0 items-center gap-1 font-semibold">
+        <div data-tour="leitura" className="flex shrink-0 items-center gap-1 font-semibold">
+          <button type="button" className={`${botao} max-sm:hidden`} onClick={aoTour}>
+            Tour
+          </button>
+          <button type="button" className={`${botao} max-sm:hidden`} aria-pressed={aula} onClick={() => aoAula(!aula)}>
+            Sala de aula
+          </button>
+          <span aria-hidden className="mx-1 h-3 w-px bg-linha-2 max-sm:hidden" />
           <button
             type="button"
             className={botao}
@@ -115,7 +125,7 @@ function Cabecalho() {
                   )}
                   <Link
                     to={item.para}
-                    className={`nav-item relative flex items-center gap-1.5 rounded-full px-[3px] py-2 text-[0.8rem] transition-colors max-sm:text-[0.74rem] max-sm:[font-stretch:76%] max-[379px]:px-[2px] max-[379px]:text-[0.68rem] sm:px-3 lg:max-xl:px-2 sm:text-[0.97rem] ${ativo ? 'font-semibold' : 'text-tinta-2 hover:bg-papel hover:text-tinta'}`}
+                    className={`nav-item relative flex items-center gap-1.5 rounded-full px-[3px] py-2 text-[0.8rem] transition-colors max-sm:text-[0.78rem] max-sm:[font-stretch:76%] max-[379px]:px-[2px] max-[379px]:text-[0.78rem] sm:px-3 lg:max-xl:px-2 sm:text-[0.97rem] ${ativo ? 'font-semibold' : 'text-tinta-2 hover:bg-papel hover:text-tinta'}`}
                     style={ativo ? { color: 'var(--color-selecao-tinta)' } : undefined}
                     aria-current={ativo ? 'page' : undefined}
                     aria-label={item.curto ? item.rotulo : undefined}
@@ -244,6 +254,13 @@ function EntradaDaPagina() {
 }
 
 export function Moldura() {
+  const tour = useTour()
+  // a sala de aula vale só nesta visita: quem fecha o projetor não volta com a letra gigante
+  const [aula, setAula] = useState(false)
+  useEffect(() => {
+    if (aula) document.documentElement.setAttribute('data-aula', '1')
+    else document.documentElement.removeAttribute('data-aula')
+  }, [aula])
   return (
     <div className="flex min-h-[100dvh] flex-col">
       <a
@@ -252,12 +269,14 @@ export function Moldura() {
       >
         Pular para o conteúdo
       </a>
-      <BarraUtilitaria />
+      <BarraUtilitaria aula={aula} aoAula={setAula} aoTour={tour.abrir} />
       <Cabecalho />
       <main id="conteudo" className="flex-1">
         <EntradaDaPagina />
       </main>
-      <Rodape />
+      {!aula && <Rodape />}
+      {aula ? <ModoAula aoSair={() => setAula(false)} /> : <NestaPagina />}
+      {tour.aberto && <Tour aoFechar={tour.fechar} />}
     </div>
   )
 }

@@ -1,18 +1,20 @@
 // Ficha da carreira (P10): retrato 3x4 com o carimbo da situação atual, a fita da carreira (uma
 // casa por eleição, preenchida quando venceu), a resposta em texto, a trajetória por cargo com a
 // faixa dos partidos, as campanhas com custo (P1) e para onde foi o dinheiro (P9), e os santinhos.
-import { ArrowLeft, ArrowRight, CaretLeft, CaretRight } from '@phosphor-icons/react'
+import { ArrowLeft, ArrowRight, ArrowsLeftRight, CaretLeft, CaretRight } from '@phosphor-icons/react'
 import { useQuery } from '@tanstack/react-query'
-import { Link, useParams, useSearch } from '@tanstack/react-router'
+import { Link, useParams, useRouter, useSearch } from '@tanstack/react-router'
 import { motion, useReducedMotion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { destinoDe, useOrigem } from '../lib/pilha'
 import { consultas, type Candidatura, type Politico } from '../api'
+import { Compartilhar } from '../componentes/Compartilhar'
 import { Atrasado, EsqueletoPagina } from '../componentes/Esqueleto'
 import { ErroCarga } from '../componentes/ErroCarga'
 import { Retrato } from '../componentes/Retrato'
 import { Trajetoria } from '../graficos/Trajetoria'
 import { duracaoMandato, situacao } from '../lib/carreira'
-import { cargo as fmtCargo, cargoPlural, inteiro, nomeProprio, plural } from '../lib/formato'
+import { cargo as fmtCargo, cargoPlural, inteiro, noEstado, nomeProprio, plural } from '../lib/formato'
 import { GastosCampanha } from '../gastos/GastosCampanha'
 import { Santinho } from './Santinho'
 
@@ -56,7 +58,7 @@ function Carimbo({ l }: { l: Leitura }) {
       : ['Nunca eleito', 'var(--color-tinta-3)']
   return (
     <span
-      className="inline-block -rotate-2 rounded-[5px] border-2 px-2.5 py-1 text-[0.74rem] font-black uppercase tracking-[0.08em]"
+      className="inline-block -rotate-2 rounded-[5px] border-2 px-2.5 py-1 text-[0.78rem] font-black uppercase tracking-[0.08em]"
       style={{ color: cor, borderColor: cor }}
     >
       {texto}
@@ -85,12 +87,12 @@ function FitaCarreira({ ordem }: { ordem: Candidatura[] }) {
               aria-label={`${c.ano}, ${fmtCargo(c.cargo)}, ${situacao(c).toLowerCase()}. Ver o santinho`}
             >
               <span
-                className="grid size-[30px] place-items-center rounded-[6px] border-2 text-[0.62rem] font-black text-white transition-transform group-hover:-translate-y-0.5"
+                className="grid size-[30px] place-items-center rounded-[6px] border-2 text-[0.78rem] font-black text-white transition-transform group-hover:-translate-y-0.5"
                 style={c.eleito ? { background: cor, borderColor: cor } : { borderColor: 'var(--color-linha-2)', background: 'var(--color-folha)' }}
               >
                 {c.reeleito ? 'RE' : ''}
               </span>
-              <span className="tabular text-[0.72rem] font-semibold text-tinta-2">{c.ano}</span>
+              <span className="tabular text-[0.78rem] font-semibold text-tinta-2">{c.ano}</span>
             </a>
           </motion.li>
         )
@@ -113,7 +115,7 @@ function Resposta({ p, l }: { p: Politico; l: Leitura }) {
       </p>
       {ctx && (
         <p className="text-[0.95em]">
-          Para comparar: {ctx.uf === 'BR' ? 'no país' : `no ${ctx.uf}`}, dos {cargoPlural(ctx.cargo)} eleitos que tentaram a reeleição,{' '}
+          Para comparar: {ctx.uf === 'BR' ? 'no país' : noEstado(ctx.uf, ctx.uf)}, dos {cargoPlural(ctx.cargo)} eleitos que tentaram a reeleição,{' '}
           {b(`${inteiro(ctx.reeleitos)} de ${inteiro(ctx.tentaram)}`)} {ctx.reeleitos === 1 ? 'conseguiu' : 'conseguiram'} ({b(`${inteiro(Math.round(ctx.taxa))}%`)}).{' '}
           <Link
             to="/reeleicao"
@@ -183,16 +185,20 @@ function Santinhos({ recentes, nome }: { recentes: Candidatura[]; nome: string }
 export function PoliticoPagina() {
   const { id } = useParams({ from: '/politico/$id' })
   const busca = useSearch({ from: '/politico/$id' })
-  const { data: p, error, isLoading } = useQuery(consultas.politico(Number(id)))
+  const { data: p, error, isLoading, refetch } = useQuery(consultas.politico(Number(id)))
   const { data: partidos } = useQuery(consultas.partidos())
   const viesPartido = useMemo(() => (partidos ? new Map(partidos.map((x) => [x.sigla, x.vies])) : undefined), [partidos])
   const reduz = useReducedMotion()
+  // o Voltar leva à tela de onde se veio (o boletim, o plenário, a escola...), como ela estava; sem ela (link
+  // direto), a urna
+  const origem = useOrigem()
+  const router = useRouter()
 
   useEffect(() => {
     if (p) document.title = `${nomeProprio(p.nome)} · Voto Aberto`
   }, [p])
 
-  if (error) return <ErroCarga erro={error} />
+  if (error) return <ErroCarga erro={error} aoTentar={refetch} />
   if (isLoading || !p) return <Atrasado><EsqueletoPagina variante="carreira" rotulo="Abrindo a carreira..." /></Atrasado>
 
   const nome = nomeProprio(p.nome)
@@ -202,9 +208,28 @@ export function PoliticoPagina() {
 
   return (
     <div className="mx-auto max-w-[var(--casca-max)] px-4 pb-16 pt-6 md:px-[var(--casca-margem)]">
-      <Link to="/urna" className="inline-flex items-center gap-1.5 text-[0.88rem] font-semibold text-acao hover:underline">
-        <ArrowLeft size={14} weight="bold" aria-hidden /> Nova consulta na urna
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+      {origem && destinoDe(origem) ? (
+        <button type="button" onClick={() => router.history.back()} className="inline-flex items-center gap-1.5 text-[0.88rem] font-semibold text-acao hover:underline">
+          <ArrowLeft size={14} weight="bold" aria-hidden /> Voltar {destinoDe(origem)}
+        </button>
+      ) : (
+        <Link to="/urna" className="inline-flex items-center gap-1.5 text-[0.88rem] font-semibold text-acao hover:underline">
+          <ArrowLeft size={14} weight="bold" aria-hidden /> Nova consulta na urna
+        </Link>
+      )}
+        <Link to="/comparar" search={{ a: p.id }} className="inline-flex items-center gap-1.5 text-[0.88rem] font-semibold text-acao hover:underline">
+          <ArrowsLeftRight size={14} weight="bold" aria-hidden /> Comparar com outro político
+        </Link>
+        <Compartilhar
+          cartao={{
+            pergunta: nome,
+            numero: `${inteiro(p.resumo.vitorias)} de ${inteiro(p.resumo.candidaturas)}`,
+            legenda: `eleições vencidas${p.resumo.primeiro_ano ? ` desde ${p.resumo.primeiro_ano}` : ''}`,
+            recorte: local,
+          }}
+        />
+      </div>
 
       <header className="mt-4 grid gap-x-10 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-start">
         <div className="flex gap-5 sm:gap-7">

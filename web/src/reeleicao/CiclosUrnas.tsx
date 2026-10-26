@@ -73,8 +73,8 @@ export function CiclosUrnas({ cargo, ativo, aoEscolher }: { cargo: Cargo; ativo:
                 </span>
                 <MiniUrna taxa={c.taxa} media={c.media_municipios} ativa={marcada} />
                 <span className="t-rotulo tabular text-tinta">{c.disputa}</span>
-                <span className="text-[0.72rem] tabular text-tinta-3">eleitos em {c.eleitos_em}</span>
-                <span className="mt-0.5 text-[0.72rem] tabular text-tinta-3">
+                <span className="text-[0.78rem] tabular text-tinta-3">eleitos em {c.eleitos_em}</span>
+                <span className="mt-0.5 text-[0.78rem] tabular text-tinta-3">
                   {inteiro(c.reeleitos)} de {inteiro(c.tentaram)}
                 </span>
               </button>

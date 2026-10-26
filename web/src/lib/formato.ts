@@ -71,4 +71,16 @@ const EM = new Set(['AL', 'GO', 'MG', 'MS', 'MT', 'PE', 'RO', 'RR', 'SC', 'SE', 
 export const noEstado = (sigla: string, nome: string) => `${NA.has(sigla) ? 'na' : EM.has(sigla) ? 'em' : 'no'} ${nome}`
 
 /** Busca sem acento e sem caixa. */
+/**
+ * A contagem de lugares numa frase só, em todo o site: "os 26 estados e o DF" quando o DF está na lista e "os 26
+ * estados" quando não (ele não elege prefeito nem vereador). O DF não é estado: nunca vira "27 estados".
+ */
+export function ufsFrase(lista: (string | { sigla: string })[], artigo: 'os' | 'Os' | 'nos' | 'todos os' | 'Todos os' = 'os'): string {
+  const siglas = lista.map((u) => (typeof u === 'string' ? u : u.sigla)).filter((s) => s !== 'BR')
+  const n = siglas.filter((s) => s !== 'DF').length
+  const df = siglas.includes('DF')
+  const um = artigo.toLowerCase().endsWith('os') ? artigo.replace(/os$/, 'o') : 'no'
+  return `${n === 1 ? um : artigo} ${n} ${n === 1 ? 'estado' : 'estados'}${df ? ` e ${artigo === 'nos' ? 'no' : 'o'} DF` : ''}`
+}
+
 export const semAcento = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
