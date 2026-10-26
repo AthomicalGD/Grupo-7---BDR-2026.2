@@ -240,7 +240,8 @@ def _politicos(x: _Execucao) -> None:
     """
     x.sql("""
         CREATE TEMP TABLE tmp_pessoa ON COMMIT DROP AS
-        SELECT DISTINCT ON (chave) chave, titulo, cpf, nome, dt_nascimento, grau, ano,
+        SELECT DISTINCT ON (chave) chave, titulo, cpf, nome, dt_nascimento, grau,
+               CASE WHEN genero IN ('MASCULINO', 'FEMININO') THEN genero END AS genero, ano,
                NULL::bigint AS id_politico, false AS novo
         FROM {s}candidato
         ORDER BY chave, ano DESC, grau IS NULL, turno;
@@ -265,9 +266,9 @@ def _politicos(x: _Execucao) -> None:
             UPDATE tmp_pessoa SET id_politico = nextval(pg_get_serial_sequence('politico', 'id_politico')), novo = true
             WHERE id_politico IS NULL AND left(chave, 1) = %(fase)s""", fase=fase)
         x.sql("""
-            INSERT INTO politico (id_politico, cpf, nr_titulo_eleitoral, nome, ds_grau_de_instrucao,
+            INSERT INTO politico (id_politico, cpf, nr_titulo_eleitoral, nome, ds_grau_de_instrucao, ds_genero,
                                   dt_nascimento, ano_ultima_candidatura)
-            SELECT id_politico, cpf, titulo, nome, grau, dt_nascimento, ano
+            SELECT id_politico, cpf, titulo, nome, grau, genero, dt_nascimento, ano
             FROM tmp_pessoa WHERE novo AND left(chave, 1) = %(fase)s""", "politico", fase=fase)
     # Quem já existia: completa documentos e atualiza nome/escolaridade se a candidatura for mais recente.
     x.sql("""
@@ -280,10 +281,14 @@ def _politicos(x: _Execucao) -> None:
             ds_grau_de_instrucao = CASE WHEN u.ano > po.ano_ultima_candidatura
                                         THEN COALESCE(u.grau, po.ds_grau_de_instrucao)
                                         ELSE COALESCE(po.ds_grau_de_instrucao, u.grau) END,
+            ds_genero = CASE WHEN u.ano > po.ano_ultima_candidatura
+                             THEN COALESCE(u.genero, po.ds_genero)
+                             ELSE COALESCE(po.ds_genero, u.genero) END,
             ano_ultima_candidatura = GREATEST(po.ano_ultima_candidatura, u.ano)
         FROM (SELECT id_politico, max(titulo) AS titulo, max(cpf) AS cpf, max(dt_nascimento) AS dt_nascimento,
                      max(ano) AS ano, (array_agg(nome ORDER BY ano DESC))[1] AS nome,
-                     (array_agg(grau ORDER BY ano DESC) FILTER (WHERE grau IS NOT NULL))[1] AS grau
+                     (array_agg(grau ORDER BY ano DESC) FILTER (WHERE grau IS NOT NULL))[1] AS grau,
+                     (array_agg(genero ORDER BY ano DESC) FILTER (WHERE genero IS NOT NULL))[1] AS genero
               FROM tmp_pessoa WHERE NOT novo GROUP BY id_politico) u
         WHERE po.id_politico = u.id_politico""")
 
@@ -339,6 +344,20 @@ def partidos_das_candidaturas(x: _Execucao) -> None:
           AND (pe.id_partido IS DISTINCT FROM COALESCE(pa.id_partido, pe.id_partido)
                OR pe.nr_candidato IS DISTINCT FROM c.numero OR pe.nm_urna IS DISTINCT FROM c.nome_urna
                OR pe.ds_grau_instrucao IS DISTINCT FROM c.grau OR pe.ds_sit_tot_turno IS DISTINCT FROM c.situacao)""")
+
+
+
+def genero_dos_politicos(x: _Execucao) -> None:
+    """Gênero dos políticos já carregados (migração 015): o da candidatura mais recente da UF que o informa."""
+    x.sql(f"""
+        UPDATE politico po SET ds_genero = g.genero
+        FROM (SELECT DISTINCT ON (pe.id_politico) pe.id_politico, c.genero
+              FROM {{s}}candidato c
+              JOIN tmp_eleicao t ON {_disp('c')}
+              JOIN politico_eleicao pe ON pe.id_eleicao = t.id_eleicao AND pe.sq_candidato = c.sq
+              WHERE c.turno = 1 AND c.genero IN ('MASCULINO', 'FEMININO')
+              ORDER BY pe.id_politico, c.ano DESC) g
+        WHERE po.id_politico = g.id_politico AND po.ds_genero IS NULL""")
 
 
 def atualizar_resumos(cur) -> None:

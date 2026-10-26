@@ -1,7 +1,8 @@
-"""Preenche partido, número e nome de urna, escolaridade e situação das candidaturas já carregadas:
-python -m loader.partidos
+"""Preenche partido, número e nome de urna, escolaridade e situação das candidaturas já carregadas,
+e o gênero dos políticos: python -m loader.partidos
 
-As migrações 011, 013 e 014 criaram esses campos em politico_eleicao e as cargas novas já os gravam.
+As migrações 011, 013 e 014 criaram esses campos em politico_eleicao, a 015 o gênero em politico,
+e as cargas novas já os gravam.
 Este passo relê só os arquivos de candidatos das UFs carregadas e atualiza as views da P1.
 """
 import os
@@ -35,6 +36,8 @@ def main() -> None:
         carga._tmp_eleicao(x)
         carga.partidos_das_candidaturas(x)
         print(f"  {uf}: {cur.rowcount:,} candidaturas com partido")
+        carga.genero_dos_politicos(x)
+        print(f"  {uf}: {cur.rowcount:,} políticos com gênero")
         conn.commit()  # tmp_eleicao some aqui (ON COMMIT DROP)
     print("Atualizando os resumos de campanha ...", flush=True)
     carga.atualizar_resumos(cur)

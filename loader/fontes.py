@@ -134,7 +134,7 @@ CONJUNTOS = [
         "DS_GRAU_INSTRUCAO": ("grau", "texto"), "NR_PARTIDO": ("nr_partido", "int"),
         "NR_CANDIDATO": ("numero", "int"), "NM_URNA_CANDIDATO": ("nome_urna", "texto"),
         "SG_PARTIDO": ("sg_partido", "sigla"), "NM_PARTIDO": ("nm_partido", "texto"),
-        "DS_SIT_TOT_TURNO": ("situacao", "sigla"),
+        "DS_SIT_TOT_TURNO": ("situacao", "sigla"), "DS_GENERO": ("genero", "sigla"),
     }, pos=_chave_pessoa, extras=(("chave", "texto"),)),
     Conjunto("vagas", "tse/vagas", "consulta_vagas_*.csv", {**DISPUTA, "QT_VAGA": ("qt_vaga", "int")}),
     Conjunto("bem", "tse/bens_candidatos", "bem_candidato_*.csv", {
