@@ -55,6 +55,17 @@ export interface BuscaPatrimonio {
   uf?: string
 }
 
+export interface BuscaSegundoTurno {
+  /** a disputa aberta (id da eleição do 2º turno) */
+  d?: number
+  /** código do cargo: 1 presidente, 3 governador, 11 prefeito */
+  cargo?: number
+  ano?: Ano
+  /** só as viradas */
+  viradas?: boolean
+  ordem?: 'recentes' | 'viradas' | 'crescimento'
+}
+
 export interface BuscaReeleicao {
   uf?: string
   cargo?: number
@@ -174,7 +185,20 @@ const metodologia = createRoute({
   component: lazyRouteComponent(() => import('./paginas/Metodologia'), 'Metodologia'),
 })
 
-const arvore = raiz.addChildren([atlas.addChildren([inicio, estado, municipio]), urna, cadeira, escola, patrimonio, reeleicao, politico, comparar, metodologia])
+const segundoTurno = createRoute({
+  getParentRoute: () => raiz,
+  path: '/segundo-turno',
+  component: lazyRouteComponent(() => import('./segundo/SegundoTurnoPagina'), 'SegundoTurnoPagina'),
+  validateSearch: (s: Record<string, unknown>): BuscaSegundoTurno => ({
+    d: Number.isInteger(Number(s.d)) && Number(s.d) > 0 ? Number(s.d) : undefined,
+    cargo: [1, 3, 11].includes(Number(s.cargo)) ? Number(s.cargo) : undefined,
+    ano: ([2018, 2020, 2022, 2024] as const).find((a) => a === Number(s.ano)),
+    viradas: s.viradas === true || s.viradas === 'true' ? true : undefined,
+    ordem: s.ordem === 'viradas' || s.ordem === 'crescimento' ? s.ordem : undefined,
+  }),
+})
+
+const arvore = raiz.addChildren([atlas.addChildren([inicio, estado, municipio]), urna, cadeira, escola, patrimonio, reeleicao, segundoTurno, politico, comparar, metodologia])
 
 export const router = createRouter({
   routeTree: arvore,
@@ -205,7 +229,7 @@ declare module '@tanstack/react-router' {
 // Baixa o código das páginas no tempo ocioso, uma por vez, depois da primeira tela: trocar de página fica imediato
 // (sem esqueleto nem espera). O 3D não entra aqui: ele é baixado só quando a tela que o usa abre.
 const ocioso = (f: () => void) => ('requestIdleCallback' in window ? window.requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 1500))
-const paginas = [urna, cadeira, escola, patrimonio, reeleicao, politico, metodologia]
+const paginas = [urna, cadeira, escola, patrimonio, reeleicao, segundoTurno, politico, metodologia]
 const proxima = () => {
   const r = paginas.shift()
   const pre = r && (r.options.component as { preload?: () => Promise<void> } | undefined)?.preload

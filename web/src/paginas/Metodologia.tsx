@@ -19,7 +19,7 @@ import p7VotosPartido from './consultas/p7_votos_partido.sql?raw'
 function Secao({ id, titulo, resposta, children }: {
   id: string
   titulo: string
-  resposta?: { para: '/' | '/cadeira' | '/patrimonio' | '/urna' | '/escola' | '/reeleicao'; rotulo: string }
+  resposta?: { para: '/' | '/cadeira' | '/patrimonio' | '/urna' | '/escola' | '/reeleicao' | '/segundo-turno'; rotulo: string }
   children: ReactNode
 }) {
   return (
@@ -141,6 +141,7 @@ const INDICE = [
   ['m-vies', 'P7'],
   ['m-carreira', 'P10'],
   ['m-reeleicao', 'P10a'],
+  ['m-segundo-turno', '2º turno'],
   ['m-colonial', 'Extra'],
   ['m-fontes', 'Fontes'],
   ['m-limites', 'Limitações'],
@@ -472,6 +473,25 @@ export function Metodologia() {
           <li><b>Estado a estado:</b> casas com menos de 10 tentativas ficam hachuradas; poucos casos mudam muito a taxa.</li>
           <li><b>Quem são:</b> os eleitos de cada eleição, separados pelo que fizeram na seguinte, com os mais votados primeiro (há votos de 2018 em diante).</li>
         </ul>
+      </Secao>
+
+      <Secao id="m-segundo-turno" titulo="O que muda no 2º turno (questão extra)" resposta={{ para: '/segundo-turno', rotulo: 'Ver a resposta no 2º turno' }}>
+        <p>
+          Quando ninguém passa da metade dos votos válidos, os dois mais votados disputam de novo. A pergunta: quem liderou o 1º turno
+          venceu o 2º? Quanto cada finalista cresceu, e onde o líder mudou?
+        </p>
+        <ul className="list-disc space-y-2 pl-5">
+          <li><b>As disputas:</b> cada eleição de 2º turno é ligada ao 1º turno da mesma disputa (mesmo ano, cargo e lugar). Os votos do 2º turno ficam na mesma candidatura do 1º, então cada finalista tem os dois números sem nenhuma carga a mais.</li>
+          <li><b>Virada:</b> quem venceu o 2º turno não foi o mais votado do 1º.</li>
+          <li><b>A parte do vencedor:</b> nas linhas que se cruzam (a trança e as fichas), a altura é a parte do vencedor nos votos dos dois finalistas, em cada turno; abaixo da metade no 1º turno, ele começou atrás. Na ficha de cada candidato, a parte do 1º turno é entre todos os candidatos.</li>
+          <li><b>De onde vieram os votos novos:</b> só os totais de cada turno, na mesma régua dos eleitores aptos (os dois finalistas, os outros candidatos, brancos e nulos, e quem não foi votar). O voto é secreto: dá para comparar os totais, não seguir cada eleitor.</li>
+          <li><b>Onde o líder mudou:</b> presidente por estado, governador por município e prefeito por zona eleitoral, somando os votos por zona.</li>
+          <li><b>Fora da conta:</b> antes de 2018 (o banco não tem os votos por zona), os vices (vão na chapa do titular) e as disputas sem os votos do 1º turno no banco (Piracicaba 2020 e Aracaju 2024).</li>
+        </ul>
+        <p>
+          De 2018 a 2024 foram 135 segundos turnos e 36 viradas (26,7%): nenhuma nos dois da Presidência, 6 em 26 governos e 30 em
+          107 prefeituras. A maior foi em Caxias do Sul em 2020: o vencedor teve 15,5% no 1º turno e cresceu 299% até o 2º.
+        </p>
       </Secao>
 
       <Secao id="m-colonial" titulo="Exploração colonial e escolaridade (questão extra)" resposta={{ para: '/escola', rotulo: 'Ver no mapa da escola' }}>

@@ -1,4 +1,4 @@
-import { Archive, Armchair, ArrowsClockwise, BookOpenText, GraduationCap, MapTrifold, PiggyBank, type Icon } from '@phosphor-icons/react'
+import { Archive, Armchair, ArrowsClockwise, BookOpenText, GraduationCap, Intersect, MapTrifold, PiggyBank, type Icon } from '@phosphor-icons/react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { motion } from 'motion/react'
@@ -35,7 +35,7 @@ function usePreferencia(chave: string, atributo: string, inicial: string) {
 // Cada módulo tem um ícone; o ativo vira uma pílula no oliva claro da seleção (o mesmo papel em todo o
 // sistema), com o laço das fitas embaixo. A pílula desliza entre os itens (mola) e o ícone pula e fica
 // cheio ao chegar.
-type ItemNav = { para: '/' | '/urna' | '/cadeira' | '/escola' | '/patrimonio' | '/reeleicao' | '/metodologia'; rotulo: string; curto?: string; icone: Icon; ativo: (p: string) => boolean }
+type ItemNav = { para: '/' | '/urna' | '/cadeira' | '/escola' | '/patrimonio' | '/reeleicao' | '/segundo-turno' | '/metodologia'; rotulo: string; curto?: string; icone: Icon; ativo: (p: string) => boolean }
 const NAV: ItemNav[] = [
   { para: '/', rotulo: 'Mapa', icone: MapTrifold, ativo: (p) => p === '/' || p.startsWith('/uf') },
   { para: '/urna', rotulo: 'Urna', icone: Archive, ativo: (p) => p.startsWith('/urna') || p.startsWith('/politico') },
@@ -43,6 +43,7 @@ const NAV: ItemNav[] = [
   { para: '/escola', rotulo: 'Escola', icone: GraduationCap, ativo: (p) => p.startsWith('/escola') },
   { para: '/patrimonio', rotulo: 'Patrimônio', curto: 'Bens', icone: PiggyBank, ativo: (p) => p.startsWith('/patrimonio') },
   { para: '/reeleicao', rotulo: 'Reeleição', icone: ArrowsClockwise, ativo: (p) => p.startsWith('/reeleicao') },
+  { para: '/segundo-turno', rotulo: '2º turno', curto: 'Virada', icone: Intersect, ativo: (p) => p.startsWith('/segundo-turno') },
   { para: '/metodologia', rotulo: 'Metodologia', curto: 'Método', icone: BookOpenText, ativo: (p) => p.startsWith('/metodologia') },
 ]
 
@@ -125,7 +126,7 @@ function Cabecalho() {
                   )}
                   <Link
                     to={item.para}
-                    className={`nav-item relative flex items-center gap-1.5 rounded-full px-[3px] py-2 text-[0.8rem] transition-colors max-sm:text-[0.78rem] max-sm:[font-stretch:76%] max-[379px]:px-[2px] max-[379px]:text-[0.78rem] sm:px-3 lg:max-xl:px-2 sm:text-[0.97rem] ${ativo ? 'font-semibold' : 'text-tinta-2 hover:bg-papel hover:text-tinta'}`}
+                    className={`nav-item relative flex items-center gap-1.5 whitespace-nowrap rounded-full px-[2px] py-2 text-[0.8rem] transition-colors max-sm:text-[0.78rem] max-sm:[font-stretch:76%] max-[379px]:px-[1px] max-[379px]:text-[0.76rem] sm:px-3 lg:max-xl:px-2 sm:text-[0.97rem] ${ativo ? 'font-semibold' : 'text-tinta-2 hover:bg-papel hover:text-tinta'}`}
                     style={ativo ? { color: 'var(--color-selecao-tinta)' } : undefined}
                     aria-current={ativo ? 'page' : undefined}
                     aria-label={item.curto ? item.rotulo : undefined}

@@ -69,6 +69,8 @@ const NA = new Set(['BA', 'PB'])
 const EM = new Set(['AL', 'GO', 'MG', 'MS', 'MT', 'PE', 'RO', 'RR', 'SC', 'SE', 'SP'])
 /** "no Piauí", "na Bahia", "em Goiás". */
 export const noEstado = (sigla: string, nome: string) => `${NA.has(sigla) ? 'na' : EM.has(sigla) ? 'em' : 'no'} ${nome}`
+/** "do Piauí", "da Bahia", "de Goiás". */
+export const doEstado = (sigla: string, nome: string) => `${NA.has(sigla) ? 'da' : EM.has(sigla) ? 'de' : 'do'} ${nome}`
 
 /** Busca sem acento e sem caixa. */
 /**

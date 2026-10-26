@@ -652,3 +652,10 @@
 @keyframes bandeira-entra { from { opacity: 0; transform: translateY(4px) rotate(-3deg) scale(.94); } to { opacity: 1; transform: none; } }
 .bandeira-entra { animation: bandeira-entra 220ms var(--ease-saida) both; transform-origin: 20% 80%; }
 @media (prefers-reduced-motion: reduce) { .bandeira-entra { animation: none; } }
+
+/* P12, o 2º turno (segundo/): a trança se desenha uma vez, do 1º ao 2º turno, linha a linha; quem não foi
+   votar é hachurado, como o "sem dados" do mapa (ausência visível) */
+@keyframes tranca-desenha { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.tranca-linha { stroke-dasharray: 1; stroke-dashoffset: 1; animation: tranca-desenha 900ms var(--ease-saida) forwards; }
+.segundo-hachura { background: repeating-linear-gradient(45deg, #eceef0 0 4px, #c9ced3 4px 5.5px); }
+@media (prefers-reduced-motion: reduce) { .tranca-linha { animation: none; stroke-dashoffset: 0; } }

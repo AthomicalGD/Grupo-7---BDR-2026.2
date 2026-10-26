@@ -556,6 +556,46 @@ export interface CandidatosPartido {
   candidatos: ComposicaoVies['partidos'][number]['candidatos']
 }
 
+// ───────── P12: o que muda no 2º turno ─────────
+
+export interface Finalista {
+  id_candidatura: number
+  id_politico: number
+  nome: string
+  nome_urna: string | null
+  partido: string | null
+  vies: number | null
+  foto: string | null
+  votos_t1: number
+  votos_t2: number
+  /** parte nos votos nominais do 1º turno (entre todos os candidatos) e do 2º (entre os dois) */
+  pct_t1: number
+  pct_t2: number
+  /** votos do 2º turno sobre os do 1º, em % */
+  crescimento: number | null
+  lider_t1: boolean
+  venceu: boolean
+}
+export interface Comparecimento { aptos: number; comparecimento: number; brancos: number; nulos: number; abstencoes: number }
+export interface SegundoTurno {
+  id: number
+  ano: number
+  cod_cargo: number
+  cargo: string
+  uf: string | null
+  municipio: string | null
+  municipio_ibge: number | null
+  /** quem venceu o 2º turno não liderou o 1º */
+  virada: boolean
+  /** o vencedor primeiro */
+  finalistas: [Finalista, Finalista]
+  eliminados: { candidatos: number; votos: number }
+  turnos: { t1: Comparecimento | null; t2: Comparecimento | null }
+}
+/** a disputa pelo território: a = vencedor, b = derrotado (votos de cada um em cada lugar e turno) */
+export interface LugarSegundoTurno { codigo: string; nome: string; a1: number; b1: number; outros1: number; a2: number; b2: number; virou: boolean }
+export interface SegundoTurnoLugares { disputa: SegundoTurno; nivel: 'uf' | 'municipio' | 'zona'; lugares: LugarSegundoTurno[] }
+
 const sempre = { staleTime: Infinity, gcTime: 30 * 60_000 } // os dados só mudam com uma nova carga
 /** "?cargo=1" (ou "&cargo=1"), ou nada quando são todos os cargos */
 const comCargo = (cargo: number | undefined, sep: '?' | '&') => (cargo ? `${sep}cargo=${cargo}` : '')
@@ -701,6 +741,10 @@ export const consultas = {
     queryOptions({ queryKey: ['malha', 'BR'], queryFn: ({ signal }) => get<Malha>('/api/geo/brasil', signal), ...sempre }),
   malhaUF: (sigla: string) =>
     queryOptions({ queryKey: ['malha', sigla], queryFn: ({ signal }) => get<Malha>(`/api/geo/uf/${sigla}`, signal), ...sempre }),
+  segundoTurno: () =>
+    queryOptions({ queryKey: ['segundo-turno'], queryFn: ({ signal }) => get<{ disputas: SegundoTurno[]; incompletas: { ano: number; cargo: string; uf: string | null; municipio: string | null }[] }>('/api/segundo-turno', signal), ...sempre }),
+  segundoTurnoLugares: (id: number) =>
+    queryOptions({ queryKey: ['segundo-turno', id], queryFn: ({ signal }) => get<SegundoTurnoLugares>(`/api/segundo-turno/${id}`, signal), ...sempre }),
 }
 
 export const politicoAleatorio = () => get<{ id: number; nome: string }>('/api/politicos/aleatorio')
