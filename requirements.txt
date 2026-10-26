@@ -10,3 +10,5 @@ scipy>=1.11
 # api (uvicorn api.app:app)
 fastapi>=0.115
 uvicorn>=0.30
+# questão extra (scripts/11_exploracao_colonial.py): a planilha .xls do Censo de 1872
+xlrd>=2.0
