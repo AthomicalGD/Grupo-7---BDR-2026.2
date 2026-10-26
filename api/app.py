@@ -1669,6 +1669,144 @@ def gastos_destaques():
     return destaques_gastos()
 
 
+# ───────── P12: o que muda no 2º turno ─────────
+# Cada 2º turno (de 2018 em diante, quando há votos por zona) ligado ao 1º turno da mesma disputa (mesmo ano,
+# cargo e lugar). Os votos do 2º turno ficam na candidatura do 1º, então cada finalista tem os dois números.
+# Virada = quem venceu o 2º turno não liderou o 1º. A conta é a de web/src/paginas/consultas/p12_segundo_turno.sql.
+SQL_P12_DISPUTAS = """
+SELECT e2.id_eleicao AS id_t2, e1.id_eleicao AS id_t1, e2.ano, e2.cod_cargo, c.nome AS cargo,
+       COALESCE(u.sigla, um.sigla) AS uf, m.nm_municipio AS municipio, m.cd_ibge AS municipio_ibge
+FROM eleicao e2
+JOIN eleicao e1 ON e1.ano = e2.ano AND e1.tipo = e2.tipo AND e1.cod_cargo = e2.cod_cargo AND e1.turno = 1
+               AND e1.cd_uf IS NOT DISTINCT FROM e2.cd_uf AND e1.cd_municipio IS NOT DISTINCT FROM e2.cd_municipio
+JOIN cargo c          ON c.cod_cargo = e2.cod_cargo
+LEFT JOIN uf u        ON u.cd_ibge = e2.cd_uf
+LEFT JOIN municipio m ON m.cd_municipio = e2.cd_municipio
+LEFT JOIN uf um       ON um.cd_ibge = m.cd_uf
+WHERE e2.turno = 2 AND e2.tipo <> 1 AND e2.ano >= 2018 AND e2.cod_cargo IN (1, 3, 11)   -- sem os vices: vão na chapa
+"""
+SQL_P12_CANDIDATOS = """
+WITH d AS (SELECT unnest(%(t2)s::int[]) AS id_t2, unnest(%(t1)s::int[]) AS id_t1),
+votos AS (
+    SELECT d.id_t2, v.id_politico_eleicao,
+           sum(v.qtd_votos_nominais) FILTER (WHERE v.id_eleicao = d.id_t1) AS votos_t1,
+           sum(v.qtd_votos_nominais) FILTER (WHERE v.id_eleicao = d.id_t2) AS votos_t2
+    FROM d JOIN votacao_candidato_munzona v ON v.id_eleicao IN (d.id_t1, d.id_t2)
+    GROUP BY 1, 2
+)
+SELECT v.id_t2, v.votos_t1, v.votos_t2, pe.id_politico_eleicao AS id_candidatura, pe.id_politico, p.nome,
+       pe.nm_urna AS nome_urna, pe.sq_candidato AS sq, pa.sigla AS partido, pa.vies_politico AS vies
+FROM votos v
+JOIN politico_eleicao pe ON pe.id_politico_eleicao = v.id_politico_eleicao
+JOIN politico p          ON p.id_politico = pe.id_politico
+LEFT JOIN partido pa     ON pa.id_partido = pe.id_partido
+"""
+# quem foi votar, em branco, nulo e quem faltou, em cada turno (somado nos municípios da disputa)
+SQL_P12_COMPARECIMENTO = """
+SELECT id_eleicao, sum(qt_aptos) AS aptos, sum(qt_comparecimento) AS comparecimento, sum(qt_brancos) AS brancos,
+       sum(qt_nulos) AS nulos, sum(qt_abstencoes) AS abstencoes
+FROM votacao_municipio WHERE id_eleicao = ANY(%(ids)s) GROUP BY 1
+"""
+
+
+def _cd_mun_tse(ibge):
+    return consultar("SELECT cd_municipio FROM municipio WHERE cd_ibge = %s", (ibge,))[0]["cd_municipio"] if ibge else None
+
+
+@lru_cache(maxsize=1)
+@em_disco
+def segundos_turnos() -> dict:
+    disputas = consultar(SQL_P12_DISPUTAS)
+    if not disputas:
+        return {"disputas": [], "incompletas": []}
+    cands = consultar(SQL_P12_CANDIDATOS, {"t2": [d["id_t2"] for d in disputas], "t1": [d["id_t1"] for d in disputas]})
+    comp = {r["id_eleicao"]: r for r in consultar(SQL_P12_COMPARECIMENTO, {"ids": [i for d in disputas for i in (d["id_t1"], d["id_t2"])]})}
+    por_disputa: dict[int, list[dict]] = {}
+    for c in cands:
+        por_disputa.setdefault(c["id_t2"], []).append(c)
+    saida, incompletas = [], []
+    for d in disputas:
+        cs = sorted(por_disputa.get(d["id_t2"], []), key=lambda c: -(c["votos_t1"] or 0))
+        finais = sorted([c for c in cs if c["votos_t2"]], key=lambda c: -c["votos_t2"])
+        # sem os dois finalistas votados no 2º turno, ou sem os votos deles no 1º (falha na carga daquela
+        # disputa): não dá para comparar os turnos, então a disputa sai da conta e é listada à parte
+        if len(finais) != 2 or not all(c["votos_t1"] for c in finais):
+            incompletas.append({"ano": d["ano"], "cargo": d["cargo"], "uf": d["uf"], "municipio": d["municipio"]})
+            continue
+        total_t1 = sum(c["votos_t1"] or 0 for c in cs)
+        total_t2 = sum(c["votos_t2"] for c in finais)
+        lider_t1 = cs[0]["id_candidatura"]
+        cd_mun = _cd_mun_tse(d["municipio_ibge"]) if d["municipio_ibge"] else None
+        finalistas = []
+        for i, c in enumerate(finais):
+            v1 = c["votos_t1"] or 0
+            finalistas.append({
+                "id_candidatura": c["id_candidatura"], "id_politico": c["id_politico"], "nome": c["nome"],
+                "nome_urna": c["nome_urna"], "partido": c["partido"], "vies": float(c["vies"]) if c["vies"] is not None else None,
+                "foto": foto_url(d["ano"], d["uf"] if d["cod_cargo"] != 1 else None, c["sq"], cd_mun),
+                "votos_t1": v1, "votos_t2": c["votos_t2"],
+                "pct_t1": 100 * v1 / total_t1 if total_t1 else 0, "pct_t2": 100 * c["votos_t2"] / total_t2 if total_t2 else 0,
+                "crescimento": 100 * (c["votos_t2"] - v1) / v1 if v1 else None,
+                "lider_t1": c["id_candidatura"] == lider_t1, "venceu": i == 0,
+            })
+        eliminados = [c for c in cs if not c["votos_t2"]]
+        turno = lambda k: {kk: int(vv) for kk, vv in comp[k].items() if kk != "id_eleicao"} if k in comp else None
+        saida.append({
+            "id": d["id_t2"], "ano": d["ano"], "cod_cargo": d["cod_cargo"], "cargo": d["cargo"], "uf": d["uf"],
+            "municipio": d["municipio"], "municipio_ibge": d["municipio_ibge"],
+            "virada": not finalistas[0]["lider_t1"], "finalistas": finalistas,
+            "eliminados": {"candidatos": len(eliminados), "votos": sum(c["votos_t1"] or 0 for c in eliminados)},
+            "turnos": {"t1": turno(d["id_t1"]), "t2": turno(d["id_t2"])},
+        })
+    return {"disputas": saida, "incompletas": incompletas}
+
+
+@app.get("/api/segundo-turno")
+def segundo_turno():
+    """P12: todos os 2º turnos de 2018 em diante, com os finalistas nos dois turnos e se houve virada; em
+    `incompletas`, os que ficaram de fora por falta de votos de um dos turnos no banco."""
+    return segundos_turnos()
+
+
+@lru_cache(maxsize=64)
+@em_disco
+def segundo_turno_lugares(id_t2: int) -> dict:
+    disputa = next((d for d in segundos_turnos()["disputas"] if d["id"] == id_t2), None)
+    if not disputa:
+        raise HTTPException(404, "2º turno não encontrado (ou de antes de 2018)")
+    id_t1 = consultar(SQL_P12_DISPUTAS + " AND e2.id_eleicao = %(id)s", {"id": id_t2})[0]["id_t1"]
+    a, b = (f["id_candidatura"] for f in disputa["finalistas"])
+    # presidente por estado, governador por município, prefeito por zona eleitoral
+    chave, nome = {1: ("uf.cd_ibge", "uf.sigla"), 3: ("m.cd_ibge", "m.nm_municipio")}.get(disputa["cod_cargo"], ("z.numero", "'Zona ' || z.numero"))
+    linhas = consultar(f"""
+        SELECT {chave} AS codigo, {nome} AS nome,
+               sum(v.qtd_votos_nominais) FILTER (WHERE v.id_eleicao = %(t1)s AND v.id_politico_eleicao = %(a)s) AS a1,
+               sum(v.qtd_votos_nominais) FILTER (WHERE v.id_eleicao = %(t1)s AND v.id_politico_eleicao = %(b)s) AS b1,
+               sum(v.qtd_votos_nominais) FILTER (WHERE v.id_eleicao = %(t1)s AND v.id_politico_eleicao NOT IN (%(a)s, %(b)s)) AS outros1,
+               sum(v.qtd_votos_nominais) FILTER (WHERE v.id_eleicao = %(t2)s AND v.id_politico_eleicao = %(a)s) AS a2,
+               sum(v.qtd_votos_nominais) FILTER (WHERE v.id_eleicao = %(t2)s AND v.id_politico_eleicao = %(b)s) AS b2
+        FROM votacao_candidato_munzona v
+        JOIN zona_eleitoral z ON z.id_zona = v.id_zona
+        JOIN municipio m      ON m.cd_municipio = z.cd_municipio
+        JOIN uf               ON uf.cd_ibge = m.cd_uf
+        WHERE v.id_eleicao IN (%(t1)s, %(t2)s)
+        GROUP BY 1, 2 ORDER BY 2""", {"t1": id_t1, "t2": id_t2, "a": a, "b": b})
+    lugares = []
+    for r in linhas:
+        a1, b1, a2, b2 = (int(r[k] or 0) for k in ("a1", "b1", "a2", "b2"))
+        lugares.append({"codigo": str(r["codigo"]), "nome": r["nome"], "a1": a1, "b1": b1, "outros1": int(r["outros1"] or 0),
+                        "a2": a2, "b2": b2, "virou": (a1 > b1) != (a2 > b2) and a1 != b1 and a2 != b2})
+    nivel = {1: "uf", 3: "municipio"}.get(disputa["cod_cargo"], "zona")
+    return {"disputa": disputa, "nivel": nivel, "lugares": lugares}
+
+
+@app.get("/api/segundo-turno/{id_t2}")
+def segundo_turno_detalhe(id_t2: int):
+    """P12: uma disputa de 2º turno pelo território (presidente por estado, governador por município, prefeito por
+    zona): quem liderou em cada lugar nos dois turnos e onde virou."""
+    return segundo_turno_lugares(id_t2)
+
+
 # ───────── Malhas (IBGE) ─────────
 
 TOLERANCIA_MALHA = 0.0006   # graus (~66 m)
