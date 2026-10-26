@@ -70,6 +70,16 @@ UFS = {m["sg_uf"]: {"sigla": m["sg_uf"], "cd_ibge": ibge // 100_000, "nome": m["
 
 BUSCA = sorted((sem_acento(m["municipio"]), ibge) for ibge, m in MUNICIPIOS.items())
 
+# Questão extra: a exploração colonial de cada município (0 a 100: metade o ciclo econômico mais forte, metade o trabalho
+# escravizado), gerada por scripts/11_exploracao_colonial.py a partir de dados abertos (ver o cabeçalho do script)
+_COLONIAL_CSV = Path(__file__).resolve().parent.parent / "respostas" / "11_exploracao_colonial" / "municipios.csv"
+COLONIAL: dict[int, dict] = {}
+if _COLONIAL_CSV.exists():
+    with open(_COLONIAL_CSV, encoding="utf-8", newline="") as f:
+        COLONIAL = {int(r["ibge"]): {"indice": float(r["indice"]), "economia": float(r["economia"]), "escravidao": float(r["escravidao"]),
+                                     "ciclos": [float(r[k]) for k in ("acucar", "mineracao", "gado", "norte")]}
+                    for r in csv.DictReader(f) if r["indice"]}
+
 
 def uf_de(sigla: str) -> dict:
     uf = UFS.get(sigla.upper())
@@ -475,6 +485,46 @@ def detalhar_municipio(ibge: int, cargo: int | None = None):
     if ibge not in MUNICIPIOS:
         raise HTTPException(404, f"Município desconhecido: {ibge}")
     return detalhe_municipio(ibge, cargo_de(cargo))
+
+
+# As zonas eleitorais do município: o eleitorado, quem foi votar e o mais votado (prefeito nos anos municipais,
+# presidente nos gerais). O TSE não publica a seção de cada eleitor em dados abertos: a página leva à consulta oficial.
+SQL_ZONAS = """
+WITH z AS (SELECT id_zona, numero FROM zona_eleitoral WHERE cd_municipio = %(cd)s),
+perfil AS (
+    SELECT id_zona, sum(qtd_eleitores)::int AS aptos, sum(qtd_comparecimento)::int AS foram,
+           (sum(qtd_comparecimento) FILTER (WHERE ds_grau_escolaridade = 'SUPERIOR COMPLETO'))::int AS superior
+    FROM perfil_eleitorado_munzona
+    WHERE id_zona IN (SELECT id_zona FROM z) AND ano_eleicao = %(ano)s
+    GROUP BY id_zona
+),
+votos AS (
+    SELECT v.id_zona, pe.id_politico, pe.nm_urna, pa.sigla, v.qtd_votos_nominais AS votos,
+           sum(v.qtd_votos_nominais) OVER (PARTITION BY v.id_zona) AS total,
+           row_number() OVER (PARTITION BY v.id_zona ORDER BY v.qtd_votos_nominais DESC) AS r
+    FROM votacao_candidato_munzona v
+    JOIN eleicao e           ON e.id_eleicao = v.id_eleicao
+    JOIN politico_eleicao pe ON pe.id_politico_eleicao = v.id_politico_eleicao
+    LEFT JOIN partido pa     ON pa.id_partido = pe.id_partido
+    WHERE v.id_zona IN (SELECT id_zona FROM z) AND e.ano = %(ano)s AND e.turno = 1 AND e.tipo = 2 AND e.cod_cargo = %(cargo)s
+)
+SELECT z.numero, p.aptos, p.foram, p.superior, vt.id_politico, vt.nm_urna, vt.sigla, vt.votos, vt.total::int AS total
+FROM z
+LEFT JOIN perfil p ON p.id_zona = z.id_zona
+LEFT JOIN votos vt ON vt.id_zona = z.id_zona AND vt.r = 1
+ORDER BY z.numero
+"""
+
+
+@app.get("/api/municipios/{ibge}/zonas")
+def zonas_municipio(ibge: int, ano: int):
+    if ibge not in MUNICIPIOS:
+        raise HTTPException(404, f"Município desconhecido: {ibge}")
+    if ano not in ANOS:
+        raise HTTPException(404, f"Sem eleição em {ano}")
+    cd = consultar("SELECT cd_municipio FROM municipio WHERE cd_ibge = %s", (ibge,))[0]["cd_municipio"]
+    cargo = 11 if ano % 4 == 0 else 1
+    return {"ano": ano, "cargo": CARGOS_P1.get(cargo, "Presidente"), "zonas": consultar(SQL_ZONAS, {"cd": cd, "ano": ano, "cargo": cargo})}
 
 
 # Partidos votados no município em cada ano, com o viés daquela eleição (NULL = sem viés, vão para o fim).
@@ -1150,8 +1200,8 @@ def reeleicao_pessoas(cargo: int, eleitos_em: int, uf: str = TODOS, grupo: str =
 
 @app.get("/api/politicos/{id_politico}")
 def detalhar_politico(id_politico: int):
-    p = consultar("SELECT id_politico AS id, nome, extract(year FROM dt_nascimento)::int AS nascimento_ano "
-                  "FROM politico WHERE id_politico = %s", (id_politico,))
+    p = consultar("SELECT id_politico AS id, nome, extract(year FROM dt_nascimento)::int AS nascimento_ano, "
+                  "lower(ds_genero) AS genero FROM politico WHERE id_politico = %s", (id_politico,))
     if not p:
         raise HTTPException(404, f"Político desconhecido: {id_politico}")
     cands = consultar(SQL_CANDIDATURAS, (id_politico,))
@@ -1256,8 +1306,8 @@ def curva_vitoria(linhas: list[dict]) -> list[dict]:
              "candidatos": n, "eleitos": e} for k, (n, e) in sorted(faixas.items())]
 
 
-@app.get("/api/cadeira")
-def custo_cadeira(ano: int, cargo: int, uf: str = "", municipio: int | None = None):
+def _escopo_cadeira(ano: int, cargo: int, uf: str, municipio: int | None) -> tuple[str, ...]:
+    """Confere o recorte da P1 (cargo, ano, UF, município) e devolve as UFs dele."""
     if cargo not in CARGOS_P1:
         raise HTTPException(404, f"Cargo fora da P1: {cargo}")
     if ano not in ipca() or (ano % 4 == 0) != (cargo in MUNICIPAIS):
@@ -1274,7 +1324,27 @@ def custo_cadeira(ano: int, cargo: int, uf: str = "", municipio: int | None = No
         if municipio not in MUNICIPIOS or MUNICIPIOS[municipio]["sg_uf"] not in ufs:
             raise HTTPException(404, f"Município sem dados: {municipio}")
         ufs = (MUNICIPIOS[municipio]["sg_uf"],)
-    return cadeira(ano, cargo, ufs, municipio)
+    return ufs
+
+
+@app.get("/api/cadeira")
+def custo_cadeira(ano: int, cargo: int, uf: str = "", municipio: int | None = None):
+    return cadeira(ano, cargo, _escopo_cadeira(ano, cargo, uf, municipio), municipio)
+
+
+@lru_cache(maxsize=32)
+@em_disco
+def nao_eleitos(ano: int, cargo: int, ufs: tuple[str, ...], municipio: int | None) -> list[dict]:
+    """Quem disputou e não se elegeu, do maior ao menor gasto: a galeria do plenário."""
+    linhas = sorted((r for r in campanhas(ano, cargo, ufs, municipio) if not r["eleito"]), key=lambda r: -r["despesa"])
+    return [{"id": r["id"], "nome": r["nome"], "partido": r["partido"], "vies": r["vies"], "uf": r["uf"],
+             "local": r["nm_municipio"] if cargo == 11 else None, "gasto": r["despesa"], "votos": r["votos"],
+             "foto": foto_url(ano, r["uf"], r["sq"], r["cd_municipio"])} for r in linhas]
+
+
+@app.get("/api/cadeira/nao-eleitos")
+def cadeira_nao_eleitos(ano: int, cargo: int, uf: str = "", municipio: int | None = None):
+    return nao_eleitos(ano, cargo, _escopo_cadeira(ano, cargo, uf, municipio), municipio)
 
 
 @lru_cache(maxsize=32)
@@ -1886,7 +1956,14 @@ def escola_ano(ano: int, uf: str = "") -> dict:
 def escola(ano: int = 2024, uf: str = ""):
     ano, uf = _ano_escola(ano), _uf_escola(uf)
     sem_municipal(uf, ano % 4 == 0)
-    return escola_ano(ano, uf)
+    d = escola_ano(ano, uf)
+    # a questão extra: quanto a escolaridade anda junto com a exploração colonial, município a município
+    mun = [m for m in municipios_recorte(ano, uf) if m["ibge"] in COLONIAL]
+    col = lambda m: COLONIAL[m["ibge"]]["indice"]
+    return {**d, "colonial": {"municipios": len(mun),
+                              "votantes": _correlacao([(col(m), m["votantes"]) for m in mun]),
+                              "candidatos": _correlacao([(col(m), m["candidatos"]) for m in mun]),
+                              d["medida"]: _correlacao([(col(m), m[d["medida"]]) for m in mun])}}
 
 
 @lru_cache(maxsize=64)
@@ -1991,7 +2068,8 @@ def escola_municipios(ano: int = 2024, uf: str = ""):
     sem_municipal(uf, ano % 4 == 0)
     return [{"ibge": m["ibge"], "nome": MUNICIPIOS[m["ibge"]]["municipio"], "uf": MUNICIPIOS[m["ibge"]]["sg_uf"],
              "comparecimento": m["comparecimento"], "eleitos_n": m["eleitos_n"], "quintil": m["quintil"],
-             **{k: (round(m[k], 1) if m[k] is not None else None) for k in ("votantes", "candidatos", "eleitos", "votados")}}
+             **{k: (round(m[k], 1) if m[k] is not None else None) for k in ("votantes", "candidatos", "eleitos", "votados")},
+             "colonial": COLONIAL.get(m["ibge"])}
             for m in municipios_recorte(ano, uf) if m["ibge"] in MUNICIPIOS]
 
 
