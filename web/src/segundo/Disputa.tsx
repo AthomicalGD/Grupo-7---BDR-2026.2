@@ -10,7 +10,7 @@ import { EsqueletoBloco } from '../componentes/Esqueleto'
 import { ErroCarga } from '../componentes/ErroCarga'
 import { Retrato } from '../componentes/Retrato'
 import { decimal, inteiro, nomeProprio, pct, plural } from '../lib/formato'
-import { COR, disputaNome, nomeUrna, sinal } from './comuns'
+import { COR, coresFinalistas, disputaNome, nomeUrna, sinal, type CorFinalista } from './comuns'
 
 /* ---------- os dois finalistas, do 1º ao 2º turno, em votos ---------- */
 function Inclinacao({ d }: { d: SegundoTurno }) {
@@ -22,6 +22,7 @@ function Inclinacao({ d }: { d: SegundoTurno }) {
   const [e0, e1] = afastar(y(d.finalistas[0].votos_t1), y(d.finalistas[1].votos_t1))
   const [d0, d1] = afastar(y(d.finalistas[0].votos_t2), y(d.finalistas[1].votos_t2))
   const rotulos = [[e0, d0], [e1, d1]]
+  const cores = coresFinalistas(d)
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="img"
       aria-label={d.finalistas.map((f) => `${nomeUrna(f)}: ${inteiro(f.votos_t1)} votos no 1º turno, ${inteiro(f.votos_t2)} no 2º`).join('. ')}>
@@ -32,7 +33,7 @@ function Inclinacao({ d }: { d: SegundoTurno }) {
         </g>
       ))}
       {d.finalistas.map((f, i) => {
-        const cor = f.venceu ? COR.vence : COR.perde
+        const cor = cores[i].cor
         const [ya, yb] = [y(f.votos_t1), y(f.votos_t2)]
         return (
           <g key={f.id_candidatura}>
@@ -44,7 +45,7 @@ function Inclinacao({ d }: { d: SegundoTurno }) {
             {f.crescimento != null && (
               <g transform={`translate(${(X1 + X2) / 2} ${(ya + yb) / 2 + (i ? 26 : -18)})`}>
                 <rect x={-34} y={-13} width={68} height={22} rx={11} fill="var(--color-folha)" stroke={cor} strokeWidth={1.5} />
-                <text textAnchor="middle" y={3} className="tabular text-[12.5px] font-bold" fill={f.venceu ? 'var(--color-selecao-tinta)' : 'var(--color-tinta-2)'}>
+                <text textAnchor="middle" y={3} className="tabular text-[12.5px] font-bold" fill={cores[i].texto}>
                   {sinal(f.crescimento)}{decimal(Math.abs(f.crescimento), 0)}%
                 </text>
               </g>
@@ -61,14 +62,15 @@ function Votos({ d }: { d: SegundoTurno }) {
   const { t1, t2 } = d.turnos
   if (!t1 || !t2) return null
   const [a, b] = d.finalistas
+  const [ca, cb] = coresFinalistas(d)
   const linhas = [
     { turno: '1º turno', partes: [
-      { r: nomeUrna(a), v: a.votos_t1, cor: COR.vence }, { r: nomeUrna(b), v: b.votos_t1, cor: COR.perde },
+      { r: nomeUrna(a), v: a.votos_t1, cor: ca.cor }, { r: nomeUrna(b), v: b.votos_t1, cor: cb.cor },
       { r: `Os outros ${d.eliminados.candidatos}`, v: d.eliminados.votos, cor: 'var(--color-acao-claro)' },
       { r: 'Brancos e nulos', v: t1.brancos + t1.nulos, cor: 'var(--color-papel-2)' }, { r: 'Não foram votar', v: t1.abstencoes, cor: 'hachura' },
     ] },
     { turno: '2º turno', partes: [
-      { r: nomeUrna(a), v: a.votos_t2, cor: COR.vence }, { r: nomeUrna(b), v: b.votos_t2, cor: COR.perde },
+      { r: nomeUrna(a), v: a.votos_t2, cor: ca.cor }, { r: nomeUrna(b), v: b.votos_t2, cor: cb.cor },
       { r: 'Brancos e nulos', v: t2.brancos + t2.nulos, cor: 'var(--color-papel-2)' }, { r: 'Não foram votar', v: t2.abstencoes, cor: 'hachura' },
     ] },
   ]
@@ -111,12 +113,12 @@ function Votos({ d }: { d: SegundoTurno }) {
 
 /* ---------- onde o líder mudou: presidente por estado, governador por município, prefeito por zona ---------- */
 type Vista = 't1' | 't2' | 'virou'
-const corLugar = (l: LugarSegundoTurno, vista: Vista) => {
+const corLugar = (l: LugarSegundoTurno, vista: Vista, [ca, cb]: [CorFinalista, CorFinalista]) => {
   if (vista === 'virou') return l.virou ? COR.vira : 'var(--color-papel-2)'
   const [a, b] = vista === 't1' ? [l.a1, l.b1] : [l.a2, l.b2]
   if (a + b === 0) return 'var(--color-papel-2)'
   const forte = Math.abs(a - b) / (a + b) > 0.2
-  return a > b ? (forte ? COR.vence : COR.venceClaro) : (forte ? COR.perde : COR.perdeClaro)
+  return a > b ? (forte ? ca.cor : ca.claro) : (forte ? cb.cor : cb.claro)
 }
 
 function Territorio({ d, ufs }: { d: SegundoTurno; ufs: Map<string, string> }) {
@@ -138,6 +140,7 @@ function Territorio({ d, ufs }: { d: SegundoTurno; ufs: Map<string, string> }) {
   }, [desenho])
   const porCodigo = useMemo(() => new Map((q.data?.lugares ?? []).map((l) => [l.codigo, l])), [q.data])
   const [a, b] = d.finalistas
+  const cores = coresFinalistas(d)
   if (q.error) return <ErroCarga erro={q.error} compacto aoTentar={q.refetch} />
   if (!q.data) return <EsqueletoBloco altura={320} linhas={0} rotulo="Juntando os votos de cada lugar..." />
   const lugares = q.data.lugares
@@ -172,7 +175,7 @@ function Territorio({ d, ufs }: { d: SegundoTurno; ufs: Map<string, string> }) {
                 {[['1º', p1], ['2º', p2]].map(([t, p]) => (
                   <div key={t} className="mt-1.5 grid grid-cols-[22px_minmax(0,1fr)_38px] items-center gap-2 text-[0.75rem] text-tinta-2">
                     <span className="font-semibold">{t}</span>
-                    <span className="flex h-2.5 overflow-hidden rounded-full bg-linha"><span style={{ width: `${p}%`, background: COR.vence }} /></span>
+                    <span className="flex h-2.5 overflow-hidden rounded-full bg-linha"><span style={{ width: `${p}%`, background: cores[0].cor }} /></span>
                     <span className="tabular text-right">{decimal(p as number, 0)}%</span>
                   </div>
                 ))}
@@ -187,7 +190,7 @@ function Territorio({ d, ufs }: { d: SegundoTurno; ufs: Map<string, string> }) {
             {desenho.map((f) => {
               const l = porCodigo.get(String(f.codigo))
               return (
-                <path key={f.codigo} d={f.d} fill={l ? corLugar(l, vista) : 'var(--color-papel-2)'} stroke="var(--color-folha)" strokeWidth={nivel === 'uf' ? 1.6 : 0.8}
+                <path key={f.codigo} d={f.d} fill={l ? corLugar(l, vista, cores) : 'var(--color-papel-2)'} stroke="var(--color-folha)" strokeWidth={nivel === 'uf' ? 1.6 : 0.8}
                   vectorEffect="non-scaling-stroke" onPointerEnter={() => l && setFoco(l)} />
               )
             })}
@@ -199,8 +202,8 @@ function Territorio({ d, ufs }: { d: SegundoTurno; ufs: Map<string, string> }) {
                 {[['1º turno', foco.a1, foco.b1], ['2º turno', foco.a2, foco.b2]].map(([t, x, z]) => (
                   <div key={t as string} className="mt-2.5">
                     <p className="t-rotulo text-tinta-3">{t}</p>
-                    <p className="tabular"><span className="font-bold" style={{ color: 'var(--color-selecao-tinta)' }}>{nomeUrna(a)}</span> {inteiro(x as number)}</p>
-                    <p className="tabular"><span className="font-bold text-tinta-2">{nomeUrna(b)}</span> {inteiro(z as number)}</p>
+                    <p className="tabular"><span className="font-bold" style={{ color: cores[0].texto }}>{nomeUrna(a)}</span> {inteiro(x as number)}</p>
+                    <p className="tabular"><span className="font-bold" style={{ color: cores[1].texto }}>{nomeUrna(b)}</span> {inteiro(z as number)}</p>
                   </div>
                 ))}
                 {foco.virou && <p className="mt-2.5 inline-flex items-center gap-1 rounded-full bg-escolha px-2.5 py-0.5 text-[0.76rem] font-bold"><Intersect size={12} weight="bold" aria-hidden />O líder mudou aqui</p>}
@@ -216,8 +219,8 @@ function Territorio({ d, ufs }: { d: SegundoTurno; ufs: Map<string, string> }) {
                 </>
               ) : (
                 <>
-                  <li className="flex items-center gap-2"><span className="size-3 rounded-[3px]" style={{ background: COR.vence }} />{nomeUrna(a)} na frente</li>
-                  <li className="flex items-center gap-2"><span className="size-3 rounded-[3px]" style={{ background: COR.perde }} />{nomeUrna(b)} na frente</li>
+                  <li className="flex items-center gap-2"><span className="size-3 rounded-[3px]" style={{ background: cores[0].cor }} />{nomeUrna(a)} na frente</li>
+                  <li className="flex items-center gap-2"><span className="size-3 rounded-[3px]" style={{ background: cores[1].cor }} />{nomeUrna(b)} na frente</li>
                   <li className="text-tinta-3">Tom claro: diferença de até 20 pontos</li>
                 </>
               )}
@@ -231,10 +234,10 @@ function Territorio({ d, ufs }: { d: SegundoTurno; ufs: Map<string, string> }) {
   )
 }
 
-function Ficha({ f }: { f: Finalista }) {
+function Ficha({ f, cor }: { f: Finalista; cor: CorFinalista }) {
   return (
     <Link to="/politico/$id" params={{ id: String(f.id_politico) }} className="group flex min-w-0 items-center gap-3 rounded-[16px] border border-linha bg-folha p-3 transition-colors hover:border-linha-2">
-      <span className="shrink-0 overflow-hidden rounded-full border-[3px]" style={{ borderColor: f.venceu ? COR.vence : COR.perdeClaro }}>
+      <span className="shrink-0 overflow-hidden rounded-full border-[3px]" style={{ borderColor: cor.cor }}>
         <Retrato foto={f.foto} nome={f.nome} tamanho={56} />
       </span>
       <span className="min-w-0">
@@ -265,8 +268,8 @@ export function Disputa({ d, ufs }: { d: SegundoTurno; ufs: Map<string, string> 
       </div>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        <Ficha f={a} />
-        <Ficha f={b} />
+        <Ficha f={a} cor={coresFinalistas(d)[0]} />
+        <Ficha f={b} cor={coresFinalistas(d)[1]} />
       </div>
 
       <div className="mt-8 grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">

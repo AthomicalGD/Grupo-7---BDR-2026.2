@@ -485,6 +485,7 @@ export function Metodologia() {
           <li><b>Virada:</b> quem venceu o 2º turno não foi o mais votado do 1º.</li>
           <li><b>A parte do vencedor:</b> a parte dele nos votos dos dois finalistas. Na largada, cada ponto fica na parte do 1º turno: à esquerda da metade, ele começou atrás e virou. Nas fichas, as duas linhas vão do 1º ao 2º turno e se cruzam quando há virada. Na ficha de cada candidato, a parte do 1º turno é entre todos os candidatos.</li>
           <li><b>De onde vieram os votos novos:</b> só os totais de cada turno, na mesma régua dos eleitores aptos (os dois finalistas, os outros candidatos, brancos e nulos, e quem não foi votar). O voto é secreto: dá para comparar os totais, não seguir cada eleitor.</li>
+          <li><b>As cores dos finalistas:</b> pelo lado do partido (o viés da P7): esquerda em vermelho, direita em azul. Se os dois são do mesmo lado, o mais à ponta fica com a cor do lado e o outro com o amarelo.</li>
           <li><b>Onde o líder mudou:</b> presidente por estado, governador por município e prefeito por zona eleitoral, somando os votos por zona.</li>
           <li><b>Fora da conta:</b> antes de 2018 (o banco não tem os votos por zona), os vices (vão na chapa do titular) e as disputas sem os votos do 1º turno no banco (Piracicaba 2020 e Aracaju 2024).</li>
         </ul>

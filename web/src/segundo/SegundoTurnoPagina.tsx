@@ -12,7 +12,7 @@ import { Atrasado, EsqueletoPagina } from '../componentes/Esqueleto'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { cargo as cargoBonito, decimal, inteiro, nomeProprio, pct, semAcento } from '../lib/formato'
 import type { BuscaSegundoTurno } from '../router'
-import { CARGOS, COR, disputaNome, lugar, nomeUrna, parteVencedor, type ChaveCargo } from './comuns'
+import { CARGOS, coresFinalistas, disputaNome, lugar, nomeUrna, parteVencedor, type ChaveCargo } from './comuns'
 import { Disputa } from './Disputa'
 import { Largada } from './Largada'
 
@@ -25,6 +25,7 @@ function Placar({ d, ufs, aberta, aoAbrir }: { d: SegundoTurno; ufs: Map<string,
   const W = 220, H = 92, X1 = 12, X2 = W - 12
   const y = (v: number) => 8 + ((70 - Math.min(70, Math.max(30, v))) / 40) * (H - 16)
   const [a, b] = d.finalistas
+  const [ca, cb] = coresFinalistas(d)
   return (
     <button
       type="button"
@@ -42,12 +43,12 @@ function Placar({ d, ufs, aberta, aoAbrir }: { d: SegundoTurno; ufs: Map<string,
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} className="mt-2 block h-auto w-full" aria-hidden>
         <line x1={X1} x2={X2} y1={y(50)} y2={y(50)} stroke="var(--color-linha)" strokeDasharray="3 4" />
-        <line x1={X1} y1={y(100 - t1)} x2={X2} y2={y(100 - t2)} stroke={COR.perde} strokeWidth={3} strokeLinecap="round" />
-        <line x1={X1} y1={y(t1)} x2={X2} y2={y(t2)} stroke={d.virada ? COR.viraTraco : COR.vence} strokeWidth={4} strokeLinecap="round" />
+        <line x1={X1} y1={y(100 - t1)} x2={X2} y2={y(100 - t2)} stroke={cb.cor} strokeWidth={3.5} strokeLinecap="round" />
+        <line x1={X1} y1={y(t1)} x2={X2} y2={y(t2)} stroke={ca.cor} strokeWidth={4} strokeLinecap="round" />
         {[[X1, t1], [X2, t2]].map(([x, v]) => (
           <g key={x}>
-            <circle cx={x} cy={y(100 - v)} r={4} fill={COR.perde} />
-            <circle cx={x} cy={y(v)} r={4.5} fill={d.virada ? COR.viraTraco : COR.vence} />
+            <circle cx={x} cy={y(100 - v)} r={4.5} fill={cb.cor} />
+            <circle cx={x} cy={y(v)} r={4.5} fill={ca.cor} />
           </g>
         ))}
       </svg>
