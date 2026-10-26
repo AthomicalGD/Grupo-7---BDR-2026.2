@@ -202,6 +202,21 @@ cinco fornecedores por tipo). Usa o tipo oficial da despesa; a descrição livre
 tipos genéricos quando contém termos reconhecíveis. Não infere o serviço pelo fornecedor.
 Exclui doações financeiras a outras campanhas para evitar dupla contagem, como na P1.
 
+### Exploração colonial (questão extra)
+
+Cruza a escolaridade da P4 com quanto cada município foi explorado pela Colônia (até 1822). Rode
+`python scripts/11_exploracao_colonial.py`: ele baixa as fontes para `dados/colonial/` na primeira vez
+(o histórico dos 5.570 municípios no IBGE é uma consulta por município e retoma de onde parou) e grava
+`respostas/11_exploracao_colonial/municipios.csv`, que a API lê ao subir (`/api/escola` e
+`/api/escola/municipios` trazem o índice e a correlação). Precisa do `xlrd` (está no `requirements.txt`).
+
+O índice vai de 0 a 100: metade **economia** (a força do ciclo colonial mais forte que o município viveu:
+açúcar, mineração, gado, ou algodão, arroz, fumo e drogas do sertão, com a influência caindo até zero a
+200 km, como em Naritomi, Soares e Assunção, 2012) e metade **trabalho escravizado** (a parte escravizada
+no Censo de 1872, na área comparável do IPEA, levada ao nível de 1819 pela razão entre a capitania em 1819
+e o estado em 1872). O método completo, as limitações e os links estão na página Metodologia do site
+(seção "Exploração colonial e escolaridade") e no cabeçalho do script.
+
 ### Fotos dos candidatos
 
 O TSE publica a foto de registro de cada candidatura num zip por eleição e UF
@@ -248,6 +263,7 @@ python -m uvicorn api.app:app --port 8000
 | `GET /api/escola/municipio/{ibge}?ano=` | P4 no município: quem votou por grau, os eleitos (2024) com grau e partido, os votos para deputado (2022) ou vereador por grau, e o quintil |
 | `GET /api/municipios?q=&uf=&limite=8` | Busca de municípios por nome, sem acentos, em todo o Brasil |
 | `GET /api/municipios/{ibge}` | Viés e alinhamento (do município e da UF), votos por partido com o viés de cada eleição, indicadores (PIB per capita, IDHM...), comparecimento e prefeitos |
+| `GET /api/municipios/{ibge}/zonas?ano=` | As zonas eleitorais do município: aptos, comparecimento, superior completo de quem foi votar e o mais votado (prefeito ou presidente) |
 | `GET /api/politicos?q=&cargo=&ano=&uf=&partido=&resultado=&limite=8` | Busca de políticos por nome (trigramas, sem acentos; migração `010_busca_politicos.sql`) e/ou por uma candidatura que bata com todos os filtros |
 | `GET /api/partidos` | Siglas das candidaturas, com o viés atual do partido (`null` = sem viés; filtro da busca) |
 | `GET /api/politicos/aleatorio` | Um político com 5+ candidaturas e 2+ vitórias |
@@ -257,6 +273,7 @@ python -m uvicorn api.app:app --port 8000
 | `GET /api/reeleicao?uf=` | P10a: por cargo, eleitos, quantos tentaram a reeleição e quantos voltaram, ciclo a ciclo e somados (média das taxas municipais para prefeito e vereador), como em `respostas/10a_taxa_reeleicao.txt`; alguns segundos na primeira vez de cada UF |
 | `GET /api/reeleicao/pessoas?uf=&cargo=&eleitos_em=&grupo=&limite=&desde=` | P10a: os eleitos de um cargo numa eleição que voltaram, perderam ou não tentaram na seguinte (`grupo`), os mais votados primeiro, com a contagem dos três grupos |
 | `GET /api/cadeira?ano=&cargo=&uf=&municipio=` | P1: custo da cadeira (gasto médio dos eleitos) e gasto da disputa por cadeira (gasto de todos os candidatos ÷ eleitos), cada eleito com gasto e votos, chance de vitória por faixa de gasto, preço por partido, despesas por tipo, receitas por fonte e o fator do IPCA |
+| `GET /api/cadeira/nao-eleitos?ano=&cargo=&uf=&municipio=` | P1: quem disputou e não se elegeu, do maior ao menor gasto (a galeria do plenário) |
 | `GET /api/fotos/{ano}/{uf}/{sq}` | Foto da candidatura, lida do zip do TSE (candidaturas, busca e prefeitos já trazem a URL em `foto`) |
 | `GET /api/geo/brasil`, `GET /api/geo/uf/{sigla}` | Malhas do IBGE em GeoJSON, com os anéis no sentido que o d3-geo espera |
 
@@ -400,6 +417,7 @@ dados/
 ├── ipea_atlas/idhm_municipios.csv
 ├── ideologia_partidos/            df_experts.csv (notas dos especialistas, P7)
 ├── camara/                        votacoes, votacoesVotos e votacoesOrientacoes-<ano>.csv (alinhamento, P7)
+├── colonial/                      fontes da questão extra (baixadas por scripts/11_exploracao_colonial.py)
 └── _controle/manifesto.json       <- controle interno (versão e arquivos de cada download)
 ```
 
@@ -421,6 +439,7 @@ pergunta fica no `INDICE_PERGUNTAS.md`, gerado a cada execução.
 | 8 | E.P. | candidatos, receitas | `DS_FONTE_RECEITA` (ex.: FUNDO ESPECIAL = FEFC), `DS_ORIGEM_RECEITA`, `VR_RECEITA`, doador originário |
 | 9 | E.P. | candidatos, despesas contratadas | `DS_ORIGEM_DESPESA` (tipo), `DS_DESPESA` (texto livre, para a nuvem), `NM_FORNECEDOR` |
 | 10 | 1994-2024 | candidatos (16 eleições) | `NR_TITULO_ELEITORAL_CANDIDATO`, `DS_CARGO`, `DS_SIT_TOT_TURNO`, `ST_REELEICAO` |
+| Extra | Colônia (até 1822) × 2022, 2024 | os dados da P4, mais as fontes da exploração colonial (tabela de fontes) | índice de 0 a 100 por município (`respostas/11_exploracao_colonial/municipios.csv`) |
 
 A P3 ficou no E.P. completo porque há indicadores para os quatro anos: PIB municipal até 2023,
 estimativas de população para 2018, 2020 e 2024 e o Censo para 2022.
@@ -433,6 +452,7 @@ estimativas de população para 2018, 2020 e 2024 e o Censo para 2022.
 | IBGE | API SIDRA + API de Localidades | PIB municipal (tabela 5938), população estimada (6579), Censo 2022: população (4709), idade mediana/envelhecimento (9515), instrução 18+ (10061); regiões dos municípios |
 | Atlas Brasil (PNUD/Ipea/FJP) | API do Ipeadata, séries `ADH_IDHM`, `_E`, `_L`, `_R` | IDHM e subíndices por município. O link de "dados brutos" do site do Atlas saiu do ar (404) |
 | Harvard Dataverse | API, doi:10.7910/DVN/MFIXKW | Classificação ideológica dos partidos (Bolognesi, Codato, Ribeiro & Silva; base de Bolognesi, Ribeiro & Codato, *Dados* 66(2), 2023) |
+| Exploração colonial (questão extra) | `scripts/11_exploracao_colonial.py` | Pacote *Old But Gold* (Baerlocher, Firmino, Lambais, Reis e Veras), Mendeley Data ppxdfzt28d, CC BY 4.0: núcleos de 1694 e 1822, coordenadas e distância do litoral; IBGE, Evolução da Divisão Territorial 1872-2010 (população livre e escravizada de 1872); IPEA/geobr, Áreas Mínimas Comparáveis 1872-2010; IBGE, API da Biblioteca (histórico de cada município); Serviço Geológico do Brasil (ocorrências de ouro e diamante); IBGE, semiárido 2022; população de 1819 por capitania (Velloso de Oliveira, via Motta, *Revista USP* 132, 2022) |
 | Câmara dos Deputados, Dados Abertos | `dadosabertos.camara.leg.br/arquivos/{tipo}/csv/{tipo}-{ano}.csv`, de 2015 ao ano corrente (o ano corrente é baixado de novo a cada execução) | Votações do Plenário, votos dos deputados e orientações de bancada, para o alinhamento dos partidos (P7) |
 
 Os sons do cofrinho (P2) são gravações em domínio público (CC0): Kenney (Impact Sounds, RPG Audio, Interface

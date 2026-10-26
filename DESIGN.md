@@ -34,8 +34,8 @@ colors:
   marca-verde: "#1f9a4e"
   marca-amarelo: "#fbc700"
   marca-azul: "#2b4c8c"
-  gasto-inicio: "#edf8b4"
-  gasto-fim: "#004529"
+  gasto-inicio: "#d9f2c4"
+  gasto-fim: "#004d22"
   escola-inicio: "#f9e99a"
   escola-fim: "#1c3e81"
 typography:
@@ -175,7 +175,8 @@ Fundo frio de papel e tinta ardósia; cor saturada só no dado, nas fitas da mar
 - A escala é calculada em OKLCH (`web/src/lib/vies.ts`): cada braço mantém a matiz, luminosidade e croma variam juntos, os dois braços têm o mesmo passo de luminosidade. Satura em ±60; no modo relativo ao estado, em ±20.
 
 ### Data (gasto de campanha, P1)
-- **Rampa amarelo → verde**: ColorBrewer YlGn (sequencial validado), a partir de 16% para não sumir no papel (`web/src/cadeira/geometria.ts`). As duas pontas são as cores da bandeira; quanto mais verde, mais cara a campanha.
+- **Rampa verde vivo**: #e4f7d2, #a8e27a, #55c45a, #009c3b (o verde da bandeira), #00742f, #004d22; matiz entre 130° e 151° (sem amarelo escuro), claridade sempre caindo, a partir de 8% para não sumir no papel (`web/src/cadeira/geometria.ts`). Quanto mais verde, mais cara a campanha.
+- **Poltrona**: o eleito senta numa poltrona vista de cima (sombra curta, encosto arredondado, dois braços, almofada na cor do gasto com brilho); com "Todos os candidatos", quem não se elegeu senta na galeria por fora, num banquinho redondo sem encosto nem braços, e o cartão leva o selo "Não se elegeu".
 - Linear quando os gastos ficam na mesma ordem de grandeza; logarítmica quando o maior passa de 40 vezes o menor (a legenda diz "escala logarítmica").
 - Nunca usada para viés; o partido continua com a cor do seu viés (barras do preço por partido).
 
@@ -184,6 +185,10 @@ Fundo frio de papel e tinta ardósia; cor saturada só no dado, nas fitas da mar
 - Os tons claros levam contorno de tinta a 20% sobre a folha, para não sumir. Texto em tinta sobre os quatro tons claros e em folha sobre os quatro escuros.
 - O grau em destaque ganha contorno de tinta de 1,2px nas suas unidades; os outros recuam a 30% de opacidade, e a composição continua à vista. Unidade vazia (fora da conta) é folha com contorno #87919d (3,1:1).
 - Só existe na página da Escola; o viés continua laranja ↔ azul e o gasto amarelo → verde em suas páginas.
+
+### Data (exploração colonial, questão extra)
+- **Escala do pau-brasil** (8 tons): do areia ao vermelho do pau-brasil, o corante que deu nome ao país, em OKLCH com a luminosidade sempre caindo (0,95 → 0,38), o croma subindo (0,035 → 0,145) e a matiz indo do amarelo ao vermelho (85° → 28°). Calculada em `web/src/escola/MapaEscola.tsx` (`TINTA_COLONIAL`), com a mesma régua de 8 níveis das outras vistas do mapa, de 0 a 80 ou mais.
+- É de propósito diferente da escala da bandeira: o mapa mostra escolaridade e exploração colonial lado a lado, e as duas não podem ser lidas como a mesma grandeza.
 
 ### Tertiary (fitas, assinatura)
 - **Fitas** (#5e881b, #a2bd31, #5d6b94, #468baf, #76acd0, #f19929, #fbc700): a faixa ondulada do cabeçalho e do rodapé, a tira do santinho e da cédula de consulta. A do cabeçalho só ondula enquanto a API responde. Nunca carregam informação nem texto.
@@ -201,23 +206,23 @@ Fundo frio de papel e tinta ardósia; cor saturada só no dado, nas fitas da mar
 
 ## Typography
 
-**Display Font:** Archivo Variable (eixos `wght` 100-900 e `wdth` 62-125)
+**Display Font:** League Spartan (500-900), servida pelo próprio site (`public/fontes`, latin e latin-ext), nos títulos (`t-display`, `t-h1`, `t-h2`, `t-h3`), nos números grandes (`t-numero`) e no menu
 **Body Font:** Archivo Variable
 **Label/Mono Font:** Red Hat Mono Variable (papel térmico e visor da urna)
 
-**Character:** uma grotesca latino-americana (Omnibus-Type) usada em três larguras: expandida para a tese, normal para ler, condensada para os números. A mono existe só onde o objeto real imprime em mono.
+**Character:** títulos geométricos e pesados em League Spartan, como letreiro de obra pública; o texto corrido numa grotesca latino-americana (Archivo, Omnibus-Type), calma para ler. A mono existe só onde o objeto real imprime em mono.
 
 ### Hierarchy
-- **Display** (780, clamp(2rem → 3.1rem), 0.98, `wdth` 112): a tese de cada tela ("Para onde o voto pendeu").
-- **Headline** (760, clamp(1.6rem → 2.1rem), 1.04, `wdth` 106): nome do estado, do município, do político.
+- **Display** (League Spartan 900, clamp(2.2rem → 3.6rem), 0.95, −0.03em): a tese de cada tela ("Para onde o voto pendeu").
+- **Headline** (League Spartan 800, clamp(1.6rem → 2.1rem), 1.04, −0.02em): nome do estado, do município, do político.
 - **Title** (700, 1.375rem, 1.18): seções de página.
 - **Subtitle** (650, 1.125rem, 1.25): títulos de gráficos e blocos.
 - **Body** (400, 1rem, 1.55): textos explicativos, até ~54ch na coluna do painel.
 - **Label** (600, 0.8125rem, 1.3): rótulos, legendas, metadados.
-- **Número** (820, `wdth` 74): valores de viés e votos em destaque; algarismos proporcionais. Tabelas e eixos usam `tabular-nums`.
+- **Número** (League Spartan 800, −0.02em): valores de viés e votos em destaque; algarismos proporcionais. Tabelas e eixos usam `tabular-nums`.
 
 ### Named Rules
-**A Regra de Uma Família.** Hierarquia por largura e peso do Archivo, nunca por uma segunda família de exibição.
+**A Regra de Duas Vozes.** League Spartan fala nos títulos e números; Archivo, no texto. Nenhuma terceira família de exibição.
 **A Regra do Sinal Tipográfico.** Viés negativo usa o sinal de menos (−), não hífen; números em pt-BR (vírgula decimal, ponto de milhar).
 
 ## Layout
@@ -245,6 +250,9 @@ Desempenho do 3D: as colunas de um relevo são uma malha só (um desenho por qua
 Contêineres com 16px de raio, painéis do mapa e do relevo com 20px, controles em pílula, marcas de dados com 3-5px na ponta e o mapa sem raio. O boletim termina em serrilhado (máscara `conic-gradient`, dente de 14px) e sai de uma fenda escura de 12px. Os carimbos dos santinhos são retângulos com 4px de raio, girados −8°.
 
 ## Components
+
+### Bandeira do estado
+O seletor de estado mostra a bandeira do estado sob o mouse (ou do escolhido) acima do nome, num lugar reservado de 96×67 (tracejado quando não há estado), com um pulo curto de 220ms; o cartão dos estados no mapa leva a bandeira pequena (58px) ao lado do nome. São miniaturas PNG das bandeiras oficiais do Wikimedia Commons (domínio público) em `public/bandeiras/<UF>.png`, baixadas todas de uma vez quando o seletor aparece.
 
 ### Botões
 - **Forma:** pílula.
@@ -309,7 +317,7 @@ No cabeçalho, sob a cédula de anos: "Todos" e uma pílula por estado carregado
 O espectro da P7 contado em diploma: cada partido é uma coluna, da esquerda para a direita na ordem do viés e na cor do viés (a cor do partido é o seu viés), com a largura pelos eleitos e a altura pelos eleitos com superior completo; o traço em tinta é a mesma conta entre os candidatos e o tracejado, a média. A escala vai até o maior valor arredondado (não até 100), para as diferenças aparecerem. Cada coluna tem na base uma tira na cor do seu viés (a posição não é o viés: o eixo é a soma dos eleitos); os dois extremos citados no texto ganham chamada com sigla e valor, por cima de tudo. Cartão com os números ao passar o mouse. No celular vira uma linha por partido (sigla, barra na cor do viés, traço dos candidatos).
 
 ### Mapa e dispersão da escolaridade (P4)
-Um alternador troca as duas vistas dos municípios. O mapa funciona como o atlas: abre no Brasil com cada estado carregado pintado pela sua média (municípios pesados pelo comparecimento, ou pelos eleitos), com sigla e % no centro; clicar num estado faz a câmera voar até ele (interpolateZoom de van Wijk: afasta, desliza e aproxima, 750 a 1500ms, quadro a quadro direto no grupo do SVG) e os municípios dele acendem quando ela pousa, enquanto os outros estados esmaecem; "Todos os estados" volta. O município escolhido no boletim leva a câmera ao estado dele só quando o município muda. A cor é a escala da bandeira em 8 níveis; "Pintar por: Políticos | Eleitores" escolhe a medida (eleitos em 2024 ou votos para deputado em 2022, de 0 a 100%; quem votou, de 0 a 25%, porque ninguém passa muito disso), e a legenda diz a régua. "Plano | Em pé" levanta o mesmo recorte em 3D (estados ou municípios, altura pela %), com as colunas do relevo do atlas e o céu claro dos outros 3D. Os controles têm a mesma altura e não quebram linha. A dispersão põe cada município como ponto (quem votou × eleitos, tamanho por quem votou) com a diagonal pontilhada "eleito = eleitor" e a tendência tracejada. Clicar em qualquer município abre o boletim. O mapa não passa da altura da janela, para caber ao lado do boletim.
+Um alternador troca as duas vistas dos municípios. O mapa funciona como o atlas: abre no Brasil com cada estado carregado pintado pela sua média (municípios pesados pelo comparecimento, ou pelos eleitos), com sigla e % no centro; clicar num estado faz a câmera voar até ele (interpolateZoom de van Wijk: afasta, desliza e aproxima, 750 a 1500ms, quadro a quadro direto no grupo do SVG) e os municípios dele acendem quando ela pousa, enquanto os outros estados esmaecem; "Todos os estados" volta. O município escolhido no boletim leva a câmera ao estado dele só quando o município muda. A cor é a escala da bandeira em 8 níveis; "Pintar por: Políticos | Eleitores" escolhe a medida (eleitos em 2024 ou votos para deputado em 2022, de 0 a 100%; quem votou, de 0 a 25%, porque ninguém passa muito disso), e a legenda diz a régua. "Plano | Em pé" levanta o mesmo recorte em 3D (estados ou municípios, altura pela %), com as colunas do relevo do atlas e o céu claro dos outros 3D. A terceira opção, "Exploração colonial" (a questão extra), pinta o mesmo mapa pelo índice de 0 a 100 na escala do pau-brasil, com o número do estado sem %; no estado, a média é simples (a exploração é do território, a capital não pesa mais que o interior). O texto ao passar o mouse dá o índice, a economia com o ciclo mais forte (açúcar, mineração, gado, ou algodão, arroz, fumo e drogas do sertão) e o trabalho escravizado; abaixo da legenda, uma frase com a correlação do índice com o superior completo de quem votou, dos candidatos e dos eleitos, e o aviso de que andar junto não é causa. O 3D levanta o índice do mesmo jeito. Os controles têm a mesma altura e não quebram linha. A dispersão põe cada município como ponto (quem votou × eleitos, tamanho por quem votou) com a diagonal pontilhada "eleito = eleitor" e a tendência tracejada. Clicar em qualquer município abre o boletim. O mapa não passa da altura da janela, para caber ao lado do boletim.
 
 ### Ranking dos municípios (P4)
 Três listas impressas como linhas do boletim (cabeçalho em mono, picote, posição e valor em mono com pontilhado até o número): mais diploma, menos diploma e maior distância do eleitor. Só entram câmaras com ao menos 5 eleitos; quando o extremo empata em mais municípios do que a lista mostra, ela diz quantos ("63 empatam em 0 de 100; os maiores:"). Cada linha abre o boletim. Em 2022 a seção das cinco câmaras se chama "Cinco cédulas".
@@ -335,7 +343,7 @@ A pergunta mais difícil do projeto tem a página mais forte do sistema, organiz
 A pergunta mais difícil do projeto contada em quatro passos clicáveis (Quebrar, A fila, Seu palpite, Quem se elegeu), com o passo atual no oliva claro da seleção; no celular, só o atual leva o nome. O dinheiro aparece só como dinheiro (moedas, cofrinho); quem se elegeu é gente (bonequinhos), nunca moeda empilhada.
 - **Abertura:** o título, a resposta em número grande ("13 de 14 disputas", que conta de 0 ao aparecer) e, ao lado, o minimapa dos estados: os carregados acesos no oliva claro e clicáveis (Tab e Enter também), o escolhido no oliva cheio com a sigla em branco e um pulo curto, o nome embaixo ao passar o mouse, "Ver todos" para voltar; com Presidente, esmaecido ("Brasil inteiro"). As siglas ficam numa camada por cima de todos os estados.
 - **Quebrar:** todos os candidatos começam dentro de um porquinho rosa de porcelana (o único rosa do sistema, pedido do dono do projeto: ilustração chapada em rosa salmão #f5a9ae sem contorno escuro, as formas separadas por tons, olho pequeno e escuro com um brilho, bochecha corada, orelha dobrada para a frente, focinho com a ponta clara, rabinho enrolado e o R$ em relevo), grande (1,3x) ao lado do número de candidatos. O olho pisca quando o mouse chega e a pupila segue o cursor. Cada uma das três marteladas cai onde a pessoa clicou (no teclado, em pontos fixos): o martelo desce, o porquinho achata e balança com amplitude que diminui, lascas rosadas voam e a rachadura se desenha a partir do golpe, com três a cinco galhos que andam aos trancos e soltam galhos mais finos (gerador com semente), um fio de brilho da porcelana ao lado e a mossa no ponto do golpe. Na terceira, o porquinho rachado vira uma imagem e se parte em sete cacos serrilhados a partir do último golpe (as linhas de corte são as mesmas para os dois vizinhos), cada caco um recorte CSS da imagem com a borda branca da porcelana por dentro; voam pela direção do golpe e assentam no chão, com uma poeira rosada.
-- **A fila (parada dos bens):** as moedas de metal giram em arco e achatam ao cair (squash and stretch) no topo da fila: 100 barrinhas, cada uma 1 em cada 100 candidatos que declararam bens, do menor ao maior valor, que crescem da base em onda (7ms entre elas). Barras de passo 5px com 2px de papel entre elas e topo arredondado; um tom só (ardósia #5d6b94) enquanto a fila está inteira. A escala cresce de 10 em 10 vezes e diz isso: linhas de referência finas e sólidas nas potências de 10 (R$ 1 mil, R$ 10 mil, R$ 100 mil, R$ 1 mi), com o rótulo na ponta esquerda, onde a fila é baixa, e "menos bens / mais bens" embaixo. Passar o mouse (ou tocar) contorna a barrinha e abre um balão em tinta: "71º de 100 na fila, declarou cerca de R$ 187 mil" (um único ouvinte, direto no DOM). No celular a fila inteira fica mais alta e desce para o lugar dos grupos ao ser cortada; o palco tem altura e subida por passo, para não sobrar faixa vazia.
+- **A fila (parada dos bens):** as moedas de metal giram em arco e achatam ao cair (squash and stretch) no topo da fila: 100 pilhas de moedas, cada uma 1 em cada 100 candidatos que declararam bens, do menor ao maior valor, que crescem da base em onda (7ms entre elas). Pilhas de passo 5px e 4px de largura, cada moeda com 3px (1px de borda escura e a face, com brilho à esquerda e a moeda de cima mais clara); todas de ouro enquanto a fila está inteira e, cortada em quatro, cobre, bronze, prata e ouro, do grupo com menos bens ao com mais. A escala cresce de 10 em 10 vezes e diz isso: linhas de referência finas e sólidas nas potências de 10 (R$ 1 mil, R$ 10 mil, R$ 100 mil, R$ 1 mi), com o rótulo na ponta esquerda, onde a fila é baixa, e "menos bens / mais bens" embaixo. Passar o mouse (ou tocar) contorna a barrinha e abre um balão em tinta: "71º de 100 na fila, declarou cerca de R$ 187 mil" (um único ouvinte, direto no DOM). No celular a fila inteira fica mais alta e desce para o lugar dos grupos ao ser cortada; o palco tem altura e subida por passo, para não sobrar faixa vazia.
 - **Os grupos cortados:** cada um num tom da rampa ordinal da ardósia, do claro (menos bens) ao escuro (mais bens): #9aa6c8, #7584b2, #5d6b94, #3a4670 (validada: claridade monótona, um só matiz, o mais claro a 2,2:1 do papel). O verde fica só para quem se elegeu; as linhas de referência saem quando a fila é cortada.
 - **Cortar:** "Cortar a fila" (tesoura) faz a tesoura amarela andar pela fila e fechar nos três cortes, cada um com o valor em pílula de tinta ("R$ 25 mil") e um estalo; depois os quatro grupos se afastam (no celular, em 2 por 2), com nome humano ("Os 25% com mais bens"), valores e candidatos.
 - **Palpite:** os grupos viram áreas tracejadas clicáveis que surgem uma a uma; "Pular o palpite" segue sem palpitar.
@@ -381,6 +389,36 @@ Papel térmico com o mesmo picote do boletim, em Red Hat Mono 500, itens com pon
 
 ### Rodapé
 A ardósia funda da marca (#1d2b4b → #162139), como o rodapé institucional do TSE, com a nossa assinatura: as sete fitas chegam largas (30px) e onduladas no topo. Letreiro negativo sem caixa de fundo (o gerador da marca não desenha mais o retângulo). Três colunas: a descrição e o aviso "Este não é um site oficial da Justiça Eleitoral" numa pílula com o ponto amarelo; as fontes com o nome de cada uma em branco; os estados carregados em fichas mono. Cada título leva um traço curto na cor de uma fita (enfeite; o texto continua em branco). Embaixo, uma linha com o crédito do projeto.
+### Tabela, CSV e SQL (todos os gráficos)
+Sob cada gráfico, três botões de texto em ardósia: "Ver tabela" (a tabela equivalente, o valor nunca depende só da cor), "Baixar CSV" (ponto e vírgula e BOM, abre no Excel em português) e "Ver SQL" (a consulta de `web/src/paginas/consultas`, a mesma da Metodologia, em Red Hat Mono numa folha com "Copiar"). Em `graficos/TabelaAlternavel.tsx`.
+
+### Anotações e setas de mudança
+O dado se explica no próprio desenho: a campanha mais cara do plenário (na ordem por gasto) e o maior município da dispersão da escolaridade levam o nome escrito, com um traço fino até o ponto. Na lista de estados do mapa, uma seta (→ direita, ← esquerda) na cor do lado diz quanto o viés andou desde a eleição do mesmo tipo anterior.
+
+### Os anos lado a lado (mapa)
+Um Brasil de 112 px por ano, na escala dos estados (±40, a mesma do mapa grande no Brasil inteiro); tocar troca o ano. O mapa grande dos estados satura em ±40 (as médias estaduais ficam entre −5 e +40); dentro de um estado os municípios continuam em ±75, e a legenda acompanha.
+
+### Comparar dois políticos
+`/comparar?a=&b=`: duas cabeças com retrato, a tabela das medidas com o maior em negrito e a seta apontando para ele, e as duas carreiras no mesmo eixo de anos (ponto cheio venceu, vazado perdeu, na cor do viés do partido). Entra pela ficha ("Comparar com outro político").
+
+### Você desenha (curva da vitória)
+Antes das barras, o gráfico vazio pede o palpite: arrastar da esquerda para a direita marca a parte que se elege em cada faixa (pontos e linha em tinta). "Mostrar a resposta" (a partir de 3 faixas) ou "Pular" revelam as barras com o palpite tracejado por cima e a distância média em pontos.
+
+### Cartão para compartilhar
+"Compartilhar imagem" desenha no navegador um PNG 1200×630: a folha clara, a marca, a pergunta, o número grande, a legenda, o recorte e as sete fitas em diagonal no canto. No celular abre o compartilhar do sistema; no computador, baixa. Na Cadeira, na Reeleição e na ficha do político.
+
+### Onde se vota (boletim)
+As zonas eleitorais do município na fita do boletim: aptos, quantos foram, quantos têm superior e quem levou a zona (prefeito ou presidente). A seção de cada eleitor não está nos dados abertos: o link leva à consulta oficial do TSE.
+
+### Ouvir o gráfico
+Nas linhas do viés e na curva da vitória: cada ponto é uma nota de 0,32 s (220 a 880 Hz, mais alto é mais agudo), andando do fone esquerdo para o direito; ponto sem dado é um estalo grave. O valor de cada ponto é lido ao mesmo tempo.
+
+### Tour, sala de aula e "Nesta página"
+Na barra de cima, "Tour" e "Sala de aula" ao lado das preferências de leitura. O tour (primeira visita, uma vez por navegador) é um holofote com anel amarelo do marcador sobre cada item do menu e um cartão de folha com "1 de 7". A sala de aula aumenta a letra (131% por cima da escolha de tamanho), abre a página na tela inteira, tira o rodapé e põe embaixo uma pílula em tinta com ← → que pulam de título em título (o passador de slides manda PageUp/PageDown). Nas páginas com 3 seções ou mais, depois da primeira tela, um botão preso ao canto diz a seção atual e abre a lista delas.
+
+### Erros
+Dito para quem lê: o título diz o que houve ("O servidor não respondeu", "O banco de dados está desligado"), uma frase diz o que fazer, "Tentar de novo" refaz só a consulta (a tela não reinicia) e o comando para quem roda o projeto fica recolhido em "Detalhes para quem roda o projeto".
+
 ### Carregamento: esqueletos, não loading
 Nada gira enquanto carrega (um aviso que gira passa a ideia de sistema lento). Três regras (componentes/Esqueleto.tsx): nada aparece nos primeiros 300 ms; se demorar, aparece o esqueleto com o desenho da tela que vem (título, texto, palco 7/12 e painel 5/12; o atlas com o mapa à esquerda; a ficha do político com retrato e nome), em blocos papel-2 com um pulso suave só de opacidade, que para com o movimento reduzido; e cada parte é trocada pelo conteúdo assim que chega. Os 3D mostram o próprio palco vazio, com o céu, até a cena chegar. Ao trocar um recorte, o conteúdo anterior fica na tela, esmaecido, e a fita do cabeçalho ondula enquanto a API responde: não há aviso por cima. O código das páginas é baixado no tempo ocioso depois da primeira tela (o 3D só quando a tela que o usa abre), e um pedaço que falhar ao baixar recarrega a página uma vez.
 
