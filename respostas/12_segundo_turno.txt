@@ -1,0 +1,207 @@
+P12) O que muda no 2º turno? (questão extra)
+Os segundos turnos de 2018 a 2024: quem liderou o 1º turno venceu o 2º? Quanto cresceu cada finalista?
+
+Colunas: % 1º = parte do candidato nos votos nominais do 1º turno (entre todos os candidatos);
+Parte 1º → 2º = parte do vencedor nos votos dos dois finalistas, em cada turno (abaixo de 50% no 1º:
+começou atrás); Cresc. = votos do vencedor no 2º turno sobre os do 1º; Virada = o vencedor não liderou o 1º.
+
+Observações:
+- Votos nominais por zona do TSE; antes de 2018 o banco não tem os votos por zona.
+- Vice-presidente, vice-governador e vice-prefeito ficam de fora: vão na chapa do titular.
+- Sem os votos do 1º turno no banco, ficaram de fora: Piracicaba (SP) 2020, Aracaju (SE) 2024.
+
+====================================================================================================
+Resumo: 135 segundos turnos, 36 viradas (26.7%).
+Quem liderou o 1º turno venceu o 2º em 99 (73.3%).
+====================================================================================================
+
+Cargo                   Disputas   Viradas   % viradas    Cresc. médio do vencedor
+Presidência                    2         0        0.0%                       11.3%
+Governos estaduais            26         6       23.1%                       67.2%
+Prefeituras                  107        30       28.0%                       60.4%
+Por ano               
+  2018                        15         2       13.3%
+  2020                        57        17       29.8%
+  2022                        13         4       30.8%
+  2024                        50        13       26.0%
+
+====================================================================================================
+As viradas, da maior para a menor (o vencedor mais atrás no 1º turno primeiro)
+====================================================================================================
+Ano   Cargo       Lugar                         Vencedor                                         % 1º   Parte 1º → 2º   Cresc.  Derrotado
+2020  Prefeito    Caxias Do Sul (RS)            ADILO ANGELO DIDOMENICO (PSDB)                  15.5%    31.1% → 59.6%     299%  GILBERTO JOSÉ SPIER VARGAS (PT)  VIRADA
+2020  Prefeito    Mauá (SP)                     FRANCISCO MARCELO DE OLIVEIRA (PT)              19.8%    35.2% → 50.7%     139%  ATILA CESAR MONTEIRO JACOMUSSI (PSB)  VIRADA
+2020  Prefeito    Macapá (AP)                   ANTONIO PAULO DE OLIVEIRA FURLAN (CIDADANIA)    17.5%    35.2% → 55.7%     212%  JOSÉ SAMUEL ALCOLUMBRE TOBELEM (DEM)  VIRADA
+2024  Prefeito    Porto Velho (RO)              LEONARDO BARRETO DE MORAES (PODE)               25.6%    36.5% → 56.2%     111%  MARIANA FONSECA RIBEIRO CARVALHO DE MORAES (UNIÃO)  VIRADA
+2024  Prefeito    Santa Maria (RS)              RODRIGO DECIMO (PSDB)                           25.9%    38.9% → 54.5%     106%  ANTONIO VALDECI OLIVEIRA DE OLIVEIRA (PT)  VIRADA
+2024  Prefeito    Taubaté (SP)                  SERGIO LUIZ VICTOR JUNIOR (NOVO)                23.5%    39.4% → 62.0%     161%  JOSE BERNARDO ORTIZ MONTEIRO JUNIOR (REPUBLICANOS)  VIRADA
+2020  Prefeito    Mogi Das Cruzes (SP)          CAIO CÉSAR MACHADO DA CUNHA (PODE)              28.7%    40.1% → 58.4%     110%  MARCUS VINICIUS DE ALMEIDA E MELO (PSDB)  VIRADA
+2020  Prefeito    Caucaia (CE)                  VITOR PEREIRA VALIM (PROS)                      27.9%    40.5% → 51.1%      77%  NAUMI GOMES DE AMORIM (PSD)  VIRADA
+2022  Governador  RS                            EDUARDO FIGUEIREDO CAVALHEIRO LEITE (PSDB)      26.8%    41.7% → 57.1%     117%  ONYX DORNELLES LORENZONI (PL)  VIRADA
+2024  Prefeito    Caxias Do Sul (RS)            ADILO ANGELO DIDOMENICO (PSDB)                  27.5%    42.0% → 51.4%      81%  MAURICIO FERNANDO SCALCO (PL)  VIRADA
+2020  Prefeito    São Gonçalo (RJ)              NELSON RUAS DOS SANTOS (AVANTE)                 22.8%    42.1% → 50.8%     122%  DIMAS DE PAIVA GADELHA JUNIOR (PT)  VIRADA
+2024  Prefeito    Piracicaba (SP)               HELIO DONIZETE ZANATTA (PSD)                    26.6%    42.6% → 53.6%      96%  BARJAS NEGRI (PSDB)  VIRADA
+2018  Governador  RO                            MARCOS JOSÉ ROCHA DOS SANTOS (PSL)              24.0%    43.2% → 66.3%     189%  EXPEDITO GONÇALVES FERREIRA JUNIOR (PSDB)  VIRADA
+2024  Prefeito    Belo Horizonte (MG)           FUAD JORGE NOMAN FILHO (PSD)                    26.5%    43.6% → 53.7%      99%  BRUNO DE CASTRO ENGLER FLORENCIO DE ALMEIDA (PL)  VIRADA
+2024  Prefeito    Olinda (PE)                   MIRELLA FERNANDA BEZERRA DE ALMEIDA (PSD)       30.0%    43.6% → 51.4%      79%  VINICIUS NASCIMENTO DOS SANTOS (PT)  VIRADA
+2020  Prefeito    Franca (SP)                   ALEXANDRE AUGUSTO FERREIRA (MDB)                19.3%    44.0% → 57.6%     175%  FLÁVIA OLIVITO LANCHA ALVES DE OLIVEIRA (PSD)  VIRADA
+2020  Prefeito    São Vicente (SP)              KAYO FELYPE NACHTAJLER AMADO (PODE)             34.0%    45.0% → 56.3%      64%  SOLANGE CRISTINA DE FREITAS (PSDB)  VIRADA
+2024  Prefeito    Palmas (TO)                   JOSÉ EDUARDO DE SIQUEIRA CAMPOS (PODE)          32.4%    45.2% → 53.0%      53%  JANAD MARQUES DE FREITAS VALCARI (PL)  VIRADA
+2024  Prefeito    Limeira (SP)                  MURILO BERBERT AVIGO FELIX (PODE)               32.3%    45.4% → 51.9%      55%  ALBERT HENRIQUE NEVES (MDB)  VIRADA
+2020  Prefeito    Ponta Grossa (PR)             ELIZABETH SILVEIRA SCHMIDT (PSD)                31.1%    45.5% → 52.4%      71%  MABEL CORA CANTO (PSC)  VIRADA
+2024  Prefeito    Fortaleza (CE)                EVANDRO SA BARRETO LEITAO (PT)                  34.3%    46.1% → 50.4%      49%  ANDRE FERNANDES DE MOURA (PL)  VIRADA
+2022  Governador  PE                            RAQUEL TEIXEIRA LYRA LUCENA (PSDB)              20.6%    46.2% → 58.7%     208%  MARÍLIA VALENÇA ROCHA ARRAES DE ALENCAR (SOLIDARIEDADE)  VIRADA
+2022  Governador  SE                            FÁBIO CRUZ MITIDIERI (PSD)                      38.9%    46.5% → 51.7%     112%  ROGERIO CARVALHO SANTOS (PT)  VIRADA
+2024  Prefeito    Goiânia (GO)                  SANDRO DA MABEL ANTÔNIO SCODRO (UNIÃO)          27.7%    47.0% → 55.5%      86%  FREDERICO GUSTAVO RODRIGUES DA CUNHA (PL)  VIRADA
+2024  Prefeito    Jundiaí (SP)                  GUSTAVO MARTINELLI (UNIÃO)                      43.3%    47.4% → 58.9%      34%  JOSE ANTONIO PARIMOSCHI (PL)  VIRADA
+2020  Prefeito    Joinville (SC)                ADRIANO BORNSCHEIN SILVA (NOVO)                 23.0%    47.6% → 55.4%     139%  DARCI DE MATOS (PSD)  VIRADA
+2020  Prefeito    Cuiabá (MT)                   EMANUEL PINHEIRO (MDB)                          30.6%    47.6% → 51.1%      65%  ABILIO JACQUES BRUNINI MOUMER (PODE)  VIRADA
+2020  Prefeito    Feira De Santana (BA)         COLBERT MARTINS DA SILVA FILHO (MDB)            38.2%    47.9% → 54.4%      50%  JOSÉ CERQUEIRA DE SANTANA NETO (PT)  VIRADA
+2020  Prefeito    Manaus (AM)                   DAVID ANTONIO ABISAI PEREIRA DE ALMEIDA (AVAN   22.7%    48.3% → 51.3%     113%  AMAZONINO ARMANDO MENDES (PODE)  VIRADA
+2020  Prefeito    Santa Maria (RS)              JORGE CLADISTONE POZZOBOM (PSDB)                24.9%    48.4% → 57.3%     117%  SERGIO ROBERTO CECHIN (PP)  VIRADA
+2022  Governador  MS                            EDUARDO CORREA RIEDEL (PSDB)                    25.2%    48.5% → 56.9%     123%  RENAN BARBOSA CONTAR (PRTB)  VIRADA
+2018  Governador  SC                            CARLOS MOISÉS DA SILVA (PSL)                    29.7%    48.8% → 71.1%     147%  GELSON LUIZ MERÍSIO (PSD)  VIRADA
+2020  Prefeito    Taboão Da Serra (SP)          JOSE APRIGIO DA SILVA (PODE)                    32.7%    48.9% → 50.6%      53%  DANIEL PLANA BOGALHO (PSDB)  VIRADA
+2020  Prefeito    Vitória Da Conquista (BA)     HERZEM GUSMÃO PEREIRA (MDB)                     45.9%    49.1% → 54.0%      24%  JOSÉ RAIMUNDO FONTES (PT)  VIRADA
+2024  Prefeito    Ponta Grossa (PR)             ELIZABETH SILVEIRA SCHMIDT (UNIÃO)              27.5%    49.7% → 53.7%      90%  MABEL CORA CANTO (PSDB)  VIRADA
+2020  Prefeito    Maceió (AL)                   JOAO HENRIQUE HOLANDA CALDAS (PSB)              28.6%    49.7% → 58.6%     104%  ALFREDO GASPAR DE MENDONÇA NETO (MDB)  VIRADA
+
+====================================================================================================
+Todas as disputas
+====================================================================================================
+Ano   Cargo       Lugar                         Vencedor                                         % 1º   Parte 1º → 2º   Cresc.  Derrotado
+2018  Governador  AM                            WILSON MIRANDA LIMA (PSC)                       33.7%    50.7% → 58.5%      73%  AMAZONINO ARMANDO MENDES (PDT)
+2018  Governador  AP                            ANTONIO WALDEZ GÓES DA SILVA (PDT)              33.6%    52.7% → 52.3%      44%  JOAO ALBERTO RODRIGUES CAPIBERIBE (PSB)
+2018  Governador  DF                            IBANEIS ROCHA BARROS JÚNIOR (MDB)               42.0%    75.1% → 69.8%      64%  RODRIGO SOBRAL ROLLEMBERG (PSB)
+2018  Governador  MG                            ROMEU ZEMA NETO (NOVO)                          42.7%    59.5% → 71.8%      68%  ANTONIO AUGUSTO JUNHO ANASTASIA (PSDB)
+2018  Governador  MS                            REINALDO AZAMBUJA SILVA (PSDB)                  44.6%    58.5% → 52.4%      17%  ODILON DE OLIVEIRA (PDT)
+2018  Governador  PA                            HELDER ZAHLUTH BARBALHO (MDB)                   47.7%    61.2% → 55.4%      13%  MARCIO DESIDERIO TEIXEIRA MIRANDA (DEM)
+2018  Governador  RJ                            WILSON JOSÉ WITZEL (PSC)                        41.3%    67.9% → 59.9%      48%  EDUARDO DA COSTA PAES (DEM)
+2018  Governador  RN                            MARIA DE FATIMA BEZERRA (PT)                    46.2%    58.7% → 57.6%      37%  CARLOS EDUARDO NUNES ALVES (PDT)
+2018  Governador  RO                            MARCOS JOSÉ ROCHA DOS SANTOS (PSL)              24.0%    43.2% → 66.3%     189%  EXPEDITO GONÇALVES FERREIRA JUNIOR (PSDB)  VIRADA
+2018  Governador  RR                            ANTONIO OLIVERIO GARCIA DE ALMEIDA (PSL)        42.3%    52.1% → 53.3%      20%  JOSE DE ANCHIETA JUNIOR (PSDB)
+2018  Governador  RS                            EDUARDO FIGUEIREDO CAVALHEIRO LEITE (PSDB)      35.9%    53.6% → 53.6%      46%  JOSÉ IVO SARTORI (MDB)
+2018  Governador  SC                            CARLOS MOISÉS DA SILVA (PSL)                    29.7%    48.8% → 71.1%     147%  GELSON LUIZ MERÍSIO (PSD)  VIRADA
+2018  Governador  SE                            BELIVALDO CHAGAS SILVA (PSD)                    40.8%    65.5% → 64.7%      68%  ANTONIO CARLOS VALADARES FILHO (PSB)
+2018  Governador  SP                            JOÃO AGRIPINO DA COSTA DORIA JUNIOR (PSDB)      31.8%    59.6% → 51.7%      71%  MÁRCIO LUIZ FRANÇA GOMES (PSB)
+2018  Presidente  Brasil                        JAIR MESSIAS BOLSONARO (PSL)                    46.0%    61.1% → 55.1%      17%  FERNANDO HADDAD (PT)
+2020  Prefeito    Anápolis (GO)                 ROBERTO NAVES E SIQUEIRA (PP)                   46.6%    61.8% → 61.3%      23%  ANTONIO ROBERTO OTONI GOMIDE (PT)
+2020  Prefeito    Aracaju (SE)                  EDVALDO NOGUEIRA FILHO (PDT)                    45.6%    68.1% → 57.9%      26%  DANIELLE GARCIA ALVES (CIDADANIA)
+2020  Prefeito    Bauru (SP)                    SUÉLLEN SILVA ROSIM (PATRIOTA)                  36.5%    52.0% → 56.0%      55%  RAUL APARECIDO GONÇALVES PAULA (DEM)
+2020  Prefeito    Belém (PA)                    EDMILSON BRITO RODRIGUES (PSOL)                 34.3%    59.7% → 51.8%      57%  EVERALDO JORGE MARTINS EGUCHI (PATRIOTA)
+2020  Prefeito    Blumenau (SC)                 MÁRIO HILDEBRANDT (PODE)                        42.5%    73.2% → 72.1%      59%  JOÃO PAULO KARAM KLEINUBING (DEM)
+2020  Prefeito    Boa Vista (RR)                ARTHUR HENRIQUE BRANDÃO MACHADO (MDB)           49.7%    82.4% → 85.4%      49%  JOSE OTACI BARROSO DO NASCIMENTO (SOLIDARIEDADE)
+2020  Prefeito    Campinas (SP)                 DÁRIO JORGE GIOLO SAADI (REPUBLICANOS)          26.3%    54.1% → 57.1%      82%  RAFAEL FERNANDO ZIMBALDI (PL)
+2020  Prefeito    Campos Dos Goytacazes (RJ)    WLADIMIR BARROS ASSED MATHEUS DE OLIVEIRA (PS   43.2%    60.8% → 52.4%      14%  CAIO SANTOS VIANNA (PDT)
+2020  Prefeito    Canoas (RS)                   JAIRO JORGE DA SILVA (PSD)                      45.2%    56.7% → 53.1%      14%  LUIZ CARLOS GHIORZZI BUSATO (PTB)
+2020  Prefeito    Cariacica (ES)                EUCLERIO DE AZEVEDO SAMPAIO JÚNIOR (DEM)        18.8%    57.3% → 58.7%     208%  CELIA MARIA VILELA TAVARES (PT)
+2020  Prefeito    Caucaia (CE)                  VITOR PEREIRA VALIM (PROS)                      27.9%    40.5% → 51.1%      77%  NAUMI GOMES DE AMORIM (PSD)  VIRADA
+2020  Prefeito    Caxias Do Sul (RS)            ADILO ANGELO DIDOMENICO (PSDB)                  15.5%    31.1% → 59.6%     299%  GILBERTO JOSÉ SPIER VARGAS (PT)  VIRADA
+2020  Prefeito    Contagem (MG)                 MARILIA APARECIDA CAMPOS (PT)                   48.7%    69.4% → 51.4%      24%  FELIPE MAURÍCIO SALIBA DE SOUZA (DEM)
+2020  Prefeito    Cuiabá (MT)                   EMANUEL PINHEIRO (MDB)                          30.6%    47.6% → 51.1%      65%  ABILIO JACQUES BRUNINI MOUMER (PODE)  VIRADA
+2020  Prefeito    Diadema (SP)                  JOSÉ DE FILIPPI JUNIOR (PT)                     45.6%    74.8% → 51.3%      15%  TAKAHARU YAMAUCHI (PSD)
+2020  Prefeito    Feira De Santana (BA)         COLBERT MARTINS DA SILVA FILHO (MDB)            38.2%    47.9% → 54.4%      50%  JOSÉ CERQUEIRA DE SANTANA NETO (PT)  VIRADA
+2020  Prefeito    Fortaleza (CE)                JOSE SARTO NOGUEIRA MOREIRA (PDT)               35.7%    51.7% → 51.7%      46%  WAGNER SOUSA GOMES (PROS)
+2020  Prefeito    Franca (SP)                   ALEXANDRE AUGUSTO FERREIRA (MDB)                19.3%    44.0% → 57.6%     175%  FLÁVIA OLIVITO LANCHA ALVES DE OLIVEIRA (PSD)  VIRADA
+2020  Prefeito    Goiânia (GO)                  LUIZ ALBERTO MAGUITO VILELA (MDB)               37.2%    59.4% → 52.6%      28%  VANDERLAN VIEIRA CARDOSO (PSD)
+2020  Prefeito    Governador Valadares (MG)     ANDRÉ LUIZ COELHO MERLO (PSDB)                  38.3%    66.5% → 57.7%      46%  LUCIANO DE OLIVEIRA E SILVA (PSC)
+2020  Prefeito    Guarulhos (SP)                GUSTAVO HENRIC COSTA (PSD)                      46.5%    58.6% → 57.8%      25%  ELÓI ALFREDO PIETÁ (PT)
+2020  Prefeito    Joinville (SC)                ADRIANO BORNSCHEIN SILVA (NOVO)                 23.0%    47.6% → 55.4%     139%  DARCI DE MATOS (PSD)  VIRADA
+2020  Prefeito    João Pessoa (PB)              CICERO DE LUCENA FILHO (PP)                     20.7%    55.5% → 53.2%     145%  NILVAN FERREIRA DO NASCIMENTO (MDB)
+2020  Prefeito    Juiz De Fora (MG)             MARIA MARGARIDA MARTINS SALOMÃO (PT)            39.7%    63.2% → 55.0%      41%  WILSON REZENDE FRANCO (PSB)
+2020  Prefeito    Limeira (SP)                  MARIO CELSO BOTION (PSD)                        32.3%    59.0% → 54.9%      61%  MURILO BERBERT AVIGO FELIX (PODE)
+2020  Prefeito    Macapá (AP)                   ANTONIO PAULO DE OLIVEIRA FURLAN (CIDADANIA)    17.5%    35.2% → 55.7%     212%  JOSÉ SAMUEL ALCOLUMBRE TOBELEM (DEM)  VIRADA
+2020  Prefeito    Maceió (AL)                   JOAO HENRIQUE HOLANDA CALDAS (PSB)              28.6%    49.7% → 58.6%     104%  ALFREDO GASPAR DE MENDONÇA NETO (MDB)  VIRADA
+2020  Prefeito    Manaus (AM)                   DAVID ANTONIO ABISAI PEREIRA DE ALMEIDA (AVAN   22.7%    48.3% → 51.3%     113%  AMAZONINO ARMANDO MENDES (PODE)  VIRADA
+2020  Prefeito    Mauá (SP)                     FRANCISCO MARCELO DE OLIVEIRA (PT)              19.8%    35.2% → 50.7%     139%  ATILA CESAR MONTEIRO JACOMUSSI (PSB)  VIRADA
+2020  Prefeito    Mogi Das Cruzes (SP)          CAIO CÉSAR MACHADO DA CUNHA (PODE)              28.7%    40.1% → 58.4%     110%  MARCUS VINICIUS DE ALMEIDA E MELO (PSDB)  VIRADA
+2020  Prefeito    Paulista (PE)                 YVES RIBEIRO DE ALBUQUERQUE (MDB)               35.0%    57.2% → 57.5%      63%  FRANCISCO AFONSO PADILHA DE MELO (PSB)
+2020  Prefeito    Pelotas (RS)                  PAULA SCHILD MASCARENHAS (PSDB)                 49.7%    77.4% → 68.7%      34%  IVAN ADMAR DORNELLES DUARTE (PT)
+2020  Prefeito    Petrópolis (RJ)               RUBENS JOSE FRANCA BOMTEMPO (PSB)               27.4%    62.0% → 55.2%      66%  BERNARDO CHIM ROSSI (PL)
+2020  Prefeito    Ponta Grossa (PR)             ELIZABETH SILVEIRA SCHMIDT (PSD)                31.1%    45.5% → 52.4%      71%  MABEL CORA CANTO (PSC)  VIRADA
+2020  Prefeito    Porto Alegre (RS)             SEBASTIÃO DE ARAÚJO MELO (MDB)                  31.0%    51.7% → 54.6%      85%  MANUELA PINTO VIEIRA D AVILA (PC DO B)
+2020  Prefeito    Porto Velho (RO)              HILDON DE LIMA CHAVES (PSDB)                    34.0%    70.4% → 54.4%      47%  CRISTIANE LOPES DA LUZ BENARROSH (PP)
+2020  Prefeito    Praia Grande (SP)             RAQUEL AUXILIADORA CHINI (PSDB)                 39.1%    52.3% → 53.5%      37%  DANILO MARCO MORGADO SILVA (PSL)
+2020  Prefeito    Recife (PE)                   JOÃO HENRIQUE DE ANDRADE LIMA CAMPOS (PSB)      29.2%    51.1% → 56.3%      92%  MARÍLIA VALENÇA ROCHA ARRAES DE ALENCAR (PT)
+2020  Prefeito    Ribeirão Preto (SP)           ANTONIO DUARTE NOGUEIRA JUNIOR (PSDB)           45.9%    68.9% → 63.2%      33%  SUELY VILELA (PSB)
+2020  Prefeito    Rio Branco (AC)               SEBASTIAO BOCALOM RODRIGUES (PP)                49.6%    68.6% → 62.9%      19%  MARIA DO SOCORRO NERI MEDEIROS DE SOUZA (PSB)
+2020  Prefeito    Rio De Janeiro (RJ)           EDUARDO DA COSTA PAES (DEM)                     37.0%    62.8% → 64.1%      67%  MARCELO BEZERRA CRIVELLA (REPUBLICANOS)
+2020  Prefeito    Santa Maria (RS)              JORGE CLADISTONE POZZOBOM (PSDB)                24.9%    48.4% → 57.3%     117%  SERGIO ROBERTO CECHIN (PP)  VIRADA
+2020  Prefeito    Santarém (PA)                 FRANCISCO NÉLIO AGUIAR DA SILVA (DEM)           43.0%    54.4% → 59.2%      30%  MARIA DO CARMO MARTINS LIMA (PT)
+2020  Prefeito    Serra (ES)                    ANTÔNIO SERGIO ALVES VIDIGAL (PDT)              48.0%    71.0% → 54.9%      11%  FABIO DUARTE DE ALMEIDA (REDE)
+2020  Prefeito    Sorocaba (SP)                 RODRIGO MAGANHATO (REPUBLICANOS)                39.4%    70.3% → 52.6%      32%  JAQUELINE LILIAN BARCELOS COUTINHO (PSL)
+2020  Prefeito    São Gonçalo (RJ)              NELSON RUAS DOS SANTOS (AVANTE)                 22.8%    42.1% → 50.8%     122%  DIMAS DE PAIVA GADELHA JUNIOR (PT)  VIRADA
+2020  Prefeito    São João De Meriti (RJ)       JOAO FERREIRA NETO (DEM)                        32.3%    62.2% → 56.8%      70%  LEONARDO VIEIRA MENDES (PSC)
+2020  Prefeito    São Luís (MA)                 EDUARDO SALIM BRAIDE (PODE)                     37.8%    63.1% → 55.5%      40%  HILDELIS SILVA DUARTE JUNIOR (REPUBLICANOS)
+2020  Prefeito    São Paulo (SP)                BRUNO COVAS LOPES (PSDB)                        32.9%    61.9% → 59.4%      81%  GUILHERME CASTRO BOULOS (PSOL)
+2020  Prefeito    São Vicente (SP)              KAYO FELYPE NACHTAJLER AMADO (PODE)             34.0%    45.0% → 56.3%      64%  SOLANGE CRISTINA DE FREITAS (PSDB)  VIRADA
+2020  Prefeito    Taboão Da Serra (SP)          JOSE APRIGIO DA SILVA (PODE)                    32.7%    48.9% → 50.6%      53%  DANIEL PLANA BOGALHO (PSDB)  VIRADA
+2020  Prefeito    Taubaté (SP)                  JOSÉ ANTÔNIO SAUD JUNIOR (MDB)                  28.8%    53.1% → 65.0%     125%  LORENY MAYARA CAETANO ROBERTO (CIDADANIA)
+2020  Prefeito    Teresina (PI)                 JOSÉ PESSOA LEAL (MDB)                          34.5%    56.4% → 62.3%      66%  KLEBER MONTEZUMA FAGUNDES DOS SANTOS (PSDB)
+2020  Prefeito    Uberaba (MG)                  ELISA GONÇALVES DE ARAÚJO (SOLIDARIEDADE)       36.2%    59.2% → 57.4%      58%  ANTONIO CARLOS SILVA NUNES (PTB)
+2020  Prefeito    Vila Velha (ES)               ARNALDO BORGO FILHO (PODE)                      37.0%    61.1% → 69.0%      90%  MAX FREITAS MAURO FILHO (PSDB)
+2020  Prefeito    Vitória (ES)                  LORENZO SILVA DE PAZOLINI (REPUBLICANOS)        31.0%    58.7% → 58.5%      93%  JOÃO CARLOS COSER (PT)
+2020  Prefeito    Vitória Da Conquista (BA)     HERZEM GUSMÃO PEREIRA (MDB)                     45.9%    49.1% → 54.0%      24%  JOSÉ RAIMUNDO FONTES (PT)  VIRADA
+2022  Governador  AL                            PAULO SURUAGY DO AMARAL DANTAS (MDB)            46.6%    63.5% → 52.3%      18%  RODRIGO SANTOS CUNHA (UNIÃO)
+2022  Governador  AM                            WILSON MIRANDA LIMA (UNIÃO)                     42.8%    67.1% → 56.7%      27%  CARLOS EDUARDO DE SOUZA BRAGA (MDB)
+2022  Governador  BA                            JERÔNIMO RODRIGUES SOUZA (PT)                   49.4%    54.8% → 52.8%      11%  ANTONIO CARLOS PEIXOTO DE MAGALHÃES NETO (UNIÃO)
+2022  Governador  ES                            JOSÉ RENATO CASAGRANDE (PSB)                    46.9%    55.0% → 53.8%      20%  CARLOS HUMBERTO MANNATO (PL)
+2022  Governador  MS                            EDUARDO CORREA RIEDEL (PSDB)                    25.2%    48.5% → 56.9%     123%  RENAN BARBOSA CONTAR (PRTB)  VIRADA
+2022  Governador  PB                            JOÃO AZEVEDO LINS FILHO (PSB)                   39.7%    62.4% → 52.5%      42%  PEDRO OLIVEIRA CUNHA LIMA (PSDB)
+2022  Governador  PE                            RAQUEL TEIXEIRA LYRA LUCENA (PSDB)              20.6%    46.2% → 58.7%     208%  MARÍLIA VALENÇA ROCHA ARRAES DE ALENCAR (SOLIDARIEDADE)  VIRADA
+2022  Governador  RO                            MARCOS JOSÉ ROCHA DOS SANTOS (UNIÃO)            38.9%    51.2% → 52.5%      39%  MARCOS ROGERIO DA SILVA BRITO (PL)
+2022  Governador  RS                            EDUARDO FIGUEIREDO CAVALHEIRO LEITE (PSDB)      26.8%    41.7% → 57.1%     117%  ONYX DORNELLES LORENZONI (PL)  VIRADA
+2022  Governador  SC                            JORGINHO DOS SANTOS MELLO (PL)                  38.6%    68.9% → 70.7%      89%  DÉCIO NERY DE LIMA (PT)
+2022  Governador  SE                            FÁBIO CRUZ MITIDIERI (PSD)                      38.9%    46.5% → 51.7%     112%  ROGERIO CARVALHO SANTOS (PT)  VIRADA
+2022  Governador  SP                            TARCISIO GOMES DE FREITAS (REPUBLICANOS)        42.3%    54.2% → 55.3%      36%  FERNANDO HADDAD (PT)
+2022  Presidente  Brasil                        LUIZ INÁCIO LULA DA SILVA (PT)                  48.4%    52.9% → 50.9%       5%  JAIR MESSIAS BOLSONARO (PL)
+2024  Prefeito    Anápolis (GO)                 MARCIO AURELIO CORREA (PL)                      49.6%    58.3% → 58.6%       9%  ANTONIO ROBERTO OTONI GOMIDE (PT)
+2024  Prefeito    Aparecida De Goiânia (GO)     LEANDRO VILELA VELLOSO (MDB)                    48.0%    52.7% → 63.6%      20%  ALCIDES RIBEIRO FILHO (PL)
+2024  Prefeito    Barueri (SP)                  JOSE ROBERTO PITERI (REPUBLICANOS)              48.4%    54.9% → 56.5%       8%  GILBERTO MACEDO GIL ARANTES (UNIÃO)
+2024  Prefeito    Belo Horizonte (MG)           FUAD JORGE NOMAN FILHO (PSD)                    26.5%    43.6% → 53.7%      99%  BRUNO DE CASTRO ENGLER FLORENCIO DE ALMEIDA (PL)  VIRADA
+2024  Prefeito    Belém (PA)                    IGOR WANDER CENTENO NORMANDO (MDB)              44.9%    58.8% → 56.4%      17%  EDER MAURO CARDOSO BARRA (PL)
+2024  Prefeito    Camaçari (BA)                 LUIZ CARLOS CAETANO (PT)                        49.5%    50.2% → 50.9%       3%  FLÁVIO MARCUS DE AZEVEDO REIS (UNIÃO)
+2024  Prefeito    Campina Grande (PB)           BRUNO CUNHA LIMA BRANCO (UNIÃO)                 48.2%    58.2% → 57.9%      23%  JHONY WESLLYS BEZERRA COSTA (PSB)
+2024  Prefeito    Campo Grande (MS)             ADRIANE BARBOSA NOGUEIRA LOPES (PP)             31.7%    51.7% → 51.5%      58%  ROSIANE MODESTO DE OLIVEIRA (UNIÃO)
+2024  Prefeito    Canoas (RS)                   AIRTON JOSE DE SOUZA (PL)                       35.3%    54.2% → 52.1%      47%  JAIRO JORGE DA SILVA (PSD)
+2024  Prefeito    Caucaia (CE)                  NAUMI GOMES DE AMORIM (PSD)                     38.4%    60.9% → 60.4%      48%  WALDEMIR CATANHO DE SENA JUNIOR (PT)
+2024  Prefeito    Caxias Do Sul (RS)            ADILO ANGELO DIDOMENICO (PSDB)                  27.5%    42.0% → 51.4%      81%  MAURICIO FERNANDO SCALCO (PL)  VIRADA
+2024  Prefeito    Cuiabá (MT)                   ABILIO JACQUES BRUNINI MOUMER (PL)              39.6%    58.3% → 53.8%      35%  LÚDIO FRANK MENDES CABRAL (PT)
+2024  Prefeito    Curitiba (PR)                 EDUARDO PIMENTEL SLAVIERO (PSD)                 33.5%    51.8% → 57.6%      69%  CRISTINA REIS GRAEML (PMB)
+2024  Prefeito    Diadema (SP)                  TAKAHARU YAMAUCHI (MDB)                         47.4%    51.2% → 52.6%       9%  JOSÉ DE FILIPPI JUNIOR (PT)
+2024  Prefeito    Fortaleza (CE)                EVANDRO SA BARRETO LEITAO (PT)                  34.3%    46.1% → 50.4%      49%  ANDRE FERNANDES DE MOURA (PL)  VIRADA
+2024  Prefeito    Franca (SP)                   ALEXANDRE AUGUSTO FERREIRA (MDB)                47.2%    62.3% → 58.6%      13%  JOÃO BATISTA ROCHA (PL)
+2024  Prefeito    Goiânia (GO)                  SANDRO DA MABEL ANTÔNIO SCODRO (UNIÃO)          27.7%    47.0% → 55.5%      86%  FREDERICO GUSTAVO RODRIGUES DA CUNHA (PL)  VIRADA
+2024  Prefeito    Guarujá (SP)                  FARID SAID MADI (PODE)                          42.5%    62.5% → 55.4%      18%  RAPHAEL VITIELLO SILVA (PP)
+2024  Prefeito    Guarulhos (SP)                LUCAS SANCHES PROMESSIA (PL)                    33.2%    52.7% → 58.5%      70%  ELÓI ALFREDO PIETÁ (SOLIDARIEDADE)
+2024  Prefeito    Imperatriz (MA)               RILDO DE OLIVEIRA AMARAL (PP)                   35.6%    57.3% → 55.1%      49%  TACILLA MARIANA CARVALHO SILVA (REPUBLICANOS)
+2024  Prefeito    João Pessoa (PB)              CICERO DE LUCENA FILHO (PP)                     49.2%    69.3% → 63.9%      26%  MARCELO ANTONIO CARTAXO QUEIROGA LOPES (PL)
+2024  Prefeito    Jundiaí (SP)                  GUSTAVO MARTINELLI (UNIÃO)                      43.3%    47.4% → 58.9%      34%  JOSE ANTONIO PARIMOSCHI (PL)  VIRADA
+2024  Prefeito    Limeira (SP)                  MURILO BERBERT AVIGO FELIX (PODE)               32.3%    45.4% → 51.9%      55%  ALBERT HENRIQUE NEVES (MDB)  VIRADA
+2024  Prefeito    Londrina (PR)                 JOSÉ TIAGO CAMARGO DO AMARAL (PSD)              42.7%    64.4% → 56.3%      27%  MARIA TEREZA PASCHOAL DE MORAES (PP)
+2024  Prefeito    Manaus (AM)                   DAVID ANTONIO ABISAI PEREIRA DE ALMEIDA (AVAN   32.2%    56.3% → 54.6%      62%  ALBERTO BARROS CAVALCANTE NETO (PL)
+2024  Prefeito    Mauá (SP)                     FRANCISCO MARCELO DE OLIVEIRA (PT)              45.1%    55.9% → 54.0%       9%  ATILA CESAR MONTEIRO JACOMUSSI (UNIÃO)
+2024  Prefeito    Natal (RN)                    PAULO EDUARDO DA COSTA FREIRE (UNIÃO)           44.1%    60.8% → 55.3%      30%  NATÁLIA BASTOS BONAVIDES (PT)
+2024  Prefeito    Niterói (RJ)                  RODRIGO NEVES BARRETO (PDT)                     48.5%    57.7% → 57.2%      15%  CARLOS ROBERTO COELHO DE MATTOS JUNIOR (PL)
+2024  Prefeito    Olinda (PE)                   MIRELLA FERNANDA BEZERRA DE ALMEIDA (PSD)       30.0%    43.6% → 51.4%      79%  VINICIUS NASCIMENTO DOS SANTOS (PT)  VIRADA
+2024  Prefeito    Palmas (TO)                   JOSÉ EDUARDO DE SIQUEIRA CAMPOS (PODE)          32.4%    45.2% → 53.0%      53%  JANAD MARQUES DE FREITAS VALCARI (PL)  VIRADA
+2024  Prefeito    Paulista (PE)                 SEVERINO RAMOS DE SANTANA (PSDB)                44.4%    59.1% → 73.4%      62%  GILBERTO GONÇALVES FEITOSA JÚNIOR (PSB)
+2024  Prefeito    Pelotas (RS)                  FERNANDO STEPHAN MARRONI (PT)                   39.6%    55.6% → 50.4%      28%  MARCIANO PERONDI (PL)
+2024  Prefeito    Petrópolis (RJ)               HINGO HAMMES (PP)                               50.0%    73.8% → 74.7%      38%  YURI LUCAS CARIUS DE MOURA ALMEIDA (PSOL)
+2024  Prefeito    Piracicaba (SP)               HELIO DONIZETE ZANATTA (PSD)                    26.6%    42.6% → 53.6%      96%  BARJAS NEGRI (PSDB)  VIRADA
+2024  Prefeito    Ponta Grossa (PR)             ELIZABETH SILVEIRA SCHMIDT (UNIÃO)              27.5%    49.7% → 53.7%      90%  MABEL CORA CANTO (PSDB)  VIRADA
+2024  Prefeito    Porto Alegre (RS)             SEBASTIÃO DE ARAÚJO MELO (MDB)                  49.7%    65.4% → 61.5%      18%  MARIA DO ROSÁRIO NUNES (PT)
+2024  Prefeito    Porto Velho (RO)              LEONARDO BARRETO DE MORAES (PODE)               25.6%    36.5% → 56.2%     111%  MARIANA FONSECA RIBEIRO CARVALHO DE MORAES (UNIÃO)  VIRADA
+2024  Prefeito    Ribeirão Preto (SP)           RICARDO AUGUSTO MACHADO DA SILVA (PSD)          48.4%    66.0% → 50.1%       2%  MARCO AURELIO MARTINS DE SOUSA (NOVO)
+2024  Prefeito    Santa Maria (RS)              RODRIGO DECIMO (PSDB)                           25.9%    38.9% → 54.5%     106%  ANTONIO VALDECI OLIVEIRA DE OLIVEIRA (PT)  VIRADA
+2024  Prefeito    Santarém (PA)                 JOSÉ MARIA TAPAJÓS (MDB)                        49.7%    54.3% → 52.0%      -2%  JUSCELINO KUBITSCHEK CAMPOS DE SOUZA (PL)
+2024  Prefeito    Santos (SP)                   ROGÉRIO PEREIRA DOS SANTOS (REPUBLICANOS)       43.3%    50.4% → 53.4%      17%  ROSANA DE OLIVEIRA VALLE (PL)
+2024  Prefeito    Serra (ES)                    WEVERSON VALCKER MEIRELES (PDT)                 39.7%    61.1% → 60.5%      42%  PABLO AURINO RAMOS ARAUJO (REPUBLICANOS)
+2024  Prefeito    Sumaré (SP)                   HENRIQUE STEIN SCIASCIO (REPUBLICANOS)          44.4%    58.5% → 58.2%      26%  WILLIAM DE SOUZA ROSA (PT)
+2024  Prefeito    São Bernardo Do Campo (SP)    MARCELO DE LIMA FERNANDES (PODE)                28.6%    51.9% → 55.7%      72%  ALEX SPINELLI MANENTE (CIDADANIA)
+2024  Prefeito    São José Do Rio Preto (SP)    FÁBIO ROGÉRIO CANDIDO (PL)                      40.5%    61.2% → 60.0%      39%  ITAMAR FRANCISCO MACHADO BORGES (MDB)
+2024  Prefeito    São José Dos Campos (SP)      ANDERSON FARIAS FERREIRA (PSD)                  39.7%    60.4% → 58.3%      35%  EDUARDO PEDROSA CURY (PL)
+2024  Prefeito    São Paulo (SP)                RICARDO LUIS REIS NUNES (MDB)                   29.5%    50.3% → 59.4%      88%  GUILHERME CASTRO BOULOS (PSOL)
+2024  Prefeito    Taboão Da Serra (SP)          DANIEL PLANA BOGALHO (UNIÃO)                    49.0%    65.4% → 66.3%      22%  JOSE APRIGIO DA SILVA (PODE)
+2024  Prefeito    Taubaté (SP)                  SERGIO LUIZ VICTOR JUNIOR (NOVO)                23.5%    39.4% → 62.0%     161%  JOSE BERNARDO ORTIZ MONTEIRO JUNIOR (REPUBLICANOS)  VIRADA
+2024  Prefeito    Uberaba (MG)                  ELISA GONÇALVES DE ARAÚJO (PSD)                 46.4%    62.3% → 55.6%      13%  ANTONIO CARLOS SILVA NUNES (MDB)
