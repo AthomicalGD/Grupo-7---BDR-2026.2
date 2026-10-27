@@ -148,7 +148,10 @@ def _municipios(x: _Execucao) -> None:
     x.sql("""
         INSERT INTO municipio (cd_municipio, nm_municipio, cd_ibge, cd_uf)
         SELECT cd_municipio, nm_municipio, cd_ibge, cd_uf FROM stg_municipio WHERE sg_uf = %(uf)s
-        ON CONFLICT (cd_municipio) DO NOTHING""", "municipio")
+        -- a correspondência corrige o que entrou sem ela, pelo insert abaixo, na carga de outra UF
+        -- (Abaeté-MG ficou na BA, sem código IBGE, e os votos dela nunca entravam)
+        ON CONFLICT (cd_municipio) DO UPDATE SET cd_ibge = EXCLUDED.cd_ibge, cd_uf = EXCLUDED.cd_uf
+        WHERE municipio.cd_ibge IS NULL""", "municipio")
     # Municípios citados pelo TSE e ausentes da correspondência TSE x IBGE (ex.: extintos).
     x.sql("""
         INSERT INTO municipio (cd_municipio, nm_municipio, cd_uf)
@@ -431,7 +434,9 @@ def _votacao(x: _Execucao) -> None:
         JOIN tmp_zona z ON z.id_zona = v.id_zona
         JOIN eleicao e ON e.id_eleicao = v.id_eleicao
         WHERE e.turno = 1 AND e.tipo = 2
-        GROUP BY 1, 2, 3, 4""", "votacao_partido_municipio")
+        GROUP BY 1, 2, 3, 4
+        -- soma todos os anos da UF a partir das zonas: na carga de um ano só (loader.ano), os outros anos já estão lá
+        ON CONFLICT (cd_municipio, id_partido, ano_eleicao, cod_cargo) DO NOTHING""", "votacao_partido_municipio")
 
 
 def _contas(x: _Execucao) -> None:

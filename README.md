@@ -1,7 +1,7 @@
 # ProjetoBDR: crawler de dados
 
 Baixa **somente** os arquivos necessários para responder às 10 perguntas do projeto,
-nos escopos de tempo definidos (E.P. = 2018, 2020, 2022 e 2024), e organiza tudo em `dados/`.
+nos escopos de tempo definidos (E.P. = 2018, 2020, 2022, 2024 e 2026, este só com o que o TSE já publicou), e organiza tudo em `dados/`.
 
 Tamanho total, medido nos servidores em 11/09/2026: **6,0 GB de download e ~33 GB em disco**
 (bem abaixo do teto de 200 GB).
@@ -38,7 +38,7 @@ python -m crawler
 | `--anos 2024` | Só esses anos, dentro do escopo de cada pergunta |
 | `--fontes tse ibge ipea dataverse camara` | Só essas fontes |
 | `--atualizar` | Baixa de novo o que o servidor republicou desde o último download |
-| `--carreira-ate 2026` | Estende a P10 às candidaturas de 2026 (ainda sem resultado) |
+| `--carreira-ate 2026` | Último ano da P10 (padrão: 2026, com o 1º turno) |
 | `--manter-zips` | Guarda os zips do TSE em `dados/_zips` (ocupa +6 GB) |
 | `--limite-gb 200` | Não baixa se o total em disco for passar desse valor (padrão 200) |
 | `--dados PASTA` | Grava em outra pasta (padrão `./dados`) |
@@ -132,7 +132,7 @@ python -m loader.remover AC RS
 
 O **viés** de cada partido é a média das notas dos especialistas de Bolognesi et al. (`dados/ideologia_partidos/df_experts.csv`;
 0 = extrema esquerda, 10 = extrema direita), mostrada de -100 a +100 por `(média - 5) * 20`. Cada eleição usa a sua
-onda: 2018 e 2020 a de 2018; 2022 e 2024 a de 2022 (em 2024 estendida por dois anos, o que a interface avisa).
+onda: 2018 e 2020 a de 2018; 2022, 2024 e 2026 a de 2022 (estendida por dois anos em 2024 e por quatro em 2026, o que a interface avisa).
 
 O **alinhamento na Câmara** é outra medida, mostrada à parte: a posição de cada partido nas votações nominais do
 Plenário (SVD), numa janela que termina antes de cada eleição. Ele acompanha quem é governo e quem é oposição, e não
@@ -175,6 +175,7 @@ Para refazer o alinhamento, baixe as votações da Câmara e rode a janela de ca
 ```bash
 python -m crawler --fontes camara
 python scripts/svd_camara.py --nome eleicao_2024 --inicio 2023-02-01 --fim 2024-10-05 --partido moda --experts dados/ideologia_partidos/df_experts.csv --onda 2022
+python scripts/svd_camara.py --nome eleicao_2026 --inicio 2023-02-01 --fim 2026-10-03 --partido moda --experts dados/ideologia_partidos/df_experts.csv --onda 2022
 ```
 
 - `scripts/svd_camara.py` grava em `banco/referencia/svd/` e mostra a correlação com o artigo e com o governo.
@@ -269,7 +270,7 @@ python -m uvicorn api.app:app --port 8000
 | `GET /api/ufs` | As 27 UFs, com nº de municípios, se estão carregadas, o viés e o alinhamento na Câmara por ano |
 | `GET /api/ufs/{sigla}` | Viés da UF, das regiões intermediárias e de cada município, alinhamento da UF e de cada município, % dos votos em partidos sem viés e eleitorado apto por ano |
 | `GET /api/ufs/{sigla}/composicao?ano=` | De onde vem o viés da UF no ano: cada partido com votos, viés naquela eleição e quanto puxa a média (a soma dá o viés; partido sem viés puxa 0), e os candidatos mais votados de cada partido |
-| `GET /api/escola?ano=&uf=` | P4 (2022 ou 2024; `uf` opcional recorta um estado): quem votou, candidatos e eleitos por grau de escolaridade e cargo, municípios em quintis pela escolaridade de quem votou e a correlação |
+| `GET /api/escola?ano=&uf=` | P4 (2022, 2024 ou 2026; `uf` opcional recorta um estado): quem votou, candidatos e eleitos por grau de escolaridade e cargo, municípios em quintis pela escolaridade de quem votou e a correlação |
 | `GET /api/escola/municipios?ano=&uf=` | P4: cada município com a % de superior completo de quem votou, dos candidatos, dos eleitos e dos votos (mapa, dispersão e ranking) |
 | `GET /api/escola/partidos?ano=&uf=` | P4: cada partido na ordem do viés, com candidatos e eleitos e quantos deles têm superior completo |
 | `GET /api/escola/comparar` | P4: 2022 e 2024 lado a lado, por estado e cargo (candidatos e eleitos por grau) e quem votou por estado |
@@ -396,7 +397,7 @@ O que protege o notebook, nos dois:
 
 | Tela | Rota | Pergunta |
 |---|---|---|
-| Mapa do Brasil, viés por estado, linha do tempo 2018-2024 | `/` | P7 |
+| Mapa do Brasil, viés por estado, linha do tempo 2018-2026 | `/` | P7 |
 | Plenário: quanto custa uma cadeira, por cargo, ano e estado (ou câmara municipal), em 2D e 3D | `/cadeira` | P1 |
 | Escola: o diploma ajuda a se eleger (do eleitor ao eleito, a chance de cada grau) e onde se estudou menos se elege menos diploma (cinco grupos de municípios, mapa por estado com 3D, dispersão, ranking e o boletim); cada cargo e cada estado, os partidos; filtro por estado | `/escola` | P4 |
 | Estado: municípios, de onde vem o viés (partidos e candidatos), alinhamento na Câmara, regiões intermediárias, extremos, relevo 3D | `/uf/PI` | P7 |
@@ -493,6 +494,24 @@ usa um User-Agent compatível que ainda identifica o projeto.
   fotos, propostas de governo, redes sociais, certidões criminais, motivos de cassação e coligações
   (a composição já vem nos arquivos de candidatos e de votação por partido).
 - Votação por candidato fora do E.P.: a P10 não precisa de votos, porque situação e reeleição estão nos arquivos de candidatos.
+
+## A eleição de 2026 (dados parciais)
+
+O TSE publica a eleição aos poucos. Em 27/10/2026 já havia candidaturas, bens, o 1º turno (votos por zona,
+detalhe e comparecimento por escolaridade) e a prestação de contas parcial; o 2º turno e as contas finais, não.
+Para carregar só um ano, apagando antes o que havia dele (cada UF numa transação):
+
+```bash
+python -m crawler --anos 2026 --atualizar      # baixa de novo o que o TSE republicou
+python -m loader.ano 2026                       # BR e todas as UFs carregadas
+python scripts/conferencia_2026.py              # divergências -> respostas/conferencia_2026.txt
+```
+
+- Entra: P7 (viés; migração 016 e janela `eleicao_2026` do SVD), P4 (deputados e senador), P10, P2 e P10a
+  (quem foi a um 2º turno ainda não publicado fica de fora do patrimônio e, na reeleição, aparece como pendente).
+- Fica de fora: P1 e P9 (contas parciais; sem IPCA de out/2026) e o 2º turno (P12), listado em `incompletas`.
+- No arquivo de 2026, `DS_GRAU_ESCOLARIDADE` virou `DS_GRAU_INSTRUCAO` (a carga aceita os dois) e
+  `DS_SITUACAO_CANDIDATURA` vem toda `#NE`.
 
 ## Espaço em disco (medido em 11/09/2026)
 

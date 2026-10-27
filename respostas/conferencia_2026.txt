@@ -1,0 +1,57 @@
+Conferência da eleição de 2026 no banco
+
+1. Votos dos candidatos x votos válidos do detalhe (1º turno)
+   Nos cargos majoritários (presidente, governador, senador) têm de ser iguais; nos proporcionais, a
+   diferença é o voto de legenda.
+   DEPUTADO DISTRITAL     1 disputas; nominais    1,627,913; válidos    1,699,544; sem divergência
+   DEPUTADO ESTADUAL     26 disputas; nominais  104,448,057; válidos  111,652,272; sem divergência
+   DEPUTADO FEDERAL      27 disputas; nominais  110,621,804; válidos  114,058,329; sem divergência
+   GOVERNADOR            27 disputas; nominais  111,854,817; válidos  111,854,817; sem divergência
+   PRESIDENTE             1 disputas; nominais  118,969,906; válidos  118,969,906; sem divergência
+   SENADOR               27 disputas; nominais  207,410,169; válidos  207,410,169; sem divergência
+
+2. Eleitos x vagas (1º turno; quem foi ao 2º turno ainda não tem mandato)
+   1º SUPLENTE          vagas    54  eleitos    54  disputas   27
+   2º SUPLENTE          vagas    54  eleitos    54  disputas   27
+   DEPUTADO DISTRITAL   vagas    24  eleitos    24  disputas    1
+   DEPUTADO ESTADUAL    vagas  1035  eleitos  1035  disputas   26
+   DEPUTADO FEDERAL     vagas   513  eleitos   513  disputas   27
+   GOVERNADOR           vagas    27  eleitos    21  disputas   27   <- faltam 6
+   PRESIDENTE           vagas     1  eleitos     0  disputas    1   <- faltam 1
+   SENADOR              vagas    54  eleitos    54  disputas   27
+   VICE-GOVERNADOR      vagas    27  eleitos    21  disputas   27   <- faltam 6
+   VICE-PRESIDENTE      vagas     1  eleitos     0  disputas    1   <- faltam 1
+
+3. Candidaturas sem situação final (#NULO: indeferidas, renunciadas ou pendentes)
+   DEPUTADO ESTADUAL       518 candidaturas;     0 com votos (0 votos)
+   DEPUTADO FEDERAL        410 candidaturas;     0 com votos (0 votos)
+   2º SUPLENTE              42 candidaturas;     0 com votos (0 votos)
+   1º SUPLENTE              41 candidaturas;     0 com votos (0 votos)
+   VICE-GOVERNADOR          20 candidaturas;     0 com votos (0 votos)
+   DEPUTADO DISTRITAL       15 candidaturas;     0 com votos (0 votos)
+   SENADOR                  11 candidaturas;     0 com votos (0 votos)
+   GOVERNADOR               10 candidaturas;     0 com votos (0 votos)
+   PRESIDENTE                1 candidaturas;     0 com votos (0 votos)
+   VICE-PRESIDENTE           1 candidaturas;     0 com votos (0 votos)
+
+4. Partidos com votos em 2026 e sem viés (ficam fora do mapa): 2
+   MISSÃO           nº  14     5,709,087 votos (0.86% dos válidos)
+   DEMOCRATA        nº  35       385,077 votos (0.06% dos válidos)
+
+5. Candidatos de 2026 que já estavam no banco: 14,784 de 20,989 (70.4%)
+
+6. Disputas que foram ao 2º turno
+   GOVERNADOR   AC  finalistas 2; linhas de votos do 2º turno no banco: 0
+   GOVERNADOR   AM  finalistas 2; linhas de votos do 2º turno no banco: 0
+   GOVERNADOR   DF  finalistas 2; linhas de votos do 2º turno no banco: 0
+   GOVERNADOR   ES  finalistas 2; linhas de votos do 2º turno no banco: 0
+   GOVERNADOR   RN  finalistas 2; linhas de votos do 2º turno no banco: 0
+   GOVERNADOR   TO  finalistas 2; linhas de votos do 2º turno no banco: 0
+   PRESIDENTE   BR  finalistas 2; linhas de votos do 2º turno no banco: 0
+   VICE-GOVERNADOR AC  finalistas 2; linhas de votos do 2º turno no banco: 0
+   VICE-GOVERNADOR AM  finalistas 2; linhas de votos do 2º turno no banco: 0
+   VICE-GOVERNADOR DF  finalistas 2; linhas de votos do 2º turno no banco: 0
+   VICE-GOVERNADOR ES  finalistas 2; linhas de votos do 2º turno no banco: 0
+   VICE-GOVERNADOR RN  finalistas 2; linhas de votos do 2º turno no banco: 0
+   VICE-GOVERNADOR TO  finalistas 2; linhas de votos do 2º turno no banco: 0
+   VICE-PRESIDENTE BR  finalistas 2; linhas de votos do 2º turno no banco: 0

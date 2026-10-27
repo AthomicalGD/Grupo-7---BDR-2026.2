@@ -8,7 +8,7 @@ Em cada pasta, se existir o consolidado *_BRASIL.csv, só ele é lido (filtrando
 SG_UF); senão, são lidos os arquivos por UF (*_SP.csv etc.) das UFs pedidas.
 """
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
 from typing import Callable, Iterator
@@ -89,6 +89,8 @@ class Conjunto:
     colunas: dict[str, tuple[str, str]]        # coluna do CSV -> (coluna de staging, tipo)
     pos: Callable[[pd.DataFrame], pd.DataFrame] | None = None
     extras: tuple[tuple[str, str], ...] = ()   # colunas criadas por `pos` (nome, tipo)
+    # nomes que a mesma coluna teve em outros anos (coluna -> outros nomes), quando o TSE renomeia
+    apelidos: dict[str, tuple[str, ...]] = field(default_factory=dict)
 
     @property
     def estrutura(self) -> list[tuple[str, str]]:
@@ -170,7 +172,7 @@ CONJUNTOS = [
         "ANO_ELEICAO": ("ano", "int"), "NR_TURNO": ("turno", "int"), **ZONA,
         "DS_GRAU_ESCOLARIDADE": ("grau", "texto"), "QT_APTOS": ("qt_aptos", "int"),
         "QT_COMPARECIMENTO": ("qt_comparecimento", "int"),
-    }, pos=_agregar_perfil),
+    }, pos=_agregar_perfil, apelidos={"DS_GRAU_ESCOLARIDADE": ("DS_GRAU_INSTRUCAO",)}),   # 2026: DS_GRAU_INSTRUCAO
 ]
 
 
@@ -188,9 +190,13 @@ def arquivos(raiz: Path, conjunto: Conjunto, ufs: set[str]) -> list[Path]:
 
 def ler(arquivo: Path, conjunto: Conjunto, ufs: set[str]) -> Iterator[pd.DataFrame]:
     """Blocos já limpos, só com as UFs pedidas, com a coluna sg_uf para separar por UF."""
-    leitor = pd.read_csv(arquivo, sep=";", encoding="latin-1", dtype=str, usecols=[*conjunto.colunas, "SG_UF"],
+    # a coluna pode ter outro nome no arquivo (o TSE renomeia de um ano para outro): lê pelo nome que existe
+    cabecalho = set(pd.read_csv(arquivo, sep=";", encoding="latin-1", nrows=0).columns)
+    nomes = {c: next((a for a in (c, *conjunto.apelidos.get(c, ())) if a in cabecalho), c) for c in conjunto.colunas}
+    leitor = pd.read_csv(arquivo, sep=";", encoding="latin-1", dtype=str, usecols=[*nomes.values(), "SG_UF"],
                          keep_default_na=False, na_filter=False, chunksize=BLOCO, on_bad_lines="warn")
     for bloco in leitor:
+        bloco = bloco.rename(columns={v: k for k, v in nomes.items() if v != k})
         uf = bloco["SG_UF"].str.strip().str.upper()
         manter = uf.isin(ufs)
         if not manter.any():
