@@ -40,6 +40,7 @@ from fastapi import FastAPI, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
 from psycopg2.extras import RealDictCursor
 from psycopg2.pool import ThreadedConnectionPool
 
@@ -194,15 +195,16 @@ def sem_municipal(uf: str, municipal: bool) -> None:
         raise HTTPException(404, "O Distrito Federal não tem eleição municipal: não elege prefeito nem vereador.")
 
 
-@lru_cache(maxsize=1)
+@lru_cache(maxsize=2)
 @em_disco
-def votos_vies() -> list[dict]:
-    """Votos válidos por município, ano e cargo, com as somas ponderadas do viés e do alinhamento."""
-    return consultar("""
+def votos_vies(turno: int = 1) -> list[dict]:
+    """Votos válidos por município, ano e cargo, com as somas ponderadas do viés e do alinhamento. No 2º turno,
+    os votos nominais dos finalistas (vies_votos_cargo_t2, migração 018), só onde houve 2º turno."""
+    return consultar(f"""
         SELECT m.cd_uf, m.cd_ibge, v.ano, CASE v.cod_cargo WHEN 8 THEN 7 ELSE v.cod_cargo END AS cod_cargo,
                v.votos, v.votos_com_vies, v.votos_x_vies::float AS votos_x_vies,
                v.votos_com_alinhamento, v.votos_x_alinhamento::float AS votos_x_alinhamento
-        FROM vies_votos_cargo v
+        FROM {"vies_votos_cargo_t2" if turno == 2 else "vies_votos_cargo"} v
         JOIN municipio m ON m.cd_municipio = v.cd_municipio
         WHERE v.ano = ANY(%s)""", (ANOS,))
 
@@ -245,16 +247,16 @@ CARGOS_VIES = {1: "Presidente", 3: "Governador", 5: "Senador", 6: "Deputado fede
                11: "Prefeito", 13: "Vereador"}
 
 
-def linhas_vies(cargo: int | None = None) -> list[dict]:
+def linhas_vies(cargo: int | None = None, turno: int = 1) -> list[dict]:
     """As linhas de votos_vies de um cargo só, ou de todos (cargo=None)."""
-    return votos_vies() if cargo is None else [r for r in votos_vies() if r["cod_cargo"] == cargo]
+    return votos_vies(turno) if cargo is None else [r for r in votos_vies(turno) if r["cod_cargo"] == cargo]
 
 
-@lru_cache(maxsize=1)
-def indice_vies() -> tuple[dict, dict]:
+@lru_cache(maxsize=2)
+def indice_vies(turno: int = 1) -> tuple[dict, dict]:
     """As linhas de votos_vies agrupadas por UF e por município, para não varrer as ~80 mil a cada pedido."""
     por_uf, por_municipio = defaultdict(list), defaultdict(list)
-    for r in votos_vies():
+    for r in votos_vies(turno):
         por_uf[r["cd_uf"]].append(r)
         por_municipio[r["cd_ibge"]].append(r)
     return por_uf, por_municipio
@@ -272,8 +274,14 @@ def cargo_de(cargo: int | None) -> int | None:
 
 @lru_cache(maxsize=16)
 @em_disco
-def vies_ufs(cargo: int | None = None) -> dict:
-    return vies(linhas_vies(cargo), lambda r: r["cd_uf"])
+def vies_ufs(cargo: int | None = None, turno: int = 1) -> dict:
+    return vies(linhas_vies(cargo, turno), lambda r: r["cd_uf"])
+
+
+def turno_de(turno: int) -> int:
+    if turno not in (1, 2):
+        raise HTTPException(422, "turno: 1 ou 2")
+    return turno
 
 
 # ───────── App ─────────
@@ -291,7 +299,7 @@ async def _ciclo_de_vida(_app):
 app = FastAPI(title="Voto Aberto", lifespan=_ciclo_de_vida)
 app.add_middleware(GZipMiddleware)
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
-                   allow_methods=["GET"])
+                   allow_methods=["GET", "PUT"])
 
 
 @app.exception_handler(psycopg2.OperationalError)
@@ -316,23 +324,23 @@ def cargos_vies():
 
 
 @app.get("/api/ufs")
-def listar_ufs(cargo: int | None = None):
-    por_uf = vies_ufs(cargo_de(cargo))
+def listar_ufs(cargo: int | None = None, turno: int = 1):
+    por_uf = vies_ufs(cargo_de(cargo), turno_de(turno))
     return [{**uf, "carregada": s in carregadas(), "vies": por_uf.get(uf["cd_ibge"], VAZIO)["vies"],
              "alinhamento": por_uf.get(uf["cd_ibge"], VAZIO)["alinhamento"]}
             for s, uf in sorted(UFS.items())]
 
 
 @app.get("/api/ufs/{sigla}")
-def detalhar_uf(sigla: str, cargo: int | None = None):
-    return detalhe_uf(uf_de(sigla)["sigla"], cargo_de(cargo))
+def detalhar_uf(sigla: str, cargo: int | None = None, turno: int = 1):
+    return detalhe_uf(uf_de(sigla)["sigla"], cargo_de(cargo), turno_de(turno))
 
 
 @lru_cache(maxsize=48)
 @em_disco
-def detalhe_uf(sigla: str, cargo: int | None = None) -> dict:
+def detalhe_uf(sigla: str, cargo: int | None = None, turno: int = 1) -> dict:
     uf = UFS[sigla]
-    linhas = so_do_cargo(indice_vies()[0].get(uf["cd_ibge"], []), cargo)
+    linhas = so_do_cargo(indice_vies(turno)[0].get(uf["cd_ibge"], []), cargo)
     estado = vies(linhas, lambda r: 0).get(0, VAZIO)
     por_regiao = vies(linhas, lambda r: MUNICIPIOS.get(r["cd_ibge"], {}).get("regiao_intermediaria"))
     por_municipio = vies(linhas, lambda r: r["cd_ibge"])
@@ -348,7 +356,7 @@ def detalhe_uf(sigla: str, cargo: int | None = None) -> dict:
     municipios = {ibge: m for ibge, m in MUNICIPIOS.items() if m["sg_uf"] == sigla}
     regioes = sorted({m["regiao_intermediaria"] for m in municipios.values()}, key=sem_acento)
     return {
-        "sigla": sigla, "cd_ibge": uf["cd_ibge"], "nome": uf["nome"], "regiao": uf["regiao"], "cargo": cargo,
+        "sigla": sigla, "cd_ibge": uf["cd_ibge"], "nome": uf["nome"], "regiao": uf["regiao"], "cargo": cargo, "turno": turno,
         "carregada": sigla in carregadas(), "vies": estado["vies"], "sem_vies_pct": estado["sem_vies_pct"],
         "alinhamento": estado["alinhamento"], "sem_alinhamento_pct": estado["sem_alinhamento_pct"],
         "regioes": [{"nome": r, "vies": por_regiao.get(r, VAZIO)["vies"]} for r in regioes],
@@ -481,10 +489,10 @@ def buscar_municipios(q: str = "", uf: str = "", limite: int = Query(8, ge=1, le
 
 
 @app.get("/api/municipios/{ibge}")
-def detalhar_municipio(ibge: int, cargo: int | None = None):
+def detalhar_municipio(ibge: int, cargo: int | None = None, turno: int = 1):
     if ibge not in MUNICIPIOS:
         raise HTTPException(404, f"Município desconhecido: {ibge}")
-    return detalhe_municipio(ibge, cargo_de(cargo))
+    return detalhe_municipio(ibge, cargo_de(cargo), turno_de(turno))
 
 
 # As zonas eleitorais do município: o eleitorado, quem foi votar e o mais votado (prefeito nos anos municipais,
@@ -566,19 +574,19 @@ ORDER BY e.ano
 
 @lru_cache(maxsize=128)
 @em_disco
-def detalhe_municipio(ibge: int, cargo: int | None = None) -> dict:
+def detalhe_municipio(ibge: int, cargo: int | None = None, turno: int = 1) -> dict:
     m = MUNICIPIOS[ibge]
     uf = UFS[m["sg_uf"]]
     base = {"ibge": ibge, "nome": m["municipio"], "uf": m["sg_uf"], "uf_nome": m["uf"],
             "regiao_intermediaria": m["regiao_intermediaria"], "regiao_imediata": m["regiao_imediata"],
-            "carregada": m["sg_uf"] in carregadas(), "cargo": cargo}
+            "carregada": m["sg_uf"] in carregadas(), "cargo": cargo, "turno": turno}
     cd = base["carregada"] and consultar("SELECT cd_municipio FROM municipio WHERE cd_ibge = %s", (ibge,))
     if not cd:
         return {**base, "vies": {}, "vies_uf": {}, "sem_vies_pct": {}, "alinhamento": {}, "alinhamento_uf": {},
                 "espectro": {}, "indicadores": {}, "comparecimento": {}, "prefeitos": [], "cadeiras": []}
     cd = cd[0]["cd_municipio"]
 
-    v = vies(so_do_cargo(indice_vies()[1].get(ibge, []), cargo), lambda r: 0).get(0, VAZIO)
+    v = vies(so_do_cargo(indice_vies(turno)[1].get(ibge, []), cargo), lambda r: 0).get(0, VAZIO)
     espectro = defaultdict(list)
     for r in consultar(SQL_ESPECTRO, (cd, ANOS, cargo, cargo)):
         espectro[str(r.pop("ano"))].append(r)
@@ -593,7 +601,7 @@ def detalhe_municipio(ibge: int, cargo: int | None = None) -> dict:
         comparecimento[ano] = {**r, "isentos_pct": round(100 * (r["brancos"] + r["nulos"] + r["abstencoes"])
                                                          / r["aptos"], 1) if r["aptos"] else None}
 
-    do_uf = vies_ufs(cargo).get(uf["cd_ibge"], VAZIO)
+    do_uf = vies_ufs(cargo, turno).get(uf["cd_ibge"], VAZIO)
     return {**base, "vies": v["vies"], "vies_uf": do_uf["vies"], "sem_vies_pct": v["sem_vies_pct"],
             "alinhamento": v["alinhamento"], "alinhamento_uf": do_uf["alinhamento"], "espectro": espectro,
             "indicadores": indicadores(cd, comparecimento), "comparecimento": comparecimento,
@@ -766,18 +774,27 @@ achados AS (
 """
 
 SQL_BUSCA_POLITICOS = """
-WITH base AS (
-    SELECT id_politico, nome, dt_nascimento, c.topo, c.n, c.ultimo,
-           word_similarity(f_unaccent(upper(%(q)s)), f_unaccent(upper(nome))) AS ws,
-           similarity(f_unaccent(upper(nome)), f_unaccent(upper(%(q)s))) AS sim,
-           ' ' || f_unaccent(upper(nome)) LIKE '%% ' || f_unaccent(upper(%(q)s)) || '%%' AS contem
-    FROM politico
-    CROSS JOIN LATERAL (SELECT count(*) AS n, min(e.cod_cargo) AS topo, max(e.ano) AS ultimo
-                        FROM politico_eleicao pe JOIN eleicao e USING (id_eleicao)
-                        WHERE pe.id_politico = politico.id_politico) c
-    WHERE f_unaccent(upper(nome)) %% f_unaccent(upper(%(q)s))
-       OR f_unaccent(upper(nome)) LIKE '%%' || f_unaccent(upper(%(q)s)) || '%%'
+WITH busca AS (SELECT f_unaccent(upper(%(q)s)) AS q),
+base AS (            -- politico_busca (migração 019): o resumo de cada político já contado
+    SELECT id_politico, nome, dt_nascimento, topo, n, ultimo,
+           word_similarity(busca.q, nome_busca) AS ws,
+           similarity(nome_busca, busca.q) AS sim,
+           ' ' || nome_busca LIKE '%% ' || busca.q || '%%' AS contem
+    FROM politico_busca, busca
+    WHERE nome_busca %% busca.q OR nome_busca LIKE '%%' || busca.q || '%%'
 ),""" + ACHADOS + SQL_RESUMO_ACHADOS
+
+# Atalho para nomes comuns: quem tem o termo como palavra inteira no nome tem word_similarity 1, o máximo; se
+# eles já enchem a página, a ordem é a da relevância sem calcular a semelhança de ~370 mil nomes ("SILVA":
+# de 2,2 s para ~0,15 s). Sem achados suficientes, vale a busca completa, que com poucos achados é rápida.
+SQL_BUSCA_PALAVRA = """
+WITH busca AS (SELECT f_unaccent(upper(%(q)s)) AS q),
+base AS (
+    SELECT id_politico, nome, dt_nascimento, topo, n, ultimo
+    FROM politico_busca, busca
+    WHERE nome_busca LIKE '%%' || busca.q || '%%' AND ' ' || nome_busca || ' ' LIKE '%% ' || busca.q || ' %%'
+),""" + ACHADOS.format(ordem="topo, n DESC, ultimo DESC, id_politico") + SQL_RESUMO_ACHADOS
+
 
 # Busca com filtros (P10): a pessoa entra se tiver ao menos uma candidatura que bata com todos os
 # filtros ao mesmo tempo ("candidatou-se a senador, em 2022, no PI, pelo PT, e foi eleita"). O nome
@@ -908,6 +925,10 @@ def buscar_politicos(q: str = "", uf: str = "", cargo: int | None = None, ano: i
         return busca_filtrada(q if len(q) >= 3 else "", tuple(sorted(filtros.items())), limite, ordem)
     if len(q) < 3:
         return []
+    if ordem == "relevancia":
+        achados = consultar(SQL_BUSCA_PALAVRA, {"q": q, "limite": limite})
+        if len(achados) >= limite:
+            return _com_foto(achados)
     sql = SQL_BUSCA_POLITICOS.format(ordem=ORDENS.get(ordem, RELEVANCIA))
     return _com_foto(consultar(sql, {"q": q, "limite": limite}))
 
@@ -1215,6 +1236,41 @@ def reeleicao_pessoas(cargo: int, eleitos_em: int, uf: str = TODOS, grupo: str =
             "total": len(do_grupo), "pessoas": pagina}
 
 
+# ───────── A roupa do bonequinho (migração 017) ─────────
+# Fora dos caches: muda a qualquer momento, por quem estiver no armário.
+
+PECA = Field(pattern=r"^[a-z]{1,20}$")
+
+
+class Visual(BaseModel):
+    rosto: str = PECA
+    chapeu: str = PECA
+    oculos: str = PECA
+    roupa: str = PECA
+    mao: str = PECA
+    animacao: str = PECA
+    faixa: bool | None = None
+    bigode: bool = False
+    chuva: bool = False
+
+
+@app.get("/api/politicos/{id_politico}/visual")
+def ler_visual(id_politico: int, response: Response):
+    response.headers["Cache-Control"] = "no-store"
+    r = consultar("SELECT visual FROM politico_visual WHERE id_politico = %s", (id_politico,))
+    return r[0]["visual"] if r else None
+
+
+@app.put("/api/politicos/{id_politico}/visual")
+def salvar_visual(id_politico: int, visual: Visual):
+    r = consultar("""INSERT INTO politico_visual (id_politico, visual) SELECT id_politico, %s FROM politico WHERE id_politico = %s
+                     ON CONFLICT (id_politico) DO UPDATE SET visual = EXCLUDED.visual, atualizado_em = now()
+                     RETURNING visual""", (json.dumps(visual.model_dump()), id_politico))
+    if not r:
+        raise HTTPException(404, "Político não encontrado")
+    return r[0]["visual"]
+
+
 @app.get("/api/politicos/{id_politico}")
 def detalhar_politico(id_politico: int):
     p = consultar("SELECT id_politico AS id, nome, extract(year FROM dt_nascimento)::int AS nascimento_ano, "
@@ -1241,6 +1297,76 @@ def detalhar_politico(id_politico: int):
                        "primeiro_ano": cands[0]["ano"] if cands else None,
                        "ultimo_ano": cands[-1]["ano"] if cands else None},
             "contexto_reeleicao": contexto}
+
+
+# ───────── Raio-x do político (político contra político) ─────────
+# Para cada candidatura: patrimônio declarado, de onde veio o dinheiro (view campanha), a fatia dos votos
+# nominais da disputa no 1º turno e a posição entre os concorrentes; e os municípios que mais votaram nele
+# na eleição mais recente com votos.
+SQL_RAIO_X = """
+WITH minhas AS (
+    SELECT pe.id_politico_eleicao, pe.id_eleicao FROM politico_eleicao pe WHERE pe.id_politico = %(id)s
+), votos AS (
+    SELECT v.id_eleicao, v.id_politico_eleicao, sum(v.qtd_votos_nominais) AS votos
+    FROM votacao_candidato_munzona v
+    WHERE v.id_eleicao IN (SELECT id_eleicao FROM minhas)
+    GROUP BY 1, 2
+), posicao AS (
+    SELECT *, rank() OVER w AS posicao, count(*) OVER (PARTITION BY id_eleicao) AS concorrentes,
+           sum(votos) OVER (PARTITION BY id_eleicao) AS total
+    FROM votos WINDOW w AS (PARTITION BY id_eleicao ORDER BY votos DESC)
+)
+SELECT m.id_politico_eleicao AS id_candidatura, p.posicao, p.concorrentes,
+       round(100 * p.votos / NULLIF(p.total, 0), 2)::float AS pct,
+       (SELECT sum(b.vr_bem_candidato) FROM bem b WHERE b.id_politico_eleicao = m.id_politico_eleicao)::float AS patrimonio,
+       c.fundo_eleitoral::float, c.fundo_partidario::float, c.pessoas_fisicas::float, c.proprios::float, c.outros::float
+FROM minhas m
+LEFT JOIN posicao p  ON p.id_politico_eleicao = m.id_politico_eleicao
+LEFT JOIN campanha c ON c.id_politico_eleicao = m.id_politico_eleicao
+"""
+SQL_REDUTOS = """
+SELECT m.cd_ibge AS ibge, m.nm_municipio AS nome, u.sigla AS uf, sum(v.qtd_votos_nominais)::bigint AS votos
+FROM votacao_candidato_munzona v
+JOIN zona_eleitoral z ON z.id_zona = v.id_zona
+JOIN municipio m      ON m.cd_municipio = z.cd_municipio
+JOIN uf u             ON u.cd_ibge = m.cd_uf
+WHERE v.id_politico_eleicao = %s
+GROUP BY 1, 2, 3
+ORDER BY 4 DESC
+"""
+
+
+@lru_cache(maxsize=256)
+@em_disco
+def raio_x(id_politico: int) -> dict:
+    linhas = consultar(SQL_RAIO_X, {"id": id_politico})
+    por_cand = {r.pop("id_candidatura"): r for r in linhas}
+    # os redutos: a candidatura mais recente com votos
+    com_votos = [c for c in consultar(SQL_CANDIDATURAS, (id_politico,)) if c["votos"]]
+    redutos = None
+    if com_votos:
+        c = max(com_votos, key=lambda c: (c["ano"], c["votos"]))
+        municipios = consultar(SQL_REDUTOS, (c["id_candidatura"],))
+        total = sum(m["votos"] for m in municipios)
+        redutos = {"ano": c["ano"], "cargo": c["cargo"], "municipios": len(municipios), "total": total,
+                   "top": [{**m, "pct": round(100 * m["votos"] / total, 1)} for m in municipios[:8]],
+                   # quantos municípios somam metade dos votos: concentrado (poucos) ou espalhado (muitos)
+                   "metade": next(i + 1 for i, acc in enumerate(_acumulado(m["votos"] for m in municipios)) if acc >= total / 2)}
+    return {"candidaturas": por_cand, "redutos": redutos}
+
+
+def _acumulado(valores):
+    soma = 0
+    for v in valores:
+        soma += v
+        yield soma
+
+
+@app.get("/api/politicos/{id_politico}/raio-x")
+def raio_x_politico(id_politico: int):
+    if not consultar("SELECT 1 FROM politico WHERE id_politico = %s", (id_politico,)):
+        raise HTTPException(404, f"Político desconhecido: {id_politico}")
+    return raio_x(id_politico)
 
 
 # ───────── Quanto custa uma cadeira? (P1), como em scripts/01_custo_cadeira.py ─────────

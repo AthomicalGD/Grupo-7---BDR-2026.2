@@ -267,8 +267,8 @@ python -m uvicorn api.app:app --port 8000
 | Endpoint | Retorna |
 |---|---|
 | `GET /api/saude` | Se o banco responde e as UFs carregadas (503 com instruções se o banco estiver fora) |
-| `GET /api/ufs` | As 27 UFs, com nº de municípios, se estão carregadas, o viés e o alinhamento na Câmara por ano |
-| `GET /api/ufs/{sigla}` | Viés da UF, das regiões intermediárias e de cada município, alinhamento da UF e de cada município, % dos votos em partidos sem viés e eleitorado apto por ano |
+| `GET /api/ufs?cargo=&turno=` | As 27 UFs, com nº de municípios, se estão carregadas, o viés e o alinhamento na Câmara por ano; `turno=2` usa os votos dos finalistas do 2º turno (migração 018) |
+| `GET /api/ufs/{sigla}?cargo=&turno=` | Viés da UF, das regiões intermediárias e de cada município, alinhamento da UF e de cada município, % dos votos em partidos sem viés e eleitorado apto por ano |
 | `GET /api/ufs/{sigla}/composicao?ano=` | De onde vem o viés da UF no ano: cada partido com votos, viés naquela eleição e quanto puxa a média (a soma dá o viés; partido sem viés puxa 0), e os candidatos mais votados de cada partido |
 | `GET /api/escola?ano=&uf=` | P4 (2022, 2024 ou 2026; `uf` opcional recorta um estado): quem votou, candidatos e eleitos por grau de escolaridade e cargo, municípios em quintis pela escolaridade de quem votou e a correlação |
 | `GET /api/escola/municipios?ano=&uf=` | P4: cada município com a % de superior completo de quem votou, dos candidatos, dos eleitos e dos votos (mapa, dispersão e ranking) |
@@ -276,12 +276,14 @@ python -m uvicorn api.app:app --port 8000
 | `GET /api/escola/comparar` | P4: 2022 e 2024 lado a lado, por estado e cargo (candidatos e eleitos por grau) e quem votou por estado |
 | `GET /api/escola/municipio/{ibge}?ano=` | P4 no município: quem votou por grau, os eleitos (2024) com grau e partido, os votos para deputado (2022) ou vereador por grau, e o quintil |
 | `GET /api/municipios?q=&uf=&limite=8` | Busca de municípios por nome, sem acentos, em todo o Brasil |
-| `GET /api/municipios/{ibge}` | Viés e alinhamento (do município e da UF), votos por partido com o viés de cada eleição, indicadores (PIB per capita, IDHM...), comparecimento e prefeitos |
+| `GET /api/municipios/{ibge}?cargo=&turno=` | Viés e alinhamento (do município e da UF), votos por partido com o viés de cada eleição, indicadores (PIB per capita, IDHM...), comparecimento e prefeitos |
 | `GET /api/municipios/{ibge}/zonas?ano=` | As zonas eleitorais do município: aptos, comparecimento, superior completo de quem foi votar e o mais votado (prefeito ou presidente) |
 | `GET /api/politicos?q=&cargo=&ano=&uf=&partido=&resultado=&limite=8` | Busca de políticos por nome (trigramas, sem acentos; migração `010_busca_politicos.sql`) e/ou por uma candidatura que bata com todos os filtros |
 | `GET /api/partidos` | Siglas das candidaturas, com o viés atual do partido (`null` = sem viés; filtro da busca) |
 | `GET /api/politicos/aleatorio` | Um político com 5+ candidaturas e 2+ vitórias |
 | `GET /api/politicos/{id}` | Candidaturas, resultados, votos e reeleições do político (sem CPF, título ou data de nascimento) |
+| `GET /api/politicos/{id}/raio-x` | Político contra político: por candidatura, patrimônio declarado, receitas por origem (fundos, pessoas físicas, recursos próprios), fatia dos votos e posição na disputa; e os municípios que mais votaram nele na eleição mais recente |
+| `GET` / `PUT /api/politicos/{id}/visual` | A roupa do bonequinho salva no armário (migração 017): chapéu, óculos, roupa, o que leva na mão, a dança e os extras; o PUT confere o formato de cada peça |
 | `GET /api/patrimonio?ano=&cargo=&uf=` | P2: candidatos e eleitos por faixa de patrimônio declarado (sem bens, R$ 0 e quartis, com limites e o candidato do meio) e a fila dos que declararam bens em 100 passos, como em `respostas/02_patrimonio.txt`; Presidente sempre nacional |
 | `GET /api/patrimonio/panorama?uf=` | P2: a taxa de cada faixa em todos os cargos e anos de uma vez, e em quantas disputas a faixa de mais bens supera a de menos |
 | `GET /api/reeleicao?uf=` | P10a: por cargo, eleitos, quantos tentaram a reeleição e quantos voltaram, ciclo a ciclo e somados (média das taxas municipais para prefeito e vereador), como em `respostas/10a_taxa_reeleicao.txt`; alguns segundos na primeira vez de cada UF |

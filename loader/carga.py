@@ -364,9 +364,9 @@ def genero_dos_politicos(x: _Execucao) -> None:
 
 
 def atualizar_resumos(cur) -> None:
-    """Views materializadas que dependem da carga (migrações 011 e 012)."""
+    """Views materializadas que dependem da carga (migrações 011, 012 e 019)."""
     cur.execute("REFRESH MATERIALIZED VIEW campanha; REFRESH MATERIALIZED VIEW despesa_por_eleicao; "
-                "REFRESH MATERIALIZED VIEW votos_candidato_uf")
+                "REFRESH MATERIALIZED VIEW votos_candidato_uf; REFRESH MATERIALIZED VIEW politico_busca")
 
 
 def _votacao(x: _Execucao) -> None:
