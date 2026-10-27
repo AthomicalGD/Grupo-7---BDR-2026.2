@@ -138,7 +138,9 @@ def versao_cache() -> str:
     dados = consultar("""
         SELECT md5(COALESCE((SELECT string_agg(sg_uf || carregada_em::text, ',' ORDER BY sg_uf) FROM carga_uf), '')
                 || COALESCE((SELECT string_agg(t::text, ',' ORDER BY t::text) FROM vies_partido_onda t), '')) AS v""")[0]["v"]
-    versao = f"{dados[:10]}-{VERSAO_CONTAS}"
+    # as fotos também entram: com o disco das fotos desconectado, as contas guardariam "sem foto" para todos
+    fotos = sum(1 for _ in (DADOS / PASTA_FOTOS).glob("*/*.zip"))
+    versao = f"{dados[:10]}{fotos:x}-{VERSAO_CONTAS}"
     if CACHE_API.exists():
         for velha in CACHE_API.iterdir():
             if velha.is_dir() and "-" in velha.name and velha.name != versao:   # "fotos" fica
