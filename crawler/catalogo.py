@@ -6,10 +6,13 @@ além disso.
 """
 from dataclasses import dataclass
 
-EP = (2018, 2020, 2022, 2024)        # Escopo Padrão
-ANOS_P4 = (2022, 2024)               # escopo da pergunta 4
+# 2026 entra com o que o TSE já publicou (27/10/2026): candidaturas, bens, vagas e a votação do 1º turno completas;
+# o 2º turno (25/10), a situação final de quem foi a ele e a prestação de contas final ainda faltam. O crawler baixa
+# de novo quando o arquivo muda no CDN (Last-Modified), então rodar outra vez traz as atualizações.
+EP = (2018, 2020, 2022, 2024, 2026)  # Escopo Padrão
+ANOS_P4 = (2022, 2024, 2026)         # escopo da pergunta 4
 PRIMEIRO_ANO_CANDIDATOS = 1994       # 1ª eleição com dados por candidato no TSE
-ULTIMO_ANO_COM_RESULTADO = 2024      # 2026 só tem registro de candidaturas (eleição em outubro)
+ULTIMO_ANO_COM_RESULTADO = 2026      # 2026 com o resultado do 1º turno (o 2º ainda não foi publicado)
 CARREIRA = "carreira"                # marcador: de 1994 até --carreira-ate, de 2 em 2 anos
 
 PERGUNTAS = {
