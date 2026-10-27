@@ -76,15 +76,19 @@ export function SegundoTurnoPagina() {
   }, [])
 
   const todas = q.data?.disputas ?? []
+  const incompletas = q.data?.incompletas ?? []
+  const pendentes = incompletas.filter((x) => x.motivo === '2º turno não publicado')
+  const semVotos = incompletas.filter((x) => x.motivo !== '2º turno não publicado')
+  // o ano vale para a página toda: a frase do topo, a largada, a disputa aberta e a lista
+  const doAno = useMemo(() => (busca.ano ? todas.filter((d) => d.ano === busca.ano) : todas), [todas, busca.ano])
   // sem disputa no endereço, abre a maior virada (o vencedor mais atrás no 1º turno)
-  const maiorVirada = useMemo(() => todas.filter((d) => d.virada).sort((x, y) => parteVencedor(x).t1 - parteVencedor(y).t1)[0], [todas])
-  const aberta = todas.find((d) => d.id === busca.d) ?? maiorVirada
+  const maiorVirada = useMemo(() => doAno.filter((d) => d.virada).sort((x, y) => parteVencedor(x).t1 - parteVencedor(y).t1)[0], [doAno])
+  const aberta = doAno.find((d) => d.id === busca.d) ?? maiorVirada
 
   const filtradas = useMemo(() => {
     const t = semAcento(texto.trim())
-    const lista = todas.filter((d) =>
+    const lista = doAno.filter((d) =>
       (!busca.cargo || d.cod_cargo === busca.cargo) &&
-      (!busca.ano || d.ano === busca.ano) &&
       (!busca.viradas || d.virada) &&
       (!t || semAcento(`${lugar(d, ufs)} ${d.finalistas.map((f) => `${f.nome} ${f.nome_urna ?? ''} ${f.partido ?? ''}`).join(' ')}`).includes(t)))
     const ordem = busca.ordem ?? 'recentes'
@@ -92,7 +96,7 @@ export function SegundoTurnoPagina() {
       ordem === 'viradas' ? Number(y.virada) - Number(x.virada) || parteVencedor(x).t1 - parteVencedor(y).t1
         : ordem === 'crescimento' ? (y.finalistas[0].crescimento ?? 0) - (x.finalistas[0].crescimento ?? 0)
           : y.ano - x.ano || x.cod_cargo - y.cod_cargo || lugar(x, ufs).localeCompare(lugar(y, ufs)))
-  }, [todas, busca.cargo, busca.ano, busca.viradas, busca.ordem, texto, ufs])
+  }, [doAno, busca.cargo, busca.viradas, busca.ordem, texto, ufs])
   useEffect(() => setMostrando(LOTE), [busca.cargo, busca.ano, busca.viradas, busca.ordem, texto])
 
   const abrir = (id: number) => {
@@ -103,9 +107,11 @@ export function SegundoTurnoPagina() {
   if (q.error) return <div className="mx-auto max-w-[var(--casca-max)] px-4 py-10 md:px-[var(--casca-margem)]"><ErroCarga erro={q.error} aoTentar={q.refetch} /></div>
   if (!q.data) return <Atrasado><EsqueletoPagina rotulo="Juntando os dois turnos de cada disputa..." /></Atrasado>
 
-  const viradas = todas.filter((d) => d.virada).length
+  const viradas = doAno.filter((d) => d.virada).length
   const anos = [...new Set(todas.map((d) => d.ano))].sort()
-  const filtrando = !!(busca.cargo || busca.ano || busca.viradas || texto)
+  // anos com 2º turno que o TSE ainda não publicou (2026): aparecem no filtro, sem poder escolher
+  const anosPendentes = [...new Set(pendentes.map((x) => x.ano))].filter((a) => !anos.includes(a as Ano)).sort()
+  const filtrando = !!(busca.cargo || busca.viradas || texto)
 
   return (
     <div className="mx-auto max-w-[var(--casca-max)] px-4 pb-12 pt-6 md:px-[var(--casca-margem)] md:pt-7">
@@ -113,15 +119,26 @@ export function SegundoTurnoPagina() {
         <div>
           <h1 className="t-display">O que muda no 2º turno?</h1>
           <p className="mt-4 max-w-[58ch] text-[1.08rem] text-tinta-2">
-            Quando ninguém passa da metade dos votos válidos, os dois mais votados disputam de novo. De {anos[0]} a {anos.at(-1)} foram{' '}
-            <b className="text-tinta">{todas.length} segundos turnos</b>, e em <b className="text-tinta">{viradas}</b> deles ({pct((100 * viradas) / todas.length, 0)}) quem
+            Quando ninguém passa da metade dos votos válidos, os dois mais votados disputam de novo. {busca.ano ? `Em ${busca.ano}` : `De ${anos[0]} a ${anos.at(-1)}`} foram{' '}
+            <b className="text-tinta">{doAno.length} segundos turnos</b>, e em <b className="text-tinta">{viradas}</b> deles ({pct((100 * viradas) / Math.max(1, doAno.length), 0)}) quem
             liderou o 1º turno perdeu: houve <b className="text-tinta">virada</b>.
           </p>
+        </div>
+        <div role="radiogroup" aria-label="Ano da eleição" className="mt-6 flex flex-wrap items-center gap-2">
+          <span className="mr-1 text-[0.86rem] font-semibold text-tinta-2">Eleição de</span>
+          <Escolha ativo={!busca.ano} aoClicar={() => mudar({ ano: undefined, d: undefined })}>Todos os anos</Escolha>
+          {anos.map((a) => <Escolha key={a} ativo={busca.ano === a} aoClicar={() => mudar({ ano: a as Ano, d: undefined })}>{a}</Escolha>)}
+          {anosPendentes.map((a) => (
+            <span key={a} role="radio" aria-checked={false} aria-disabled title="O TSE ainda não publicou os votos do 2º turno"
+              className="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-full border border-dashed border-linha-2 px-3.5 text-[0.86rem] font-semibold whitespace-nowrap text-tinta-3">
+              {a} <span className="font-normal">· 2º turno ainda não publicado</span>
+            </span>
+          ))}
         </div>
       </header>
 
       <section aria-label="De onde o vencedor partiu" className="mt-8">
-        <Largada disputas={todas} ufs={ufs} aoAbrir={abrir} />
+        <Largada disputas={doAno} ufs={ufs} aoAbrir={abrir} />
       </section>
 
       {aberta && (
@@ -132,7 +149,7 @@ export function SegundoTurnoPagina() {
 
       <section aria-labelledby="todas" className="mt-16">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <h2 id="todas" className="t-h1">{filtrando ? `${filtradas.length} de ${todas.length} disputas` : `As ${todas.length} disputas`}</h2>
+          <h2 id="todas" className="t-h1">{filtrando ? `${filtradas.length} de ${doAno.length} disputas` : `As ${doAno.length} disputas`}{busca.ano ? ` de ${busca.ano}` : ''}</h2>
           <label className="relative block w-full max-w-[340px]">
             <span className="sr-only">Procurar disputa</span>
             <MagnifyingGlass size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-tinta-3" aria-hidden />
@@ -152,10 +169,6 @@ export function SegundoTurnoPagina() {
             {(Object.keys(ROTULO_CARGO) as ChaveCargo[]).map((k) => (
               <Escolha key={k} ativo={busca.cargo === CARGOS[k]} aoClicar={() => mudar({ cargo: CARGOS[k] })}>{ROTULO_CARGO[k]}</Escolha>
             ))}
-          </div>
-          <div role="radiogroup" aria-label="Ano" className="flex flex-wrap gap-2">
-            <Escolha ativo={!busca.ano} aoClicar={() => mudar({ ano: undefined })}>Todos os anos</Escolha>
-            {anos.map((a) => <Escolha key={a} ativo={busca.ano === a} aoClicar={() => mudar({ ano: a as Ano })}>{a}</Escolha>)}
           </div>
           <button type="button" aria-pressed={!!busca.viradas} onClick={() => mudar({ viradas: busca.viradas ? undefined : true })}
             className={`inline-flex h-10 items-center gap-2 rounded-full border px-3.5 text-[0.86rem] font-semibold transition-colors ${busca.viradas ? 'border-escolha-2 bg-escolha text-tinta' : 'border-linha bg-folha text-tinta-2 hover:border-linha-2 hover:text-tinta'}`}>
@@ -188,7 +201,7 @@ export function SegundoTurnoPagina() {
         ) : (
           <div className="mt-6 rounded-[16px] border border-dashed border-linha-2 bg-folha p-8 text-center">
             <p className="text-[1rem] font-semibold">Nenhuma disputa com esses filtros.</p>
-            <button type="button" onClick={() => { setTexto(''); mudar({ cargo: undefined, ano: undefined, viradas: undefined }) }} className="mt-3 text-[0.92rem] font-semibold text-acao hover:underline">
+            <button type="button" onClick={() => { setTexto(''); mudar({ cargo: undefined, viradas: undefined }) }} className="mt-3 text-[0.92rem] font-semibold text-acao hover:underline">
               Limpar os filtros
             </button>
           </div>
@@ -209,8 +222,12 @@ export function SegundoTurnoPagina() {
         <p className="mt-3 max-w-[70ch] text-[0.82rem] text-tinta-3">
           Votos nominais por zona do TSE, de 2018 a 2024 (antes disso o banco não tem os votos por zona). % no 1º turno: entre todos os candidatos;
           no 2º, entre os dois. Comparecimento, brancos, nulos e faltas: somados nos municípios da disputa. {inteiro(todas.length)} disputas.
-          {q.data.incompletas.length > 0 && (
-            <> Ficaram de fora, por não terem no banco os votos do 1º turno: {q.data.incompletas.map((x) => `${nomeProprio(x.municipio ?? x.uf ?? '')}${x.municipio ? ` (${x.uf})` : ''} ${x.ano}`).join(' e ')}.</>
+          {semVotos.length > 0 && (
+            <> Ficaram de fora, por não terem no banco os votos do 1º turno: {semVotos.map((x) => `${nomeProprio(x.municipio ?? x.uf ?? '')}${x.municipio ? ` (${x.uf})` : ''} ${x.ano}`).join(' e ')}.</>
+          )}
+          {pendentes.length > 0 && (
+            <> O 2º turno de {[...new Set(pendentes.map((x) => x.ano))].join(' e ')} ainda não foi publicado pelo TSE: {inteiro(pendentes.length)} disputas
+              ({pendentes.map((x) => `${cargoBonito(x.cargo).toLowerCase()} ${x.municipio ? nomeProprio(x.municipio) : x.uf ?? 'Brasil'}`).join(', ')}) entram quando sair.</>
           )}
         </p>
       </section>

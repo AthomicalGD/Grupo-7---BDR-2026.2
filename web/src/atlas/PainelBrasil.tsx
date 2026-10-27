@@ -37,7 +37,7 @@ export function PainelBrasil({ ufs, malha, ano, anos, aoMudarAno, cargo, aoEscol
       <header className="space-y-3">
         <h1 className="t-display">Para onde o voto pendeu</h1>
         <p className="max-w-[54ch] text-[1.05rem] leading-relaxed text-tinta-2">
-          Viés partidário de cada estado e município de 2018 a 2024, de −100 (esquerda) a +100 (direita), calculado
+          Viés partidário de cada estado e município de 2018 a 2026, de −100 (esquerda) a +100 (direita), calculado
           {cargo ? <> só com os votos válidos para <b className="font-semibold text-tinta">{cargo.toLowerCase()}</b>.</> : ' com os votos válidos de todos os cargos.'}
         </p>
       </header>

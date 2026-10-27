@@ -86,7 +86,7 @@ export const Recorte = memo(function Recorte({ cargo, ano, anos, uf, ufs, malha,
                   <p className="t-rotulo mb-2 text-tinta-3">{grupo.titulo}</p>
                   <div className="grid gap-1">
                     {grupo.cargos.map((c) => {
-                      const a = (c.municipal ? [2020, 2024] : [2018, 2022]).includes(ano) ? ano : c.municipal ? 2024 : 2022
+                      const a = (c.municipal ? [2020, 2024] : [2018, 2022, 2026]).includes(ano) ? ano : c.municipal ? 2024 : 2026
                       const r = panorama?.recortes.find((x) => x.ano === a && x.cargo.cod === c.cod)
                       const qs = r ? quartis(r.grupos) : []
                       const marcado = c.cod === cargo.cod

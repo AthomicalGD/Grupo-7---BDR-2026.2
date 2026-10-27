@@ -2,7 +2,7 @@
 import { queryOptions } from '@tanstack/react-query'
 import type { FeatureCollection, MultiPolygon, Polygon } from 'geojson'
 
-export const ANOS = [2018, 2020, 2022, 2024] as const
+export const ANOS = [2018, 2020, 2022, 2024, 2026] as const
 export type Ano = (typeof ANOS)[number]
 export type PorAno<T> = Partial<Record<string, T>>
 
@@ -163,7 +163,7 @@ export const CARGOS_BUSCA = [
 /** Teto de `limite` em /api/politicos (Query(le=50) em api/app.py). */
 export const LIMITE_BUSCA = 50
 
-export const ANOS_ELEICAO = [2024, 2022, 2020, 2018, 2016, 2014, 2012, 2010, 2008, 2006, 2004, 2002, 2000, 1998, 1996, 1994] as const
+export const ANOS_ELEICAO = [2026, 2024, 2022, 2020, 2018, 2016, 2014, 2012, 2010, 2008, 2006, 2004, 2002, 2000, 1998, 1996, 1994] as const
 
 export interface Candidatura {
   ano: number
@@ -388,6 +388,8 @@ export interface ContaReeleicao {
   reeleitos: number
   /** reeleitos ÷ tentaram, em %; nulo quando ninguém tentou */
   taxa: number | null
+  /** tentaram, mas foram a um 2º turno que o TSE ainda não publicou (2026): fora de `tentaram` */
+  pendentes?: number
   /** prefeito e vereador: média simples das taxas dos municípios em que alguém tentou */
   media_municipios: number | null
 }
@@ -412,7 +414,7 @@ export interface Reeleicao {
 }
 
 /** P10a: os eleitos de um cargo e ciclo, num dos três destinos da eleição seguinte. */
-export type GrupoReeleicao = 'voltaram' | 'perderam' | 'nao'
+export type GrupoReeleicao = 'voltaram' | 'perderam' | 'nao' | 'aguardando'
 export interface PessoasReeleicao {
   uf: string
   cargo: number
@@ -436,7 +438,7 @@ export class ErroApi extends Error {
 
 /** P4: os 8 graus do TSE, de 1 (analfabeto) a 8 (superior completo); vetores com 8 posições. */
 export interface Escola {
-  ano: 2022 | 2024
+  ano: 2022 | 2024 | 2026
   /** a UF filtrada, ou nulo para todas as carregadas */
   uf: string | null
   ufs: string[]
@@ -479,7 +481,7 @@ export interface EscolaLugar {
   ibge: number
   nome: string
   uf: string
-  ano: 2022 | 2024
+  ano: 2022 | 2024 | 2026
   votantes: number[]
   votados: number[]
   eleitos: EleitoEscola[]
@@ -522,7 +524,7 @@ export interface EscolaComparar {
   anos: Record<string, Record<string, { votantes: number[]; cargos: Record<string, { candidatos: number[]; eleitos: number[] }> }>>
 }
 
-export const ANOS_ESCOLA = [2022, 2024] as const
+export const ANOS_ESCOLA = [2022, 2024, 2026] as const
 
 async function get<T>(caminho: string, signal?: AbortSignal): Promise<T> {
   let r: Response
@@ -600,7 +602,7 @@ const sempre = { staleTime: Infinity, gcTime: 30 * 60_000 } // os dados só muda
 /** "?cargo=1" (ou "&cargo=1"), ou nada quando são todos os cargos */
 const comCargo = (cargo: number | undefined, sep: '?' | '&') => (cargo ? `${sep}cargo=${cargo}` : '')
 
-const GERAIS: Ano[] = [2018, 2022]
+const GERAIS: Ano[] = [2018, 2022, 2026]
 const MUNICIPAIS: Ano[] = [2020, 2024]
 /** Os cargos de /api/vies/cargos, para mostrar antes da resposta chegar. */
 const CARGOS_PADRAO: CargoVies[] = [
@@ -742,7 +744,7 @@ export const consultas = {
   malhaUF: (sigla: string) =>
     queryOptions({ queryKey: ['malha', sigla], queryFn: ({ signal }) => get<Malha>(`/api/geo/uf/${sigla}`, signal), ...sempre }),
   segundoTurno: () =>
-    queryOptions({ queryKey: ['segundo-turno'], queryFn: ({ signal }) => get<{ disputas: SegundoTurno[]; incompletas: { ano: number; cargo: string; uf: string | null; municipio: string | null }[] }>('/api/segundo-turno', signal), ...sempre }),
+    queryOptions({ queryKey: ['segundo-turno'], queryFn: ({ signal }) => get<{ disputas: SegundoTurno[]; incompletas: { ano: number; cargo: string; uf: string | null; municipio: string | null; motivo: string }[] }>('/api/segundo-turno', signal), ...sempre }),
   segundoTurnoLugares: (id: number) =>
     queryOptions({ queryKey: ['segundo-turno', id], queryFn: ({ signal }) => get<SegundoTurnoLugares>(`/api/segundo-turno/${id}`, signal), ...sempre }),
 }

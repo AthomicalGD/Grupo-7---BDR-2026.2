@@ -97,7 +97,7 @@ test('filtro de cargo: só o voto para presidente, com os anos do cargo e a píl
   await expect(page).toHaveURL(/cargo=1/)
   await expect(page.getByRole('radio', { name: /^2018/ })).toBeVisible()
   await expect(page.getByRole('radio', { name: /^2020/ })).toHaveCount(0)
-  await expect(page.getByText('Só o voto para presidente, disputado em 2018 e 2022.')).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByText('Só o voto para presidente, disputado em 2018, 2022 e 2026.')).toBeVisible({ timeout: 20_000 })
   await expect(page.getByRole('button', { name: /^Mostrando só o voto para Presidente/ })).toBeVisible()
   await registrar(page, 'atlas-cargo')
   // a pílula tira o filtro

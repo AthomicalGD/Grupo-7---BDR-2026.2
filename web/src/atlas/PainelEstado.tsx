@@ -91,7 +91,7 @@ export function PainelEstado({ uf, ano, cargo, relativo, relevo, aoMudarRelativo
         </div>
         {uf.sigla === 'DF' && (cargo ? cargo.municipal : ano % 4 === 0) && (
           <p className="rounded-xl border border-linha bg-folha px-4 py-3 text-[0.9rem] text-tinta-2">
-            O Distrito Federal não tem eleição municipal: não elege prefeito nem vereador. Os dados dele estão em 2018 e 2022.
+            O Distrito Federal não tem eleição municipal: não elege prefeito nem vereador. Os dados dele estão em 2018, 2022 e 2026.
           </p>
         )}
         <div className="flex flex-wrap gap-2 pt-1">
@@ -120,8 +120,8 @@ export function PainelEstado({ uf, ano, cargo, relativo, relevo, aoMudarRelativo
         <ViesTempo principal={{ nome: uf.nome, valores: uf.vies }} anoAtivo={ano} />
         <p className="text-[0.82rem] leading-relaxed text-tinta-3">
           {cargo
-            ? <>Só o voto para {cargo.nome.toLowerCase()}, disputado em {cargo.anos.join(' e ')}. </>
-            : <>2018 e 2022 somam presidente, governador, senado e deputados; 2020 e 2024, prefeito e vereador, cada cargo com o
+            ? <>Só o voto para {cargo.nome.toLowerCase()}, disputado em {cargo.anos.slice(0, -1).join(', ')} e {cargo.anos.at(-1)}. </>
+            : <>2018, 2022 e 2026 somam presidente, governador, senado e deputados; 2020 e 2024, prefeito e vereador, cada cargo com o
               mesmo peso. Compare anos do mesmo tipo. </>}
           {(!cargo || cargo.anos.includes(2024)) && '2024 usa a classificação dos especialistas de 2022, estendida por dois anos.'}
         </p>

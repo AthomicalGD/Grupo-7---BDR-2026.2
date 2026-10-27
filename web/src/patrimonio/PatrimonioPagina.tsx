@@ -21,7 +21,7 @@ import { Escadas } from './Escadas'
 import { Recorte } from './Recorte'
 import { Voce } from './Voce'
 
-const ANOS_GERAIS: Ano[] = [2018, 2022]
+const ANOS_GERAIS: Ano[] = [2018, 2022, 2026]
 const ANOS_MUNICIPAIS: Ano[] = [2020, 2024]
 const TSE_BENS = 'https://divulgacandcontas.tse.jus.br/'
 const suave = (): ScrollBehavior => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth')

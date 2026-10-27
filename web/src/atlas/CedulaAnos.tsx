@@ -1,11 +1,11 @@
 // Seletor de ano em forma de cédula: quatro casas que se marcam com um X.
-// "Linha do tempo" percorre 2018 → 2024 e para no último ano.
+// "Linha do tempo" percorre 2018 → 2026 e para no último ano.
 import { Pause, Play } from '@phosphor-icons/react'
 import { motion } from 'motion/react'
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { ANOS, type Ano } from '../api'
 
-const TIPO: Record<Ano, string> = { 2018: 'Geral', 2020: 'Municipal', 2022: 'Geral', 2024: 'Municipal' }
+const TIPO: Record<Ano, string> = { 2018: 'Geral', 2020: 'Municipal', 2022: 'Geral', 2024: 'Municipal', 2026: 'Geral' }
 const PASSO_MS = 1600
 
 export function CedulaAnos({ ano, aoMudar, anos = ANOS, linhaDoTempo = true, extra }: {
@@ -46,7 +46,7 @@ export function CedulaAnos({ ano, aoMudar, anos = ANOS, linhaDoTempo = true, ext
 
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-linha bg-folha p-1.5 pr-2 shadow-[var(--shadow-cartao)]">
-      <div role="radiogroup" aria-label="Ano da eleição" className="grid flex-1 grid-cols-2 sm:flex sm:flex-wrap" onKeyDown={teclado}>
+      <div role="radiogroup" aria-label="Ano da eleição" className="grid flex-1 grid-cols-3 sm:flex sm:flex-wrap" onKeyDown={teclado}>
         {anos.map((a) => {
           const marcado = a === ano
           return (
@@ -61,7 +61,7 @@ export function CedulaAnos({ ano, aoMudar, anos = ANOS, linhaDoTempo = true, ext
                 setTocando(false)
                 aoMudar(a)
               }}
-              className="group flex min-w-[104px] flex-1 items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-papel"
+              className="group flex min-w-[84px] flex-1 items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors hover:bg-papel"
             >
               <span className="relative grid size-[22px] shrink-0 place-items-center rounded-[5px] border-[1.5px] border-tinta bg-folha">
                 <svg viewBox="0 0 22 22" className="absolute inset-0" aria-hidden>

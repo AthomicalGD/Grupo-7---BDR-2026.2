@@ -1,6 +1,6 @@
 // Viés na linha do tempo: a série principal em destaque e uma série de contexto em cinza
 // (ênfase, não categórico). Um eixo só, de -L a +L, simétrico em 0.
-// Eleições gerais (2018, 2022) e municipais (2020, 2024) têm cargos diferentes e não se comparam:
+// Eleições gerais (2018, 2022, 2026) e municipais (2020, 2024) têm cargos diferentes e não se comparam:
 // cada tipo tem a sua linha e o seu marcador (círculo e losango).
 // Por padrão desenha o viés; com `medida`, a mesma forma serve ao alinhamento na Câmara (outra cor e rótulos).
 import { useId, useState } from 'react'
@@ -27,7 +27,7 @@ export interface Medida {
 
 const MEDIDA_VIES: Medida = { nome: 'Viés', cor: (v) => corVies(v), lado: ladoVies, negativo: 'esquerda', positivo: 'direita', limite: 80 }
 
-const GERAIS: Ano[] = [2018, 2022]
+const GERAIS: Ano[] = [2018, 2022, 2026]
 const MUNICIPAIS: Ano[] = [2020, 2024]
 const geral = (a: Ano) => GERAIS.includes(a)
 
@@ -152,7 +152,7 @@ export function ViesTempo({ principal, contexto, anoAtivo, medida = MEDIDA_VIES 
       <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-[0.76rem] text-tinta-2">
         <span className="inline-flex items-center gap-1.5">
           <svg width="22" height="12" aria-hidden><line x1="0" y1="6" x2="22" y2="6" stroke="var(--color-tinta)" strokeWidth="2" /><circle cx="11" cy="6" r="4.5" fill="var(--color-tinta-2)" stroke="var(--color-folha)" strokeWidth="1.5" /></svg>
-          Gerais (2018, 2022)
+          Gerais (2018, 2022, 2026)
         </span>
         <span className="inline-flex items-center gap-1.5">
           <svg width="22" height="14" aria-hidden><line x1="0" y1="7" x2="22" y2="7" stroke="var(--color-tinta)" strokeWidth="2" opacity="0.45" /><path d="M11 1.5L16.5 7L11 12.5L5.5 7Z" fill="var(--color-tinta-2)" stroke="var(--color-folha)" strokeWidth="1.5" /></svg>

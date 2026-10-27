@@ -136,7 +136,7 @@ const escola = createRoute({
   path: '/escola',
   component: lazyRouteComponent(() => import('./escola/EscolaPagina'), 'EscolaPagina'),
   validateSearch: (s: Record<string, unknown>): BuscaEscola => ({
-    ano: Number(s.ano) === 2022 ? 2022 : Number(s.ano) === 2024 ? 2024 : undefined,
+    ano: ([2022, 2024, 2026] as const).find((a) => a === Number(s.ano)),
     cargo: numero(s.cargo),
     santinho: numero(s.santinho),
     uf: typeof s.uf === 'string' && /^[A-Z]{2}$/.test(s.uf) ? s.uf : undefined,
@@ -192,7 +192,7 @@ const segundoTurno = createRoute({
   validateSearch: (s: Record<string, unknown>): BuscaSegundoTurno => ({
     d: Number.isInteger(Number(s.d)) && Number(s.d) > 0 ? Number(s.d) : undefined,
     cargo: [1, 3, 11].includes(Number(s.cargo)) ? Number(s.cargo) : undefined,
-    ano: ([2018, 2020, 2022, 2024] as const).find((a) => a === Number(s.ano)),
+    ano: ([2018, 2020, 2022, 2024, 2026] as const).find((a) => a === Number(s.ano)),
     viradas: s.viradas === true || s.viradas === 'true' ? true : undefined,
     ordem: s.ordem === 'viradas' || s.ordem === 'crescimento' ? s.ordem : undefined,
   }),

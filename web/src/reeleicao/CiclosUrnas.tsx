@@ -65,7 +65,7 @@ export function CiclosUrnas({ cargo, ativo, aoEscolher }: { cargo: Cargo; ativo:
                 aria-pressed={marcada}
                 aria-label={`Disputa de ${c.disputa}, eleitos em ${c.eleitos_em}: ${
                   c.tentaram ? `${inteiro(c.reeleitos)} de ${inteiro(c.tentaram)} que tentaram voltaram (${pct(c.taxa)})` : 'nenhum eleito tentou'
-                }${c.media_municipios != null ? `; média dos municípios ${pct(c.media_municipios)}` : ''}. Ver quem são.`}
+                }${c.pendentes ? `; ${inteiro(c.pendentes)} aguardam o 2º turno, ainda não publicado` : ''}${c.media_municipios != null ? `; média dos municípios ${pct(c.media_municipios)}` : ''}. Ver quem são.`}
                 className={`group flex w-full flex-col items-center rounded-2xl px-1 pb-2 pt-3 transition-colors hover:bg-folha focus-visible:outline-[3px] focus-visible:outline-acao ${marcada ? 'bg-folha shadow-[inset_0_-3px_0_var(--color-acao)]' : ''}`}
               >
                 <span className={`t-numero text-[clamp(1.3rem,1rem+0.8vw,1.75rem)] tabular ${c.taxa == null ? 'text-tinta-3' : 'text-tinta'}`}>
@@ -77,6 +77,7 @@ export function CiclosUrnas({ cargo, ativo, aoEscolher }: { cargo: Cargo; ativo:
                 <span className="mt-0.5 text-[0.78rem] tabular text-tinta-3">
                   {inteiro(c.reeleitos)} de {inteiro(c.tentaram)}
                 </span>
+                {!!c.pendentes && <span className="text-[0.72rem] leading-tight text-tinta-3">+{inteiro(c.pendentes)} no 2º turno</span>}
               </button>
             </li>
           )

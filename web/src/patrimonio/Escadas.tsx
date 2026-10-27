@@ -101,7 +101,7 @@ export const Escadas = memo(function Escadas({ panorama, ativo, aoAbrir }: { pan
   return (
     <div>
       <div className="grid gap-x-12 gap-y-8 md:grid-cols-[auto_auto] md:justify-start">
-        <Bloco titulo="Eleições gerais" cargos={GERAIS} anos={[2018, 2022]} recortes={panorama.recortes} teto={teto} ativo={ativo} aoAbrir={aoAbrir} />
+        <Bloco titulo="Eleições gerais" cargos={GERAIS} anos={[2018, 2022, 2026]} recortes={panorama.recortes} teto={teto} ativo={ativo} aoAbrir={aoAbrir} />
         <div className="flex flex-col gap-8">
           <Bloco titulo="Eleições municipais" cargos={MUNICIPAIS} anos={[2020, 2024]} recortes={panorama.recortes} teto={teto} ativo={ativo} aoAbrir={aoAbrir} />
           <div className="max-w-[34ch] text-[0.86rem] leading-relaxed text-tinta-2">

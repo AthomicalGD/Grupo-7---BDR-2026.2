@@ -186,7 +186,7 @@ export function UrnaPagina() {
         <header className="space-y-4">
           <h1 className="t-display">Consulte a carreira de um político</h1>
           <p className="max-w-[48ch] text-[1.05rem] leading-relaxed text-tinta-2">
-            Digite o nome no visor da urna. CONFIRMA abre todas as candidaturas e mandatos, de 1994 a 2024.
+            Digite o nome no visor da urna. CONFIRMA abre todas as candidaturas e mandatos, de 1994 a 2026.
           </p>
         </header>
 

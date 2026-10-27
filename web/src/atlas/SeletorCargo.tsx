@@ -61,7 +61,7 @@ export function SeletorCargo({ cargos, cargo, aoMudar }: { cargos: CargoVies[]; 
     opcoes[(i + passo + opcoes.length) % opcoes.length]?.focus()
   }
   const grupos = [
-    { titulo: 'Eleições gerais', anos: '2018 e 2022', lista: cargos.filter((c) => !c.municipal) },
+    { titulo: 'Eleições gerais', anos: '2018, 2022 e 2026', lista: cargos.filter((c) => !c.municipal) },
     { titulo: 'Municipais', anos: '2020 e 2024', lista: cargos.filter((c) => c.municipal) },
   ]
   const opcao = (cod: number | undefined, nome: string, sub?: string) => {

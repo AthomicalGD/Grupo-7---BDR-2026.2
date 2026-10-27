@@ -1,5 +1,5 @@
 // Dois políticos lado a lado: os números da carreira com a diferença entre eles e as duas linhas do tempo no
-// mesmo eixo (1994 a 2024). Os dois ficam no endereço (?a=&b=), então o link compartilhado abre a mesma comparação.
+// mesmo eixo (1994 a 2026). Os dois ficam no endereço (?a=&b=), então o link compartilhado abre a mesma comparação.
 import { ArrowLeft, ArrowsLeftRight, MagnifyingGlass, X } from '@phosphor-icons/react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
@@ -11,7 +11,7 @@ import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { inteiro, nomeProprio, reaisCurto } from '../lib/formato'
 import { corVies } from '../lib/vies'
 
-const ULTIMO = 2024
+const ULTIMO = 2026
 
 interface Medida {
   rotulo: string

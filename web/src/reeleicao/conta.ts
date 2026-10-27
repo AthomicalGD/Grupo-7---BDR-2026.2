@@ -19,11 +19,13 @@ export const COR = {
   texto: '#55702a', // oliva para números e rótulos de quem voltou
 } as const
 
-/** As três partes em 100, pelo maior resto: a soma dá sempre 100. */
+/** As três partes em 100, pelo maior resto: a soma dá sempre 100. Quem aguarda um 2º turno ainda não
+ * publicado (2026) fica fora das três. */
 export function emCem(c: ContaReeleicao): Record<Destino, number> {
-  const brutos = { nao: c.eleitos - c.tentaram, voltou: c.reeleitos, perdeu: c.tentaram - c.reeleitos }
+  const base = c.eleitos - (c.pendentes ?? 0)
+  const brutos = { nao: base - c.tentaram, voltou: c.reeleitos, perdeu: c.tentaram - c.reeleitos }
   const chaves = Object.keys(brutos) as Destino[]
-  const exatos = chaves.map((k) => (c.eleitos ? (brutos[k] * 100) / c.eleitos : 0))
+  const exatos = chaves.map((k) => (base ? (brutos[k] * 100) / base : 0))
   const cem = exatos.map(Math.floor)
   const falta = 100 - cem.reduce((a, b) => a + b, 0)
   exatos.map((x, i) => [x - Math.floor(x), i] as const).sort((a, b) => b[0] - a[0]).slice(0, falta).forEach(([, i]) => cem[i]++)

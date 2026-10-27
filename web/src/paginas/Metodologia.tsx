@@ -135,6 +135,7 @@ const ARQ = (caminho: string) => <code>{caminho}</code>
 
 const INDICE = [
   ['m-caminho', 'Do arquivo ao banco'],
+  ['m-2026', '2026'],
   ['m-cadeira', 'P1'],
   ['m-patrimonio', 'P2'],
   ['m-escolaridade', 'P4'],
@@ -169,7 +170,7 @@ export function Metodologia() {
         <p>Os dados percorrem cinco etapas, todas no repositório:</p>
         <ol className="list-decimal space-y-2 pl-5">
           <li><b>Coleta:</b> <code>python -m crawler</code> baixa do Portal de Dados Abertos do TSE, das APIs do IBGE (SIDRA, malhas e localidades), do Ipeadata e do Harvard Dataverse para a pasta <code>dados/</code>, com um manifesto de cada arquivo.</li>
-          <li><b>Modelagem:</b> 14 migrações SQL em <code>banco/migracoes/</code> criam o esquema no PostgreSQL 17: território (UF, município, zona eleitoral), eleição e cargo, partido, político e candidatura, mandato, votação, perfil do eleitorado e contas de campanha.</li>
+          <li><b>Modelagem:</b> 16 migrações SQL em <code>banco/migracoes/</code> criam o esquema no PostgreSQL 17: território (UF, município, zona eleitoral), eleição e cargo, partido, político e candidatura, mandato, votação, perfil do eleitorado e contas de campanha.</li>
           <li><b>Carga:</b> <code>python -m loader PI</code> lê os CSVs de uma UF em blocos, grava em tabelas temporárias de preparação e passa para o esquema com SQL, ligando pessoas, partidos e zonas. No fim, atualiza as views materializadas de resumo.</li>
           <li><b>Respostas:</b> um script por questão em <code>scripts/</code> roda as consultas e grava o texto em <code>respostas/</code>.</li>
           <li><b>Site:</b> a API (FastAPI) roda as mesmas contas e este site desenha as respostas.</li>
@@ -197,6 +198,25 @@ export function Metodologia() {
             ]}
           />
         </Detalhe>
+      </Secao>
+
+      <Secao id="m-2026" titulo="A eleição de 2026 (dados ainda parciais)">
+        <p>
+          O TSE publica uma eleição aos poucos. Em outubro de 2026 já estavam no Portal de Dados Abertos as candidaturas, os bens,
+          o resultado do 1º turno (votos por zona, detalhe da votação e comparecimento por escolaridade) e a prestação de contas
+          parcial; o 2º turno e a prestação de contas final ainda não. Por isso 2026 entra só nas perguntas em que o que já saiu basta.
+        </p>
+        <ul className="list-disc space-y-2 pl-5">
+          <li><b>Entra inteiro:</b> viés político (P7), escolaridade (P4, com deputados e senador; presidente e governador ficam de fora porque a disputa de 2º turno ainda não terminou) e carreira do político (P10).</li>
+          <li><b>Entra com ressalva:</b> patrimônio (P2) e reeleição (P10a). Quem foi ao 2º turno ainda não tem resultado: fica fora do patrimônio dos eleitos e, na reeleição, aparece à parte como <i>aguardando o 2º turno</i>, sem contar na taxa.</li>
+          <li><b>Fica de fora:</b> custo da cadeira (P1) e propaganda (P9), porque as contas ainda estão incompletas e o IPCA de outubro de 2026 não saiu; e o 2º turno (questão extra), que o TSE ainda não publicou.</li>
+          <li><b>Mudanças no arquivo:</b> a escolaridade do candidato passou a se chamar <code>DS_GRAU_INSTRUCAO</code> (era <code>DS_GRAU_ESCOLARIDADE</code>); a carga aceita os dois nomes. A situação da candidatura (<code>DS_SITUACAO_CANDIDATURA</code>) vem toda como <code>#NE</code>, então a situação usada é a do resultado (<code>DS_SIT_TOT_TURNO</code>).</li>
+          <li><b>Candidaturas sem resultado:</b> as que vêm com <code>#NULO</code> no resultado (indeferidas, renunciadas ou ainda em julgamento) ficam sem situação final e não contam como eleitas nem como não eleitas.</li>
+          <li><b>Viés de 2026:</b> como em 2024, usa a onda de 2022 dos especialistas, a última publicada, agora estendida por quatro anos; o alinhamento na Câmara usa a 57ª legislatura até a véspera do 1º turno.</li>
+          <li><b>Partidos novos sem viés:</b> Missão (nº 14) e Democrata (nº 35) não existiam na onda de 2022 dos especialistas nem são sucessores de quem existia; seus votos (0,9% dos válidos de 2026) ficam fora da média, como os de qualquer partido sem viés.</li>
+          <li><b>Conferência:</b> <code>scripts/conferencia_2026.py</code> compara os votos dos candidatos com os votos válidos, os eleitos com as vagas e as disputas de 2º turno com o que já há delas; o resultado fica em <code>respostas/conferencia_2026.txt</code>. Os eleitos batem com as vagas em todos os cargos (513 deputados federais, 1.059 estaduais e distritais, 54 senadores, 21 governadores; os outros 6 governos e a Presidência foram ao 2º turno) e os votos batem com os válidos, fora o exterior, que não entra no mapa.</li>
+          <li><b>Abaeté (MG):</b> a conferência achou o município cadastrado na Bahia, sem código IBGE, desde uma carga antiga; por isso os votos dele não entravam. A carga agora corrige o município pela correspondência TSE × IBGE; 2026 foi recarregado, e os anos anteriores de Abaeté entram na próxima recarga de MG.</li>
+        </ul>
       </Secao>
 
       <Secao id="m-cadeira" titulo="Custo da cadeira (P1)" resposta={{ para: '/cadeira', rotulo: 'Ver a resposta no plenário' }}>
@@ -339,7 +359,7 @@ export function Metodologia() {
         </p>
         <p>Estados e regiões intermediárias usam a mesma conta sobre os votos de todos os seus municípios.</p>
         <ul className="list-disc space-y-2 pl-5">
-          <li>2018 e 2022 somam presidente, governador, senado e deputados; 2020 e 2024, prefeito e vereador. Compare anos do mesmo tipo.</li>
+          <li>2018, 2022 e 2026 somam presidente, governador, senado e deputados; 2020 e 2024, prefeito e vereador. Compare anos do mesmo tipo.</li>
           <li>Com os cargos de peso igual, os dois votos para o Senado em 2018 não pesam mais que os outros cargos.</li>
           <li>Partidos sem viés ficam fora da média (nem no numerador, nem no denominador); cada boletim mostra a parcela desses votos.</li>
           <li>Partido que só mudou de nome tem o mesmo valor; partido criado por fusão depois da onda recebe a média dos componentes (ex.: PRD em 2024 = PTB + Patriota).</li>
@@ -411,7 +431,7 @@ export function Metodologia() {
         </p>
         <ul className="list-disc space-y-2 pl-5">
           <li><b>Reeleição:</b> eleito para o mesmo cargo, na mesma UF ou município, na eleição ordinária anterior (quatro anos antes; oito para senador).</li>
-          <li><b>Votos:</b> nominais do 1º turno, disponíveis de 2018 a 2024 nos estados carregados.</li>
+          <li><b>Votos:</b> nominais do 1º turno, disponíveis de 2018 a 2026 nos estados carregados.</li>
           <li><b>Partido:</b> o da candidatura, eleita ou não.</li>
           <li><b>Privacidade:</b> CPF, título eleitoral e data completa de nascimento nunca aparecem; só o ano.</li>
           <li><b>Fotos:</b> as fotos de registro que o TSE publica desde 2004.</li>
@@ -426,7 +446,7 @@ export function Metodologia() {
             linhas={[
               ['Candidaturas de 1994 a 2024', ARQ('tse/candidatos/'), <>{ARQ('politico')}, {ARQ('politico_eleicao')}, {ARQ('mandato')}</>],
               [<>Número e nome de urna (<code>NR_CANDIDATO</code>, <code>NM_URNA_CANDIDATO</code>)</>, ARQ('tse/candidatos/'), <>{ARQ('politico_eleicao')} (migração 013)</>],
-              ['Votos de 2018 a 2024', ARQ('tse/votacao_candidato_munzona/'), ARQ('votacao_candidato_munzona')],
+              ['Votos de 2018 a 2026', ARQ('tse/votacao_candidato_munzona/'), ARQ('votacao_candidato_munzona')],
               ['Gasto da campanha', ARQ('tse/despesas_contratadas_candidatos/'), <>view {ARQ('campanha')}</>],
               ['Fotos de registro (desde 2004)', ARQ('tse/fotos_candidatos/'), 'lidas direto do zip pela API'],
             ]}
@@ -468,7 +488,7 @@ export function Metodologia() {
           <li><b>Taxa de reeleição:</b> dos que tentaram, quantos venceram. No caminho dos eleitos, a largura de cada fita é a quantidade de pessoas; a tira das fichas de cargo divide os eleitos em 100, pelo maior resto.</li>
           <li><b>Fora da conta:</b> eleições suplementares, presidente (disputa nacional) e vices e suplentes, que o TSE só marca como eleitos a partir de 2012 e 2014.</li>
           <li><b>A mesma pessoa:</b> ligada entre eleições pelo título eleitoral. Em 1994 e 1996 metade das candidaturas não tem título; aí a tentativa também é achada pelo nome normalizado ou pela data de nascimento com o mesmo primeiro nome.</li>
-          <li><b>Ainda sem a eleição seguinte:</b> os eleitos da última eleição de cada cargo (2022 nas gerais, 2024 nas municipais, 2018 e 2022 para senador) ficam de fora até a próxima eleição entrar no banco.</li>
+          <li><b>Ainda sem a eleição seguinte:</b> os eleitos da última eleição de cada cargo (2026 nas gerais, 2024 nas municipais, 2026 e 2022 para senador) ficam de fora até a próxima eleição entrar no banco.</li>
           <li><b>Prefeito e vereador:</b> além da soma, a média simples das taxas dos municípios em que alguém tentou, para cidades grandes não pesarem mais.</li>
           <li><b>Estado a estado:</b> casas com menos de 10 tentativas ficam hachuradas; poucos casos mudam muito a taxa.</li>
           <li><b>Quem são:</b> os eleitos de cada eleição, separados pelo que fizeram na seguinte, com os mais votados primeiro (há votos de 2018 em diante).</li>
@@ -487,7 +507,7 @@ export function Metodologia() {
           <li><b>De onde vieram os votos novos:</b> só os totais de cada turno, na mesma régua dos eleitores aptos (os dois finalistas, os outros candidatos, brancos e nulos, e quem não foi votar). O voto é secreto: dá para comparar os totais, não seguir cada eleitor.</li>
           <li><b>As cores dos finalistas:</b> pelo lado do partido (o viés da P7): esquerda em vermelho, direita em azul. Se os dois são do mesmo lado, o mais à ponta fica com a cor do lado e o outro com o amarelo.</li>
           <li><b>Onde o líder mudou:</b> presidente por estado, governador por município e prefeito por zona eleitoral, somando os votos por zona.</li>
-          <li><b>Fora da conta:</b> antes de 2018 (o banco não tem os votos por zona), os vices (vão na chapa do titular) e as disputas sem os votos do 1º turno no banco (Piracicaba 2020 e Aracaju 2024).</li>
+          <li><b>Fora da conta:</b> antes de 2018 (o banco não tem os votos por zona), o 2º turno de 2026 (o TSE ainda não publicou os votos), os vices (vão na chapa do titular) e as disputas sem os votos do 1º turno no banco (Piracicaba 2020 e Aracaju 2024).</li>
         </ul>
         <p>
           De 2018 a 2024 foram 135 segundos turnos e 36 viradas (26,7%): nenhuma nos dois da Presidência, 6 em 26 governos e 30 em

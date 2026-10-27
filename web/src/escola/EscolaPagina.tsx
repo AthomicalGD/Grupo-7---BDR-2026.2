@@ -29,7 +29,7 @@ import { MapaEscola } from './MapaEscola'
 import { Partidos } from './Partidos'
 import { Ranking } from './Ranking'
 
-const ANOS: Ano[] = [2022, 2024]
+const ANOS: Ano[] = [2022, 2024, 2026]
 const TERESINA = 2211001
 
 const milhoes = (n: number) => `${decimal(n / 1e6, 1)} mi`
@@ -49,7 +49,7 @@ export function EscolaPagina() {
   const navegar = useNavigate({ from: '/escola' })
   const mudar = (s: Partial<BuscaEscola>) => navegar({ search: (a) => ({ ...a, ...s }), replace: true, resetScroll: false })
   // abre em 2022: o contraste mais forte (9% de quem votou, 77% dos eleitos com superior completo)
-  const ano: Ano = busca.ano === 2024 ? 2024 : 2022
+  const ano: Ano = busca.ano === 2024 || busca.ano === 2026 ? busca.ano : 2022
   const { data: ufs } = useQuery(consultas.ufs())
   const { data: malha } = useQuery(consultas.malhaBrasil())
   // o DF não é um recorte aqui: os quintos dividem os municípios da UF e ele só tem Brasília (entra em todos)

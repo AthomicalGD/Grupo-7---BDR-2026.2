@@ -21,6 +21,7 @@ const GRUPOS: { chave: GrupoReeleicao; rotulo: string; fundo: string; borda: str
   { chave: 'voltaram', rotulo: 'Voltaram', fundo: COR.voltou, borda: COR.voltou },
   { chave: 'perderam', rotulo: 'Tentaram e perderam', fundo: COR.perdeu, borda: '#a39a8a' },
   { chave: 'nao', rotulo: 'Não tentaram', fundo: COR.nao, borda: '#aeb6bf' },
+  { chave: 'aguardando', rotulo: 'Aguardam o 2º turno', fundo: COR.tentou, borda: COR.tentou },
 ]
 
 function Coluna({ uf, cargo, eleitosEm, grupo, marcada, busca }: { uf: string; cargo: Cargo; eleitosEm: number; grupo: (typeof GRUPOS)[number]; marcada: boolean; busca: string }) {
@@ -152,8 +153,8 @@ export function QuemSao({ uf, ufNome, cargo, eleitosEm, destaque, aoEscolherCicl
               ))}
             </div>
           </div>
-          <div className="mt-5 grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-3">
-            {jaAbriu && GRUPOS.map((g) => (
+          <div className={`mt-5 grid grid-cols-1 gap-x-8 gap-y-6 ${ciclo.pendentes ? 'md:grid-cols-2 xl:grid-cols-4' : 'md:grid-cols-3'}`}>
+            {jaAbriu && GRUPOS.filter((g) => g.chave !== 'aguardando' || ciclo.pendentes).map((g) => (
               <Coluna key={`${uf}-${cargo.cod}-${ciclo.eleitos_em}-${g.chave}-${busca}`} uf={uf} cargo={cargo} eleitosEm={ciclo.eleitos_em} grupo={g} marcada={g.chave === destaque} busca={busca} />
             ))}
           </div>
