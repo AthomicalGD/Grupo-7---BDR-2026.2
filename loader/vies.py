@@ -295,6 +295,8 @@ def atualizar(cur, raiz: Path, auditoria: Path | None = AUDITORIA) -> list[tuple
             for a, nu, s, fo, ref, v, e, o in trilha:
                 w.writerow([a, nu, s, fo, ref, "" if v is None else f"{v:.4f}", "" if e is None else f"{e:.1f}", o])
 
+    # o viés do 2º turno (migração 018) usa o dos partidos recém-gravado
+    cur.execute("REFRESH MATERIALIZED VIEW vies_votos_cargo_t2")
     cur.execute(SQL_COBERTURA)
     return cur.fetchall()
 
