@@ -50,7 +50,7 @@ IBGE = DADOS / "ibge"
 BANCO_PADRAO = "postgresql://eleicoes:eleicoes@127.0.0.1:5432/eleicoes"
 SEM_BANCO = "Banco de dados indisponível. Suba o PostgreSQL com `docker compose up -d` na pasta do projeto."
 
-ANOS = [2018, 2020, 2022, 2024]
+ANOS = [2018, 2020, 2022, 2024, 2026]   # 2026: o 1º turno (o 2º ainda não foi publicado pelo TSE)
 PRESIDENTE, SENADOR, PREFEITO = 1, 5, 11   # cargo.cod_cargo
 VAZIO = {"vies": {}, "sem_vies_pct": {}, "alinhamento": {}, "sem_alinhamento_pct": {}}
 
@@ -937,7 +937,12 @@ def politico_aleatorio():
 SQL_REELEICAO = """
 WITH cand AS (
     SELECT pe.id_politico, e.ano, COALESCE(e.cd_municipio, -e.cd_uf) AS unidade,
-           bool_or(ma.id_mandato IS NOT NULL) AS eleito
+           bool_or(ma.id_mandato IS NOT NULL) AS eleito,
+           -- foi ao 2º turno e ele ainda não está no banco (2026, até o TSE publicar): fica fora da conta
+           bool_or(pe.ds_sit_tot_turno = '2º TURNO' AND ma.id_mandato IS NULL AND NOT EXISTS (
+               SELECT 1 FROM eleicao e2 JOIN votacao_candidato_munzona v2 ON v2.id_eleicao = e2.id_eleicao
+               WHERE e2.ano = e.ano AND e2.turno = 2 AND e2.tipo = e.tipo AND e2.cod_cargo = e.cod_cargo
+                 AND e2.cd_uf IS NOT DISTINCT FROM e.cd_uf AND e2.cd_municipio IS NOT DISTINCT FROM e.cd_municipio)) AS pendente
     FROM politico_eleicao pe
     JOIN eleicao e ON e.id_eleicao = pe.id_eleicao
     LEFT JOIN municipio m ON m.cd_municipio = e.cd_municipio
@@ -945,7 +950,7 @@ WITH cand AS (
     WHERE e.tipo <> 1 AND e.cod_cargo = ANY(CASE %(cargo)s::int WHEN 7 THEN ARRAY[7, 8] ELSE ARRAY[%(cargo)s::int] END) AND COALESCE(m.cd_uf, e.cd_uf) = %(cd_uf)s
     GROUP BY 1, 2, 3
 )
-SELECT count(DISTINCT (a.id_politico, a.ano)) FILTER (WHERE b.id_politico IS NOT NULL) AS tentaram,
+SELECT count(DISTINCT (a.id_politico, a.ano)) FILTER (WHERE b.id_politico IS NOT NULL AND NOT b.pendente) AS tentaram,
        count(DISTINCT (a.id_politico, a.ano)) FILTER (WHERE b.eleito) AS reeleitos
 FROM cand a
 LEFT JOIN cand b ON b.id_politico = a.id_politico AND b.unidade = a.unidade AND b.ano = a.ano + %(passo)s
@@ -980,7 +985,12 @@ WITH cand AS (
            COALESCE(e.cd_municipio, -e.cd_uf) AS unidade,
            p.nr_titulo_eleitoral IS NULL AS sem_titulo, p.dt_nascimento,
            {NOME_P10} AS nome, split_part(upper(p.nome), ' ', 1) AS primeiro_nome,
-           bool_or(ma.id_mandato IS NOT NULL) AS eleito
+           bool_or(ma.id_mandato IS NOT NULL) AS eleito,
+           -- foi ao 2º turno e ele ainda não está no banco (2026, até o TSE publicar): nem venceu nem perdeu
+           bool_or(pe.ds_sit_tot_turno = '2º TURNO' AND ma.id_mandato IS NULL AND NOT EXISTS (
+               SELECT 1 FROM eleicao e2 JOIN votacao_candidato_munzona v2 ON v2.id_eleicao = e2.id_eleicao
+               WHERE e2.ano = e.ano AND e2.turno = 2 AND e2.tipo = e.tipo AND e2.cod_cargo = e.cod_cargo
+                 AND e2.cd_uf IS NOT DISTINCT FROM e.cd_uf AND e2.cd_municipio IS NOT DISTINCT FROM e.cd_municipio)) AS pendente
     FROM politico_eleicao pe
     JOIN politico p ON p.id_politico = pe.id_politico
     JOIN eleicao e ON e.id_eleicao = pe.id_eleicao
@@ -996,6 +1006,7 @@ eleito AS (
     SELECT a.cod_cargo, a.ano AS ano_eleito, a.cd_municipio,
            a.ano + CASE WHEN a.cod_cargo = 5 THEN 8 ELSE 4 END AS ano_disputa,
            bool_or(b.id_politico IS NOT NULL) AS tentou, COALESCE(bool_or(b.eleito), false) AS reeleito,
+           COALESCE(bool_or(b.pendente), false) AS pendente,
            COALESCE(bool_or(b.id_politico <> a.id_politico), false) AS ligado_por_nome,
            EXISTS (SELECT 1 FROM proximo x WHERE x.cod_cargo = a.cod_cargo
                      AND x.ano = a.ano + CASE WHEN a.cod_cargo = 5 THEN 8 ELSE 4 END) AS ha_proxima
@@ -1009,8 +1020,9 @@ eleito AS (
     GROUP BY a.id_politico, a.cod_cargo, a.ano, a.cd_municipio, a.unidade
 )
 SELECT cod_cargo, ano_eleito, ano_disputa, cd_municipio, ha_proxima,
-       count(*) AS eleitos, count(*) FILTER (WHERE tentou) AS tentaram,
-       count(*) FILTER (WHERE reeleito) AS reeleitos, count(*) FILTER (WHERE ligado_por_nome) AS ligados
+       count(*) AS eleitos, count(*) FILTER (WHERE tentou AND NOT pendente) AS tentaram,
+       count(*) FILTER (WHERE reeleito) AS reeleitos, count(*) FILTER (WHERE ligado_por_nome) AS ligados,
+       count(*) FILTER (WHERE tentou AND pendente) AS pendentes
 FROM eleito
 GROUP BY 1, 2, 3, 4, 5
 """
@@ -1018,7 +1030,7 @@ GROUP BY 1, 2, 3, 4, 5
 
 def _soma_reeleicao(linhas: list[dict]) -> dict:
     eleitos, tentaram, reeleitos = (sum(r[k] for r in linhas) for k in ("eleitos", "tentaram", "reeleitos"))
-    return {"eleitos": eleitos, "tentaram": tentaram, "reeleitos": reeleitos,
+    return {"eleitos": eleitos, "tentaram": tentaram, "reeleitos": reeleitos, "pendentes": sum(r["pendentes"] for r in linhas),
             "taxa": round(100 * reeleitos / tentaram, 1) if tentaram else None}
 
 
@@ -1122,7 +1134,11 @@ WITH cand AS (
     SELECT pe.id_politico, e.ano, e.cd_municipio, COALESCE(e.cd_municipio, -e.cd_uf) AS unidade,
            p.nr_titulo_eleitoral IS NULL AS sem_titulo, p.dt_nascimento,
            {NOME_P10} AS nome, split_part(upper(p.nome), ' ', 1) AS primeiro_nome,
-           bool_or(ma.id_mandato IS NOT NULL) AS eleito
+           bool_or(ma.id_mandato IS NOT NULL) AS eleito,
+           bool_or(pe.ds_sit_tot_turno = '2º TURNO' AND ma.id_mandato IS NULL AND NOT EXISTS (
+               SELECT 1 FROM eleicao e2 JOIN votacao_candidato_munzona v2 ON v2.id_eleicao = e2.id_eleicao
+               WHERE e2.ano = e.ano AND e2.turno = 2 AND e2.tipo = e.tipo AND e2.cod_cargo = e.cod_cargo
+                 AND e2.cd_uf IS NOT DISTINCT FROM e.cd_uf AND e2.cd_municipio IS NOT DISTINCT FROM e.cd_municipio)) AS pendente
     FROM politico_eleicao pe
     JOIN politico p ON p.id_politico = pe.id_politico
     JOIN eleicao e ON e.id_eleicao = pe.id_eleicao
@@ -1134,7 +1150,8 @@ WITH cand AS (
 ),
 eleito AS (
     SELECT a.id_politico, a.cd_municipio, a.unidade,
-           bool_or(b.id_politico IS NOT NULL) AS tentou, COALESCE(bool_or(b.eleito), false) AS reeleito
+           bool_or(b.id_politico IS NOT NULL) AS tentou, COALESCE(bool_or(b.eleito), false) AS reeleito,
+           COALESCE(bool_or(b.pendente), false) AS pendente
     FROM cand a
     LEFT JOIN cand b ON b.unidade = a.unidade AND b.ano = %(prox)s
                     AND (b.id_politico = a.id_politico
@@ -1145,7 +1162,7 @@ eleito AS (
 )
 SELECT x.id_politico AS id, p.nome, c.nm_urna AS nome_urna, pa.sigla AS partido, pa.vies_politico::float AS vies,
        mu.nm_municipio AS municipio, c.sq_candidato AS sq, x.cd_municipio,
-       CASE WHEN x.reeleito THEN 'voltaram' WHEN x.tentou THEN 'perderam' ELSE 'nao' END AS grupo,
+       CASE WHEN x.reeleito THEN 'voltaram' WHEN x.pendente THEN 'aguardando' WHEN x.tentou THEN 'perderam' ELSE 'nao' END AS grupo,
        (SELECT sum(v.qtd_votos_nominais) FROM votacao_candidato_munzona v
         WHERE v.id_politico_eleicao = c.id_politico_eleicao)::bigint AS votos
 FROM eleito x
@@ -1161,7 +1178,7 @@ LEFT JOIN LATERAL (
 LEFT JOIN partido pa ON pa.id_partido = c.id_partido
 ORDER BY votos DESC NULLS LAST, p.nome
 """
-GRUPOS_P10 = ("voltaram", "perderam", "nao")
+GRUPOS_P10 = ("voltaram", "perderam", "nao", "aguardando")  # aguardando: foi ao 2º turno ainda não publicado (2026)
 
 
 
@@ -1410,6 +1427,11 @@ LEFT JOIN bens b ON b.id_politico_eleicao = pe.id_politico_eleicao
 LEFT JOIN mandato ma ON ma.id_politico_eleicao = pe.id_politico_eleicao
 WHERE e.ano = %(ano)s AND e.tipo = 2 AND e.turno = 1 AND e.cod_cargo = ANY(CASE %(cargo)s::int WHEN 7 THEN ARRAY[7, 8] ELSE ARRAY[%(cargo)s::int] END)
   AND pe.ds_sit_tot_turno IS NOT NULL
+  -- quem foi a um 2º turno ainda não publicado (2026) nem venceu nem perdeu: fica fora até o TSE publicar
+  AND NOT (pe.ds_sit_tot_turno = '2º TURNO' AND ma.id_mandato IS NULL AND NOT EXISTS (
+      SELECT 1 FROM eleicao e2 JOIN votacao_candidato_munzona v2 ON v2.id_eleicao = e2.id_eleicao
+      WHERE e2.ano = e.ano AND e2.turno = 2 AND e2.tipo = e.tipo AND e2.cod_cargo = e.cod_cargo
+        AND e2.cd_uf IS NOT DISTINCT FROM e.cd_uf AND e2.cd_municipio IS NOT DISTINCT FROM e.cd_municipio))
   AND ((e.cod_cargo = 1 AND e.cd_uf IS NULL AND e.cd_municipio IS NULL)
        OR COALESCE(u.sigla, um.sigla) = ANY(%(ufs)s))
 """
@@ -1731,7 +1753,9 @@ def segundos_turnos() -> dict:
         # sem os dois finalistas votados no 2º turno, ou sem os votos deles no 1º (falha na carga daquela
         # disputa): não dá para comparar os turnos, então a disputa sai da conta e é listada à parte
         if len(finais) != 2 or not all(c["votos_t1"] for c in finais):
-            incompletas.append({"ano": d["ano"], "cargo": d["cargo"], "uf": d["uf"], "municipio": d["municipio"]})
+            # sem nenhum voto no 2º turno: o TSE ainda não publicou (2026); senão, falta o 1º turno na carga
+            motivo = "2º turno não publicado" if not finais else "sem os votos do 1º turno"
+            incompletas.append({"ano": d["ano"], "cargo": d["cargo"], "uf": d["uf"], "municipio": d["municipio"], "motivo": motivo})
             continue
         total_t1 = sum(c["votos_t1"] or 0 for c in cs)
         total_t2 = sum(c["votos_t2"] for c in finais)
@@ -1923,12 +1947,14 @@ def geojson(arquivo: str, request: Request) -> Response:
 
 # ───────── P4: escolaridade do candidato x de quem vota (mesma conta de scripts/04_escolaridade.py) ─────────
 
-ANOS_ESCOLA = (2022, 2024)
-# Titulares, do cargo com mais candidatos ao com menos. Em 2022 o lugar é medido pelo voto em deputados
+ANOS_ESCOLA = (2022, 2024, 2026)
+# Titulares, do cargo com mais candidatos ao com menos. Em 2022 e 2026 o lugar é medido pelo voto em deputados
 # (eleitos pelo estado); em 2024, pelos eleitos do próprio município (prefeito e vereadores).
 # Presidente (1) é nacional: entra no recorte de qualquer UF e, no comparativo, fica sob "BR".
-CARGOS_ESCOLA = {2022: [7, 6, 5, 3, 1], 2024: [13, 11]}
-VOTO_ESCOLA = {2022: [6, 7], 2024: [13]}
+# 2026 só com os cargos decididos no 1º turno: governador e presidente esperam o 2º turno, que o TSE ainda não
+# publicou (quem foi a ele contaria como não eleito).
+CARGOS_ESCOLA = {2022: [7, 6, 5, 3, 1], 2024: [13, 11], 2026: [7, 6, 5]}
+VOTO_ESCOLA = {2022: [6, 7], 2024: [13], 2026: [6, 7]}
 
 SQL_ESCOLA_NIVEIS = "SELECT nivel, rotulo FROM escolaridade WHERE nivel IS NOT NULL ORDER BY nivel"
 
@@ -2161,7 +2187,8 @@ JOIN eleicao e         USING (id_eleicao)
 JOIN escolaridade es   ON es.ds_grau = pe.ds_grau_instrucao
 LEFT JOIN mandato m    USING (id_politico_eleicao)
 LEFT JOIN municipio mu ON mu.cd_municipio = e.cd_municipio
-WHERE e.ano IN (2022, 2024) AND e.tipo = 2 AND e.cod_cargo IN (1, 3, 5, 6, 7, 8, 11, 13)
+WHERE e.ano IN (2022, 2024, 2026) AND e.tipo = 2 AND e.cod_cargo IN (1, 3, 5, 6, 7, 8, 11, 13)
+  AND NOT (e.ano = 2026 AND e.cod_cargo IN (1, 3))   -- 2026: governador e presidente esperam o 2º turno
   AND pe.ds_sit_tot_turno IS NOT NULL AND es.nivel IS NOT NULL
 GROUP BY 1, 2, 3, 4
 """
@@ -2172,7 +2199,7 @@ FROM perfil_eleitorado_munzona p
 JOIN zona_eleitoral z USING (id_zona)
 JOIN municipio mu     USING (cd_municipio)
 JOIN escolaridade es  ON es.ds_grau = p.ds_grau_escolaridade
-WHERE p.ano_eleicao IN (2022, 2024) AND es.nivel IS NOT NULL
+WHERE p.ano_eleicao IN (2022, 2024, 2026) AND es.nivel IS NOT NULL
 GROUP BY 1, 2, 3
 """
 
@@ -2247,7 +2274,7 @@ def escola_comparar_tudo() -> dict:
 
 @app.get("/api/escola/comparar")
 def escola_comparar():
-    """2022 e 2024 lado a lado: por ano, UF e cargo, candidatos e eleitos por grau; por ano e UF, quem votou."""
+    """2022, 2024 e 2026 lado a lado: por ano, UF e cargo, candidatos e eleitos por grau; por ano e UF, quem votou."""
     return escola_comparar_tudo()
 
 
