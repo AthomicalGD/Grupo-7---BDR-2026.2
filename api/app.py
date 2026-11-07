@@ -275,6 +275,8 @@ async def _ciclo_de_vida(_app):
     threading.Thread(target=_aquecer, daemon=True).start()
     # a P2 de cada estado leva ~3 s na primeira vez (14 recortes): idem
     threading.Thread(target=_aquecer_patrimonio, daemon=True).start()
+    # a P6 monta a base uma vez (~18 s): idem
+    threading.Thread(target=_aquecer_idade, daemon=True).start()
     yield
 
 
@@ -1711,6 +1713,152 @@ def geojson(arquivo: str, request: Request) -> Response:
     if "gzip" in request.headers.get("accept-encoding", ""):
         return Response(comprimido, media_type="application/geo+json", headers={**headers, "Content-Encoding": "gzip"})
     return Response(bruto, media_type="application/geo+json", headers=headers)
+
+
+# ───────── P6: idade do município, alternância de poder e "jovem vota no jovem?" ─────────
+# As contas são as de scripts/06_idade_alternancia.py, importado sem cópia (como o 09 na P9): o site e
+# respostas/06_idade_alternancia.txt dão os mesmos números. Tudo vem do banco: a faixa etária de quem votou
+# fica em perfil_etario_munzona (migração 015). A base (~18 s, uma vez por processo) fica na memória; cada
+# resumo fica também em disco (em_disco), então a API reiniciada só refaz a base se faltar um resumo.
+@lru_cache(maxsize=1)
+def p6():
+    import importlib.util
+    import sys
+    pasta = Path(__file__).resolve().parent.parent / "scripts"
+    sys.path.insert(0, str(pasta))   # o script importa comum.py da própria pasta
+    try:
+        spec = importlib.util.spec_from_file_location("p6_idade_alternancia", pasta / "06_idade_alternancia.py")
+        modulo = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(modulo)
+    finally:
+        sys.path.remove(str(pasta))
+    return modulo
+
+
+_TRAVA_P6 = threading.Lock()
+
+
+@lru_cache(maxsize=1)
+def p6_base() -> dict:
+    with _TRAVA_P6:   # o aquecimento e a primeira visita não montam a base duas vezes
+        conn = pool().getconn()
+        try:
+            conn.autocommit = True
+            return p6().carregar(conn, censo_do_arquivo=False)
+        except SystemExit as e:   # migração 015 não aplicada ou tabela vazia: o script diz o que rodar
+            raise HTTPException(503, str(e)) from None
+        finally:
+            pool().putconn(conn, close=bool(conn.closed))
+
+
+ANOS_MUNICIPAIS = (2020, 2024)
+CARGOS_IDADE = {6: (2018, 2022), 7: (2018, 2022), 11: ANOS_MUNICIPAIS, 13: ANOS_MUNICIPAIS}
+
+
+def _uf_idade(uf: str) -> str:
+    """'' (todas) ou uma UF carregada; o DF fica fora: os terços dividem os municípios da UF e ele só tem Brasília."""
+    if not uf:
+        return ""
+    sigla = uf_de(uf)["sigla"]
+    if sigla not in carregadas():
+        raise HTTPException(404, f"UF sem dados: {sigla}")
+    if sigla == "DF":
+        raise HTTPException(404, "O Distrito Federal tem um só município (Brasília): ele entra no recorte de todos os estados.")
+    return sigla
+
+
+@lru_cache(maxsize=32)
+@em_disco
+def idade_perfil(ano: int, uf: str) -> dict:
+    return p6().resumo_perfil(p6_base(), ano, uf)
+
+
+@lru_cache(maxsize=32)
+@em_disco
+def idade_alternancia(uf: str) -> dict:
+    return p6().resumo_alternancia(p6_base(), uf)
+
+
+@lru_cache(maxsize=32)
+@em_disco
+def idade_eleitos(ano: int, uf: str) -> dict:
+    return p6().resumo_eleitos(p6_base(), ano, uf)
+
+
+@lru_cache(maxsize=64)
+@em_disco
+def idade_voto(cargo: int, ano: int, uf: str) -> dict:
+    return p6().resumo_voto(p6_base(), cargo, ano, uf)
+
+
+@lru_cache(maxsize=128)
+@em_disco
+def idade_municipio(ibge: int) -> dict:
+    m = MUNICIPIOS[ibge]
+    base = {"ibge": ibge, "nome": m["municipio"], "uf": m["sg_uf"], "carregada": m["sg_uf"] in carregadas()}
+    cd = base["carregada"] and consultar("SELECT cd_municipio FROM municipio WHERE cd_ibge = %s", (ibge,))
+    if not cd:
+        return {**base, "anos": {}, "idade_pop": None, "passagens": None, "galeria": []}
+    r = p6().resumo_municipio(p6_base(), cd[0]["cd_municipio"])
+    for g in r["galeria"]:
+        g["foto"] = foto_url(g["ano"], m["sg_uf"], g.pop("sq"), cd[0]["cd_municipio"])
+    return {**base, **r}
+
+
+@app.get("/api/idade/perfil")
+def api_idade_perfil(ano: int = 2024, uf: str = ""):
+    """P6 (A): idade de quem votou em cada município no ano, terços, média de cada UF, linha de 2018 a 2024."""
+    if ano not in ANOS:
+        raise HTTPException(404, f"Ano fora do escopo: {ano}")
+    return idade_perfil(ano, _uf_idade(uf))
+
+
+@app.get("/api/idade/alternancia")
+def api_idade_alternancia(uf: str = ""):
+    """P6 (B): passagens de mandato de prefeito (1996 a 2024) por terço de idade e por porte, e os efeitos."""
+    return idade_alternancia(_uf_idade(uf))
+
+
+@app.get("/api/idade/eleitos")
+def api_idade_eleitos(ano: int = 2024, uf: str = ""):
+    """P6 (C): pirâmide de quem votou, candidatos e eleitos (prefeito e vereador), terços e efeitos."""
+    if ano not in ANOS_MUNICIPAIS:
+        raise HTTPException(404, "Prefeito e vereador: só 2020 e 2024.")
+    return idade_eleitos(ano, _uf_idade(uf))
+
+
+@app.get("/api/idade/voto")
+def api_idade_voto(cargo: int = 6, ano: int = 2022, uf: str = ""):
+    """P6 (D): terços de zonas com a idade de quem votou e a idade votada, com e sem a escolaridade fixa."""
+    if ano not in CARGOS_IDADE.get(cargo, ()):
+        raise HTTPException(404, "Cargos e anos: deputados em 2018 e 2022; prefeito e vereador em 2020 e 2024.")
+    return idade_voto(cargo, ano, _uf_idade(uf))
+
+
+@app.get("/api/idade/municipio/{ibge}")
+def api_idade_municipio(ibge: int):
+    """P6 no município: idade de quem votou por ano, a da população e a galeria dos prefeitos (1996 a 2024)."""
+    if ibge not in MUNICIPIOS:
+        raise HTTPException(404, f"Município desconhecido: {ibge}")
+    return idade_municipio(ibge)
+
+
+def _aquecer_idade() -> None:
+    """A base da P6 leva ~18 s: os recortes nacionais ficam prontos ao subir (ou já estão em disco), a primeira tela
+    antes. Trocar de ano, cargo ou eleição na página não espera a base."""
+    try:
+        idade_perfil(2024, "")
+        idade_alternancia("")
+        idade_eleitos(2024, "")
+        idade_voto(6, 2022, "")
+        for ano in ANOS:
+            idade_perfil(ano, "")
+        idade_eleitos(2020, "")
+        for cargo, anos in CARGOS_IDADE.items():
+            for ano in anos:
+                idade_voto(cargo, ano, "")
+    except Exception:  # noqa: BLE001 - banco fora do ar ou migração 015 ausente: a conta é feita quando a página pedir
+        pass
 
 
 # ───────── P4: escolaridade do candidato x de quem vota (mesma conta de scripts/04_escolaridade.py) ─────────

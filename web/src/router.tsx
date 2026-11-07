@@ -37,6 +37,19 @@ export interface BuscaEscola {
   ibge?: number
 }
 
+export interface BuscaIdade {
+  /** o ano do mapa (ato 1) */
+  ano?: Ano
+  uf?: string
+  /** o município da galeria */
+  ibge?: number
+  /** a eleição municipal da pirâmide (ato 3) */
+  eleitos?: 2020 | 2024
+  /** o cargo e a eleição do "jovem vota no jovem?" (ato 4) */
+  cargo?: number
+  voto?: Ano
+}
+
 export interface BuscaPolitico {
   /** id_politico_eleicao da campanha cuja nuvem de gastos abre (P9) */
   gasto?: number
@@ -124,6 +137,19 @@ const escola = createRoute({
     ibge: numero(s.ibge),
   }),
 })
+const idade = createRoute({
+  getParentRoute: () => raiz,
+  path: '/idade',
+  component: lazyRouteComponent(() => import('./idade/IdadePagina'), 'IdadePagina'),
+  validateSearch: (s: Record<string, unknown>): BuscaIdade => ({
+    ano: ANOS.includes(Number(s.ano) as Ano) ? (Number(s.ano) as Ano) : undefined,
+    uf: typeof s.uf === 'string' && /^[A-Z]{2}$/.test(s.uf) ? s.uf : undefined,
+    ibge: numero(s.ibge),
+    eleitos: Number(s.eleitos) === 2020 ? 2020 : undefined,
+    cargo: [6, 7, 11, 13].includes(Number(s.cargo)) ? Number(s.cargo) : undefined,
+    voto: ANOS.includes(Number(s.voto) as Ano) ? (Number(s.voto) as Ano) : undefined,
+  }),
+})
 const patrimonio = createRoute({
   getParentRoute: () => raiz,
   path: '/patrimonio',
@@ -158,7 +184,7 @@ const metodologia = createRoute({
   component: lazyRouteComponent(() => import('./paginas/Metodologia'), 'Metodologia'),
 })
 
-const arvore = raiz.addChildren([atlas.addChildren([inicio, estado, municipio]), urna, cadeira, escola, patrimonio, reeleicao, politico, metodologia])
+const arvore = raiz.addChildren([atlas.addChildren([inicio, estado, municipio]), urna, cadeira, escola, idade, patrimonio, reeleicao, politico, metodologia])
 
 export const router = createRouter({
   routeTree: arvore,
@@ -184,7 +210,7 @@ declare module '@tanstack/react-router' {
 // Baixa o código das páginas no tempo ocioso, uma por vez, depois da primeira tela: trocar de página fica imediato
 // (sem esqueleto nem espera). O 3D não entra aqui: ele é baixado só quando a tela que o usa abre.
 const ocioso = (f: () => void) => ('requestIdleCallback' in window ? window.requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 1500))
-const paginas = [urna, cadeira, escola, patrimonio, reeleicao, politico, metodologia]
+const paginas = [urna, cadeira, escola, idade, patrimonio, reeleicao, politico, metodologia]
 const proxima = () => {
   const r = paginas.shift()
   const pre = r && (r.options.component as { preload?: () => Promise<void> } | undefined)?.preload

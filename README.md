@@ -188,7 +188,7 @@ python -m loader.remover AC RS
 | 3 | Índices do município x eleitos e partidos mais vitoriosos | não há | Indicadores no boletim do município |
 | 4 | Escolaridade do candidato x escolaridade dos votantes | `scripts/04_escolaridade.py` -> `respostas/04_escolaridade.txt` | `/escola` / `/escola` |
 | 5 | Quantos candidatos de dado partido foram eleitos por votos de legenda? | não há | não tem |
-| 6 | Idade média do município x alternância de poder e idade dos eleitos | `scripts/06_idade_alternancia.py` -> `respostas/06_idade_alternancia.txt` e `06_passagens_prefeitura.csv` | não tem |
+| 6 | Idade média do município x alternância de poder e idade dos eleitos | `scripts/06_idade_alternancia.py` -> `respostas/06_idade_alternancia.txt` e `06_passagens_prefeitura.csv` | `/idade` e boletim do município (galeria dos prefeitos e idade) / não tem |
 | 7 | Viés político de um município ou região na linha do tempo | `scripts/07_vies_politico_municipio.py` -> `respostas/07_vies_politico_municipio.txt` | `/`, `/uf/{sigla}` e boletim do município / `/`, `/uf/{sigla}` e município |
 | 8 | Sucesso de candidatos dependentes de repasses públicos x financiados por outras fontes | não há | Receitas por fonte (fundos públicos) em `/cadeira` |
 | 9 | Onde o candidato investe em propaganda (nuvem de palavras)? | `scripts/09_nuvem_despesas.py` -> `respostas/09_nuvem_despesas/` | Ficha do político / não tem |
@@ -302,7 +302,13 @@ python scripts/06_idade_alternancia.py
   em 30 municípios (o vice, do mesmo partido). As mudanças de partido anteriores a 2018 (PRN -> PTC; PST e PGT -> PL;
   PSD antigo, número 41, -> PTB; PRONA -> PR; PAN -> PTB) ficam no script, e não em
   `banco/referencia/sucessao_partidos.csv`, para não mexer no viés da P7.
-- **No site:** ainda não tem tela.
+- **No site:** `/idade`, em quatro atos (o mapa sépia da idade de quem votou, com os terços e o envelhecimento de 2018
+  a 2024; as passagens de mandato por terço, com a fusão nas duas leituras, e a galeria dos ex-prefeitos de cada
+  município; a pirâmide de quem votou e dos eleitos, com o prêmio de idade; os halteres por terço de zonas, com e sem a
+  escolaridade fixa), e, no boletim de cada município, a galeria compacta dos prefeitos de 1996 a 2024 e o bloco
+  "IDADE". A API carrega o script (como faz com o 09 na P9), então o site e o txt dão os mesmos números: `/api/idade/...`
+  (tabela da API). A base leva ~18 s na primeira vez de cada processo; os recortes nacionais ficam prontos ao subir a
+  API e todos os resumos ficam em `dados/cache_api/`.
 
 ### P7. Viés político de um município ou região na linha do tempo
 
@@ -444,6 +450,11 @@ python -m uvicorn api.app:app --port 8000
 | `GET /api/escola/partidos?ano=&uf=` | P4: cada partido na ordem do viés, com candidatos e eleitos e quantos deles têm superior completo |
 | `GET /api/escola/comparar` | P4: 2022 e 2024 lado a lado, por estado e cargo (candidatos e eleitos por grau) e quem votou por estado |
 | `GET /api/escola/municipio/{ibge}?ano=` | P4 no município: quem votou por grau, os eleitos (2024) com grau e partido, os votos para deputado (2022) ou vereador por grau, e o quintil |
+| `GET /api/idade/perfil?ano=&uf=` | P6 (A): idade média de quem votou em cada município no ano, a da população (Censo 2022), o terço, a média de cada UF, a linha de 2018 a 2024 e os extremos |
+| `GET /api/idade/alternancia?uf=` | P6 (B): passagens de mandato de prefeito (1996 a 2024) por terço de idade e por porte, nos três tipos (mesmo partido, troca, troca com ressalva), as trocas com ressalva por par e os efeitos |
+| `GET /api/idade/eleitos?ano=&uf=` | P6 (C, 2020 ou 2024): a pirâmide de quem votou, candidatos e eleitos (prefeito e vereador), os terços e os efeitos |
+| `GET /api/idade/voto?cargo=&ano=&uf=` | P6 (D): terços de zonas com a idade de quem votou e a idade votada, com e sem a escolaridade fixa (deputados em 2018 e 2022; prefeito e vereador em 2020 e 2024) |
+| `GET /api/idade/municipio/{ibge}` | P6 no município: idade de quem votou em cada ano, a da população e a galeria dos prefeitos de 1996 a 2024, com a marca de cada passagem |
 | `GET /api/vies/cargos` | P7: os cargos do filtro do atlas, com os anos de cada um e se é municipal |
 | `GET /api/ufs?cargo=` | P7: as 27 UFs, com nº de municípios, se estão carregadas, o viés e o alinhamento na Câmara por ano |
 | `GET /api/ufs/{sigla}?cargo=` | P7: viés da UF, das regiões intermediárias e de cada município, alinhamento da UF e de cada município, % dos votos em partidos sem viés e eleitorado apto por ano |
@@ -484,9 +495,10 @@ Abra http://localhost:5173. O Vite repassa `/api` para a API em `127.0.0.1:8000`
 | Plenário: quanto custa uma cadeira, por cargo, ano e estado (ou câmara municipal), em 2D e 3D | `/cadeira` | P1 (e receitas da P8) | `/cadeira`, só eleições gerais |
 | Patrimônio: quem declara mais bens se elege mais? Faixas, fila e panorama | `/patrimonio` | P2 | não tem |
 | Escola: o diploma ajuda a se eleger (do eleitor ao eleito, a chance de cada grau) e onde se estudou menos se elege menos diploma (cinco grupos de municípios, mapa por estado com 3D, dispersão, ranking e o boletim); cada cargo e cada estado, os partidos; filtro por estado | `/escola` | P4 | `/escola` |
+| Idade: jovem vota no jovem? O mapa sépia da idade de quem votou, as passagens de mandato de prefeito por terço e a galeria dos ex-prefeitos, a pirâmide de quem votou e dos eleitos, os halteres por terço de zonas; filtro por estado | `/idade` | P6 | não tem |
 | Mapa do Brasil, viés por estado, linha do tempo 2018-2024 | `/` | P7 | `/` |
 | Estado: municípios, de onde vem o viés (partidos e candidatos), alinhamento na Câmara, regiões intermediárias, extremos, relevo 3D | `/uf/PI` | P7 | `/uf/PI` |
-| Boletim do município: viés, espectro do voto, alinhamento na Câmara, prefeitos, custo da cadeira, indicadores, QR code | `/uf/PI/2211001` | P7, P1, P3 | `/uf/PI/2211001` |
+| Boletim do município: viés, espectro do voto, alinhamento na Câmara, galeria dos prefeitos (1996 a 2024) e idade de quem votou, custo da cadeira, indicadores, QR code | `/uf/PI/2211001` | P7, P1, P3, P6 | `/uf/PI/2211001`, sem a galeria e a idade |
 | Urna de consulta (UE2020 em vetor): busca pelo nome e cédula de filtros (cargo, ano, estado, partido, resultado) | `/urna` | P10 | `/urna` (lista de políticos) |
 | Ficha da carreira: situação atual, fita das eleições, trajetória com os partidos, custo das campanhas, nuvem de gastos, santinhos | `/politico/{id}` (o id muda quando o banco é recriado) | P10, P9, P1 | `/politico/{id}`, sem a nuvem |
 | Reeleição: quem tenta a reeleição, volta? Taxa por cargo e estado, ciclo a ciclo, e as pessoas | `/reeleicao` | P10a | `/reeleicao` |
@@ -683,6 +695,8 @@ usa um User-Agent compatível que ainda identifica o projeto.
 - **Turnos:** os arquivos trazem 1º e 2º turno (`NR_TURNO`). Em `DS_SIT_TOT_TURNO`, "2º TURNO"
   indica que o candidato foi ao 2º turno, e o resultado final está na linha do 2º turno.
 - **Municípios:** o código do TSE (5 dígitos) é diferente do IBGE (7). Use `tse/municipio_tse_ibge/`.
+  A UF de cada município vem dessa correspondência: o arquivo de candidatos de 2000 traz 5 linhas de Abaeté (MG)
+  com `SG_UF` "BA", e o loader as deixa fora da carga da BA.
 - **Datas das eleições:** o banco não guarda `DT_ELEICAO`. As idades da P6 usam o 1º turno de cada ano (07/10/2018,
   15/11/2020, adiada pela pandemia, 02/10/2022 e 06/10/2024).
 - As observações de cada pergunta (P3, P4, P6, P7 e P10) ficam na seção da pergunta, em "As perguntas".

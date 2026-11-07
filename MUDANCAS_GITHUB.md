@@ -446,7 +446,7 @@ faixa etária de quem votou, que só existia num cache em arquivo, ganhou uma ta
 **Conferência:** comparada ao cache, a tabela tem os mesmos 528.125 pares (zona, ano, faixa) com aptos e
 comparecimento idênticos; falta só a zona 1 de Abaeté, pelo defeito abaixo.
 
-### Defeito encontrado (anterior à P6, **não corrigido**): Abaeté (MG) está no banco como BA
+### Defeito encontrado (anterior à P6) e **corrigido** em 07/11/2026: Abaeté (MG) estava no banco como BA
 
 - No banco, o município 40037 (Abaeté) tem `cd_uf = 29` (BA) e `cd_ibge` nulo. Na correspondência do TSE ele é de MG
   (IBGE 3100203). Por isso ficou sem votos, sem perfil (escolaridade e idade), sem indicadores e com a BA contando 418
@@ -455,8 +455,106 @@ comparecimento idênticos; falta só a zona 1 de Abaeté, pelo defeito abaixo.
   `_municipios` (`loader/carga.py`) cadastra os "municípios citados e ausentes da correspondência" com a UF da carga, sem
   conferir que o município está na correspondência como de outra UF. A BA foi carregada antes do MG, e a carga do MG não
   corrige (`ON CONFLICT DO NOTHING`) e descarta os votos e o perfil do município pelo filtro de UF.
-- **Correção proposta (decidir):** (1) no loader, só cadastrar como "ausente" o município que não está em
-  `stg_municipio` de nenhuma UF; (2) no banco local, acertar a linha (`UPDATE municipio SET cd_uf = 31, cd_ibge =
-  3100203, nm_municipio = 'Abaeté' WHERE cd_municipio = 40037`) e recarregar o MG (`python -m loader.remover MG` e
-  `python -m loader MG`) para os votos e o perfil entrarem. Conferido no banco local: Abaeté é o **único** município
-  com UF diferente da correspondência do TSE e o único sem código IBGE.
+- **Correção aplicada:**
+  1. `loader/carga.py` (`_municipios`): só cadastra como "ausente da correspondência" o município que não está em
+     `stg_municipio` de nenhuma UF. As 5 linhas de 2000 com UF errada ficam fora da carga da BA.
+  2. No banco local: `UPDATE municipio SET cd_uf = 31, cd_ibge = 3100203, nm_municipio = 'Abaeté' WHERE
+     cd_municipio = 40037`, e você removeu e recarregou o MG (e o AC) com o loader novo.
+  3. Conferido depois da recarga: Abaeté em MG com os 8 prefeitos de 1996 a 2024, votos, perfil por escolaridade e
+     por idade e indicadores; BA com 417 municípios e MG com 853; `perfil_etario_munzona` com 528.213 linhas (o
+     conjunto completo). Abaeté era o único município com UF diferente da correspondência do TSE.
+  4. `respostas/06_idade_alternancia.txt` regerado: 38.352 passagens, 5.570 municípios; nenhuma conclusão mudou.
+- **Outras respostas** (`01`, `02`, `04`, `07`, `10a`) foram geradas antes, com outro conjunto de UFs, e não foram
+  regeradas agora; ao regerar, Abaeté entra em MG.
+
+## E. A tela da P6 (07/11/2026, sem commit)
+
+Construída a partir de `.impeccable/superficies/idade.md`, com as decisões suas: página própria + bloco no boletim,
+escala sépia, galeria dos ex-prefeitos, halteres por terço, API reaproveitando o script (como a P9) e tudo vindo do
+banco. A Metodologia e o código do site foram alterados direto (fazem parte da implementação); o `README.md` foi
+atualizado (tela, endpoints e a seção da P6). `DESIGN.md`, `PRODUCT.md` e `design/PROMPT.md` ficam para você: o texto
+proposto está em E.2.
+
+### E.1 Arquivos
+
+| Arquivo | Mudança |
+|---|---|
+| `scripts/06_idade_alternancia.py` | `carregar(conn, censo_do_arquivo)` monta a base a partir do banco (a API passa `False` e lê a idade da população de `ibge_censo_municipio`); funções de resumo para a API (`resumo_perfil`, `resumo_alternancia`, `resumo_eleitos`, `resumo_voto`, `galeria`, `resumo_municipio`) com as mesmas primitivas do txt; `indice_com_idade` e `eleitos_por_municipio` extraídos das partes B e C. O txt e o CSV saem idênticos. |
+| `api/app.py` | Seção P6: `p6()` carrega o script como `p9()`; `p6_base()` (com trava, ~18 s, uma vez por processo); 5 endpoints `/api/idade/...` com `em_disco`; `_aquecer_idade` deixa prontos os recortes nacionais ao subir. |
+| `api/test_api.py` | `test_idade_p6`: as partes fecham entre si (não depende das UFs carregadas) e a galeria de Abaeté está em MG. |
+| `web/src/idade/` (novo) | `IdadePagina.tsx` (os quatro atos e o fecho), `MapaIdade.tsx` (o mapa sépia, adaptado do mapa da Escola, sem o 3D), `Galeria.tsx` (a galeria dos ex-prefeitos, completa e compacta), `Passagens.tsx`, `Piramide.tsx`, `HalteresIdade.tsx`, `sepia.ts` (a escala e os rótulos). |
+| `web/src/api.ts`, `web/src/router.tsx` | Tipos e consultas da P6; rota `/idade` (busca: `ano`, `uf`, `ibge`, `eleitos`, `cargo`, `voto`). |
+| `web/src/componentes/Moldura.tsx` | 8º item do menu, **Idade** (Phosphor `Hourglass`), entre Escola e Patrimônio. Conferido: os 8 cabem em 360 px sem rolagem lateral. |
+| `web/src/atlas/Boletim.tsx` | "Prefeitos eleitos" vira a galeria compacta (1996 a 2024, com as marcas), com a lista antiga enquanto a P6 não chega; bloco "IDADE" com o link para `/idade`. |
+| `web/src/paginas/Metodologia.tsx`, `consultas/p6_*.sql` | Seção P6 (com índice, dados, desafios e duas consultas) e a 9514 nas fontes. |
+| `web/src/index.css` | Animações `pendura` (as molduras), `revela-direita` (o lado esquerdo da pirâmide) e `municipios-idade`; todas desligadas com movimento reduzido. |
+| `web/e2e/idade.spec.ts` (novo) | Página (os quatro atos, a galeria de Teresina) e o boletim levando à página; passou em desktop e celular. |
+| `.impeccable/superficies/idade.md` | Estado "construída" e os endpoints reais. |
+
+Verificado: `npx tsc -b` sem erros; `npm run lint` só com avisos do mesmo tipo dos que o mapa da Escola já tem;
+`npm run build` ok (a página é um pedaço de 54 kB, 15,6 kB comprimido); sem erro no console e sem rolagem lateral em
+1440 e 390 px; `e2e/idade.spec.ts` 4 de 4. Rodado com o Chrome do sistema (os navegadores do Playwright não estão
+baixados). No `e2e/atlas.spec.ts`, 2 falhas que **não** vêm da P6: o teste supõe SP fora do banco (C.4) e o primeiro
+Tab, no Chrome do sistema, foca a página antes do link "Pular para o conteúdo" (igual em `/` e `/escola`).
+
+**Fora do escopo, ainda pendentes:** a interface simples não tem a P6; a Metodologia ainda diz "14 migrações" (agora
+são 12: 001 a 006 e 010 a 015) e "um script por questão" (C.4).
+
+### E.2 Texto proposto para os documentos oficiais
+
+**`DESIGN.md`**, no cabeçalho YAML (`colors`), depois de `escola-fim`:
+
+```yaml
+  sepia-inicio: "#f4f1df"
+  sepia-fim: "#634a30"
+```
+
+**`DESIGN.md`**, seção "Colors", nova subseção depois de "Data (escolaridade, P4)":
+
+```markdown
+### Data (idade, P6)
+- **Escala sépia, o papel que amarela** (#f4f1df → #ded4b4 → #c6b48a → #ab9166 → #896e4a → #634a30): a idade de quem
+  votou, do mais jovem (papel claro) ao mais velho (sépia), em OKLCH com a luminosidade sempre caindo (0,955 → 0,43) e a
+  matiz puxada para o amarelo (98° → 66°), para não encostar no laranja do viés de esquerda (o passo mais perto fica a
+  ΔE 8,3). Em `web/src/idade/sepia.ts`.
+- O mapa usa seis classes fixas de idade média (até 40, 40 a 42, ..., 48 ou mais), as mesmas nos quatro anos: o
+  envelhecimento aparece como escurecimento. Os terços (mais jovem, intermediário, mais velho) usam os passos 2, 4 e 6,
+  sempre com o nome escrito.
+- Texto em tinta sobre os quatro claros e em folha sobre os dois escuros; o passo mais claro leva contorno de tinta a
+  20%. Só existe na página da Idade e no bloco "IDADE" do boletim.
+- As passagens de mandato não têm cor de dado: mesmo partido em Papel 2, troca em Tinta 2, troca com ressalva em
+  Tinta 2 hachurada.
+```
+
+**`DESIGN.md`**, "Components", novas entradas depois de "Ranking dos municípios (P4)":
+
+```markdown
+### A página da Idade (P6)
+Quatro atos, cada um com a pergunta como título e a resposta em frase logo abaixo: "Onde o Brasil é mais velho?" (o
+mapa sépia com os três terços e o envelhecimento de 2018 a 2024), "Lugar mais velho troca mais de prefeito?" (barras
+de 100% das passagens por terço, a leitura da fusão num alternador e a galeria), "Quem se elege é mais velho que quem
+vota?" (a pirâmide e o prêmio de idade) e "Jovem vota no jovem?" (halteres por terço de zonas, com o alternador "Como
+votaram | Mesma escolaridade"). Fecha com "O que a conta não diz". A frase do topo usa sempre deputado federal em 2022.
+
+### Galeria dos ex-prefeitos (assinatura, P6)
+A parede de retratos da prefeitura, de 1996 a 2024: cada mandato numa moldura de folha com filete sépia, o retrato do
+TSE (desde 2004; antes, as iniciais), o mandato ("2005 a 2012"), o nome de urna e o partido com a bolinha do viés.
+Reeleição vira moldura dupla, com os dois retratos e "PTB → PSDB" quando a pessoa trocou de partido. Entre as molduras,
+o sinal da passagem num círculo (= mesmo partido, ≠ troca, ~ troca com ressalva), com o nome curto embaixo e a
+explicação no título. As molduras penduram uma vez (descem e balançam, 60 ms entre elas). No celular, a galeria rola
+de lado dentro do quadro. No boletim, a versão compacta (retratos de 44 px, sem o nome curto) e a linha de resumo em
+mono.
+
+### Pirâmide etária (P6)
+Espelhada: quem votou (18+) à esquerda, os eleitos à direita, as quatro faixas comuns do mais velho (em cima) ao mais
+jovem, cada barra no passo sépia da faixa; o tracejado em tinta são os candidatos aptos. O número fica dentro da barra
+e vai para fora quando ela é curta. As barras crescem do eixo para fora, uma vez.
+```
+
+**`DESIGN.md`**, "Navegação": "sete itens à direita (Mapa, Urna, Cadeira, Escola, Patrimônio, Reeleição,
+Metodologia)" vira "oito itens à direita (Mapa, Urna, Cadeira, Escola, Idade, Patrimônio, Reeleição, Metodologia)", e
+"para os sete caberem em 360px" vira "para os oito caberem em 360px".
+
+**`PRODUCT.md`**, "Evidence on Hand": acrescentar a P6 (`respostas/06_idade_alternancia.txt`, tela `/idade`).
+
+**`design/PROMPT.md`**, "4. Telas e rotas": nova subseção "Idade (`/idade`)" com o resumo da página da Idade acima.

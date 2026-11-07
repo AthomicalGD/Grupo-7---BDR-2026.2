@@ -29,6 +29,7 @@ Uso: python scripts/06_idade_alternancia.py
 Saída: respostas/06_idade_alternancia.txt e respostas/06_passagens_prefeitura.csv (uma linha por passagem)
 """
 import csv
+import math
 import re
 import sys
 import textwrap
@@ -152,10 +153,11 @@ def gravar_censo(conn, mun: pd.DataFrame) -> int:
 
 SQL_MUNICIPIOS = """
 SELECT m.cd_municipio, m.nm_municipio, m.cd_ibge, u.sigla AS sg_uf,
-       i.populacao, i.mediana_idade, i.indice_envelhecimento
+       i.populacao, i.mediana_idade, i.indice_envelhecimento, c.idade_media_populacao AS idade_pop_banco
 FROM municipio m
 JOIN uf u ON u.cd_ibge = m.cd_uf
 LEFT JOIN indices_municipio i ON i.cd_municipio = m.cd_municipio AND i.ano = 2022
+LEFT JOIN ibge_censo_municipio c ON c.cd_municipio = m.cd_municipio AND c.ano = 2022
 """
 
 SQL_ZONAS = "SELECT id_zona, cd_municipio, numero AS nr_zona FROM zona_eleitoral"
@@ -171,7 +173,8 @@ GROUP BY 1, 2
 
 # Prefeitos eleitos nas eleições ordinárias (tipo 2), com o partido pelo qual foram eleitos.
 SQL_PREFEITOS = """
-SELECT e.cd_municipio, e.ano, pe.id_politico, p.nome, pa.sigla, pa.numero
+SELECT e.cd_municipio, e.ano, e.turno, pe.id_politico, p.nome, pe.nm_urna, pe.sq_candidato AS sq, pa.sigla, pa.numero,
+       pa.vies_politico::float AS vies
 FROM mandato m
 JOIN eleicao e           ON e.id_eleicao = m.id_eleicao
 JOIN politico_eleicao pe ON pe.id_politico_eleicao = m.id_politico_eleicao
@@ -462,6 +465,16 @@ def porte(pop) -> str:
     return "-"
 
 
+def indice_com_idade(t: pd.DataFrame, mun: pd.DataFrame) -> pd.DataFrame:
+    """Índice de alternância de cada município com a idade de quem votou em 2024, o terço na UF, porte e escolaridade."""
+    i = indice_alternancia(t)
+    m24 = mun[mun["ano"] == 2024][["cd_municipio", "sg_uf", "idade", "terco", "terco_uf", "populacao", "pct_sup"]]
+    i = i.merge(m24, on="cd_municipio")
+    i["log_pop"] = np.log(i["populacao"].astype(float))
+    i["porte"] = i["populacao"].map(porte)
+    return i
+
+
 def parte_b(t: pd.DataFrame, mun: pd.DataFrame) -> tuple[list[str], dict]:
     s = titulo("PARTE B: alternância de poder na prefeitura (1996 a 2024)")
     s += paragrafo("Cada passagem de mandato (eleição ordinária -> a seguinte, 4 anos depois) recebe uma marca pelo "
@@ -485,12 +498,7 @@ def parte_b(t: pd.DataFrame, mun: pd.DataFrame) -> tuple[list[str], dict]:
     s += [f"  {a - 4}->{a}  {pa} -> {pn}: {n(q)}" for (a, pa, pn), q in fus.items()]
 
     # Índice por município x terço de idade (dentro da UF, 2024)
-    i = indice_alternancia(t)
-    m24 = mun[mun["ano"] == 2024][["cd_municipio", "sg_uf", "idade", "terco_uf", "populacao"]]
-    m24 = m24.merge(mun.loc[mun["ano"] == 2024, ["cd_municipio", "pct_sup"]], on="cd_municipio")
-    i = i.merge(m24, on="cd_municipio")
-    i["log_pop"] = np.log(i["populacao"].astype(float))
-    i["porte"] = i["populacao"].map(porte)
+    i = indice_com_idade(t, mun)
     s += ["", "Índice de alternância de cada município = % das suas passagens com troca. Terços de idade de quem",
           "votou em 2024, montados dentro de cada UF (a idade muda muito entre regiões). Médias dos municípios.", "",
           "  Terço (na UF)    Municípios  Idade  Troca (fusão = troca)  Troca (fusão = continuidade)  Outra pessoa",
@@ -538,10 +546,31 @@ def faixa_idade(idade: pd.Series) -> pd.Series:
     return pd.cut(idade, [17, 34, 49, 64, 200], labels=list(FAIXAS)).astype(int)
 
 
-def parte_c(cand: pd.DataFrame, mun: pd.DataFrame) -> tuple[list[str], dict]:
-    s = titulo("PARTE C: idade dos eleitos (prefeito e vereadores, 2020 e 2024)")
+def preparar_candidaturas(cand: pd.DataFrame) -> pd.DataFrame:
     cand = cand[cand["idade"].between(18, 100)].copy()
     cand["faixa"] = faixa_idade(cand["idade"])
+    return cand
+
+
+def eleitos_por_municipio(cand: pd.DataFrame, mun: pd.DataFrame) -> pd.DataFrame:
+    """Por município e ano: idade média dos candidatos e dos eleitos (prefeito e vereador), com a de quem votou."""
+    g = cand.groupby(["ano", "cd_municipio", "cod_cargo"])
+    por = pd.DataFrame({"cand": g["idade"].mean(),
+                        "eleitos": cand[cand["eleito"]].groupby(["ano", "cd_municipio", "cod_cargo"])["idade"].mean()})
+    por = por.unstack("cod_cargo")
+    por.columns = [f"{a}_{CARGOS[c][:3].lower()}" for a, c in por.columns]
+    por = por.reset_index().merge(mun[["ano", "cd_municipio", "sg_uf", "idade", "terco_uf", "populacao", "pct_sup"]],
+                                  on=["ano", "cd_municipio"])
+    por["premio_ver"] = por["eleitos_ver"] - por["cand_ver"]
+    por["log_pop"] = np.log(por["populacao"].astype(float))
+    pref = cand[cand["eleito"] & (cand["cod_cargo"] == 11)].groupby(["ano", "cd_municipio"])["idade"].max()
+    por = por.merge((pref >= 60).rename("pref_60").reset_index(), on=["ano", "cd_municipio"], how="left")
+    por["uf_ano"] = por["sg_uf"] + por["ano"].astype(str)
+    return por
+
+
+def parte_c(cand: pd.DataFrame, mun: pd.DataFrame) -> tuple[list[str], dict]:
+    s = titulo("PARTE C: idade dos eleitos (prefeito e vereadores, 2020 e 2024)")
     s += ["Distribuição por faixa de idade: quem votou (18+, 1º turno), candidatos aptos e eleitos.", "",
           "  Ano   Grupo                        Pessoas  Idade média  " + "  ".join(f"{v:>10}" for v in FAIXAS.values()),
           "  " + "-" * 104]
@@ -558,18 +587,7 @@ def parte_c(cand: pd.DataFrame, mun: pd.DataFrame) -> tuple[list[str], dict]:
                 s.append(f"  {ano}  {CARGOS[cargo] + ': ' + rot:<27}  {n(len(d)):>11}  {d['idade'].mean():>11.1f}  {cols}")
         s.append("")
 
-    # Por município
-    g = cand.groupby(["ano", "cd_municipio", "cod_cargo"])
-    por = pd.DataFrame({"cand": g["idade"].mean(),
-                        "eleitos": cand[cand["eleito"]].groupby(["ano", "cd_municipio", "cod_cargo"])["idade"].mean()})
-    por = por.unstack("cod_cargo")
-    por.columns = [f"{a}_{CARGOS[c][:3].lower()}" for a, c in por.columns]
-    por = por.reset_index().merge(mun[["ano", "cd_municipio", "sg_uf", "idade", "terco_uf", "populacao", "pct_sup"]],
-                                  on=["ano", "cd_municipio"])
-    por["premio_ver"] = por["eleitos_ver"] - por["cand_ver"]
-    por["log_pop"] = np.log(por["populacao"].astype(float))
-    pref = cand[cand["eleito"] & (cand["cod_cargo"] == 11)].groupby(["ano", "cd_municipio"])["idade"].max()
-    por = por.merge((pref >= 60).rename("pref_60").reset_index(), on=["ano", "cd_municipio"], how="left")
+    por = eleitos_por_municipio(cand, mun)
 
     s += ["Por terço de idade de quem votou (dentro da UF), médias dos municípios. 'Prêmio' = idade média dos",
           "vereadores eleitos menos a dos candidatos a vereador do mesmo município.", "",
@@ -583,7 +601,6 @@ def parte_c(cand: pd.DataFrame, mun: pd.DataFrame) -> tuple[list[str], dict]:
                      f"  {100 * d['pref_60'].mean():>13.1f}%")
     efeitos = {}
     s += ["", "Efeito de +5 anos na idade média de quem votou, dentro da UF e do ano, descontados porte e escolaridade:"]
-    por["uf_ano"] = por["sg_uf"] + por["ano"].astype(str)
     for col, rot in (("cand_ver", "idade dos candidatos a vereador"), ("eleitos_ver", "idade dos vereadores eleitos"),
                      ("premio_ver", "prêmio (eleitos - candidatos)"), ("eleitos_pre", "idade do prefeito eleito")):
         efeitos[col] = efeito(por, col, "idade", "uf_ano", controles=("log_pop", "pct_sup"), cluster="cd_municipio")
@@ -771,32 +788,243 @@ def conclusao(a: dict, b: dict, c: dict, d: dict) -> list[str]:
 
 # ───────── Principal ─────────
 
-def main() -> None:
-    conn = conectar()
+# ───────── Para a API (/api/idade): os mesmos números do txt, em dados ─────────
+# A API carrega este arquivo (como faz com o script 09) e chama carregar(conn, censo_do_arquivo=False) e as funções
+# abaixo. Cada uma recebe a base de carregar() e devolve só tipos do Python (números, textos, listas, dicts).
+
+def _r(x, casas: int = 1):
+    if x is None:
+        return None
+    x = float(x)
+    return None if math.isnan(x) else round(x, casas)
+
+
+def _efeito(df: pd.DataFrame, *args, **kw) -> dict | None:
+    """efeito() em +5 anos de idade de quem votou; None quando o recorte não dá para medir."""
+    try:
+        e = efeito(df, *args, **kw)
+    except (ValueError, ZeroDivisionError, IndexError, np.linalg.LinAlgError):
+        return None
+    if not e["n"] or math.isnan(e["b"]):
+        return None
+    return {"b": _r(5 * e["b"], 2), "lo": _r(5 * e["lo"], 2), "hi": _r(5 * e["hi"], 2), "r": _r(e["r"], 2),
+            "n": int(e["n"]), "grupos": int(e["grupos"])}
+
+
+def _recorte(df: pd.DataFrame, uf: str) -> pd.DataFrame:
+    return df[df["sg_uf"] == uf] if uf else df
+
+
+def resumo_perfil(base: dict, ano: int, uf: str = "") -> dict:
+    """(A) Cada município no ano (idade de quem votou e da população, terço, 60+ e 16-29), a média de cada UF, a
+    linha de 2018 a 2024, os limites dos terços e os extremos. Com UF, os terços são os da UF."""
+    col = "terco_uf" if uf else "terco"
+    todos = _recorte(base["mun"], uf)
+    d = todos[todos["ano"] == ano]
+    municipios = [{"ibge": int(r.cd_ibge), "nome": r.nm_municipio, "uf": r.sg_uf, "idade": _r(r.idade),
+                   "idade_pop": _r(r.idade_pop), "terco": int(getattr(r, col)), "pct_60": _r(r.pct_60),
+                   "pct_16_29": _r(r.pct_16_29), "comparecimento": int(r.comp)}
+                  for r in d.itertuples() if not pd.isna(r.cd_ibge)]
+    g = d.groupby("sg_uf")[["comp_x_idade", "comp"]].sum()
+    linha = []
+    for a in ANOS_PERFIL:
+        x = todos[todos["ano"] == a]
+        linha.append({"ano": a, "media": _r(x["idade"].mean()), "ponderada": _r(media_p(x["idade"], x["comp"])),
+                      "mais_velhos_pct": _r(100 * (x["comp_60"] > x["comp_16_29"]).mean()),
+                      "mais_velhos": int((x["comp_60"] > x["comp_16_29"]).sum())})
+    ordem = d.sort_values("idade")
+    ext = lambda r: {"ibge": int(r.cd_ibge), "nome": r.nm_municipio, "uf": r.sg_uf, "idade": _r(r.idade)}  # noqa: E731
+    t18 = todos[todos["ano"] == 2018].set_index("cd_municipio")[col]
+    t24 = todos[todos["ano"] == 2024].set_index("cd_municipio")[col]
+    comum = t18.index.intersection(t24.index)
+    return {
+        "ano": ano, "uf": uf or None, "municipios": municipios,
+        "por_uf": [{"uf": u, "idade": _r(v.comp_x_idade / v.comp)} for u, v in g.iterrows()],
+        "linha": linha,
+        "limites": [_r(d.loc[d[col] == 1, "idade"].max()), _r(d.loc[d[col] == 3, "idade"].min())],
+        "mais_jovem": ext(next(ordem.itertuples())), "mais_velho": ext(next(ordem.iloc[::-1].itertuples())),
+        "media": _r(d["idade"].mean()), "ponderada": _r(media_p(d["idade"], d["comp"])),
+        "estavel": _r(100 * (t18[comum] == t24[comum]).mean()),
+        "r_censo": _r(d["idade"].corr(d["idade_pop"]), 2),
+    }
+
+
+def resumo_alternancia(base: dict, uf: str = "") -> dict:
+    """(B) As passagens de mandato de prefeito (1996 a 2024) por terço de idade na UF (2024) e por porte, os ciclos,
+    as trocas com ressalva por par e os efeitos (+5 anos), com fusão contada como troca e como continuidade."""
+    t = _recorte(base["t"], uf)
+    i = _recorte(indice_com_idade(base["t"], base["mun"]), uf)
+    tm = t.merge(i[["cd_municipio", "terco_uf"]], on="cd_municipio")
+    tercos_ = []
+    for k in (1, 2, 3):
+        di, dt = i[i["terco_uf"] == k], tm[tm["terco_uf"] == k]
+        c = dt["passagem"].value_counts()
+        tercos_.append({"terco": k, "municipios": len(di), "idade": _r(di["idade"].mean()),
+                        "troca_estrita": _r(di["alt_estrita"].mean()), "troca_ampla": _r(di["alt_ampla"].mean()),
+                        "outra_pessoa": _r(di["alt_pessoa"].mean()), "passagens": len(dt),
+                        "mesmo": int(c.get(MESMO, 0)), "troca": int(c.get(TROCA, 0)), "fusao": int(c.get(FUSAO, 0))})
+    portes = []
+    for _, _, rot in PORTES:
+        d = i[i["porte"] == rot]
+        v = d.groupby("terco_uf")["alt_estrita"].mean()
+        portes.append({"porte": rot, "municipios": len(d), "tercos": [_r(v.get(k)) for k in (1, 2, 3)]})
+    ciclos = []
+    for ano, d in t.groupby("ano"):
+        c = d["passagem"].value_counts()
+        ciclos.append({"ano": int(ano), "passagens": len(d), "mesmo": int(c.get(MESMO, 0)), "troca": int(c.get(TROCA, 0)),
+                       "fusao": int(c.get(FUSAO, 0)), "reeleicao": _r(100 * d["mesma_pessoa"].mean())})
+    fus = t[t["passagem"] == FUSAO].groupby(["ano", "partido_anterior", "partido"]).size().sort_values(ascending=False)
+    c = t["passagem"].value_counts()
+    ctrl = ("log_pop", "pct_sup")
+    return {
+        "uf": uf or None, "tercos": tercos_, "portes": portes, "ciclos": ciclos,
+        "fusoes": [{"ano": int(a), "de": de, "para": para, "n": int(q)} for (a, de, para), q in fus.items()],
+        "total": {"passagens": len(t), "mesmo": int(c.get(MESMO, 0)), "troca": int(c.get(TROCA, 0)),
+                  "fusao": int(c.get(FUSAO, 0)), "reeleicao": _r(100 * t["mesma_pessoa"].mean()),
+                  "municipios": int(t["cd_municipio"].nunique())},
+        "efeitos": {"estrita": _efeito(i, "alt_estrita", "idade", "sg_uf", peso="passagens", controles=ctrl),
+                    "ampla": _efeito(i, "alt_ampla", "idade", "sg_uf", peso="passagens", controles=ctrl),
+                    "pessoa": _efeito(i, "alt_pessoa", "idade", "sg_uf", peso="passagens", controles=ctrl)},
+    }
+
+
+def resumo_eleitos(base: dict, ano: int, uf: str = "") -> dict:
+    """(C) A pirâmide (quem votou x candidatos x eleitos, nas faixas comuns) no ano, os terços na UF e os efeitos
+    (+5 anos, 2020 e 2024 juntos, dentro da UF e do ano, descontados porte e escolaridade, como no txt)."""
+    mun, cand = _recorte(base["mun"], uf), base["cand"]
+    if uf:
+        cand = cand[cand["cd_municipio"].isin(set(mun["cd_municipio"]))]
+    mv = mun[mun["ano"] == ano]
+    cargos = {}
+    for cod in (11, 13):
+        dc = cand[(cand["ano"] == ano) & (cand["cod_cargo"] == cod)]
+        de = dc[dc["eleito"]]
+        cargos[str(cod)] = {"nome": CARGOS[cod], "candidatos": [int((dc["faixa"] == f).sum()) for f in FAIXAS],
+                            "eleitos": [int((de["faixa"] == f).sum()) for f in FAIXAS],
+                            "idade_candidatos": _r(dc["idade"].mean()), "idade_eleitos": _r(de["idade"].mean())}
+    por = eleitos_por_municipio(cand, mun)
+    tercos_ = []
+    for k in (1, 2, 3):
+        d = por[(por["ano"] == ano) & (por["terco_uf"] == k)]
+        tercos_.append({"terco": k, "municipios": len(d), "quem_votou": _r(d["idade"].mean()),
+                        "candidatos": _r(d["cand_ver"].mean()), "eleitos": _r(d["eleitos_ver"].mean()),
+                        "premio": _r(d["premio_ver"].mean(), 2), "prefeito": _r(d["eleitos_pre"].mean()),
+                        "prefeito_60": _r(100 * d["pref_60"].mean())})
+    ctrl = ("log_pop", "pct_sup")
+    return {
+        "ano": ano, "uf": uf or None, "faixas": list(FAIXAS.values()),
+        "quem_votou": [int(mv[f"comp_f{f}"].sum()) for f in FAIXAS],
+        "idade_quem_votou": _r(media_p(mv["idade"], mv["comp"])), "cargos": cargos, "tercos": tercos_,
+        "efeitos": {c: _efeito(por, c, "idade", "uf_ano", controles=ctrl, cluster="cd_municipio")
+                    for c in ("cand_ver", "eleitos_ver", "premio_ver", "eleitos_pre")},
+    }
+
+
+def resumo_voto(base: dict, cargo: int, ano: int, uf: str = "") -> dict:
+    """(D) Terços de zonas (deputado: dentro da UF; vereador e prefeito: dentro do município, cidades com 2+ zonas),
+    com a idade de quem votou, a idade votada e a idade votada com a escolaridade fixa, e os efeitos (+5 anos)."""
+    z = base["z"]
+    d = _recorte(z[(z["cod_cargo"] == cargo) & (z["ano"] == ano)], uf).copy()
+    estadual = cargo in (6, 7)
+    if not estadual:
+        d = d[d["zonas_no_mun"] >= 2].copy()
+    grupo, peso = ("sg_uf", "votos") if estadual else ("cd_municipio", "peso_mun")
+    d["terco"] = tercos(d, "idade", por=grupo, peso="comp")
+    bruto = efeito(d, "idade_votada", "idade", grupo, peso=peso, cluster="cd_municipio")
+    fixa = efeito(d, "idade_votada", "idade", grupo, peso=peso, controles=("pct_sup",), cluster="cd_municipio")
+    x0, y0 = media_p(d["idade"], d["comp"]), media_p(d["idade_votada"], d["votos"])
+    tercos_ = []
+    for k in (1, 2, 3):
+        q = d[d["terco"] == k]
+        xk = media_p(q["idade"], q["comp"])
+        tercos_.append({"terco": k, "zonas": len(q), "municipios": int(q["cd_municipio"].nunique()),
+                        "quem_votou": _r(xk, 2), "votada": _r(media_p(q["idade_votada"], q["votos"]), 2),
+                        "votada_fixa": _r(y0 + fixa["b"] * (xk - x0), 2),
+                        "pct_votos_18_34": _r(media_p(q["pct_v1"], q["votos"])),
+                        "pct_votos_65": _r(media_p(q["pct_v4"], q["votos"]))})
+    cidades = d[d["zonas_no_mun"] >= 2]
+    r_esc = efeito(cidades, "pct_sup", "idade", "cd_municipio", reps=0)["r"] if len(cidades) > 2 else float("nan")
+    efeitos = {"bruto": _efeito(d, "idade_votada", "idade", grupo, peso=peso, cluster="cd_municipio"),
+               "escolaridade": _efeito(d, "idade_votada", "idade", grupo, peso=peso, controles=("pct_sup",),
+                                       cluster="cd_municipio")}
+    if estadual:
+        efeitos["municipio_bruto"] = _efeito(cidades, "idade_votada", "idade", "cd_municipio", peso="peso_mun",
+                                             cluster="cd_municipio")
+        efeitos["municipio_escolaridade"] = _efeito(cidades, "idade_votada", "idade", "cd_municipio", peso="peso_mun",
+                                                    controles=("pct_sup",), cluster="cd_municipio")
+    return {"cargo": cargo, "nome": CARGOS[cargo], "ano": ano, "uf": uf or None,
+            "comparacao": "zonas da UF" if estadual else "zonas do mesmo município",
+            "zonas": len(d), "municipios": int(d["cd_municipio"].nunique()), "tercos": tercos_, "efeitos": efeitos,
+            "r_escolaridade": _r(r_esc, 2), "b_bruto": _r(bruto["b"], 4), "b_escolaridade": _r(fixa["b"], 4)}
+
+
+def galeria(base: dict, cd_municipio: int) -> list[dict]:
+    """(B) Os prefeitos eleitos de 1996 a 2024 no município, com a marca da passagem em relação ao anterior."""
+    p = base["pref"][base["pref"]["cd_municipio"] == cd_municipio].sort_values(["ano", "sq"])
+    t = base["t"][base["t"]["cd_municipio"] == cd_municipio].set_index("ano")
+    saida = []
+    for ano, g in p.groupby("ano"):
+        r = g.iloc[0]
+        tem = ano in t.index
+        saida.append({"ano": int(ano), "id_politico": int(r.id_politico), "nome": r.nome,
+                      "nome_urna": r.nm_urna or r.nome, "partido": r.sigla, "vies": _r(r.vies),
+                      "sq": int(r.sq) if not pd.isna(r.sq) else None, "turno": int(r.turno), "duplo": len(g) > 1,
+                      "passagem": t.at[ano, "passagem"] if tem else None,
+                      "mesma_pessoa": bool(t.at[ano, "mesma_pessoa"]) if tem else None})
+    return saida
+
+
+def resumo_municipio(base: dict, cd_municipio: int) -> dict:
+    """O bloco do boletim: idade de quem votou em cada ano (com os terços), a da população e as passagens."""
+    d = base["mun"][base["mun"]["cd_municipio"] == cd_municipio]
+    t = base["t"][base["t"]["cd_municipio"] == cd_municipio]
+    c = t["passagem"].value_counts()
+    ref = base["mun_ref"][base["mun_ref"]["cd_municipio"] == cd_municipio]
+    return {
+        "anos": {str(int(r.ano)): {"idade": _r(r.idade), "terco": int(r.terco), "terco_uf": int(r.terco_uf),
+                                   "pct_60": _r(r.pct_60), "pct_16_29": _r(r.pct_16_29)} for r in d.itertuples()},
+        "idade_pop": _r(ref["idade_pop"].iloc[0]) if len(ref) else None,
+        "passagens": {"total": len(t), "mesmo": int(c.get(MESMO, 0)), "troca": int(c.get(TROCA, 0)),
+                      "fusao": int(c.get(FUSAO, 0)), "reeleicoes": int(t["mesma_pessoa"].sum())},
+        "galeria": galeria(base, cd_municipio),
+    }
+
+
+def carregar(conn, censo_do_arquivo: bool = True) -> dict:
+    """Tudo o que as partes A a D usam, a partir do banco. censo_do_arquivo: a idade da população sai do CSV da 9514
+    (o script, que a grava no banco) ou de ibge_censo_municipio (a API, que só lê o banco)."""
     zonas_tse = perfil_zonas(eleitorado_por_faixa(conn))
-    print("Consultando municípios, prefeitos e candidaturas...", flush=True)
     mun_ref = consultar(conn, SQL_MUNICIPIOS)
-    mun_ref = mun_ref.merge(censo_idade(), left_on="cd_ibge", right_index=True, how="left")
+    if censo_do_arquivo:
+        mun_ref = mun_ref.merge(censo_idade(), left_on="cd_ibge", right_index=True, how="left")
+    else:
+        mun_ref["idade_pop"] = pd.to_numeric(mun_ref["idade_pop_banco"], errors="coerce")
+        mun_ref["pop_censo"] = np.nan
     for c in ("populacao", "mediana_idade", "indice_envelhecimento"):
         mun_ref[c] = pd.to_numeric(mun_ref[c], errors="coerce")
     mun_ref["populacao"] = mun_ref["populacao"].fillna(mun_ref["pop_censo"])
-    gravados = gravar_censo(conn, mun_ref)
     esc = consultar(conn, SQL_ESCOLARIDADE).merge(consultar(conn, SQL_ZONAS), on="id_zona")
     for c in ("comp_sup", "comp_esc"):
         esc[c] = esc[c].astype(float)
     mun = municipios_por_ano(zonas_tse, mun_ref, esc)
     pref = consultar(conn, SQL_PREFEITOS)
-    cand = consultar(conn, SQL_CANDIDATURAS)
-    print("Somando votos por zona e idade do candidato (alguns minutos)...", flush=True)
+    cand = preparar_candidaturas(consultar(conn, SQL_CANDIDATURAS))
     votos = consultar(conn, SQL_VOTOS)
-    zonas_banco = consultar(conn, SQL_ZONAS)
-    ufs = [s for s, _ in ufs_carregadas(conn)]
-    conn.close()
+    z = zonas_com_votos(votos, zonas_tse, consultar(conn, SQL_ZONAS), mun_ref,
+                        esc[["id_zona", "ano", "comp_sup", "comp_esc"]])
+    return {"mun_ref": mun_ref, "mun": mun, "pref": pref, "t": passagens(pref, mun_ref), "cand": cand, "z": z,
+            "ufs": [s for s, _ in ufs_carregadas(conn)]}
 
-    t = passagens(pref, mun_ref)
+
+def main() -> None:
+    conn = conectar()
+    print("Consultando o banco (perfil de quem votou, prefeitos, candidaturas e votos por zona)...", flush=True)
+    base = carregar(conn)
+    gravados = gravar_censo(conn, base["mun_ref"])
+    conn.close()
+    mun, t, cand, z, ufs = base["mun"], base["t"], base["cand"], base["z"], base["ufs"]
     PASSAGENS.parent.mkdir(exist_ok=True)
     t.sort_values(["sg_uf", "nm_municipio", "ano"]).to_csv(PASSAGENS, index=False, sep=";")
-    z = zonas_com_votos(votos, zonas_tse, zonas_banco, mun_ref, esc[["id_zona", "ano", "comp_sup", "comp_esc"]])
 
     sa, ra = parte_a(mun)
     sb, rb = parte_b(t, mun)

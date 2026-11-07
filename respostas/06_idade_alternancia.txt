@@ -3,7 +3,7 @@ P6) Idade do município x alternância de poder e idade dos eleitos: jovem vota 
 Fontes: perfil de comparecimento por faixa etária e zona (TSE, 1º turno; perfil_etario_munzona);
 população por idade simples (Censo 2022, SIDRA 9514) e idade mediana/índice de envelhecimento (SIDRA 9515);
 prefeitos eleitos 1996-2024, candidaturas e votos nominais por zona (TSE, banco eleicoes).
-UFs: todas as 27. Idade média da população gravada em ibge_censo_municipio para 5.569 municípios.
+UFs: todas as 27. Idade média da população gravada em ibge_censo_municipio para 5.570 municípios.
 
 Observações:
 - Idades em anos completos. Candidato: na data do 1º turno (15/11 em 2020). Quem votou: ponto médio da faixa
@@ -22,10 +22,10 @@ Por ano, quem votou no 1º turno (média simples dos municípios) e os limites d
 
    Ano  Municípios  Idade média  Mais jovem até  Mais velho a partir de   % 60+   % 16-29   60+ > 16-29
   ----------------------------------------------------------------------------------------------------
-  2018       5.569         42.0            41.1                    43.1    16.0      26.3     410 (7.4%)
-  2020       5.567         42.9            41.9                    44.0    17.8      25.0     968 (17.4%)
-  2022       5.569         43.4            42.4                    44.5    18.5      23.9   1.494 (26.8%)
-  2024       5.568         44.2            43.2                    45.4    20.7      23.4   2.311 (41.5%)
+  2018       5.570         42.0            41.1                    43.1    16.0      26.3     410 (7.4%)
+  2020       5.568         42.9            41.9                    44.0    17.8      25.0     969 (17.4%)
+  2022       5.570         43.4            42.4                    44.5    18.5      23.9   1.495 (26.8%)
+  2024       5.569         44.2            43.2                    45.4    20.7      23.4   2.312 (41.5%)
 
 2024, os 5 municípios mais jovens e os 5 mais velhos (idade média de quem votou):
   mais jovens: Melgaço-PA 34.8; Jordão-AC 34.9; Porto Walter-AC 34.9; Uiramutã-RR 35.0; Marechal Thaumaturgo-AC 35.4
@@ -56,7 +56,7 @@ do país e % com mais votantes de 60+ do que de 16-29.
   ES          78         45.0                41.0            65.4
   GO         246         44.9                43.9            51.6
   MA         217         41.1                 0.0             0.0
-  MG         852         45.4                52.1            64.4
+  MG         853         45.4                52.1            64.5
   MS          79         44.0                13.9            29.1
   MT         142         43.5                11.3            21.1
   PA         144         40.3                 0.0             0.0
@@ -87,14 +87,14 @@ respostas/06_passagens_prefeitura.csv.
 
   Passagem    Passagens  Mesmo partido  Troca com ressalva  Troca de partido  Reeleição
   ----------------------------------------------------------------------------------------
-  1996->2000      5.403          36.1%          0 ( 0.0%)             63.9%      37.6%
-  2000->2004      5.512          28.6%         17 ( 0.3%)             71.0%      24.7%
-  2004->2008      5.486          37.2%          0 ( 0.0%)             62.8%      38.9%
-  2008->2012      5.527          30.1%          0 ( 0.0%)             69.9%      24.1%
-  2012->2016      5.516          24.5%          0 ( 0.0%)             75.5%      22.6%
-  2016->2020      5.444          32.9%          4 ( 0.1%)             67.0%      37.3%
-  2020->2024      5.457          31.5%        200 ( 3.7%)             64.8%      42.8%
-  Total          38.345          31.6%        221 ( 0.6%)             67.9%      32.5%
+  1996->2000      5.404          36.1%          0 ( 0.0%)             63.9%      37.6%
+  2000->2004      5.513          28.6%         17 ( 0.3%)             71.1%      24.7%
+  2004->2008      5.487          37.2%          0 ( 0.0%)             62.8%      38.9%
+  2008->2012      5.528          30.1%          0 ( 0.0%)             69.9%      24.1%
+  2012->2016      5.517          24.5%          0 ( 0.0%)             75.5%      22.6%
+  2016->2020      5.445          32.9%          4 ( 0.1%)             67.0%      37.3%
+  2020->2024      5.458          31.5%        200 ( 3.7%)             64.8%      42.9%
+  Total          38.352          31.6%        221 ( 0.6%)             67.9%      32.5%
 
 Trocas com ressalva (partidos fundidos), por par:
   2020->2024  DEM -> UNIÃO: 148
@@ -113,7 +113,7 @@ votou em 2024, montados dentro de cada UF (a idade muda muito entre regiões). M
   Terço (na UF)    Municípios  Idade  Troca (fusão = troca)  Troca (fusão = continuidade)  Outra pessoa
   --------------------------------------------------------------------------------------------------
   mais jovem            1.853   42.6                  68.6%                         68.0%         66.9%
-  intermediário         1.860   44.3                  69.0%                         68.5%         67.9%
+  intermediário         1.861   44.3                  69.0%                         68.5%         67.9%
   mais velho            1.854   45.7                  67.8%                         67.1%         67.7%
 
 Por porte (população do Censo 2022), troca de partido com fusão = troca:
@@ -121,24 +121,24 @@ Por porte (população do Censo 2022), troca de partido com fusão = troca:
   Porte              Mais jovem  Intermediário  Mais velho   (municípios)
   ------------------------------------------------------------------------
   até 10 mil              67.2%          66.9%       64.7%   (2.493)
-  10 a 50 mil             69.9%          71.1%       71.6%   (2.418)
+  10 a 50 mil             69.9%          71.1%       71.6%   (2.419)
   50 a 200 mil            68.9%          69.6%       72.7%   (505)
   mais de 200 mil         64.1%          64.5%       60.7%   (151)
 
 Por UF: o terço mais velho alterna mais que o mais jovem em 11 de 26 UFs (diferença mediana: -1.1 pontos).
 
 Efeito de +5 anos na idade média de quem votou (2024), dentro da UF, descontados porte e escolaridade:
-  troca (fusão = troca):         +0.89 pontos (IC 95%: -0.96 a +2.52; r parcial = +0.01; 5.567 unidades em 26 grupos)
-  troca (fusão = continuidade):  +0.62 pontos (IC 95%: -1.25 a +2.29; r parcial = +0.01; 5.567 unidades em 26 grupos)
-  outra pessoa na prefeitura:    +2.39 pontos (IC 95%: +1.35 a +3.53; r parcial = +0.06; 5.567 unidades em 26 grupos)
+  troca (fusão = troca):         +0.89 pontos (IC 95%: -0.84 a +2.68; r parcial = +0.01; 5.568 unidades em 26 grupos)
+  troca (fusão = continuidade):  +0.63 pontos (IC 95%: -1.09 a +2.45; r parcial = +0.01; 5.568 unidades em 26 grupos)
+  outra pessoa na prefeitura:    +2.38 pontos (IC 95%: +1.30 a +3.47; r parcial = +0.05; 5.568 unidades em 26 grupos)
 
 Passagens recentes com o terço de idade da própria eleição (dentro da UF): % com troca de partido
 (fusão = troca).
 
   Passagem    Mais jovem  Intermediário  Mais velho
   --------------------------------------------------
-  2016->2020       68.8%          67.5%       65.0%
-  2020->2024       68.1%          67.4%       69.8%
+  2016->2020       68.8%          67.5%       64.9%
+  2020->2024       68.1%          67.5%       69.8%
 
 ====================================================================================================
 PARTE C: idade dos eleitos (prefeito e vereadores, 2020 e 2024)
@@ -148,17 +148,17 @@ Distribuição por faixa de idade: quem votou (18+, 1º turno), candidatos aptos
 
   Ano   Grupo                        Pessoas  Idade média     18 a 34     35 a 49     50 a 64  65 ou mais
   --------------------------------------------------------------------------------------------------------
-  2020  quem votou (18+)             112.698.689            -       34.2%       31.7%       24.7%        9.4%
-  2020  Prefeito: candidatos              18.797         49.7        8.3%       41.7%       40.4%        9.6%
-  2020  Prefeito: eleitos                  5.493         49.3        9.0%       41.9%       40.7%        8.4%
-  2020  Vereador: candidatos             504.107         45.2       18.5%       45.7%       30.9%        4.9%
-  2020  Vereador: eleitos                 58.094         44.5       17.6%       50.4%       29.0%        3.1%
+  2020  quem votou (18+)             112.712.978            -       34.2%       31.7%       24.7%        9.4%
+  2020  Prefeito: candidatos              18.802         49.7        8.3%       41.7%       40.4%        9.6%
+  2020  Prefeito: eleitos                  5.494         49.3        9.0%       41.9%       40.6%        8.4%
+  2020  Vereador: candidatos             504.171         45.2       18.5%       45.7%       30.9%        4.9%
+  2020  Vereador: eleitos                 58.103         44.5       17.6%       50.4%       29.0%        3.1%
 
-  2024  quem votou (18+)             120.458.672            -       30.9%       31.6%       25.3%       12.1%
-  2024  Prefeito: candidatos              15.154         50.3        7.3%       41.7%       39.8%       11.2%
-  2024  Prefeito: eleitos                  5.529         49.5        7.7%       44.9%       37.3%       10.1%
-  2024  Vereador: candidatos             416.844         46.7       14.7%       45.1%       33.9%        6.4%
-  2024  Vereador: eleitos                 58.130         45.5       14.8%       50.6%       30.8%        3.8%
+  2024  quem votou (18+)             120.472.667            -       30.9%       31.6%       25.3%       12.1%
+  2024  Prefeito: candidatos              15.157         50.3        7.3%       41.7%       39.8%       11.2%
+  2024  Prefeito: eleitos                  5.530         49.5        7.7%       44.9%       37.3%       10.1%
+  2024  Vereador: candidatos             416.926         46.7       14.7%       45.1%       33.9%        6.4%
+  2024  Vereador: eleitos                 58.139         45.5       14.8%       50.6%       30.8%        3.8%
 
 Por terço de idade de quem votou (dentro da UF), médias dos municípios. 'Prêmio' = idade média dos
 vereadores eleitos menos a dos candidatos a vereador do mesmo município.
@@ -170,13 +170,13 @@ vereadores eleitos menos a dos candidatos a vereador do mesmo município.
   2020  mais velho            44.4            45.2                45.0    -0.1             49.3           17.9%
   2024  mais jovem            42.6            45.5                44.8    -0.7             48.9           17.7%
   2024  intermediário         44.3            46.3                45.5    -0.8             49.7           20.4%
-  2024  mais velho            45.7            46.8                46.2    -0.7             49.9           21.3%
+  2024  mais velho            45.7            46.8                46.2    -0.7             49.9           21.4%
 
 Efeito de +5 anos na idade média de quem votou, dentro da UF e do ano, descontados porte e escolaridade:
-  idade dos candidatos a vereador    +2.67 anos (IC 95%: +2.52 a +2.85; r parcial = +0.33; 11.110 unidades em 52 grupos)
-  idade dos vereadores eleitos       +2.51 anos (IC 95%: +2.17 a +2.82; r parcial = +0.18; 11.109 unidades em 52 grupos)
-  prêmio (eleitos - candidatos)      -0.17 anos (IC 95%: -0.45 a +0.09; r parcial = -0.01; 11.109 unidades em 52 grupos)
-  idade do prefeito eleito           +1.18 anos (IC 95%: +0.27 a +2.12; r parcial = +0.03; 11.021 unidades em 52 grupos)
+  idade dos candidatos a vereador    +2.68 anos (IC 95%: +2.51 a +2.87; r parcial = +0.33; 11.112 unidades em 52 grupos)
+  idade dos vereadores eleitos       +2.50 anos (IC 95%: +2.19 a +2.81; r parcial = +0.18; 11.111 unidades em 52 grupos)
+  prêmio (eleitos - candidatos)      -0.18 anos (IC 95%: -0.43 a +0.09; r parcial = -0.01; 11.111 unidades em 52 grupos)
+  idade do prefeito eleito           +1.20 anos (IC 95%: +0.29 a +2.06; r parcial = +0.03; 11.023 unidades em 52 grupos)
 
 ====================================================================================================
 PARTE D: jovem vota no jovem? (votos nominais do 1º turno por zona eleitoral)
@@ -215,20 +215,20 @@ zonas do mesmo município, cada município pesa igual (senão São Paulo e Rio d
 resultado). IC de 95% por reamostragem de municípios.
 
 Efeito de +5 anos na idade de quem votou sobre a idade votada:
-  2018 Deputado Federal  zonas da UF, sem controle:              -0.21 anos (IC 95%: -0.83 a +0.47; r parcial = -0.02; 6.101 unidades em 27 grupos)
-  2018 Deputado Federal  zonas da UF, mesma escolaridade:        +1.27 anos (IC 95%: +0.63 a +1.97; r parcial = +0.10; 6.101 unidades em 27 grupos)
+  2018 Deputado Federal  zonas da UF, sem controle:              -0.20 anos (IC 95%: -0.76 a +0.42; r parcial = -0.02; 6.102 unidades em 27 grupos)
+  2018 Deputado Federal  zonas da UF, mesma escolaridade:        +1.27 anos (IC 95%: +0.64 a +1.93; r parcial = +0.10; 6.102 unidades em 27 grupos)
   2018 Deputado Federal  zonas do município, sem controle:       -0.41 anos (IC 95%: -0.71 a -0.10; r parcial = -0.18; 721 unidades em 189 grupos)
   2018 Deputado Federal  zonas do município, mesma escolaridade: -0.05 anos (IC 95%: -0.43 a +0.31; r parcial = -0.01; 721 unidades em 189 grupos)
-  2018 Deputado Estadual zonas da UF, sem controle:              -0.30 anos (IC 95%: -1.01 a +0.47; r parcial = -0.03; 6.082 unidades em 26 grupos)
-  2018 Deputado Estadual zonas da UF, mesma escolaridade:        +0.78 anos (IC 95%: +0.17 a +1.46; r parcial = +0.05; 6.082 unidades em 26 grupos)
+  2018 Deputado Estadual zonas da UF, sem controle:              -0.30 anos (IC 95%: -1.04 a +0.53; r parcial = -0.03; 6.083 unidades em 26 grupos)
+  2018 Deputado Estadual zonas da UF, mesma escolaridade:        +0.78 anos (IC 95%: +0.13 a +1.42; r parcial = +0.05; 6.083 unidades em 26 grupos)
   2018 Deputado Estadual zonas do município, sem controle:       -0.22 anos (IC 95%: -0.58 a +0.10; r parcial = -0.08; 702 unidades em 188 grupos)
   2018 Deputado Estadual zonas do município, mesma escolaridade: -0.15 anos (IC 95%: -0.76 a +0.29; r parcial = -0.04; 702 unidades em 188 grupos)
-  2022 Deputado Federal  zonas da UF, sem controle:              +0.01 anos (IC 95%: -0.61 a +0.59; r parcial = +0.00; 6.101 unidades em 27 grupos)
-  2022 Deputado Federal  zonas da UF, mesma escolaridade:        +1.72 anos (IC 95%: +1.21 a +2.25; r parcial = +0.13; 6.101 unidades em 27 grupos)
+  2022 Deputado Federal  zonas da UF, sem controle:              +0.01 anos (IC 95%: -0.55 a +0.55; r parcial = +0.00; 6.102 unidades em 27 grupos)
+  2022 Deputado Federal  zonas da UF, mesma escolaridade:        +1.73 anos (IC 95%: +1.17 a +2.30; r parcial = +0.13; 6.102 unidades em 27 grupos)
   2022 Deputado Federal  zonas do município, sem controle:       -0.13 anos (IC 95%: -0.47 a +0.20; r parcial = -0.06; 721 unidades em 189 grupos)
   2022 Deputado Federal  zonas do município, mesma escolaridade: +0.07 anos (IC 95%: -0.45 a +0.52; r parcial = +0.02; 721 unidades em 189 grupos)
-  2022 Deputado Estadual zonas da UF, sem controle:              +0.03 anos (IC 95%: -0.68 a +0.82; r parcial = +0.00; 6.082 unidades em 26 grupos)
-  2022 Deputado Estadual zonas da UF, mesma escolaridade:        +1.36 anos (IC 95%: +0.69 a +2.01; r parcial = +0.10; 6.082 unidades em 26 grupos)
+  2022 Deputado Estadual zonas da UF, sem controle:              +0.03 anos (IC 95%: -0.66 a +0.79; r parcial = +0.00; 6.083 unidades em 26 grupos)
+  2022 Deputado Estadual zonas da UF, mesma escolaridade:        +1.36 anos (IC 95%: +0.77 a +2.00; r parcial = +0.10; 6.083 unidades em 26 grupos)
   2022 Deputado Estadual zonas do município, sem controle:       -0.34 anos (IC 95%: -0.69 a -0.01; r parcial = -0.13; 702 unidades em 188 grupos)
   2022 Deputado Estadual zonas do município, mesma escolaridade: +0.18 anos (IC 95%: -0.24 a +0.65; r parcial = +0.04; 702 unidades em 188 grupos)
 
@@ -264,7 +264,7 @@ mesmo terço em 2018 e 2024) e acompanha o Censo (r = +0.92 com a idade média d
 idade muda muito entre regiões (Sul mais velho, Norte mais jovem), as comparações das partes B a D
 são feitas dentro de cada UF.
 
-Alternância. Das 38.345 passagens de mandato de prefeito desde 1996, 221 são trocas com ressalva
+Alternância. Das 38.352 passagens de mandato de prefeito desde 1996, 221 são trocas com ressalva
 (o partido do prefeito anterior foi incorporado ao do novo, como DEM e PSL no UNIÃO) e aparecem à
 parte. A troca de partido não depende da idade do município: nos municípios mais velhos da própria
 UF ela ocorre em 67.8% das passagens, contra 68.6% nos mais jovens, e +5 anos de idade de quem

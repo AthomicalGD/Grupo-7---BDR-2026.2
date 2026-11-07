@@ -3,7 +3,8 @@
 Modo: Read. Público: a turma e quem avalia o trabalho, em projetor ou notebook; cidadão curioso pelo próprio município.
 Tarefa: entender se lugares mais velhos ou mais jovens trocam mais de prefeito, quão velhos são os eleitos e se "jovem
 vota no jovem e velho vota no velho". Dados: `scripts/06_idade_alternancia.py` (mesmas contas de
-`respostas/06_idade_alternancia.txt`). Estado: **idealização**, nada construído.
+`respostas/06_idade_alternancia.txt`). Estado: **construída em 07/11/2026** (`web/src/idade/`, bloco no boletim, seção na
+Metodologia); ver `MUDANCAS_GITHUB.md`, parte E.
 
 ## Direction contract
 
@@ -174,13 +175,11 @@ darem sempre os mesmos números.
   tabelas) da formatação do txt, sem mudar o txt; a API chama o cálculo, o `main()` continua gravando o txt.
 - **Tempo:** a soma dos votos por zona leva ~20 s no banco inteiro. A API guarda o resultado como as outras contas
   pesadas (cache no processo e em `dados/cache_api/<versão>/`, como a reeleição: "alguns segundos na primeira vez").
-- `GET /api/idade?ano=&uf=`: atos 1 a 4 (perfil por município e ano, terços, passagens resumidas por terço e porte,
-  pirâmide, halteres com e sem escolaridade, frases calculadas).
-- `GET /api/idade/municipio/{ibge}`: a galeria (prefeitos de 1996 a 2024 com retrato, partido, viés, passagem e
-  reeleição) e as linhas do bloco do boletim; ou acrescentar `idade` e `galeria` em `/api/municipios/{ibge}`.
-- Os halteres "com a mesma escolaridade" precisam de um número por terço: a idade votada prevista com a escolaridade na
-  média (média geral + inclinação controlada × distância do terço à média). O script hoje só dá a inclinação; acrescentar
-  esse cálculo nele, para o txt e o site mostrarem o mesmo.
+- Endpoints construídos (um por ato, para trocar de ano ou cargo sem baixar tudo): `/api/idade/perfil?ano=&uf=`,
+  `/api/idade/alternancia?uf=`, `/api/idade/eleitos?ano=&uf=`, `/api/idade/voto?cargo=&ano=&uf=` e
+  `/api/idade/municipio/{ibge}` (galeria e bloco do boletim).
+- Os halteres "com a mesma escolaridade" usam, por terço, a idade votada prevista com a escolaridade fixa: média geral +
+  inclinação controlada × distância do terço à média (`resumo_voto` no script).
 
 ## Acessibilidade e desempenho
 
