@@ -234,3 +234,29 @@ def test_gastos_p9():
     assert [t["valor"] for t in d["tipos"]] == sorted((t["valor"] for t in d["tipos"]), reverse=True)
     assert cliente.get("/api/gastos?candidatura=999999999").status_code == 404
     assert cliente.get("/api/gastos?candidatura=-1").status_code == 422
+
+
+def test_idade_p6():
+    """A P6 usa as contas do script 06 e as partes fecham entre si (não depende de quais UFs estão carregadas)."""
+    p = cliente.get("/api/idade/perfil?ano=2024").json()
+    assert {m["terco"] for m in p["municipios"]} == {1, 2, 3}
+    assert p["limites"][0] <= p["limites"][1] and p["mais_jovem"]["idade"] <= p["media"] <= p["mais_velho"]["idade"]
+    assert [x["ano"] for x in p["linha"]] == [2018, 2020, 2022, 2024]
+    a = cliente.get("/api/idade/alternancia").json()
+    t = a["total"]
+    assert t["mesmo"] + t["troca"] + t["fusao"] == t["passagens"]
+    assert all(k["mesmo"] + k["troca"] + k["fusao"] == k["passagens"] for k in a["tercos"])
+    assert sum(f["n"] for f in a["fusoes"]) == t["fusao"]
+    e = cliente.get("/api/idade/eleitos?ano=2024").json()
+    assert len(e["quem_votou"]) == len(e["faixas"]) == 4 and all(v > 0 for v in e["quem_votou"])
+    assert sum(e["cargos"]["13"]["eleitos"]) <= sum(e["cargos"]["13"]["candidatos"])
+    v = cliente.get("/api/idade/voto?cargo=6&ano=2022").json()
+    idades = [k["quem_votou"] for k in v["tercos"]]
+    assert idades == sorted(idades) and v["comparacao"] == "zonas da UF"
+    assert cliente.get("/api/idade/voto?cargo=13&ano=2022").status_code == 404
+    assert cliente.get("/api/idade/eleitos?ano=2018").status_code == 404
+    assert cliente.get("/api/idade/perfil?uf=DF").status_code == 404
+    abaete = cliente.get("/api/idade/municipio/3100203").json()   # era cadastrado como BA até a correção do loader
+    if abaete["carregada"]:
+        assert abaete["uf"] == "MG" and [g["ano"] for g in abaete["galeria"]] == list(range(1996, 2025, 4))
+        assert abaete["galeria"][0]["passagem"] is None and all(g["passagem"] for g in abaete["galeria"][1:])

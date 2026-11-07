@@ -1,4 +1,4 @@
-import { Archive, Armchair, ArrowsClockwise, BookOpenText, GraduationCap, MapTrifold, PiggyBank, type Icon } from '@phosphor-icons/react'
+import { Archive, Armchair, ArrowsClockwise, BookOpenText, GraduationCap, Hourglass, MapTrifold, PiggyBank, type Icon } from '@phosphor-icons/react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { motion } from 'motion/react'
@@ -32,12 +32,13 @@ function usePreferencia(chave: string, atributo: string, inicial: string) {
 // Cada módulo tem um ícone; o ativo vira uma pílula no oliva claro da seleção (o mesmo papel em todo o
 // sistema), com o laço das fitas embaixo. A pílula desliza entre os itens (mola) e o ícone pula e fica
 // cheio ao chegar.
-type ItemNav = { para: '/' | '/urna' | '/cadeira' | '/escola' | '/patrimonio' | '/reeleicao' | '/metodologia'; rotulo: string; curto?: string; icone: Icon; ativo: (p: string) => boolean }
+type ItemNav = { para: '/' | '/urna' | '/cadeira' | '/escola' | '/idade' | '/patrimonio' | '/reeleicao' | '/metodologia'; rotulo: string; curto?: string; icone: Icon; ativo: (p: string) => boolean }
 const NAV: ItemNav[] = [
   { para: '/', rotulo: 'Mapa', icone: MapTrifold, ativo: (p) => p === '/' || p.startsWith('/uf') },
   { para: '/urna', rotulo: 'Urna', icone: Archive, ativo: (p) => p.startsWith('/urna') || p.startsWith('/politico') },
   { para: '/cadeira', rotulo: 'Cadeira', icone: Armchair, ativo: (p) => p.startsWith('/cadeira') },
   { para: '/escola', rotulo: 'Escola', icone: GraduationCap, ativo: (p) => p.startsWith('/escola') },
+  { para: '/idade', rotulo: 'Idade', icone: Hourglass, ativo: (p) => p.startsWith('/idade') },
   { para: '/patrimonio', rotulo: 'Patrimônio', curto: 'Bens', icone: PiggyBank, ativo: (p) => p.startsWith('/patrimonio') },
   { para: '/reeleicao', rotulo: 'Reeleição', icone: ArrowsClockwise, ativo: (p) => p.startsWith('/reeleicao') },
   { para: '/metodologia', rotulo: 'Metodologia', curto: 'Método', icone: BookOpenText, ativo: (p) => p.startsWith('/metodologia') },

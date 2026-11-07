@@ -531,6 +531,122 @@ export interface CandidatosPartido {
   candidatos: ComposicaoVies['partidos'][number]['candidatos']
 }
 
+
+// ───────── P6: idade do município, alternância de poder e "jovem vota no jovem?" ─────────
+
+/** Um efeito em anos (ou pontos) a cada +5 anos de idade de quem votou, com o IC de 95%. */
+export interface EfeitoIdade {
+  b: number
+  lo: number
+  hi: number
+  r: number
+  n: number
+  grupos: number
+}
+
+export type Terco = 1 | 2 | 3
+
+export interface MunicipioIdade {
+  ibge: number
+  nome: string
+  uf: string
+  /** idade média de quem votou no 1º turno */
+  idade: number
+  /** idade média da população (Censo 2022) */
+  idade_pop: number | null
+  terco: Terco
+  pct_60: number
+  pct_16_29: number
+  comparecimento: number
+}
+
+export interface PerfilIdade {
+  ano: Ano
+  uf: string | null
+  municipios: MunicipioIdade[]
+  por_uf: { uf: string; idade: number }[]
+  linha: { ano: Ano; media: number; ponderada: number; mais_velhos_pct: number; mais_velhos: number }[]
+  /** idade até a qual vai o terço mais jovem, e a partir da qual começa o mais velho */
+  limites: [number, number]
+  mais_jovem: { ibge: number; nome: string; uf: string; idade: number }
+  mais_velho: { ibge: number; nome: string; uf: string; idade: number }
+  media: number
+  ponderada: number
+  /** % dos municípios no mesmo terço em 2018 e 2024 */
+  estavel: number
+  r_censo: number | null
+}
+
+export interface AlternanciaIdade {
+  uf: string | null
+  tercos: { terco: Terco; municipios: number; idade: number; troca_estrita: number; troca_ampla: number; outra_pessoa: number; passagens: number; mesmo: number; troca: number; fusao: number }[]
+  portes: { porte: string; municipios: number; tercos: (number | null)[] }[]
+  ciclos: { ano: number; passagens: number; mesmo: number; troca: number; fusao: number; reeleicao: number }[]
+  fusoes: { ano: number; de: string; para: string; n: number }[]
+  total: { passagens: number; mesmo: number; troca: number; fusao: number; reeleicao: number; municipios: number }
+  efeitos: { estrita: EfeitoIdade | null; ampla: EfeitoIdade | null; pessoa: EfeitoIdade | null }
+}
+
+export interface EleitosIdade {
+  ano: 2020 | 2024
+  uf: string | null
+  faixas: string[]
+  quem_votou: number[]
+  idade_quem_votou: number
+  cargos: Record<'11' | '13', { nome: string; candidatos: number[]; eleitos: number[]; idade_candidatos: number; idade_eleitos: number }>
+  tercos: { terco: Terco; municipios: number; quem_votou: number; candidatos: number; eleitos: number; premio: number; prefeito: number; prefeito_60: number }[]
+  efeitos: Record<'cand_ver' | 'eleitos_ver' | 'premio_ver' | 'eleitos_pre', EfeitoIdade | null>
+}
+
+export interface VotoIdade {
+  cargo: number
+  nome: string
+  ano: Ano
+  uf: string | null
+  comparacao: string
+  zonas: number
+  municipios: number
+  tercos: { terco: Terco; zonas: number; municipios: number; quem_votou: number; votada: number; votada_fixa: number; pct_votos_18_34: number; pct_votos_65: number }[]
+  efeitos: { bruto: EfeitoIdade | null; escolaridade: EfeitoIdade | null; municipio_bruto?: EfeitoIdade | null; municipio_escolaridade?: EfeitoIdade | null }
+  r_escolaridade: number | null
+}
+
+export type Passagem = 'mesmo partido' | 'troca de partido' | 'troca com ressalva (partidos fundidos)'
+
+export interface PrefeitoGaleria {
+  ano: number
+  id_politico: number
+  nome: string
+  nome_urna: string
+  partido: string
+  vies: number | null
+  turno: number
+  /** o TSE marcou dois eleitos nesse ano (o vice, em 2000) */
+  duplo: boolean
+  passagem: Passagem | null
+  mesma_pessoa: boolean | null
+  foto: string | null
+}
+
+export interface IdadeMunicipio {
+  ibge: number
+  nome: string
+  uf: string
+  carregada: boolean
+  anos: PorAno<{ idade: number; terco: Terco; terco_uf: Terco; pct_60: number; pct_16_29: number }>
+  idade_pop: number | null
+  passagens: { total: number; mesmo: number; troca: number; fusao: number; reeleicoes: number } | null
+  galeria: PrefeitoGaleria[]
+}
+
+/** Cargos e anos do ato "Jovem vota no jovem?" (deputados nas gerais, prefeito e vereador nas municipais). */
+export const CARGOS_IDADE: { cod: number; nome: string; anos: Ano[] }[] = [
+  { cod: 6, nome: 'Deputado federal', anos: [2018, 2022] },
+  { cod: 7, nome: 'Deputado estadual', anos: [2018, 2022] },
+  { cod: 13, nome: 'Vereador', anos: [2020, 2024] },
+  { cod: 11, nome: 'Prefeito', anos: [2020, 2024] },
+]
+
 const sempre = { staleTime: Infinity, gcTime: 30 * 60_000 } // os dados só mudam com uma nova carga
 /** "?cargo=1" (ou "&cargo=1"), ou nada quando são todos os cargos */
 const comCargo = (cargo: number | undefined, sep: '?' | '&') => (cargo ? `${sep}cargo=${cargo}` : '')
@@ -659,6 +775,20 @@ export const consultas = {
         ),
       ...sempre,
     }),
+  idadePerfil: (ano: number, uf = '') =>
+    queryOptions({ queryKey: ['idade-perfil', ano, uf], queryFn: ({ signal }) => get<PerfilIdade>(`/api/idade/perfil?ano=${ano}&uf=${uf}`, signal), ...sempre }),
+  idadeAlternancia: (uf = '') =>
+    queryOptions({ queryKey: ['idade-alternancia', uf], queryFn: ({ signal }) => get<AlternanciaIdade>(`/api/idade/alternancia?uf=${uf}`, signal), ...sempre }),
+  idadeEleitos: (ano: number, uf = '') =>
+    queryOptions({ queryKey: ['idade-eleitos', ano, uf], queryFn: ({ signal }) => get<EleitosIdade>(`/api/idade/eleitos?ano=${ano}&uf=${uf}`, signal), ...sempre }),
+  idadeVoto: (cargo: number, ano: number, uf = '') =>
+    queryOptions({
+      queryKey: ['idade-voto', cargo, ano, uf],
+      queryFn: ({ signal }) => get<VotoIdade>(`/api/idade/voto?cargo=${cargo}&ano=${ano}&uf=${uf}`, signal),
+      ...sempre,
+    }),
+  idadeMunicipio: (ibge: number) =>
+    queryOptions({ queryKey: ['idade-municipio', ibge], queryFn: ({ signal }) => get<IdadeMunicipio>(`/api/idade/municipio/${ibge}`, signal), ...sempre }),
   malhaBrasil: () =>
     queryOptions({ queryKey: ['malha', 'BR'], queryFn: ({ signal }) => get<Malha>('/api/geo/brasil', signal), ...sempre }),
   malhaUF: (sigla: string) =>

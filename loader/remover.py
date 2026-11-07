@@ -20,6 +20,7 @@ REMOCOES = [
     ("votacao_candidato_munzona", "id_zona IN (SELECT id_zona FROM tmp_zona)"),
     ("votacao_partido_munzona", "id_zona IN (SELECT id_zona FROM tmp_zona)"),
     ("perfil_eleitorado_munzona", "id_zona IN (SELECT id_zona FROM tmp_zona)"),
+    ("perfil_etario_munzona", "id_zona IN (SELECT id_zona FROM tmp_zona)"),
     # votação nas zonas de outras UFs não aponta para disputas desta; o que sobrar aqui barra a remoção (FK)
     ("votacao_municipio", "cd_municipio IN (SELECT cd_municipio FROM tmp_mun)"),
     ("votacao_partido_municipio", "cd_municipio IN (SELECT cd_municipio FROM tmp_mun)"),
