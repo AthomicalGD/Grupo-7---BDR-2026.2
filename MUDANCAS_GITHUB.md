@@ -223,7 +223,7 @@ cada informação deve morar, para que fique concentrada num lugar só.
 | Arquivo | Mudança |
 |---|---|
 | `crawler/catalogo.py`, `crawler/ibge.py` | Novo item `ibge_censo2022_idades`: SIDRA 9514, população por idade simples (101 idades, total de sexo e de forma de declaração), em `dados/ibge/censo2022/populacao_idade_simples_tabela9514.csv`. Declarado na P6. O comentário de `candidatos` na P6 passou de "idade na posse" para "nascimento (idade na eleição)": `NR_IDADE_DATA_POSSE` não existe nos arquivos de 2018 a 2024. |
-| `scripts/06_idade_alternancia.py` (novo) | A resposta. Lê a faixa etária de quem votou dos CSVs de perfil do TSE (o loader só guarda a escolaridade) e guarda o resumo em `dados/_derivados/eleitorado_idade_zona.csv` (14 MB, ~40 s para montar; `--refazer-cache` refaz). Grava `ibge_censo_municipio.idade_media_populacao` (ano 2022, 5.569 municípios), como o script 07 grava `vies_municipio`. Não muda o esquema do banco nem o loader: **não é preciso recarregar as UFs**. |
+| `scripts/06_idade_alternancia.py` (novo) | A resposta. Grava `ibge_censo_municipio.idade_media_populacao` (ano 2022, 5.569 municípios), como o script 07 grava `vies_municipio`. A faixa etária de quem votou vinha de um cache em arquivo; desde a parte D, vem da tabela `perfil_etario_munzona` (migração 015). |
 | `scripts/test_06_idade_alternancia.py` (novo) | 10 testes sem banco: faixas do TSE, passagens (renomeação, fusão dentro e fora do intervalo, PSD antigo x atual, vice duplicado em 2000), terços com peso, efeito fixo e controle. `python -m unittest discover -s scripts -p 'test_06*.py'`. |
 | `respostas/06_idade_alternancia.txt` (novo) | A resposta (partes A a D e conclusão). |
 | `respostas/06_passagens_prefeitura.csv` (novo, 2,3 MB) | Uma linha por passagem de mandato de prefeito (38.345), com a marca `mesmo partido` / `troca de partido` / `troca com ressalva (partidos fundidos)` e se foi a mesma pessoa. **Decidido:** fica fora do git (`.gitignore`, commit `c042e63`), porque é regerado a cada execução. |
@@ -425,3 +425,38 @@ das passagens de prefeito desde 1996 com as três marcas) e uma seção na Metod
   carregadas aparecem em `/api/saude`; o site mostra as não carregadas em cinza."
 - `DESIGN.md` e `design/PROMPT.md` não têm nada da P6 (coerente com C.5). Os itens 3 e 4 da parte de cima deste
   arquivo (escala do viés) continuam valendo.
+
+## D. Tabela nova da P6 e o defeito de Abaeté (07/11/2026, depois do commit `c042e63`; sem commit)
+
+Decisão sua: a P6 aparece no site com a API reaproveitando o script, como a P9, e **tudo vem do banco**. Para isso a
+faixa etária de quem votou, que só existia num cache em arquivo, ganhou uma tabela.
+
+| Arquivo | Mudança |
+|---|---|
+| `banco/migracoes/015_perfil_etario.sql` (novo) | Tabelas `faixa_etaria` (as 22 faixas do TSE, com o ponto médio) e `perfil_etario_munzona` (aptos e comparecimento do 1º turno por zona, ano e faixa; molde de `perfil_eleitorado_munzona`). Já aplicada no banco local (`docker compose run --rm migracoes`). |
+| `loader/fontes.py`, `loader/carga.py` | O perfil do TSE passa a ser somado por escolaridade **e** faixa etária; a carga grava `perfil_etario_munzona` (a faixa inválida, -3, fica fora e é contada em `descartadas`). |
+| `loader/remover.py` | Remove `perfil_etario_munzona` junto com a UF. |
+| `loader/perfil_etario.py` (novo) | `python -m loader.perfil_etario`: preenche a tabela num banco já carregado, relendo só os CSVs de perfil (2min42s para as 27 UFs, 508 mil linhas). Já rodado no banco local. |
+| `scripts/06_idade_alternancia.py` | Lê de `perfil_etario_munzona`; sem cache e sem `--refazer-cache`. A lista de passagens saiu idêntica; o txt só mudou por causa de Abaeté (abaixo). |
+| `scripts/test_06_idade_alternancia.py` | O teste do ponto médio passou a conferir a tabela `faixa_etaria` da migração (código, intervalo e ponto médio de cada faixa). |
+| `dados/_derivados/` | Apagado (era o cache; `dados/` não vai para o git). |
+| `README.md` | Migração 015 na tabela, o passo para bancos antigos e a seção da P6 sem o cache. |
+| `.impeccable/superficies/idade.md` (novo) | A idealização visual da P6 (página `/idade` e bloco do boletim). |
+
+**Conferência:** comparada ao cache, a tabela tem os mesmos 528.125 pares (zona, ano, faixa) com aptos e
+comparecimento idênticos; falta só a zona 1 de Abaeté, pelo defeito abaixo.
+
+### Defeito encontrado (anterior à P6, **não corrigido**): Abaeté (MG) está no banco como BA
+
+- No banco, o município 40037 (Abaeté) tem `cd_uf = 29` (BA) e `cd_ibge` nulo. Na correspondência do TSE ele é de MG
+  (IBGE 3100203). Por isso ficou sem votos, sem perfil (escolaridade e idade), sem indicadores e com a BA contando 418
+  municípios (são 417; o teste `web/e2e/escola.spec.ts:70` espera 417).
+- **Causa:** o arquivo de candidatos de 2000 do TSE traz linhas de Abaeté com `SG_UF = "BA"`. Na carga da BA,
+  `_municipios` (`loader/carga.py`) cadastra os "municípios citados e ausentes da correspondência" com a UF da carga, sem
+  conferir que o município está na correspondência como de outra UF. A BA foi carregada antes do MG, e a carga do MG não
+  corrige (`ON CONFLICT DO NOTHING`) e descarta os votos e o perfil do município pelo filtro de UF.
+- **Correção proposta (decidir):** (1) no loader, só cadastrar como "ausente" o município que não está em
+  `stg_municipio` de nenhuma UF; (2) no banco local, acertar a linha (`UPDATE municipio SET cd_uf = 31, cd_ibge =
+  3100203, nm_municipio = 'Abaeté' WHERE cd_municipio = 40037`) e recarregar o MG (`python -m loader.remover MG` e
+  `python -m loader MG`) para os votos e o perfil entrarem. Conferido no banco local: Abaeté é o **único** município
+  com UF diferente da correspondência do TSE e o único sem código IBGE.

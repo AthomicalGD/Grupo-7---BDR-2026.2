@@ -1,6 +1,6 @@
 P6) Idade do município x alternância de poder e idade dos eleitos: jovem vota no jovem?
 
-Fontes: perfil de comparecimento por faixa etária e zona (TSE, 1º turno; cache em dados/_derivados/eleitorado_idade_zona.csv);
+Fontes: perfil de comparecimento por faixa etária e zona (TSE, 1º turno; perfil_etario_munzona);
 população por idade simples (Censo 2022, SIDRA 9514) e idade mediana/índice de envelhecimento (SIDRA 9515);
 prefeitos eleitos 1996-2024, candidaturas e votos nominais por zona (TSE, banco eleicoes).
 UFs: todas as 27. Idade média da população gravada em ibge_censo_municipio para 5.569 municípios.
@@ -22,10 +22,10 @@ Por ano, quem votou no 1º turno (média simples dos municípios) e os limites d
 
    Ano  Municípios  Idade média  Mais jovem até  Mais velho a partir de   % 60+   % 16-29   60+ > 16-29
   ----------------------------------------------------------------------------------------------------
-  2018       5.570         42.0            41.1                    43.1    16.0      26.3     410 (7.4%)
-  2020       5.568         42.9            41.9                    44.0    17.8      25.0     969 (17.4%)
-  2022       5.570         43.4            42.4                    44.5    18.5      23.9   1.495 (26.8%)
-  2024       5.569         44.2            43.2                    45.4    20.7      23.4   2.312 (41.5%)
+  2018       5.569         42.0            41.1                    43.1    16.0      26.3     410 (7.4%)
+  2020       5.567         42.9            41.9                    44.0    17.8      25.0     968 (17.4%)
+  2022       5.569         43.4            42.4                    44.5    18.5      23.9   1.494 (26.8%)
+  2024       5.568         44.2            43.2                    45.4    20.7      23.4   2.311 (41.5%)
 
 2024, os 5 municípios mais jovens e os 5 mais velhos (idade média de quem votou):
   mais jovens: Melgaço-PA 34.8; Jordão-AC 34.9; Porto Walter-AC 34.9; Uiramutã-RR 35.0; Marechal Thaumaturgo-AC 35.4
@@ -51,12 +51,12 @@ do país e % com mais votantes de 60+ do que de 16-29.
   AL         102         41.0                 0.0             0.0
   AM          62         38.4                 0.0             0.0
   AP          16         38.6                 0.0             0.0
-  BA         418         43.3                 5.0             9.6
+  BA         417         43.3                 4.8             9.4
   CE         184         42.7                 1.1             2.2
   ES          78         45.0                41.0            65.4
   GO         246         44.9                43.9            51.6
   MA         217         41.1                 0.0             0.0
-  MG         852         45.4                52.0            64.4
+  MG         852         45.4                52.1            64.4
   MS          79         44.0                13.9            29.1
   MT         142         43.5                11.3            21.1
   PA         144         40.3                 0.0             0.0
@@ -113,8 +113,8 @@ votou em 2024, montados dentro de cada UF (a idade muda muito entre regiões). M
   Terço (na UF)    Municípios  Idade  Troca (fusão = troca)  Troca (fusão = continuidade)  Outra pessoa
   --------------------------------------------------------------------------------------------------
   mais jovem            1.853   42.6                  68.6%                         68.0%         66.9%
-  intermediário         1.861   44.3                  69.0%                         68.5%         67.9%
-  mais velho            1.853   45.7                  67.8%                         67.1%         67.7%
+  intermediário         1.860   44.3                  69.0%                         68.5%         67.9%
+  mais velho            1.854   45.7                  67.8%                         67.1%         67.7%
 
 Por porte (população do Censo 2022), troca de partido com fusão = troca:
 
@@ -138,7 +138,7 @@ Passagens recentes com o terço de idade da própria eleição (dentro da UF): %
   Passagem    Mais jovem  Intermediário  Mais velho
   --------------------------------------------------
   2016->2020       68.8%          67.5%       65.0%
-  2020->2024       68.1%          67.5%       69.8%
+  2020->2024       68.1%          67.4%       69.8%
 
 ====================================================================================================
 PARTE C: idade dos eleitos (prefeito e vereadores, 2020 e 2024)
@@ -148,13 +148,13 @@ Distribuição por faixa de idade: quem votou (18+, 1º turno), candidatos aptos
 
   Ano   Grupo                        Pessoas  Idade média     18 a 34     35 a 49     50 a 64  65 ou mais
   --------------------------------------------------------------------------------------------------------
-  2020  quem votou (18+)             112.712.978            -       34.2%       31.7%       24.7%        9.4%
+  2020  quem votou (18+)             112.698.689            -       34.2%       31.7%       24.7%        9.4%
   2020  Prefeito: candidatos              18.797         49.7        8.3%       41.7%       40.4%        9.6%
   2020  Prefeito: eleitos                  5.493         49.3        9.0%       41.9%       40.7%        8.4%
   2020  Vereador: candidatos             504.107         45.2       18.5%       45.7%       30.9%        4.9%
   2020  Vereador: eleitos                 58.094         44.5       17.6%       50.4%       29.0%        3.1%
 
-  2024  quem votou (18+)             120.472.667            -       30.9%       31.6%       25.3%       12.1%
+  2024  quem votou (18+)             120.458.672            -       30.9%       31.6%       25.3%       12.1%
   2024  Prefeito: candidatos              15.154         50.3        7.3%       41.7%       39.8%       11.2%
   2024  Prefeito: eleitos                  5.529         49.5        7.7%       44.9%       37.3%       10.1%
   2024  Vereador: candidatos             416.844         46.7       14.7%       45.1%       33.9%        6.4%

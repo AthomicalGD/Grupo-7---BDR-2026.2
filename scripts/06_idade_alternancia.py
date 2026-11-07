@@ -19,19 +19,19 @@
     Nas cidades, as zonas mais velhas são também as mais escolarizadas; por isso cada efeito sai também
     descontada a escolaridade de quem votou (% com superior completo, perfil_eleitorado_munzona).
 
-Idades em anos completos: a do candidato na data do 1º turno; a de quem votou, ponto médio da faixa do TSE;
-a da população, idade simples do Censo.
+Idades em anos completos: a do candidato na data do 1º turno; a de quem votou, ponto médio da faixa do TSE
+(faixa_etaria.idade_media); a da população, idade simples do Censo.
 
-Uso: python scripts/06_idade_alternancia.py [--refazer-cache]
+A faixa etária de quem votou vem de perfil_etario_munzona (migração 015). Num banco carregado antes dela:
+python -m loader.perfil_etario
+
+Uso: python scripts/06_idade_alternancia.py
 Saída: respostas/06_idade_alternancia.txt e respostas/06_passagens_prefeitura.csv (uma linha por passagem)
-Cache: dados/_derivados/eleitorado_idade_zona.csv (faixa etária de quem votou, lida dos CSVs de perfil do TSE,
-       que o loader agrega só por escolaridade).
 """
 import csv
 import re
 import sys
 import textwrap
-import time
 import unicodedata
 
 import numpy as np
@@ -43,16 +43,11 @@ from comum import RAIZ, RESPOSTAS, conectar, consultar, gravar_txt, ufs_carregad
 sys.path.insert(0, str(RAIZ))
 from loader.vies import canonica  # noqa: E402  (mesma normalização de siglas da P7)
 
-PERFIL = RAIZ / "dados" / "tse" / "comparecimento_abstencao"
-CACHE = RAIZ / "dados" / "_derivados" / "eleitorado_idade_zona.csv"
 CENSO_IDADES = RAIZ / "dados" / "ibge" / "censo2022" / "populacao_idade_simples_tabela9514.csv"
 SUCESSAO = RAIZ / "banco" / "referencia" / "sucessao_partidos.csv"
 PASSAGENS = RESPOSTAS / "06_passagens_prefeitura.csv"
 
 ANOS_PERFIL = (2018, 2020, 2022, 2024)
-COLUNAS_PERFIL = {"ANO_ELEICAO": "ano", "NR_TURNO": "turno", "SG_UF": "sg_uf", "CD_MUNICIPIO": "cd_municipio",
-                  "NR_ZONA": "nr_zona", "CD_FAIXA_ETARIA": "cd_faixa", "QT_APTOS": "qt_aptos",
-                  "QT_COMPARECIMENTO": "qt_comparecimento"}
 # 1º turno de cada eleição (o banco não guarda DT_ELEICAO). Em 2020 a eleição foi adiada pela pandemia.
 DATAS = {2018: "2018-10-07", 2020: "2020-11-15", 2022: "2022-10-02", 2024: "2024-10-06"}
 CARGOS = {6: "Deputado Federal", 7: "Deputado Estadual", 11: "Prefeito", 13: "Vereador"}
@@ -70,48 +65,27 @@ ANTIGAS_FUSOES = [(2003, "PL", ("PST", "PGT")), (2003, "PTB", ("PSD41",)),
 MESMO, TROCA, FUSAO = "mesmo partido", "troca de partido", "troca com ressalva (partidos fundidos)"
 
 
-# ───────── Faixa etária de quem votou (cache) ─────────
+# ───────── Faixa etária de quem votou (perfil_etario_munzona, migração 015) ─────────
 
-def montar_cache() -> pd.DataFrame:
-    """Lê os CSVs de perfil (≈2 GB por ano) e soma aptos e comparecimento do 1º turno por zona e faixa etária."""
-    partes = []
-    for ano in ANOS_PERFIL:
-        arquivo = next(iter(sorted((PERFIL / str(ano)).glob("perfil_comparecimento_abstencao_*.csv"))), None)
-        if arquivo is None:
-            raise SystemExit(f"falta o perfil do eleitorado de {ano} em {PERFIL} (python -m crawler --perguntas 6)")
-        inicio = time.time()
-        soma = None
-        leitor = pd.read_csv(arquivo, sep=";", encoding="latin-1", usecols=list(COLUNAS_PERFIL),
-                             dtype={"SG_UF": str}, chunksize=2_000_000)
-        for bloco in leitor:
-            bloco = bloco.rename(columns=COLUNAS_PERFIL)
-            bloco = bloco[(bloco["turno"] == 1) & (bloco["sg_uf"] != "ZZ")]
-            g = bloco.groupby(["ano", "cd_municipio", "nr_zona", "cd_faixa"])[["qt_aptos", "qt_comparecimento"]].sum()
-            soma = g if soma is None else soma.add(g, fill_value=0)
-        partes.append(soma.reset_index())
-        print(f"  perfil {ano}: {len(soma)} linhas em {time.time() - inicio:.0f} s", flush=True)
-    df = pd.concat(partes, ignore_index=True)
-    df[["qt_aptos", "qt_comparecimento"]] = df[["qt_aptos", "qt_comparecimento"]].astype("int64")
-    CACHE.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(CACHE, index=False)
-    return df
+# Aptos e comparecimento do 1º turno por zona e faixa, com o ponto médio da faixa (faixa_etaria.idade_media).
+SQL_PERFIL_ETARIO = """
+SELECT p.ano_eleicao AS ano, z.cd_municipio, z.numero AS nr_zona, p.cd_faixa, f.idade_media::float AS idade_media,
+       p.qtd_eleitores AS qt_aptos, p.qtd_comparecimento AS qt_comparecimento
+FROM perfil_etario_munzona p
+JOIN zona_eleitoral z USING (id_zona)
+JOIN faixa_etaria f USING (cd_faixa)
+"""
 
 
-def eleitorado_por_faixa(refazer: bool = False) -> pd.DataFrame:
-    if refazer or not CACHE.exists():
-        print(f"Montando {CACHE.relative_to(RAIZ)} a partir dos CSVs de perfil do TSE (cerca de 1 minuto)...")
-        return montar_cache()
-    return pd.read_csv(CACHE)
-
-
-def ponto_medio(cd: int) -> float:
-    """CD_FAIXA_ETARIA do TSE -> idade: 1600 = 16 anos; 2124 = 21 a 24 (22,5); 9999 = 100 anos ou mais."""
-    if cd == 9999:
-        return 100.0
-    if cd < 2100:
-        return float(cd // 100)
-    inicio, fim = divmod(cd, 100)
-    return (inicio + fim) / 2
+def eleitorado_por_faixa(conn) -> pd.DataFrame:
+    with conn.cursor() as cur:
+        cur.execute("SELECT to_regclass('public.perfil_etario_munzona') IS NOT NULL")
+        if not cur.fetchone()[0]:
+            raise SystemExit("Falta a migração 015_perfil_etario.sql: rode docker compose run --rm migracoes")
+    faixas = consultar(conn, SQL_PERFIL_ETARIO)
+    if faixas.empty:
+        raise SystemExit("perfil_etario_munzona está vazia: rode python -m loader.perfil_etario")
+    return faixas
 
 
 def faixa_do_tse(cd: int) -> int:
@@ -123,8 +97,8 @@ def faixa_do_tse(cd: int) -> int:
 
 def perfil_zonas(faixas: pd.DataFrame) -> pd.DataFrame:
     """Por ano e zona: quem votou (total, × idade, 16-29, 60+, por faixa comum) e aptos (total, × idade)."""
-    d = faixas[faixas["cd_faixa"] > 0].copy()                    # -3 = faixa inválida
-    idade = d["cd_faixa"].map(ponto_medio)
+    d = faixas.copy()
+    idade = d["idade_media"]
     comp = d["qt_comparecimento"]
     d["comp"] = comp
     d["comp_x_idade"] = comp * idade
@@ -798,9 +772,8 @@ def conclusao(a: dict, b: dict, c: dict, d: dict) -> list[str]:
 # ───────── Principal ─────────
 
 def main() -> None:
-    faixas = eleitorado_por_faixa("--refazer-cache" in sys.argv)
-    zonas_tse = perfil_zonas(faixas)
     conn = conectar()
+    zonas_tse = perfil_zonas(eleitorado_por_faixa(conn))
     print("Consultando municípios, prefeitos e candidaturas...", flush=True)
     mun_ref = consultar(conn, SQL_MUNICIPIOS)
     mun_ref = mun_ref.merge(censo_idade(), left_on="cd_ibge", right_index=True, how="left")
@@ -832,8 +805,7 @@ def main() -> None:
     cabecalho = [
         "P6) Idade do município x alternância de poder e idade dos eleitos: jovem vota no jovem?",
         "",
-        "Fontes: perfil de comparecimento por faixa etária e zona (TSE, 1º turno; cache em "
-        "dados/_derivados/eleitorado_idade_zona.csv);",
+        "Fontes: perfil de comparecimento por faixa etária e zona (TSE, 1º turno; perfil_etario_munzona);",
         "população por idade simples (Censo 2022, SIDRA 9514) e idade mediana/índice de envelhecimento (SIDRA 9515);",
         "prefeitos eleitos 1996-2024, candidaturas e votos nominais por zona (TSE, banco eleicoes).",
         f"UFs: {', '.join(ufs) if len(ufs) < 27 else 'todas as 27'}. "

@@ -3,6 +3,7 @@
 Uso: python -m unittest discover -s scripts -p 'test_06*.py'
 """
 import importlib.util
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -18,12 +19,19 @@ spec.loader.exec_module(mod)
 
 
 class FaixasTest(unittest.TestCase):
-    def test_ponto_medio_das_faixas_do_tse(self):
-        self.assertEqual(mod.ponto_medio(1600), 16)
-        self.assertEqual(mod.ponto_medio(2000), 20)
-        self.assertEqual(mod.ponto_medio(2124), 22.5)
-        self.assertEqual(mod.ponto_medio(9599), 97)
-        self.assertEqual(mod.ponto_medio(9999), 100)
+    def test_faixa_etaria_da_migracao_015(self):
+        """Código do TSE, intervalo e ponto médio de cada faixa concordam (1600 = 16; 2124 = 21 a 24; 9999 = 100+)."""
+        sql = (Path(__file__).resolve().parent.parent / "banco/migracoes/015_perfil_etario.sql").read_text()
+        linhas = re.findall(r"\((\d{4}), '[^']+',\s+(\d+),\s+(\d+|NULL),\s+([\d.]+)\)", sql)
+        self.assertEqual(len(linhas), 22)
+        for cd, ini, fim, media in linhas:
+            cd, ini, media = int(cd), int(ini), float(media)
+            if fim == "NULL":
+                self.assertEqual((cd, ini, media), (9999, 100, 100.0))
+                continue
+            fim = int(fim)
+            self.assertEqual(cd, ini * 100 if ini == fim else ini * 100 + fim % 100)
+            self.assertEqual(media, (ini + fim) / 2)
 
     def test_faixas_comuns_a_candidato_e_eleitor(self):
         self.assertEqual([mod.faixa_do_tse(c) for c in (1700, 1800, 3034, 3539, 4549, 5054, 6064, 6569, 9999)],

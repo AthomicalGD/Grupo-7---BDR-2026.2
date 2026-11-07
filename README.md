@@ -139,12 +139,16 @@ python -m loader SP RJ MG
 | `012_votos_candidato_uf.sql` | View `votos_candidato_uf`: votos nominais de cada candidatura por UF e ano (P7) |
 | `013_numero_e_nome_de_urna.sql` | Número na urna e nome de urna de cada candidatura (`politico_eleicao.nr_candidato`, `nm_urna`; santinhos, P10) |
 | `014_escolaridade.sql` | Escolaridade e situação final de cada candidatura e a tabela `escolaridade` (P4) |
+| `015_perfil_etario.sql` | `perfil_etario_munzona` (aptos e comparecimento do 1º turno por zona e faixa etária) e a tabela `faixa_etaria`, com o ponto médio de cada faixa do TSE (P6) |
 
 Os números 007 a 009 não existem mais: viraram a `006_vies_partidos.sql` na correção do viés.
 
 - **Banco carregado antes da 011, 013 ou 014:** cargas novas já gravam tudo; num banco antigo, rode uma vez
   `python -m loader.partidos` (relê só os arquivos de candidatos, ~2 min), que preenche o partido, o número e o nome
   de urna, a escolaridade e a situação de cada candidatura e atualiza as views.
+- **Banco carregado antes da 015:** cargas novas já gravam a faixa etária; num banco antigo, aplique a migração
+  (`docker compose run --rm migracoes`, que aplica só as pendentes) e rode uma vez `python -m loader.perfil_etario`
+  (relê só os CSVs de perfil do eleitorado, ~3 min para as 27 UFs).
 - **Banco criado antes da correção do viés:** as antigas migrações 006 a 009 viraram um único
   `006_vies_partidos.sql`, e 001 e 004 foram editadas no lugar. Como o serviço `migracoes` só aplica arquivos
   novos, recrie o banco e carregue as UFs de novo:
@@ -289,10 +293,10 @@ python scripts/06_idade_alternancia.py
   fixa, porque nas cidades as zonas mais velhas são também as mais escolarizadas.
 - **Resposta:** `respostas/06_idade_alternancia.txt` e `respostas/06_passagens_prefeitura.csv` (cada passagem, com a
   marca e se foi a mesma pessoa). O script também preenche `ibge_censo_municipio.idade_media_populacao`.
-- **Dados sem mudar o banco:** a faixa etária de quem votou vem dos CSVs `perfil_comparecimento_abstencao`, que o
-  loader agrega só por escolaridade; o script os lê uma vez e guarda o resumo em
-  `dados/_derivados/eleitorado_idade_zona.csv` (~40 s; `--refazer-cache` refaz). A idade da população vem do Censo
-  2022 por idade simples (`python -m crawler --perguntas 6 --fontes ibge`).
+- **Dados:** tudo vem do banco. A faixa etária de quem votou fica em `perfil_etario_munzona` (migração
+  `015_perfil_etario.sql`), gravada pelo loader a partir do mesmo arquivo `perfil_comparecimento_abstencao` que dá a
+  escolaridade da P4; o ponto médio de cada faixa, em `faixa_etaria`. A idade da população vem do Censo 2022 por idade
+  simples (`python -m crawler --perguntas 6 --fontes ibge`).
 - Para medir alternância com mais pontos no tempo, os arquivos de candidatos de 1994 a 2024, baixados para a P10,
   trazem a sequência de prefeitos desde 1996 sem custo extra de download. Em 2000 o TSE marca dois "eleitos" a prefeito
   em 30 municípios (o vice, do mesmo partido). As mudanças de partido anteriores a 2018 (PRN -> PTC; PST e PGT -> PL;
@@ -615,7 +619,6 @@ dados/
 ├── ipea_atlas/idhm_municipios.csv
 ├── ideologia_partidos/            df_experts.csv (notas dos especialistas, P7)
 ├── camara/                        votacoes, votacoesVotos e votacoesOrientacoes-<ano>.csv (alinhamento, P7)
-├── _derivados/                    eleitorado_idade_zona.csv (faixa etária de quem votou, P6; refeito pelo script)
 └── _controle/manifesto.json       <- controle interno (versão e arquivos de cada download)
 ```
 
@@ -671,7 +674,6 @@ usa um User-Agent compatível que ainda identifica o projeto.
 | Votações da Câmara, 2015-2026 (medido em 17/10/2026) | 0,6 GB |
 | **Total** (medido em 11/09/2026, salvo a Câmara) | **~34 GB** |
 | Fotos dos candidatos, Brasil inteiro, 2004-2024 (opcional, medido em 07/11/2026) | 38 GB |
-| Cache da P6 (`dados/_derivados/`, medido em 07/11/2026) | 14 MB |
 
 ## Observações gerais para a análise
 
