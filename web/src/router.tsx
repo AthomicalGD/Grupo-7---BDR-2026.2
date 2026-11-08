@@ -1,5 +1,5 @@
 import { createRootRoute, createRoute, createRouter, lazyRouteComponent, Link } from '@tanstack/react-router'
-import { ANOS, ANOS_ELEICAO, CARGOS_BUSCA, ORDENS_BUSCA, type Ano, type FiltrosBusca, type OrdemBusca } from './api'
+import { ANOS, ANOS_ELEICAO, ANOS_LEGENDA, CARGOS_BUSCA, ORDENS_BUSCA, type Ano, type FiltrosBusca, type OrdemBusca, type SituacaoLegenda } from './api'
 import { Atlas } from './atlas/Atlas'
 import { EsqueletoPagina } from './componentes/Esqueleto'
 import { ErroCarga } from './componentes/ErroCarga'
@@ -66,6 +66,14 @@ export interface BuscaReeleicao {
   cargo?: number
 }
 
+export interface BuscaLegenda {
+  ano_p5?: number
+  cargo?: number
+  uf?: string
+  partido?: string
+  situacao?: SituacaoLegenda
+}
+
 const sim = (v: unknown) => (v === true || v === 'true' ? true : undefined)
 const numero = (v: unknown) => (Number.isFinite(Number(v)) && v !== '' && v != null ? Number(v) : undefined)
 
@@ -123,6 +131,18 @@ const cadeira = createRoute({
     epoca: sim(s.epoca),
     ordem: s.ordem === 'partido' ? 'partido' : undefined,
     pe: sim(s.pe),
+  }),
+})
+const legenda = createRoute({
+  getParentRoute: () => raiz,
+  path: '/cadeira/legenda',
+  component: lazyRouteComponent(() => import('./legenda/LegendaPagina'), 'LegendaPagina'),
+  validateSearch: (s: Record<string, unknown>): BuscaLegenda => ({
+    ano_p5: ANOS_LEGENDA.includes(Number(s.ano_p5) as (typeof ANOS_LEGENDA)[number]) ? Number(s.ano_p5) : undefined,
+    cargo: [6, 7, 13].includes(Number(s.cargo)) ? Number(s.cargo) : undefined,
+    uf: typeof s.uf === 'string' && /^[A-Z]{2}$/.test(s.uf) ? s.uf : undefined,
+    partido: typeof s.partido === 'string' && /^[A-Z0-9 ÇÃÁÉÍÓÚÂÊÔÕ]{2,20}$/.test(s.partido) ? s.partido : undefined,
+    situacao: s.situacao === 'qp' || s.situacao === 'media' ? s.situacao : undefined,
   }),
 })
 const escola = createRoute({
@@ -184,7 +204,7 @@ const metodologia = createRoute({
   component: lazyRouteComponent(() => import('./paginas/Metodologia'), 'Metodologia'),
 })
 
-const arvore = raiz.addChildren([atlas.addChildren([inicio, estado, municipio]), urna, cadeira, escola, idade, patrimonio, reeleicao, politico, metodologia])
+const arvore = raiz.addChildren([atlas.addChildren([inicio, estado, municipio]), urna, cadeira, legenda, escola, idade, patrimonio, reeleicao, politico, metodologia])
 
 export const router = createRouter({
   routeTree: arvore,
@@ -210,7 +230,7 @@ declare module '@tanstack/react-router' {
 // Baixa o código das páginas no tempo ocioso, uma por vez, depois da primeira tela: trocar de página fica imediato
 // (sem esqueleto nem espera). O 3D não entra aqui: ele é baixado só quando a tela que o usa abre.
 const ocioso = (f: () => void) => ('requestIdleCallback' in window ? window.requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 1500))
-const paginas = [urna, cadeira, escola, idade, patrimonio, reeleicao, politico, metodologia]
+const paginas = [urna, cadeira, legenda, escola, idade, patrimonio, reeleicao, politico, metodologia]
 const proxima = () => {
   const r = paginas.shift()
   const pre = r && (r.options.component as { preload?: () => Promise<void> } | undefined)?.preload
