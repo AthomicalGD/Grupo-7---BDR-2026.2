@@ -4,7 +4,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from . import camara, dataverse, fotos, ibge, ipea, tse
+from . import camara, dataverse, fotos, ibge, ipea, logos, tse
 from .catalogo import ITENS, PERGUNTAS, PRIMEIRO_ANO_CANDIDATOS, ULTIMO_ANO_COM_RESULTADO, montar_plano
 from .manifesto import Manifesto, gerar_indice
 from .rede import descrever_erro, novo_cliente
@@ -38,6 +38,9 @@ def _argumentos(argv):
     p.add_argument("--fotos", action="store_true",
                    help="baixa as fotos dos candidatos (2004 em diante) em vez dos dados das perguntas; "
                         "aceita --anos, --ufs, --simular, --atualizar e --carreira-ate")
+    p.add_argument("--logos", action="store_true",
+                   help="baixa os logos dos partidos do banco (Câmara e, na falta, Wikimedia Commons) em "
+                        "dados/partidos/logos, em vez dos dados das perguntas; aceita --atualizar")
     p.add_argument("--ufs", nargs="+", metavar="UF",
                    help="com --fotos: só essas UFs; BR = candidatos a Presidente (padrão: todas + BR)")
     args = p.parse_args(argv)
@@ -181,6 +184,13 @@ def main(argv=None) -> int:
     raiz = args.dados.resolve()
     if args.fotos:
         return _baixar_fotos(args, raiz)
+    if args.logos:
+        print("Logos dos partidos (Câmara dos Deputados; na falta, Wikimedia Commons):", flush=True)
+        with novo_cliente() as cli:
+            m = logos.coletar(cli, raiz, atualizar=args.atualizar)
+        com = sum(1 for r in m.values() if r.get("arquivo"))
+        print(f"\n{com} de {len(m)} siglas com logo em {raiz / logos.PASTA}.")
+        return 0
     perguntas = sorted(set(args.perguntas or PERGUNTAS))
     plano = montar_plano(perguntas, args.fontes, args.anos, args.carreira_ate)
     if not plano:

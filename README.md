@@ -128,6 +128,41 @@ python -m loader.remover AC RS
 - Não são carregados: votos do exterior (`ZZ`), `MALHA_MUNICIPIO` e `idade_media_populacao` (o crawler não baixa esses dados).
   `vies_municipio` é preenchida por `python scripts/07_vies_politico_municipio.py` (seção abaixo).
 
+### Índices do município x viés político (P3)
+
+A página `/indices` põe cada município num gráfico de dispersão: o viés da eleição (2018 a 2024) contra o índice
+escolhido, e o desvio padrão do viés nos quatro anos contra o IFDM mais recente. Os dados saem de `/api/indices`.
+
+O IDHM municipal só existe para 2010 (Censo) e não há viés antes de 2018 (a pesquisa com especialistas tem só as rodadas
+de 2018 e 2022), então o IDHM 2010, longe demais das eleições de 2018 a 2024, fica fora da página e o índice de cada eleição é o **IFDM** da Firjan
+(anual, 2013 a 2023; 2024 usa o de 2023). O site da Firjan não deixa baixar por script:
+
+1. Baixe "Série Histórica IFDM 2013 a 2023" (.xlsx) pelo navegador em https://www.firjan.com.br/ifdm/downloads/.
+2. Salve em `dados/firjan/` (qualquer nome com `IFDM`).
+3. Rode `python -m loader.ifdm --simular` para ver o que o leitor achou na planilha, depois `python -m loader.ifdm`.
+4. Reinicie a API.
+
+A migração `020_ifdm.sql` cria `ifdm_municipio`, pelo código IBGE: a planilha cobre o Brasil inteiro e não depende das
+UFs carregadas. O leitor é conferido por `python -m loader.test_ifdm`, que não precisa do banco.
+
+A área **Desempenho municipal dos partidos** (`/api/indices/partidos?uf=&ano=`) usa as eleições municipais de 2012 a
+2024. Os isentos e os eleitores aptos de 2012 e 2016 vêm do detalhe da votação desses anos, baixado só para a P3. Num
+banco com as UFs já carregadas, acrescente-os sem refazer o resto (só insere em `votacao_municipio`, nada é apagado):
+
+```bash
+python -m crawler --perguntas 3 --fontes tse --anos 2012 2016
+python -m loader.comparecimento 2012 2016 --simular   # confere quantas linhas ligam às disputas do banco
+python -m loader.comparecimento 2012 2016
+```
+
+Depois, reinicie a API. Uma carga completa (`python -m loader`) já lê esses arquivos sozinha.
+
+Os logos ao lado da sigla nos rankings vêm de `python -m crawler --logos` (com o banco no ar: as siglas são as da
+tabela `partido`). Primeiro a Câmara dos Deputados (oficial, mas sem os partidos criados ou renomeados depois de
+~2017); na falta, o Wikimedia Commons, numa lista fixa em `crawler/logos.py` tirada do logo (P154) do Wikidata.
+Ficam em `dados/partidos/logos/`, com `logos.json` (fonte, página e licença de cada um); a API serve por
+`/api/partidos/logos`. Siglas sem logo em nenhuma das duas (PFL, PSDC, PRONA...) aparecem só com a sigla.
+
 ### Viés dos partidos e alinhamento (P7)
 
 O **viés** de cada partido é a média das notas dos especialistas de Bolognesi et al. (`dados/ideologia_partidos/df_experts.csv`;

@@ -19,7 +19,7 @@ import p7VotosPartido from './consultas/p7_votos_partido.sql?raw'
 function Secao({ id, titulo, resposta, children }: {
   id: string
   titulo: string
-  resposta?: { para: '/' | '/cadeira' | '/patrimonio' | '/urna' | '/escola' | '/reeleicao' | '/segundo-turno'; rotulo: string }
+  resposta?: { para: '/' | '/cadeira' | '/patrimonio' | '/urna' | '/escola' | '/reeleicao' | '/indices' | '/segundo-turno'; rotulo: string }
   children: ReactNode
 }) {
   return (
@@ -138,6 +138,7 @@ const INDICE = [
   ['m-2026', '2026'],
   ['m-cadeira', 'P1'],
   ['m-patrimonio', 'P2'],
+  ['m-indices', 'P3'],
   ['m-escolaridade', 'P4'],
   ['m-vies', 'P7'],
   ['m-carreira', 'P10'],
@@ -283,6 +284,43 @@ export function Metodologia() {
               ['Patrimônio declarado', ARQ('tse/bens_candidatos/'), ARQ('bem.vr_bem_candidato')],
               ['Candidaturas e situação final', ARQ('tse/candidatos/'), <>{ARQ('politico_eleicao.ds_sit_tot_turno')}, {ARQ('mandato')}</>],
               ['Quartis e relatório reproduzível', ARQ('scripts/02_patrimonio.py'), ARQ('respostas/02_patrimonio.txt')],
+            ]}
+          />
+        </Detalhe>
+      </Secao>
+
+      <Secao id="m-indices" titulo="Índices do município e viés político (P3)" resposta={{ para: '/indices', rotulo: 'Ver a resposta nos índices' }}>
+        <p>
+          A pergunta: os índices de um município (desenvolvimento, PIB per capita, eleitores por habitante e isentos) andam com o lado
+          do voto? E os municípios que repetem o voto a cada eleição são mais ou menos desenvolvidos? Dois gráficos de dispersão, um
+          ponto por município, de um estado ou de todos os carregados.
+        </p>
+        <ul className="list-disc space-y-2 pl-5">
+          <li><b>Eixo horizontal do primeiro gráfico:</b> o viés do município na eleição escolhida, de −100 (esquerda) a +100 (direita), a mesma conta do mapa (P7).</li>
+          <li><b>Por que o IDHM ficou de fora:</b> o índice de cada eleição precisa ser de um ano próximo a ela. O IDHM municipal é calculado com o Censo, e o mais recente publicado pelo Atlas Brasil é o do Censo 2010, de 8 a 14 anos antes das eleições de 2018 a 2024 (os anos recentes do Atlas, pela PNAD Contínua, saem só para estados e regiões metropolitanas). Compará-lo com eleições perto de 2010 também não dá: o banco tem eleições só de 2018 em diante, e o viés depende da pesquisa com especialistas de Bolognesi et al., que tem só as rodadas de 2018 e 2022.</li>
+          <li><b>O IFDM nas eleições de 2018 a 2024:</b> o Índice Firjan de Desenvolvimento Municipal é anual, vai de 0 a 1 e é a média simples de três áreas (Emprego e renda, Educação e Saúde), feitas com registros administrativos (emprego formal, Inep, DataSUS). Usamos a edição de 2025, que revisou o método e refez a série de 2013 a 2023. Cada eleição usa o IFDM do mesmo ano; 2024 usa o de 2023, o mais recente. O IFDM não é o IDHM com outro nome: mede outras coisas, com outras fontes, e por isso aparece com o próprio nome.</li>
+          <li><b>Como o IFDM chega ao banco:</b> o site da Firjan não deixa baixar a planilha por programa, então ela é baixada pelo navegador e posta em <code>dados/firjan/</code>. O <code>python -m loader.ifdm</code> lê e grava a tabela <code>ifdm_municipio</code>. Como a planilha muda entre edições, o leitor acha sozinho a coluna do código IBGE, o ano, a área e a nota de cada coluna (os rankings ficam de fora); com <code>--simular</code>, só mostra o que achou.</li>
+          <li><b>Os outros índices:</b> PIB per capita (o PIB do ano mais recente até a eleição sobre a população do ano mais próximo); eleitores por habitante (eleitores aptos por 100 habitantes; passa de 100 onde há títulos de quem já se mudou); isentos (brancos, nulos e abstenções sobre os aptos). Os eleitores e os isentos são do 1º turno, no voto para presidente nos anos gerais e para prefeito nos municipais.</li>
+          <li><b>Desempenho municipal dos partidos:</b> só eleições municipais (2012, 2016, 2020 e 2024), com o partido do prefeito eleito em cada município (eleições suplementares ficam de fora). O <b>perfil</b> é a média simples do índice nos municípios onde o partido elegeu o prefeito, com o ano do índice mais perto da eleição, de 2 anos antes a 1 depois (no empate, o anterior). A <b>evolução</b> é a média da variação do índice nesses municípios: o primeiro valor pela mesma regra e o segundo o mais longe depois da eleição, até o ano da eleição municipal seguinte, para que entre os dois só caiba a eleição analisada. O ano vale para o recorte todo, e o município sem o índice naquele ano fica de fora. O PIB per capita varia em % (nominal, sem descontar a inflação) e os outros em pontos; os isentos são os do voto para prefeito, e os eleitores por habitante usam os aptos de qualquer eleição. A população do PIB per capita e dos eleitores por habitante segue a mesma regra de ano. Por isso nem todo índice existe em toda eleição: em 2012 há o IFDM e os isentos (o PIB e a população no banco começam em 2017); em 2024, a evolução só sai para os eleitores por habitante (de 2024 a 2026).</li>
+          <li><b>Correlação:</b> a de Pearson (r, de −1 a +1) sobre os municípios com os dois valores, cada um com o mesmo peso (o tamanho do ponto, pelos eleitores, é só visual). No PIB per capita, sobre o logaritmo, como o eixo. Chamamos de fraca abaixo de 0,3, moderada até 0,5 e forte acima disso. A linha tracejada é a reta de mínimos quadrados.</li>
+          <li><b>Segundo gráfico, o voto que se repete:</b> no eixo horizontal, o desvio padrão do viés do município só nas eleições municipais, 2020 e 2024 (populacional: a raiz da variância da P7), só para quem tem viés nas duas; no vertical, o IFDM mais recente. As gerais ficam de fora porque têm outros cargos (presidente a deputado contra prefeito e vereador), e a troca de cargos mudaria o viés mesmo sem o eleitor mudar de lado. As municipais anteriores não entram porque o viés depende da pesquisa com especialistas, que começa em 2018. Com duas eleições, o desvio padrão é a metade da diferença entre os dois viéses. Desvio pequeno quer dizer que o município vota parecido nas duas eleições, para qualquer lado: o lado não entra na conta.</li>
+        </ul>
+        <p>
+          <b>Limitações.</b> O desvio padrão compara só duas eleições, então uma eleição atípica num município pesa muito. O viés
+          de 2024 usa a pesquisa de 2022, estendida por dois anos. Os pontos são municípios, não pessoas: um
+          município mais rico votar mais à direita não diz que as pessoas mais ricas dele votam assim (a falácia ecológica). E andar
+          junto não é causa.
+        </p>
+        <Detalhe titulo="De onde vêm os dados">
+          <Origens
+            linhas={[
+              [<>IFDM e as três áreas, por município e ano (Firjan, edição 2025, série 2013–2023)</>, <><a className="text-acao underline underline-offset-4" target="_blank" rel="noreferrer" href="https://www.firjan.com.br/ifdm/downloads/">Firjan, IFDM</a>, {ARQ('Serie-Historica-IFDM-2013-a-2023.xlsx')}, baixado à mão em {ARQ('dados/firjan/')}</>, ARQ('ifdm_municipio')],
+              ['PIB municipal (SIDRA 5938) e população (6579 e Censo 2022, 4709)', <>{ARQ('dados/ibge/pib/')} e {ARQ('dados/ibge/populacao/')}</>, <>{ARQ('indices_municipio.pib')}, {ARQ('populacao')}</>],
+              ['Eleitores aptos, brancos, nulos e abstenções', ARQ('dados/tse/detalhe_votacao_munzona/'), ARQ('votacao_municipio')],
+              ['Viés do município em cada eleição', 'o mesmo da P7', ARQ('vies_votos_cargo')],
+              [<>Logos dos partidos, ao lado da sigla nos rankings (só identificação; a licença de cada arquivo do Commons fica no manifesto)</>,
+                <>Câmara dos Deputados (Dados Abertos, <code>urlLogo</code>) e, para os partidos que ela não tem, Wikimedia Commons (o logo do Wikidata), por {ARQ('python -m crawler --logos')}</>,
+                ARQ('dados/partidos/logos/logos.json')],
             ]}
           />
         </Detalhe>
@@ -568,6 +606,7 @@ export function Metodologia() {
           <li><b>IBGE, SIDRA</b> (<a className="text-acao underline underline-offset-4" href="https://sidra.ibge.gov.br" target="_blank" rel="noreferrer">sidra.ibge.gov.br</a>): IPCA de outubro (tabela 1737), PIB municipal (5938), população estimada (6579), Censo 2022 (4709, idade 9515 e nível de instrução das pessoas de 18 anos ou mais, 10061).</li>
           <li><b>IBGE, APIs de malhas e localidades:</b> contornos dos estados e municípios (GeoJSON) e regiões intermediárias.</li>
           <li><b>Atlas Brasil (PNUD, Ipea, FJP)</b>, pelo Ipeadata: IDHM; o mais recente é o do Censo 2010.</li>
+          <li><b>Firjan</b> (<a className="text-acao underline underline-offset-4" href="https://www.firjan.com.br/ifdm/" target="_blank" rel="noreferrer">firjan.com.br/ifdm</a>): Índice Firjan de Desenvolvimento Municipal (IFDM), série histórica de 2013 a 2023, edição 2025.</li>
           <li><b>Harvard Dataverse:</b> classificação ideológica dos partidos por especialistas (Bolognesi, Codato, Ribeiro e Silva).</li>
           <li><b>Exploração colonial (questão extra):</b> pacote de replicação de <i>Old But Gold</i> no Mendeley Data (<a className="text-acao underline underline-offset-4" target="_blank" rel="noreferrer" href="https://data.mendeley.com/datasets/ppxdfzt28d">ppxdfzt28d</a>, CC BY 4.0), Censo de 1872 e evolução da divisão territorial do IBGE, áreas comparáveis do IPEA, histórico dos municípios (IBGE), ocorrências minerais do Serviço Geológico do Brasil, semiárido (IBGE) e a população de 1819 por capitania (Velloso de Oliveira).</li>
         </ul>
@@ -588,6 +627,7 @@ export function Metodologia() {
           <li><code>python -m crawler</code> baixa os dados; <code>python -m crawler --fotos</code>, as fotos.</li>
           <li><code>docker compose up -d</code> sobe o PostgreSQL e aplica as migrações.</li>
           <li><code>python -m loader PI BA</code> carrega os estados.</li>
+          <li><code>python -m loader.ifdm</code> carrega o IFDM, com a planilha da Firjan baixada à mão em <code>dados/firjan/</code>.</li>
           <li><code>python scripts/04_escolaridade.py</code> (e os outros scripts) gravam as respostas em <code>respostas/</code>.</li>
           <li><code>python -m uvicorn api.app:app --port 8000</code> sobe a API.</li>
           <li><code>npm run dev</code> na pasta <code>web</code> abre este site.</li>

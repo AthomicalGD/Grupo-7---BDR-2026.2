@@ -598,6 +598,71 @@ export interface SegundoTurno {
 export interface LugarSegundoTurno { codigo: string; nome: string; a1: number; b1: number; outros1: number; a2: number; b2: number; virou: boolean }
 export interface SegundoTurnoLugares { disputa: SegundoTurno; nivel: 'uf' | 'municipio' | 'zona'; lugares: LugarSegundoTurno[] }
 
+/** IFDM (Firjan) de um município num ano: 0 a 1, o geral e as três áreas. */
+export interface Ifdm { ifdm: number | null; emprego_renda: number | null; educacao: number | null; saude: number | null }
+/** P3: um município com o viés de cada eleição e os índices (chaves por ano da eleição). */
+export interface MunicipioIndices {
+  ibge: number
+  nome: string
+  uf: string
+  vies: PorAno<number>
+  /** do Censo 2010, o mesmo em todas as eleições */
+  idhm: number | null
+  aptos: PorAno<number>
+  /** o do ano em `ano_ifdm` */
+  ifdm: PorAno<Ifdm>
+  pib_pc: PorAno<number>
+  /** eleitores aptos por 100 habitantes (passa de 100 onde há títulos de quem se mudou) */
+  eleitores_pop: PorAno<number>
+  /** brancos, nulos e abstenções, % dos aptos */
+  isentos: PorAno<number>
+  /** desvio padrão do viés nas eleições municipais (`anos_desvio`); null sem viés em todas elas */
+  desvio: number | null
+  /** IFDM geral do ano `ifdm_recente` */
+  ifdm_recente: number | null
+}
+export interface IndicesVies {
+  uf: string
+  ufs: string[]
+  anos: number[]
+  /** ano da eleição -> ano do IFDM usado (2024 -> 2023) */
+  ano_ifdm: PorAno<number>
+  ano_pib: PorAno<number>
+  /** as eleições do desvio padrão do viés: só as municipais (2020 e 2024) */
+  anos_desvio: number[]
+  ifdm_recente: number | null
+  municipios: MunicipioIndices[]
+}
+
+/** P3: um partido num ranking da área de desempenho municipal (média nos municípios onde elegeu o prefeito). */
+export interface PartidoRanking {
+  sigla: string
+  media: number
+  prefeitos: number
+  /** códigos IBGE dos municípios que entraram na média (os nomes ficam em `municipios`) */
+  cidades: number[]
+  /** só no perfil: a soma da população desses municípios no ano `ano_populacao` */
+  populacao?: number | null
+}
+export interface RankingsIndice {
+  perfil: { ano: number; partidos: PartidoRanking[] } | null
+  /** variação de `de` até `ate`: em % no PIB per capita, em pontos nos outros */
+  evolucao: { de: number; ate: number; partidos: PartidoRanking[] } | null
+}
+export interface DesempenhoPartidos {
+  uf: string
+  ufs: string[]
+  ano: number
+  eleicoes: number[]
+  prefeitos: number
+  ano_populacao: number | null
+  municipios: Record<string, { nome: string; uf: string }>
+  indices: Record<string, RankingsIndice>
+}
+
+/** Logo de um partido (python -m crawler --logos): Câmara dos Deputados ou, na falta, Wikimedia Commons. */
+export interface LogoPartido { url: string; fonte: 'camara' | 'wikimedia'; pagina: string | null; licenca: string | null }
+
 const sempre = { staleTime: Infinity, gcTime: 30 * 60_000 } // os dados só mudam com uma nova carga
 /** "?cargo=1" (ou "&cargo=1"), ou nada quando são todos os cargos */
 const comCargo = (cargo: number | undefined, sep: '?' | '&') => (cargo ? `${sep}cargo=${cargo}` : '')
@@ -729,6 +794,16 @@ export const consultas = {
     }),
   reeleicao: (uf: string) =>
     queryOptions({ queryKey: ['reeleicao', uf], queryFn: ({ signal }) => get<Reeleicao>(`/api/reeleicao?uf=${uf}`, signal), ...sempre }),
+  indices: (uf: string) =>
+    queryOptions({ queryKey: ['indices', uf], queryFn: ({ signal }) => get<IndicesVies>(`/api/indices?uf=${uf}`, signal), ...sempre }),
+  logosPartidos: () =>
+    queryOptions({ queryKey: ['logos-partidos'], queryFn: ({ signal }) => get<Record<string, LogoPartido>>('/api/partidos/logos', signal), ...sempre }),
+  indicesPartidos: (uf: string, ano: number) =>
+    queryOptions({
+      queryKey: ['indices-partidos', uf, ano],
+      queryFn: ({ signal }) => get<DesempenhoPartidos>(`/api/indices/partidos?uf=${uf}&ano=${ano}`, signal),
+      ...sempre,
+    }),
   pessoasReeleicao: (uf: string, cargo: number, eleitosEm: number, grupo: GrupoReeleicao, limite: number, busca = '') =>
     queryOptions({
       queryKey: ['reeleicao-pessoas', uf, cargo, eleitosEm, grupo, limite, busca],

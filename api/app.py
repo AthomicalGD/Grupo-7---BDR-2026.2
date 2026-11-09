@@ -21,6 +21,7 @@ import math
 import os
 import pickle
 import random
+import re
 import shutil
 import statistics
 import struct
@@ -129,7 +130,7 @@ def consultar(sql: str, params=None) -> list[dict]:
 CACHE_API = DADOS / "cache_api"
 # Aumente ao mudar uma conta ou consulta (o que muda um resultado); mudanças que não mudam resultados
 # (tamanho dos caches, textos de erro) não precisam, e assim não obrigam a refazer tudo.
-VERSAO_CONTAS = 1
+VERSAO_CONTAS = 3
 
 
 @lru_cache(maxsize=1)
@@ -729,6 +730,38 @@ def foto(ano: int, uf: str, chave: str):
                     headers={"Cache-Control": "public, max-age=31536000, immutable"})
 
 
+# ───────── Logos dos partidos (python -m crawler --logos) ─────────
+# Lidos a cada pedido do manifesto (dados/partidos/logos/logos.json), que é pequeno: um logo baixado depois
+# aparece sem reiniciar a API. Fonte: Câmara dos Deputados e, na falta, Wikimedia Commons (licença no manifesto).
+PASTA_LOGOS = DADOS / "partidos" / "logos"
+TIPOS_IMAGEM = {"gif": "image/gif", "png": "image/png", "jpg": "image/jpeg"}
+
+
+def _manifesto_logos() -> dict:
+    try:
+        return json.loads((PASTA_LOGOS / "logos.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+@app.get("/api/partidos/logos")
+def logos_partidos(response: Response):
+    """Sigla -> URL do logo, de onde veio e a licença; só as siglas que têm logo."""
+    response.headers["Cache-Control"] = "public, max-age=3600"
+    return {sigla: {"url": f"/api/partidos/logos/{r['arquivo']}", "fonte": r["fonte"], "pagina": r.get("pagina"),
+                    "licenca": r.get("licenca")}
+            for sigla, r in _manifesto_logos().items() if r.get("arquivo")}
+
+
+@app.get("/api/partidos/logos/{arquivo}")
+def logo_partido(arquivo: str):
+    m = re.fullmatch(r"[A-Z0-9]{1,20}\.(gif|png|jpg)", arquivo)
+    caminho = PASTA_LOGOS / arquivo
+    if not m or not caminho.is_file():
+        raise HTTPException(404, "Logo não encontrado")
+    return Response(caminho.read_bytes(), media_type=TIPOS_IMAGEM[m.group(1)], headers={"Cache-Control": "public, max-age=86400"})
+
+
 # ───────── Políticos (nunca expõe CPF, título eleitoral nem data de nascimento completa) ─────────
 
 # Filtra pelos trigramas do nome sem acento (índice politico_nome_trgm, migração 010). A ordem vem de
@@ -1127,7 +1160,10 @@ def _aquecer() -> None:
             for ano in ANOS:
                 composicao_vies(sigla, ano, None)
         for ano in ANOS_ESCOLA:   # a P4 abre em 2022 com todos os estados: ~11 s a frio
-            escola_ano(ano, "")
+            try:
+                escola_ano(ano, "")
+            except HTTPException:   # ano fora do banco: o resto do aquecimento segue
+                pass
         escola_comparar_tudo()
         custo_cadeira(2022, 6)   # a P1 abre em deputado federal, 2022, todos os estados
         veteranos()              # o BRANCO da urna sorteia daqui
@@ -1234,6 +1270,237 @@ def reeleicao_pessoas(cargo: int, eleitos_em: int, uf: str = TODOS, grupo: str =
             "disputa": eleitos_em + (8 if cargo == SENADOR else 4), "grupo": grupo,
             "contagem": {g: sum(r["grupo"] == g for r in todos) for g in GRUPOS_P10},
             "total": len(do_grupo), "pessoas": pagina}
+
+
+# ───────── P3: índices do município x viés político ─────────
+# Cada município de uma UF (ou de todas as carregadas), com o viés de cada eleição (a mesma conta do atlas, 1º turno)
+# e os índices: IFDM da Firjan (migração 020) do ano da eleição, ou do mais recente antes dela (2024 usa o de 2023);
+# IDHM, só o do Censo 2010 (o municipal não tem ano mais novo) e por isso fixo em todas as eleições; PIB per capita
+# do ano mais recente até a eleição; eleitores aptos sobre a população e isentos (brancos, nulos e abstenções sobre
+# os aptos) da própria eleição, no presidente nos anos gerais e no prefeito nos municipais. O desvio padrão do viés
+# (populacional, como a variância da P7) usa só as eleições municipais, para comparar sempre os mesmos cargos (prefeito
+# e vereador), e só sai para quem tem viés em todas elas; com duas eleições, é a metade da diferença entre os dois viéses.
+ANOS_P3 = [2018, 2020, 2022, 2024]
+ANOS_DESVIO = [2020, 2024]   # as eleições municipais com viés (a pesquisa com especialistas começa em 2018)
+AREAS_IFDM = ("ifdm", "emprego_renda", "educacao", "saude")
+
+SQL_P3_VOTACAO = f"""
+SELECT m.cd_ibge, e.ano, v.qt_aptos AS aptos, v.qt_brancos + v.qt_nulos + v.qt_abstencoes AS isentos
+FROM votacao_municipio v
+JOIN eleicao e ON e.id_eleicao = v.id_eleicao
+JOIN municipio m ON m.cd_municipio = v.cd_municipio
+WHERE m.cd_uf = ANY(%(ufs)s) AND e.ano = ANY(%(anos)s) AND e.turno = 1 AND e.tipo <> 1
+  AND e.cod_cargo IN ({PRESIDENTE}, {PREFEITO})
+"""
+SQL_P3_INDICES = """
+SELECT m.cd_ibge, i.ano, i.idhm::float AS idhm, i.pib::float AS pib, i.populacao
+FROM indices_municipio i JOIN municipio m ON m.cd_municipio = i.cd_municipio
+WHERE m.cd_uf = ANY(%(ufs)s)
+"""
+SQL_P3_IFDM = """
+SELECT f.cd_ibge, f.ano, f.ifdm::float AS ifdm, f.emprego_renda::float AS emprego_renda,
+       f.educacao::float AS educacao, f.saude::float AS saude
+FROM ifdm_municipio f JOIN municipio m ON m.cd_ibge = f.cd_ibge
+WHERE m.cd_uf = ANY(%(ufs)s)
+"""
+
+
+def _ate(anos, ano: int) -> int | None:
+    """O ano mais recente até `ano`; sem nenhum, o primeiro depois."""
+    antes = [a for a in anos if a <= ano]
+    return max(antes) if antes else min((a for a in anos if a > ano), default=None)
+
+
+@lru_cache(maxsize=32)
+def indices_vies(sigla: str) -> dict:
+    ufs = sorted(carregadas() - {"BR"}) if sigla == TODOS else [sigla]
+    p = {"ufs": [UFS[u]["cd_ibge"] for u in ufs], "anos": ANOS_P3}
+    por_uf = indice_vies()[0]
+    v = vies([r for cd in p["ufs"] for r in por_uf.get(cd, [])], lambda r: r["cd_ibge"])
+
+    votacao = defaultdict(dict)
+    for r in consultar(SQL_P3_VOTACAO, p):
+        votacao[r["cd_ibge"]][r["ano"]] = r
+    pop, pib, idhm = defaultdict(dict), defaultdict(dict), {}
+    for r in consultar(SQL_P3_INDICES, p):
+        if r["populacao"]:
+            pop[r["cd_ibge"]][r["ano"]] = r["populacao"]
+        if r["pib"] is not None:
+            pib[r["cd_ibge"]][r["ano"]] = r["pib"]
+        if r["idhm"] is not None and r["ano"] == 2010:
+            idhm[r["cd_ibge"]] = r["idhm"]
+    ifdm = defaultdict(dict)
+    for r in consultar(SQL_P3_IFDM, p):
+        ifdm[r.pop("cd_ibge")][r.pop("ano")] = r
+
+    anos_ifdm = sorted({a for d in ifdm.values() for a in d})
+    anos_pib = sorted({a for d in pib.values() for a in d})
+    ano_ifdm = {str(e): a for e in ANOS_P3 if (a := _ate(anos_ifdm, e)) is not None}
+    ano_pib = {str(e): a for e in ANOS_P3 if (a := _ate(anos_pib, e)) is not None}
+    recente = anos_ifdm[-1] if anos_ifdm else None
+
+    municipios = []
+    for ibge in sorted(set(v) | set(votacao) | set(ifdm)):
+        m = MUNICIPIOS.get(ibge)
+        if m is None:
+            continue
+        vies_m = v.get(ibge, VAZIO)["vies"]
+        pop_m = pop.get(ibge, {})
+        perto = lambda ano: pop_m[min(pop_m, key=lambda a: (abs(a - ano), a))] if pop_m else None
+        d = {"ibge": ibge, "nome": m["municipio"], "uf": m["sg_uf"], "vies": vies_m, "idhm": idhm.get(ibge),
+             "aptos": {}, "ifdm": {}, "pib_pc": {}, "eleitores_pop": {}, "isentos": {}}
+        for e in ANOS_P3:
+            a = str(e)
+            if a in ano_ifdm and (f := ifdm.get(ibge, {}).get(ano_ifdm[a])):
+                d["ifdm"][a] = f
+            if a in ano_pib and (x := pib.get(ibge, {}).get(ano_pib[a])) is not None and (n := perto(ano_pib[a])):
+                d["pib_pc"][a] = round(x * 1000 / n, 2)
+            if (r := votacao.get(ibge, {}).get(e)) and r["aptos"]:
+                d["aptos"][a] = r["aptos"]
+                d["isentos"][a] = round(100 * r["isentos"] / r["aptos"], 1)
+                if n := perto(e):
+                    d["eleitores_pop"][a] = round(100 * r["aptos"] / n, 1)
+        serie = [vies_m.get(str(e)) for e in ANOS_DESVIO]
+        d["desvio"] = round(statistics.pstdev(serie), 2) if None not in serie else None
+        d["ifdm_recente"] = (ifdm.get(ibge, {}).get(recente) or {}).get("ifdm") if recente else None
+        municipios.append(d)
+    return {"uf": sigla, "ufs": ufs, "anos": ANOS_P3, "anos_desvio": ANOS_DESVIO, "ano_ifdm": ano_ifdm, "ano_pib": ano_pib,
+            "ifdm_recente": recente, "municipios": municipios}
+
+
+@app.get("/api/indices")
+def indices(uf: str = TODOS):
+    """P3: viés de cada município nas eleições de 2018 a 2024 com IFDM, IDHM 2010, PIB per capita, eleitores sobre a
+    população e isentos, e o desvio padrão do viés nas eleições municipais (uf=TODOS: todas as carregadas)."""
+    ufs = _ufs_p10(uf)
+    return indices_vies(TODOS if len(ufs) > 1 or uf.strip().upper() in ("", TODOS) else ufs[0])
+
+
+# ───────── P3: desempenho municipal dos partidos ─────────
+# Só eleições municipais. Para cada partido que elegeu prefeitos, a média de cada índice nos municípios que ganhou
+# (perfil) e a média da variação do índice durante o mandato (evolução). As regras de ano valem para o recorte todo
+# (todo município usa o mesmo ano, e quem não tem o índice naquele ano fica de fora):
+# - perfil: o ano mais próximo da eleição, de 2 anos antes a 1 depois; no empate, o anterior;
+# - evolução: o primeiro valor pela mesma regra e o segundo o mais longe depois da eleição, até o ano da eleição
+#   municipal seguinte; assim, entre os dois, só cabe a eleição analisada.
+# O PIB per capita varia em % (nominal) e os outros em pontos. Os isentos são os do voto para prefeito, para comparar
+# sempre o mesmo cargo; os eleitores por habitante usam os aptos de qualquer eleição (o eleitorado é o mesmo).
+ELEICOES_MUNICIPAIS = (2012, 2016, 2020, 2024)
+ANTES, DEPOIS, MANDATO = 2, 1, 4
+INDICES_PARTIDOS = ("ifdm", "emprego_renda", "educacao", "saude", "pib_pc", "eleitores_pop", "isentos")
+
+SQL_PREFEITOS_ELEITOS = f"""
+SELECT DISTINCT ON (m.cd_ibge) m.cd_ibge, pa.sigla
+FROM eleicao e
+JOIN politico_eleicao pe ON pe.id_eleicao = e.id_eleicao
+JOIN mandato ma ON ma.id_politico_eleicao = pe.id_politico_eleicao
+JOIN partido pa ON pa.id_partido = ma.id_partido
+JOIN municipio m ON m.cd_municipio = e.cd_municipio
+WHERE e.cod_cargo = {PREFEITO} AND e.tipo <> 1 AND e.ano = %(ano)s AND m.cd_uf = ANY(%(ufs)s)
+ORDER BY m.cd_ibge
+"""
+SQL_PARTIDOS_VOTACAO = f"""
+SELECT m.cd_ibge, e.ano, e.cod_cargo, v.qt_aptos AS aptos, v.qt_brancos + v.qt_nulos + v.qt_abstencoes AS isentos
+FROM votacao_municipio v
+JOIN eleicao e ON e.id_eleicao = v.id_eleicao
+JOIN municipio m ON m.cd_municipio = v.cd_municipio
+WHERE m.cd_uf = ANY(%(ufs)s) AND e.turno = 1 AND e.tipo <> 1 AND e.cod_cargo IN ({PRESIDENTE}, {PREFEITO})
+"""
+
+
+def ano_perto(anos, eleicao: int) -> int | None:
+    """O ano mais próximo da eleição, de ANTES anos antes a DEPOIS anos depois; no empate, o anterior."""
+    dentro = [a for a in anos if eleicao - ANTES <= a <= eleicao + DEPOIS]
+    return min(dentro, key=lambda a: (abs(a - eleicao), a)) if dentro else None
+
+
+def anos_evolucao(anos, eleicao: int) -> tuple[int, int] | None:
+    """O primeiro ano pela regra do perfil e o segundo o mais longe depois da eleição, até a eleição municipal seguinte."""
+    de = ano_perto(anos, eleicao)
+    depois = [a for a in anos if a > eleicao and a > (de or 0) and a <= eleicao + MANDATO]
+    return (de, max(depois)) if de is not None and depois else None
+
+
+def series_partidos(ufs: list[str]) -> tuple[dict, dict]:
+    """Cada índice como {ibge: {ano: valor}} e a população {ibge: {ano: habitantes}}."""
+    p = {"ufs": [UFS[u]["cd_ibge"] for u in ufs]}
+    s = {k: defaultdict(dict) for k in INDICES_PARTIDOS}
+    pop, pib = defaultdict(dict), defaultdict(dict)
+    for r in consultar(SQL_P3_INDICES, p):
+        if r["populacao"]:
+            pop[r["cd_ibge"]][r["ano"]] = r["populacao"]
+        if r["pib"] is not None:
+            pib[r["cd_ibge"]][r["ano"]] = r["pib"]
+    # a população do denominador segue a mesma regra de ano (2 antes a 1 depois): sem ela, o município fica sem valor
+    perto = lambda ibge, ano: (pm := pop.get(ibge)) and (a := ano_perto(pm, ano)) is not None and pm[a]
+    for ibge, anos in pib.items():
+        for ano, x in anos.items():
+            if n := perto(ibge, ano):
+                s["pib_pc"][ibge][ano] = x * 1000 / n
+    for r in consultar(SQL_P3_IFDM, p):
+        for area in AREAS_IFDM:
+            if r[area] is not None:
+                s[area][r["cd_ibge"]][r["ano"]] = r[area]
+    for r in consultar(SQL_PARTIDOS_VOTACAO, p):
+        if not r["aptos"]:
+            continue
+        if n := perto(r["cd_ibge"], r["ano"]):
+            s["eleitores_pop"][r["cd_ibge"]][r["ano"]] = 100 * r["aptos"] / n
+        if r["cod_cargo"] == PREFEITO:
+            s["isentos"][r["cd_ibge"]][r["ano"]] = 100 * r["isentos"] / r["aptos"]
+    return s, pop
+
+
+def _ranking(prefeitos: dict, valores: dict, pop: dict | None = None) -> list[dict]:
+    """Média por partido de `valores` ({ibge: valor}) nos municípios onde ele elegeu o prefeito, da maior para a menor."""
+    grupos = defaultdict(list)
+    for ibge, sigla in prefeitos.items():
+        if ibge in valores:
+            grupos[sigla].append(ibge)
+    linhas = []
+    for sigla, cidades in grupos.items():
+        linha = {"sigla": sigla, "media": round(statistics.fmean(valores[c] for c in cidades), 4),
+                 "prefeitos": len(cidades), "cidades": sorted(cidades)}
+        if pop is not None:
+            linha["populacao"] = sum(pop.get(c, 0) for c in cidades) or None
+        linhas.append(linha)
+    return sorted(linhas, key=lambda l: (-l["media"], -l["prefeitos"], l["sigla"]))
+
+
+@lru_cache(maxsize=64)
+@em_disco
+def desempenho_partidos(sigla: str, ano: int) -> dict:
+    ufs = sorted(carregadas() - {"BR"}) if sigla == TODOS else [sigla]
+    prefeitos = {r["cd_ibge"]: r["sigla"] for r in consultar(SQL_PREFEITOS_ELEITOS, {"ano": ano, "ufs": [UFS[u]["cd_ibge"] for u in ufs]})}
+    series, pop = series_partidos(ufs)
+    ano_pop = ano_perto({a for d in pop.values() for a in d}, ano)
+    pop_ano = {ibge: d[ano_pop] for ibge, d in pop.items() if ano_pop in d}
+
+    indices = {}
+    for k, serie in series.items():
+        anos = {a for d in serie.values() for a in d}
+        perfil = evolucao = None
+        if (a := ano_perto(anos, ano)) is not None:
+            perfil = {"ano": a, "partidos": _ranking(prefeitos, {i: d[a] for i, d in serie.items() if a in d}, pop_ano)}
+        if par := anos_evolucao(anos, ano):
+            de, ate = par
+            delta = {i: (100 * (d[ate] / d[de] - 1) if k == "pib_pc" else d[ate] - d[de])
+                     for i, d in serie.items() if de in d and ate in d and (k != "pib_pc" or d[de] > 0)}
+            evolucao = {"de": de, "ate": ate, "partidos": _ranking(prefeitos, delta)}
+        indices[k] = {"perfil": perfil, "evolucao": evolucao}
+    nomes = {ibge: {"nome": MUNICIPIOS[ibge]["municipio"], "uf": MUNICIPIOS[ibge]["sg_uf"]} for ibge in prefeitos if ibge in MUNICIPIOS}
+    return {"uf": sigla, "ufs": ufs, "ano": ano, "eleicoes": list(ELEICOES_MUNICIPAIS), "prefeitos": len(prefeitos),
+            "ano_populacao": ano_pop, "municipios": nomes, "indices": indices}
+
+
+@app.get("/api/indices/partidos")
+def indices_partidos(uf: str = TODOS, ano: int = 2020):
+    """P3: desempenho municipal dos partidos numa eleição municipal: o perfil (média de cada índice nos municípios onde
+    o partido elegeu o prefeito) e a evolução (média da variação do índice durante o mandato), por partido."""
+    if ano not in ELEICOES_MUNICIPAIS:
+        raise HTTPException(404, f"Eleição municipal sem índices: {ano} (use {', '.join(map(str, ELEICOES_MUNICIPAIS))})")
+    ufs = _ufs_p10(uf)
+    return desempenho_partidos(TODOS if len(ufs) > 1 or uf.strip().upper() in ("", TODOS) else ufs[0], ano)
 
 
 # ───────── A roupa do bonequinho (migração 017) ─────────
@@ -2209,6 +2476,8 @@ def municipios_escola(ano: int) -> dict[int, dict]:
     """Cada município com a % de superior completo de quem votou, dos candidatos, dos eleitos e dos votos,
     e o quintil pela escolaridade de quem votou (cortes nos quantis, como o pandas.qcut do script)."""
     linhas = consultar(SQL_ESCOLA_MUNICIPIOS, {"ano": ano, "voto": VOTO_ESCOLA[ano]})
+    if not linhas:   # o ano não foi carregado (2026 num banco anterior a ele): sem municípios não há quintos
+        raise HTTPException(404, f"{ano} não está no banco. Carregue com: python -m loader.ano {ano}")
     cortes = statistics.quantiles([r["votantes"] for r in linhas], n=5, method="inclusive")
     return {r["ibge"]: {**r, "quintil": bisect.bisect_left(cortes, r["votantes"]) + 1} for r in linhas}
 
