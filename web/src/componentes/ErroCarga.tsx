@@ -10,15 +10,19 @@ import { ErroApi } from '../api'
 export function ErroCarga({ erro, compacto = false, aoTentar }: { erro: unknown; compacto?: boolean; aoTentar?: () => unknown }) {
   const [tentando, setTentando] = useState(false)
   const status = erro instanceof ErroApi ? erro.status : 0
+  // o banco responde, mas a tabela desta tela ainda não foi preenchida (a API diz "está vazia: rode ...")
+  const semCarga = status === 503 && erro instanceof Error && /vazia/i.test(erro.message)
   const { titulo, texto } =
-    status === 404
+    semCarga
+      ? { titulo: 'Estes dados ainda não foram carregados', texto: 'O banco está ligado, mas esta tela precisa de uma carga que ainda não rodou neste computador. Volte daqui a pouco ou veja o comando abaixo.' }
+      : status === 404
       ? { titulo: 'Não achamos isto', texto: 'O endereço pode estar errado, ou este recorte não tem eleição (o DF, por exemplo, não elege prefeito).' }
       : status === 503
         ? { titulo: 'O banco de dados está desligado', texto: 'Os números moram num banco que não está respondendo agora. Tente de novo em alguns segundos.' }
         : status === 0
           ? { titulo: 'O servidor não respondeu', texto: 'A página abriu, mas o servidor que entrega os dados não. Pode ser a conexão ou o servidor desligado.' }
           : { titulo: 'Os dados não chegaram', texto: 'Algo deu errado do nosso lado ao montar esta consulta. Tentar de novo costuma resolver.' }
-  const dica = status === 503 ? 'docker compose up -d' : status === 0 ? 'python -m uvicorn api.app:app --port 8000' : null
+  const dica = semCarga && erro instanceof Error ? erro.message : status === 503 ? 'docker compose up -d' : status === 0 ? 'python -m uvicorn api.app:app --port 8000' : null
   const tentar = async () => {
     if (!aoTentar) return location.reload()
     setTentando(true)

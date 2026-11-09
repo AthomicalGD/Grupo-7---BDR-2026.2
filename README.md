@@ -624,6 +624,60 @@ Para apresentar, use sempre a versão de produção (`apresentar`, `rede` ou `re
 neste notebook: no `npm run dev` cada página trava de 450 a 800 ms ao abrir e usa de 2 a 3 vezes mais
 memória; na produção, as páginas abrem sem travar e rolam a 60 quadros por segundo.
 
+### Interface azulejo: passo a passo para quem for rodar
+
+A interface completa desta branch usa o visual "Azulejo de Brasília" (painéis de Athos Bulcão: azul `#1d4fa0`,
+vermelho `#d6382a` e amarelo `#f5b800` sobre branco, peças quadradas e rejunte de 3px). O visual vive em
+`web/src/index.css`, no bloco "Azulejo de Brasília" (as variáveis `--azul`, `--vermelho`, `--amarelo` e os tokens
+`--color-*`); trocar as cores ali muda o site inteiro. Do zero, nesta ordem:
+
+```bash
+# 1. banco (PostgreSQL 17) e migrações (cria as tabelas; as pendentes são aplicadas sozinhas)
+docker compose up -d
+docker compose run --rm migracoes
+
+# 2. dados: baixar (crawler) e carregar (loader). Só o que cada tela precisa está na tabela abaixo
+python -m crawler --simular            # mostra o que baixa e o espaço (o crawler baixa o Brasil inteiro, ~6 GB)
+python -m crawler
+python -m loader BR PI SP              # carrega as UFs que você quiser (BR é o consolidado; as já carregadas são puladas)
+python -m loader.perfil_etario         # P6: idade de quem votou (relê ~2 GB por ano; ~5 min)
+python -m loader.ifdm                  # P3: IFDM da Firjan (ver "A página de índices")
+python -m loader.ano 2026              # 2026, incluindo o 2º turno quando o TSE já publicou
+
+# 3. API (se a porta 8000 estiver ocupada por outro projeto, use outra e avise o site com API_ALVO)
+python -m uvicorn api.app:app --port 8000
+#    outro banco/porta: DATABASE_URL=postgresql://eleicoes:eleicoes@127.0.0.1:5433/eleicoes
+
+# 4. site (versão de produção, mais leve): em outro terminal
+cd web && npm ci && npm run apresentar     # http://localhost:4173
+#    com a API em outra porta: API_ALVO=http://127.0.0.1:8001 npm run apresentar
+```
+
+O que cada tela precisa no banco (sem isso ela abre, mas mostra um aviso de dados não carregados ou fica vazia):
+
+| Tela | Rota | Precisa de |
+|---|---|---|
+| Mapa, estado e município | `/`, `/uf/..` | carga normal; o 2º turno do mapa e a Virada precisam do 2º turno de 2026 (`loader.ano 2026`) |
+| Índices (P3) | `/indices` | `loader.ifdm` (sem ele o IFDM aparece como "sem dado") e `scripts/07_vies_politico_municipio.py` |
+| Legenda (P5) | `/cadeira/legenda` | carga normal |
+| Idade (P6) | `/idade` | `loader.perfil_etario` e, para a população do Censo, `scripts/06_idade_alternancia.py` |
+| Comparar (bonequinhos) | `/comparar` | carga normal e fotos (`--fotos`, opcional) |
+
+Recursos desta interface, todos no `web/src`:
+
+- **Balão das questões** (`componentes/Questoes.tsx`): liga e desliga no botão "Questões" da barra de cima, lista P1 a
+  P10 e leva à tela de cada uma. Para incluir uma questão nova, acrescente uma linha em `QUESTOES` (e a rota em `Para`).
+- **Bonequinhos, armário e raio-x** (`comparar/`): `Bonequinho3D.tsx` (3D), `Armario.tsx` (roupas e acessórios, salvos
+  por político em `PUT /api/politicos/{id}/visual`), `RaioX.tsx` e `pecas.ts` (o catálogo das peças).
+- **Turno no mapa** (`atlas/SeletorTurno.tsx`): alterna 1º e 2º turno; o 2º só tem presidente, governador e prefeito.
+- **Tema claro/escuro** (`componentes/Moldura.tsx`): o botão do sol na barra de cima; a cor de cada tema fica em `index.css`.
+- **Mapa em degraus** (`lib/vies.ts`, `corMapa`): a escala de cor do viés em faixas, com a onda de oeste para leste ao trocar de ano.
+- **Aviso de dados não carregados** (`componentes/ErroCarga.tsx`): quando a API responde 503 "está vazia: rode ...", a tela
+  mostra o comando que falta, em vez de dizer que o banco está desligado.
+
+Dicas: a primeira consulta de cada tela pode levar de segundos a meio minuto (a API monta caches em disco e fica rápida
+depois); com a máquina lenta, use sempre `npm run apresentar` em vez de `npm run dev`.
+
 ### Abrir no celular (QR code do boletim)
 
 Com `npm run rede` ou `npm run rede:publico`, o terminal mostra um endereço com `?chave=...`. Abra-o
