@@ -558,3 +558,163 @@ Metodologia)" vira "oito itens à direita (Mapa, Urna, Cadeira, Escola, Idade, P
 **`PRODUCT.md`**, "Evidence on Hand": acrescentar a P6 (`respostas/06_idade_alternancia.txt`, tela `/idade`).
 
 **`design/PROMPT.md`**, "4. Telas e rotas": nova subseção "Idade (`/idade`)" com o resumo da página da Idade acima.
+
+---
+
+## 2026 no crawler e o SVD de 2026 (09/11/2026)
+
+> **Não aplicado.** Texto proposto para o `README.md`; o código do crawler (`crawler/__main__.py` e
+> `crawler/catalogo.py`) já foi alterado na árvore local, sem commit.
+
+### `README.md`, seção "A eleição de 2026 (dados parciais)"
+
+Atual: "O TSE publica a eleição aos poucos. Em 27/10/2026 já havia candidaturas, bens, o 1º turno (votos por zona,
+detalhe e comparecimento por escolaridade) e a prestação de contas parcial; o 2º turno e as contas finais, não."
+
+Proposto (conferido nos arquivos baixados em 09/11/2026: `votacao_candidato_munzona_2026` tem o turno 2 de presidente
+e governador, e `consulta_cand_2026` traz a situação final de quem foi ao 2º turno):
+
+```markdown
+O TSE publica a eleição aos poucos. Em 09/11/2026 já havia candidaturas, bens, os dois turnos (votos por zona,
+detalhe e comparecimento por escolaridade) e a prestação de contas parcial; as contas finais, não.
+```
+
+E, na lista logo abaixo, trocar "(quem foi a um 2º turno ainda não publicado fica de fora do patrimônio e, na
+reeleição, aparece como pendente)" e "e o 2º turno (P12), listado em `incompletas`" **só depois** de recarregar 2026
+(`python -m loader.ano 2026`) e conferir `respostas/conferencia_2026.txt`: o código da API (`api/app.py`) ainda trata o
+2º turno de 2026 como "não publicado" (comentários e a exclusão de governador e presidente em 2026).
+
+### `README.md`, linha da tabela de fontes (Câmara) e `/api/segundo-turno`
+
+- Fonte da Câmara: o texto "o ano corrente é baixado de novo a cada execução" passa a ser verdadeiro (antes, sem
+  `--atualizar`, o crawler pulava a fonte inteira quando os arquivos já existiam). Agora é uma vez por dia.
+- `GET /api/segundo-turno`: "todos os 2º turnos de 2018 a 2024" vira "de 2018 a 2026" depois da recarga acima.
+
+---
+
+## F. Integração das questões 3, 5 e 6 e a eleição de 2026 (09/11/2026)
+
+> Registro de tudo o que foi feito na branch `frankenstein-q3-q5-q6` e o que ficou pendente. **Nada daqui foi
+> aplicado ao `README.md`, `DESIGN.md`, `PRODUCT.md` ou `design/PROMPT.md` além do que o próprio merge trouxe**
+> (listado em F.2). O texto proposto para o resto está em F.5.
+
+### F.1 Como a branch foi montada
+
+O Victor tinha a interface completa em `origin/feat/pergunta-3` (a mesma de `feat/turnos-tema-personagem`), com 17
+commits que nunca entraram na `main`; a `main` tinha a Q6 (PR #16). A Q5 estava só em `feat/votodelegenda` (Felipe) e a Q3
+do Saleh só foi enviada em 09/11/2026, como um commit (`0f2f73e`) na própria `feat/pergunta-3`.
+
+| Passo | Commit | O que entrou |
+|---|---|---|
+| Base | `8e363b7` (`origin/feat/pergunta-3`) | interface do Victor: tour, modo aula, "Ouvir", político contra político, 2º turno (Q12), colonial (Q11), 2026, gênero (migrações 015 a 019) |
+| Merge da `main` | `8bd6652` | Q6 (`/idade`, migração `015_perfil_etario`, script e resposta) |
+| Merge de `origin/feat/votodelegenda` | `da84e3d` | Q5 (`/cadeira/legenda`, `/api/legenda`, `scripts/05_votos_legenda.py`) |
+| Merge de `origin/feat/pergunta-3` (Saleh) | `d88b94c` | Q3 (`/indices`, `/api/indices`, migração `020_ifdm`, `loader/ifdm.py`, `loader/comparecimento.py`, `crawler/logos.py`) |
+
+A branch **não tem upstream** (de propósito, para um `git push` não cair na branch do Victor). Nada foi enviado ao GitHub.
+
+Conflitos resolvidos: `README.md`, `web/src/api.ts`, `web/src/componentes/Moldura.tsx`, `web/src/paginas/Metodologia.tsx`,
+`web/src/router.tsx`, `web/src/atlas/Boletim.tsx` e `loader/carga.py` (Q6 + Victor); os mesmos mais a Q5 e a Q3 depois.
+Quase todos eram aditivos (rotas, itens de menu, tipos). Dois não eram:
+
+- **Boletim do município:** ficou a versão da Q6 (galeria dos prefeitos e idade), que já traz como reserva a lista simples
+  de prefeitos do Victor.
+- **`loader/carga.py`:** ficou a correção de Abaeté do Victor (`ON CONFLICT ... DO UPDATE ... WHERE cd_ibge IS NULL`)
+  com o comentário da `main`.
+
+### F.2 O que os merges mudaram no `README.md` (para você conferir)
+
+O README da `main` (reorganizado na Q6) foi a base; o que o Victor tinha acrescentado foi reaplicado por cima:
+
+1. Introdução: "E.P. = 2018, 2020, 2022, 2024 e 2026, este só com o que o TSE já publicou".
+2. Tabela do crawler: `--carreira-ate 2026` (agora "último ano da P10, padrão 2026").
+3. P7: a onda 2022 vale também para 2026 (estendida por quatro anos); comando `svd_camara.py --nome eleicao_2026`.
+4. Seções novas "Exploração colonial (questão extra)" e "O que muda no 2º turno (questão extra 12)", antes da P10.
+5. Tabela da API: `turno=` em `/api/ufs` e `/api/municipios/{ibge}`, `/api/municipios/{ibge}/zonas`, `/api/politicos/{id}/raio-x`,
+   `/api/politicos/{id}/visual`, `/api/segundo-turno` (e `/{id}`), `/api/cadeira/nao-eleitos`; `/api/escola` com 2026.
+6. Tabela de telas: "linha do tempo 2018-2026" e a linha "O que muda no 2º turno".
+7. Árvore de `dados/` (`colonial/`), linha "Extra" de pergunta -> dados, fonte "Exploração colonial".
+8. Seção "A eleição de 2026 (dados parciais)", antes de "Espaço em disco".
+9. Tabela de migrações: linhas `015_genero` a `019_politico_busca` (o Victor não as documentou) e `020_ifdm`.
+10. Da Q3 do Saleh: o bloco "A página de índices (`/indices`) e o viés político (P3)", dentro da seção P3 (IFDM, planilha
+    manual da Firjan, `loader.ifdm`, `loader.comparecimento`, `crawler --logos`).
+11. Da Q5 do Felipe: a linha 5 das tabelas "Pergunta -> resposta -> tela" e a seção P5 (vieram do merge, sem edição minha).
+
+### F.3 Texto proposto para o `README.md` (não aplicado)
+
+**Tabela "Pergunta -> resposta -> tela", linha 3** (hoje: `não há` / `Indicadores no boletim do município`):
+
+```markdown
+| 3 | Índices do município x eleitos e partidos mais vitoriosos | `/api/indices` (sem script de resposta em texto) | `/indices` (dispersão do viés contra o IFDM e outros índices, desempenho municipal dos partidos) e indicadores no boletim do município / não tem |
+```
+
+**Seção "P3"**: o primeiro item ("Sem script de resposta...") passa a citar a página `/indices`; o bloco do Saleh já está
+logo abaixo dela.
+
+**Tabela da API** (os três endpoints do Saleh não estão documentados; parâmetros conferir em `api/app.py:1373`, `1498`, `749`):
+
+```markdown
+| `GET /api/indices?uf=` | P3: viés de cada município nas eleições de 2018 a 2024 com IFDM, IDHM 2010, PIB per capita, eleitores ÷ população e isentos, e o desvio padrão do viés nas eleições municipais |
+| `GET /api/indices/partidos?uf=&ano=` | P3: desempenho municipal dos partidos nas eleições municipais de 2012 a 2024, por faixa de cada índice |
+| `GET /api/partidos/logos` | Sigla -> URL do logo, de onde veio e a licença (`python -m crawler --logos`); `/api/partidos/logos/{arquivo}` serve o arquivo |
+```
+
+**Tabela de telas**: acrescentar `/indices` (P3) e `/cadeira/legenda` (P5, já na tabela do Felipe).
+
+**Seção "A eleição de 2026"** (conferido em 09/11/2026: o TSE já publicou o 2º turno de presidente e governador, e o banco
+está carregado; ver `respostas/conferencia_2026.txt`):
+
+```markdown
+O TSE publica a eleição aos poucos. Em 09/11/2026 já havia candidaturas, bens, os dois turnos (votos por zona,
+detalhe e comparecimento por escolaridade) e a prestação de contas parcial; as contas finais, não.
+```
+
+e, na lista abaixo dela, trocar "quem foi a um 2º turno ainda não publicado..." e "o 2º turno (P12), listado em
+`incompletas`" **depois** de ajustar a API (F.4, item 1).
+
+**Fonte da Câmara**: "o ano corrente é baixado de novo a cada execução" passa a ser verdade (antes, sem `--atualizar`,
+o crawler pulava a fonte quando os arquivos já existiam; agora refaz uma vez por dia).
+
+**Para reproduzir / dois Dockers** (sugestão de nota): no Linux com Docker do sistema e Docker Desktop, os dois publicam a
+`127.0.0.1:5432` e têm volumes separados com o mesmo nome. Conferir `docker context ls` antes de `docker compose up`, nunca
+usar `down -v` sem saber o engine, e lembrar que o DBeaver conecta no engine que ganhou a porta.
+
+### F.4 O que ainda precisa de decisão ou de código
+
+1. **API ainda trata o 2º turno de 2026 como não publicado** (o banco já tem os dados: presidente, 12.212 linhas; 6 governos).
+   Trechos: `api/app.py:54` (`ANOS`), `964`, `1012`, `1204` (grupo "aguardando"), `1683`, `2009`, `2353` e `2590`
+   (`AND NOT (e.ano = 2026 AND e.cod_cargo IN (1, 3))`). Enquanto não forem revisados, presidente e governador de 2026
+   ficam fora de algumas telas. Os testes de API e os e2e não foram rodados (faltam banco de testes e `pytest` na `.venv`).
+2. **Menu com 10 itens** (Mapa, Urna, Cadeira, Escola, Idade, Patrimônio, Reeleição, Índices, 2º turno, Metodologia):
+   conferir a 360px. O `DESIGN.md` ("Navegação") diz "sete itens"; a seção 3 deste arquivo já propunha "oito" (com Idade).
+   Com 2º turno e Índices o texto proposto passa a ser **dez itens** (e "para os dez caberem em 360px").
+3. **Q3 sem dados no banco local**: falta aplicar a `020_ifdm` (`docker compose run --rm migracoes`), baixar à mão a planilha
+   do IFDM da Firjan (`dados/firjan/`) e rodar `loader.ifdm`; baixar `--perguntas 3 --fontes tse --anos 2012 2016` e rodar
+   `loader.comparecimento 2012 2016`; baixar os logos (`crawler --logos`). Passos no README do Saleh (F.1, item 10).
+4. **Gênero dos políticos quase todo vazio** (`politico.ds_genero`): depois da carga de 2026 só 20.875 de 2.320.919 estão
+   preenchidos (os candidatos de 2026). Os mais antigos vêm de `python -m loader.partidos`, que roda `carga.genero_dos_politicos`
+   sobre as candidaturas já carregadas (`loader/partidos.py:39`). Até lá o bonequinho do "político contra político" fica sem gênero.
+5. **Q3 e Q8 sem `scripts/NN_*.py` e `respostas/NN_*.txt`**, como as outras questões; e **sem seção de Metodologia** a Q8
+   (a da Q3 veio do Saleh).
+6. **Migrações:** há dois arquivos `015` (`015_genero` e `015_perfil_etario`). O compose registra por nome de arquivo em
+   `schema_migrations`, então convivem; não renumerar, porque quem já aplicou a `015_perfil_etario` a reaplicaria.
+   Os textos que dizem "migração 015" (`loader/carga.py:356` e `:374`, `loader/perfil_etario.py`) ficam ambíguos.
+7. **Banco: dois engines.** O `127.0.0.1:5432` respondia o Docker do sistema (vazio, volume antigo com migrações 006 a 008
+   de antes da reescrita do viés), e os dados estavam no Docker Desktop. Resolvido em 09/11/2026 passando a porta para o
+   Desktop; o container do sistema não foi removido.
+
+### F.5 Código alterado fora dos merges (sem commit até a mensagem abaixo)
+
+| Arquivo | Mudança |
+|---|---|
+| `crawler/__main__.py` | A Câmara deixa de ser pulada quando os arquivos existem: o ano corrente é rebaixado uma vez por dia (`_externo_em_disco`) |
+| `crawler/catalogo.py` | Comentários e `ULTIMO_ANO_COM_RESULTADO`: 2026 com os dois turnos |
+| `loader/carga.py` | `copiar` descarta o byte NUL (`\x00`) antes do `COPY`: o TSE publicou em 2026 uma despesa com NUL no meio do texto (linha 637.467 de 1.773.202), e o PostgreSQL recusa; os arquivos de 2018 a 2024 não têm nenhum |
+| `respostas/conferencia_2026.txt` | Regenerado depois da carga de 2026 com o 2º turno (27 governadores, presidente eleito, 12.212 linhas de votos do 2º turno do presidente) |
+
+### F.6 SVD de 2026
+
+`banco/referencia/svd/svd_eleicao_2026.csv` (22 partidos, 643 deputados, 1.123 votações; janela 2023-02-01 a 2026-10-03;
+Spearman +0,646 contra o artigo e -0,829 contra o governo, o mesmo sinal invertido de 2024) foi calculado pelo Victor e
+**reproduzido aqui com saída idêntica**, antes e depois de atualizar a Câmara em 09/11. Não há o que recalcular. O resultado
+chega ao banco por `python -m loader.vies`.

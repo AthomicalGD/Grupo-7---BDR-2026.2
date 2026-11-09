@@ -6,13 +6,14 @@ além disso.
 """
 from dataclasses import dataclass
 
-# 2026 entra com o que o TSE já publicou (27/10/2026): candidaturas, bens, vagas e a votação do 1º turno completas;
-# o 2º turno (25/10), a situação final de quem foi a ele e a prestação de contas final ainda faltam. O crawler baixa
-# de novo quando o arquivo muda no CDN (Last-Modified), então rodar outra vez traz as atualizações.
+# 2026 entra com o que o TSE já publicou (conferido em 09/11/2026): candidaturas, bens, vagas e a votação dos dois
+# turnos (presidente e governador têm o 2º turno, de 25/10, e a situação final de quem foi a ele). A prestação de
+# contas continua parcial. O crawler baixa de novo quando o arquivo muda no CDN (Last-Modified), então rodar
+# `python -m crawler --anos 2026 --atualizar` traz as atualizações que o TSE ainda fizer.
 EP = (2018, 2020, 2022, 2024, 2026)  # Escopo Padrão
 ANOS_P4 = (2022, 2024, 2026)         # escopo da pergunta 4
 PRIMEIRO_ANO_CANDIDATOS = 1994       # 1ª eleição com dados por candidato no TSE
-ULTIMO_ANO_COM_RESULTADO = 2026      # 2026 com o resultado do 1º turno (o 2º ainda não foi publicado)
+ULTIMO_ANO_COM_RESULTADO = 2026      # 2026 com os dois turnos (prestação de contas ainda parcial)
 CARREIRA = "carreira"                # marcador: de 1994 até --carreira-ate, de 2 em 2 anos
 
 PERGUNTAS = {

@@ -16,11 +16,11 @@ Conferência da eleição de 2026 no banco
    DEPUTADO DISTRITAL   vagas    24  eleitos    24  disputas    1
    DEPUTADO ESTADUAL    vagas  1035  eleitos  1035  disputas   26
    DEPUTADO FEDERAL     vagas   513  eleitos   513  disputas   27
-   GOVERNADOR           vagas    27  eleitos    21  disputas   27   <- faltam 6
-   PRESIDENTE           vagas     1  eleitos     0  disputas    1   <- faltam 1
+   GOVERNADOR           vagas    27  eleitos    27  disputas   27
+   PRESIDENTE           vagas     1  eleitos     1  disputas    1
    SENADOR              vagas    54  eleitos    54  disputas   27
-   VICE-GOVERNADOR      vagas    27  eleitos    21  disputas   27   <- faltam 6
-   VICE-PRESIDENTE      vagas     1  eleitos     0  disputas    1   <- faltam 1
+   VICE-GOVERNADOR      vagas    27  eleitos    27  disputas   27
+   VICE-PRESIDENTE      vagas     1  eleitos     1  disputas    1
 
 3. Candidaturas sem situação final (#NULO: indeferidas, renunciadas ou pendentes)
    DEPUTADO ESTADUAL       518 candidaturas;     0 com votos (0 votos)
@@ -41,13 +41,13 @@ Conferência da eleição de 2026 no banco
 5. Candidatos de 2026 que já estavam no banco: 14,784 de 20,989 (70.4%)
 
 6. Disputas que foram ao 2º turno
-   GOVERNADOR   AC  finalistas 2; linhas de votos do 2º turno no banco: 0
-   GOVERNADOR   AM  finalistas 2; linhas de votos do 2º turno no banco: 0
-   GOVERNADOR   DF  finalistas 2; linhas de votos do 2º turno no banco: 0
-   GOVERNADOR   ES  finalistas 2; linhas de votos do 2º turno no banco: 0
-   GOVERNADOR   RN  finalistas 2; linhas de votos do 2º turno no banco: 0
-   GOVERNADOR   TO  finalistas 2; linhas de votos do 2º turno no banco: 0
-   PRESIDENTE   BR  finalistas 2; linhas de votos do 2º turno no banco: 0
+   GOVERNADOR   AC  finalistas 2; linhas de votos do 2º turno no banco: 46
+   GOVERNADOR   AM  finalistas 2; linhas de votos do 2º turno no banco: 148
+   GOVERNADOR   DF  finalistas 2; linhas de votos do 2º turno no banco: 38
+   GOVERNADOR   ES  finalistas 2; linhas de votos do 2º turno no banco: 170
+   GOVERNADOR   RN  finalistas 2; linhas de votos do 2º turno no banco: 344
+   GOVERNADOR   TO  finalistas 2; linhas de votos do 2º turno no banco: 280
+   PRESIDENTE   BR  finalistas 2; linhas de votos do 2º turno no banco: 12,212
    VICE-GOVERNADOR AC  finalistas 2; linhas de votos do 2º turno no banco: 0
    VICE-GOVERNADOR AM  finalistas 2; linhas de votos do 2º turno no banco: 0
    VICE-GOVERNADOR DF  finalistas 2; linhas de votos do 2º turno no banco: 0

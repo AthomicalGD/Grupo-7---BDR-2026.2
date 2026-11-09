@@ -56,9 +56,9 @@ def registrar(cur, uf: str, resumo: dict) -> None:
 # ───────── Staging ─────────
 
 def copiar(cur, tabela: str, df: pd.DataFrame) -> None:
-    buf = io.StringIO()
-    df.to_csv(buf, index=False, header=False)
-    buf.seek(0)
+    # O PostgreSQL não aceita o byte NUL em texto. O TSE publicou, em 2026, uma despesa com \x00 no meio
+    # da descrição ("estrat\x00égica"; 1 linha em 1,7 milhão); descartar o byte preserva o resto do texto.
+    buf = io.StringIO(df.to_csv(index=False, header=False).replace("\x00", ""))
     cur.copy_expert(f"COPY {tabela} ({', '.join(df.columns)}) FROM STDIN WITH (FORMAT csv)", buf)
 
 

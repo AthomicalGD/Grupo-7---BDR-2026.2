@@ -2,6 +2,7 @@
 import argparse
 import shutil
 import sys
+from datetime import date
 from pathlib import Path
 
 from . import camara, dataverse, fotos, ibge, ipea, logos, tse
@@ -67,8 +68,15 @@ def _rotulo_perguntas(perguntas) -> str:
 
 
 def _externo_em_disco(manifesto: Manifesto, raiz: Path, chave: str) -> bool:
-    arquivos = manifesto.get(chave).get("arquivos", [])
-    return bool(arquivos) and all((raiz / a).exists() for a in arquivos)
+    info = manifesto.get(chave)
+    arquivos = info.get("arquivos", [])
+    if not (arquivos and all((raiz / a).exists() for a in arquivos)):
+        return False
+    # A Câmara ainda atualiza o ano corrente (camara.coletar só baixa de novo esse): uma vez por dia basta.
+    # Sem isso, o ano corrente ficava parado no dia da primeira carga, a menos que se usasse --atualizar.
+    if ITENS[chave].fonte == "camara" and info.get("atualizado_em", "")[:10] != date.today().isoformat():
+        return False
+    return True
 
 
 def _mostrar_plano(tarefas, externos, externos_pendentes, plano, perguntas) -> None:
