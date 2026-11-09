@@ -1532,6 +1532,131 @@ def cadeira(ano: int, cargo: int, ufs: tuple[str, ...], municipio: int | None) -
     }
 
 
+# ───────── Eleitos pelo sistema proporcional (P5) ─────────
+
+CARGOS_P5 = {6: "Deputado federal", 7: "Deputado estadual", 13: "Vereador"}
+ANOS_P5 = (2018, 2020, 2022, 2024, 2026)
+COMBINACOES_P5 = {2018: {6, 7}, 2020: {13}, 2022: {6, 7}, 2024: {13}, 2026: {6, 7}}
+SITUACOES_P5 = {"qp": "ELEITO POR QP", "media": "ELEITO POR MÉDIA"}
+
+SQL_LEGENDA = """
+SELECT e.ano, CASE e.cod_cargo WHEN 8 THEN 7 ELSE e.cod_cargo END AS cod_cargo,
+       pa.sigla, max(pa.nome) AS nome, ma.ds_situacao, count(*) AS eleitos,
+       array_agg(DISTINCT COALESCE(u.sigla, um.sigla)) AS ufs
+FROM mandato ma
+JOIN politico_eleicao pe ON pe.id_politico_eleicao = ma.id_politico_eleicao
+JOIN eleicao e           ON e.id_eleicao = ma.id_eleicao
+JOIN partido pa          ON pa.id_partido = ma.id_partido
+LEFT JOIN municipio m    ON m.cd_municipio = e.cd_municipio
+LEFT JOIN uf um          ON um.cd_ibge = m.cd_uf
+LEFT JOIN uf u           ON u.cd_ibge = e.cd_uf
+WHERE e.ano = ANY(%(anos)s) AND e.tipo = 2 AND e.turno = 1
+  AND e.cod_cargo = ANY(ARRAY[6, 7, 8, 13])
+  AND ma.ds_situacao IN ('ELEITO POR QP', 'ELEITO POR MÉDIA')
+  AND COALESCE(u.sigla, um.sigla) = ANY(%(ufs)s)
+GROUP BY e.ano, 2, pa.sigla, ma.ds_situacao
+"""
+
+SQL_ELEITOS_LEGENDA = """
+SELECT pe.id_politico AS id, po.nome, pe.nm_urna AS nome_urna, pe.nr_candidato AS numero,
+       pa.sigla AS partido, ma.ds_situacao AS situacao,
+       COALESCE(u.sigla, um.sigla) AS uf,
+       COALESCE(m.nm_municipio || ' (' || um.sigla || ')', u.sigla, um.sigla) AS local,
+       e.cd_municipio, pe.sq_candidato AS sq
+FROM mandato ma
+JOIN politico_eleicao pe ON pe.id_politico_eleicao = ma.id_politico_eleicao
+JOIN politico po         ON po.id_politico = pe.id_politico
+JOIN eleicao e           ON e.id_eleicao = ma.id_eleicao
+JOIN partido pa          ON pa.id_partido = ma.id_partido
+LEFT JOIN municipio m    ON m.cd_municipio = e.cd_municipio
+LEFT JOIN uf um          ON um.cd_ibge = m.cd_uf
+LEFT JOIN uf u           ON u.cd_ibge = e.cd_uf
+WHERE e.ano = %(ano)s AND e.tipo = 2 AND e.turno = 1
+  AND e.cod_cargo = ANY(CASE %(cargo)s::int WHEN 7 THEN ARRAY[7, 8] ELSE ARRAY[%(cargo)s::int] END)
+  AND pa.sigla = %(partido)s AND ma.ds_situacao = %(situacao)s
+  AND COALESCE(u.sigla, um.sigla) = ANY(%(ufs)s)
+ORDER BY po.nome, pe.id_politico_eleicao
+"""
+
+
+def _ufs_p5(uf: str = "") -> tuple[str, ...]:
+    disponiveis = carregadas() - {"BR"}
+    if uf:
+        sigla = uf_de(uf)["sigla"]
+        if sigla not in disponiveis:
+            raise HTTPException(404, f"UF sem dados: {sigla}")
+        return (sigla,)
+    if not disponiveis:
+        raise HTTPException(404, "Nenhuma UF carregada")
+    return tuple(sorted(disponiveis))
+
+
+@lru_cache(maxsize=16)
+@em_disco
+def resumo_legenda(ufs: tuple[str, ...]) -> dict:
+    linhas = consultar(SQL_LEGENDA, {"anos": list(ANOS_P5), "ufs": list(ufs)})
+    recortes = {}
+    for r in linhas:
+        chave = (r["ano"], r["cod_cargo"])
+        recorte = recortes.setdefault(chave, {"ano": r["ano"],
+            "cargo": {"cod": r["cod_cargo"], "nome": CARGOS_P5[r["cod_cargo"]]},
+            "ufs_com_dados": set(), "partidos": {}})
+        partido = recorte["partidos"].setdefault(r["sigla"], {
+            "sigla": r["sigla"], "nome": r["nome"], "qp": 0, "media": 0, "total": 0,
+        })
+        coluna = "qp" if r["ds_situacao"] == "ELEITO POR QP" else "media"
+        partido[coluna] += r["eleitos"]
+        partido["total"] += r["eleitos"]
+        recorte["ufs_com_dados"].update(r["ufs"])
+    saida = []
+    for _, r in sorted(recortes.items()):
+        partidos = sorted(r["partidos"].values(), key=lambda p: (-p["total"], p["sigla"]))
+        saida.append({"ano": r["ano"], "cargo": r["cargo"], "ufs_com_dados": sorted(r["ufs_com_dados"]),
+                      "total": {"qp": sum(p["qp"] for p in partidos),
+                                "media": sum(p["media"] for p in partidos),
+                                "eleitos": sum(p["total"] for p in partidos)},
+                      "partidos": partidos})
+    return {"ufs": list(ufs), "recortes": saida}
+
+
+@app.get("/api/legenda")
+def legenda(uf: str = ""):
+    return {"uf": uf.upper() or None, **resumo_legenda(_ufs_p5(uf))}
+
+
+@lru_cache(maxsize=64)
+@em_disco
+def candidatos_legenda(partido: str, ano: int, cargo: int, ufs: tuple[str, ...], situacao: str) -> list[dict]:
+    linhas = consultar(SQL_ELEITOS_LEGENDA, {"ano": ano, "cargo": cargo, "partido": partido,
+                                             "ufs": list(ufs), "situacao": SITUACOES_P5[situacao]})
+    for r in linhas:
+        r["busca"] = sem_acento(f"{r['nome']} {r['nome_urna'] or ''}")
+    return linhas
+
+
+@app.get("/api/legenda/{partido}/eleitos")
+def eleitos_legenda(partido: str, ano: int, cargo: int, uf: str = "", situacao: str = "qp", q: str = "",
+                    desde: int = Query(0, ge=0), limite: int = Query(6, ge=1, le=60)):
+    if ano not in COMBINACOES_P5 or cargo not in COMBINACOES_P5[ano]:
+        raise HTTPException(404, f"Não há resultado proporcional de {CARGOS_P5.get(cargo, cargo)} em {ano}")
+    if situacao not in SITUACOES_P5:
+        raise HTTPException(422, "situacao: qp ou media")
+    ufs = _ufs_p5(uf)
+    sigla = partido.strip().upper()
+    lista = candidatos_legenda(sigla, ano, cargo, ufs, situacao)
+    if not lista:
+        raise HTTPException(404, f"Nenhum eleito de {sigla} neste recorte")
+    termo = sem_acento(q.strip())
+    achados = [c for c in lista if termo in c["busca"]] if termo else lista
+    pagina = []
+    for c in achados[desde:desde + limite]:
+        pagina.append({"id": c["id"], "nome": c["nome"], "nome_urna": c["nome_urna"], "numero": c["numero"],
+                       "partido": c["partido"], "situacao": c["situacao"], "uf": c["uf"], "local": c["local"],
+                       "foto": foto_url(ano, c["uf"], c["sq"], c["cd_municipio"])})
+    return {"ano": ano, "cargo": cargo, "partido": sigla, "situacao": SITUACOES_P5[situacao],
+            "total": len(lista), "achados": len(achados), "desde": desde, "candidatos": pagina}
+
+
 # ───────── Patrimônio declarado (P2) ─────────
 # A ausência de uma linha em `bem` não vira zero: o front mostra os dois casos separados.
 CARGOS_P2 = {1: "Presidente", 3: "Governador", 5: "Senador", 6: "Deputado federal",

@@ -598,6 +598,55 @@ export interface SegundoTurno {
 export interface LugarSegundoTurno { codigo: string; nome: string; a1: number; b1: number; outros1: number; a2: number; b2: number; virou: boolean }
 export interface SegundoTurnoLugares { disputa: SegundoTurno; nivel: 'uf' | 'municipio' | 'zona'; lugares: LugarSegundoTurno[] }
 
+// ───────── P5: candidaturas eleitas pelo sistema proporcional ─────────
+
+export const ANOS_LEGENDA = [2018, 2020, 2022, 2024, 2026] as const
+export type SituacaoLegenda = 'qp' | 'media'
+
+export interface PartidoLegenda {
+  sigla: string
+  nome: string | null
+  qp: number
+  media: number
+  total: number
+}
+
+export interface RecorteLegenda {
+  ano: number
+  cargo: { cod: 6 | 7 | 13; nome: string }
+  ufs_com_dados: string[]
+  total: { qp: number; media: number; eleitos: number }
+  partidos: PartidoLegenda[]
+}
+
+export interface ResumoLegenda {
+  uf: string | null
+  ufs: string[]
+  recortes: RecorteLegenda[]
+}
+
+export interface EleitosLegenda {
+  ano: number
+  cargo: number
+  partido: string
+  situacao: 'ELEITO POR QP' | 'ELEITO POR MÉDIA'
+  total: number
+  achados: number
+  desde: number
+  candidatos: {
+    id: number
+    nome: string
+    nome_urna: string | null
+    numero: number | null
+    partido: string
+    situacao: 'ELEITO POR QP' | 'ELEITO POR MÉDIA'
+    uf: string
+    local: string
+    foto: string | null
+  }[]
+}
+
+
 // ───────── P6: idade do município, alternância de poder e "jovem vota no jovem?" ─────────
 
 /** Um efeito em anos (ou pontos) a cada +5 anos de idade de quem votou, com o IC de 95%. */
@@ -784,6 +833,24 @@ export const consultas = {
         return get<PoliticoBusca[]>(`/api/politicos?${p}`, signal)
       },
       enabled: q.trim().length >= 3 || filtrando(f),
+      ...sempre,
+    }),
+  legenda: (uf = '') =>
+    queryOptions({
+      queryKey: ['legenda', uf],
+      queryFn: ({ signal }) => get<ResumoLegenda>(`/api/legenda${uf ? `?uf=${encodeURIComponent(uf)}` : ''}`, signal),
+      ...sempre,
+    }),
+  eleitosLegenda: (partido: string, ano: number, cargo: number, uf: string, situacao: SituacaoLegenda,
+                   q: string, limite: number) =>
+    queryOptions({
+      queryKey: ['eleitos-legenda', partido, ano, cargo, uf, situacao, q, limite],
+      queryFn: ({ signal }) => {
+        const p = new URLSearchParams({ ano: String(ano), cargo: String(cargo), situacao, limite: String(limite) })
+        if (uf) p.set('uf', uf)
+        if (q) p.set('q', q)
+        return get<EleitosLegenda>(`/api/legenda/${encodeURIComponent(partido)}/eleitos?${p}`, signal)
+      },
       ...sempre,
     }),
   partidos: () =>

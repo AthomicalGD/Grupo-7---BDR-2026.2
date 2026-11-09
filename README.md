@@ -192,7 +192,7 @@ python -m loader.remover AC RS
 | 2 | Qual a taxa de sucesso eleitoral por patrimônio declarado? | `scripts/02_patrimonio.py` -> `respostas/02_patrimonio.txt` | `/patrimonio` / não tem |
 | 3 | Índices do município x eleitos e partidos mais vitoriosos | não há | Indicadores no boletim do município |
 | 4 | Escolaridade do candidato x escolaridade dos votantes | `scripts/04_escolaridade.py` -> `respostas/04_escolaridade.txt` | `/escola` / `/escola` |
-| 5 | Quantos candidatos de dado partido foram eleitos por votos de legenda? | não há | não tem |
+| 5 | Quantos candidatos de dado partido foram eleitos pelo sistema proporcional? | `scripts/05_votos_legenda.py` -> `respostas/05_votos_legenda.txt` | `/cadeira/legenda` / não tem |
 | 6 | Idade média do município x alternância de poder e idade dos eleitos | `scripts/06_idade_alternancia.py` -> `respostas/06_idade_alternancia.txt` e `06_passagens_prefeitura.csv` | `/idade` e boletim do município (galeria dos prefeitos e idade) / não tem |
 | 7 | Viés político de um município ou região na linha do tempo | `scripts/07_vies_politico_municipio.py` -> `respostas/07_vies_politico_municipio.txt` | `/`, `/uf/{sigla}` e boletim do município / `/`, `/uf/{sigla}` e município |
 | 8 | Sucesso de candidatos dependentes de repasses públicos x financiados por outras fontes | não há | Receitas por fonte (fundos públicos) em `/cadeira` |
@@ -270,12 +270,13 @@ comum (conexão, UFs carregadas, gravação em `respostas/`) ficam em `scripts/c
 - A escolaridade do eleitor no TSE é a declarada no alistamento e raramente é atualizada, então subestima a
   escolaridade real. O Censo 2022 (SIDRA 10061, pessoas de 18+ anos) serve de controle.
 
-### P5. Quantos candidatos de dado partido foram eleitos por votos de legenda?
+### P5. Quantos candidatos de dado partido foram eleitos pelo sistema proporcional?
 
-- **Sem script de resposta nem tela.** Os dados estão no banco: a situação de cada candidatura (`ELEITO POR QP`,
-  `ELEITO POR MÉDIA`), os votos nominais e de legenda por partido e zona (`votacao_partido_munzona`) e as vagas. A API
-  já devolve os votos de legenda de cada partido na composição do viés de um estado (`/api/ufs/{sigla}/composicao`),
-  mas o site não os mostra como resposta da P5.
+- **Resposta:** `python scripts/05_votos_legenda.py` -> `respostas/05_votos_legenda.txt`; conta `ELEITO POR QP` e
+  `ELEITO POR MÉDIA`, mostra as duas categorias e lista os candidatos por partido de filiação.
+- **No site:** `/cadeira/legenda`, com filtros de ano, cargo e estado; barras por partido e abertura da lista de eleitos.
+- A filiação do eleito não significa que os votos daquele partido, isoladamente, garantiram a cadeira: em 2018,
+  os votos eram somados por coligação proporcional; em 2022, 2024 e 2026, por federação.
 
 ### P6. Idade média do município x alternância de poder e idade dos eleitos
 
@@ -478,6 +479,8 @@ python -m uvicorn api.app:app --port 8000
 | `GET /api/fotos/{ano}/{uf}/{sq}` | Foto da candidatura, lida do zip do TSE (candidaturas, busca e prefeitos já trazem a URL em `foto`) |
 | `GET /api/cadeira?ano=&cargo=&uf=&municipio=` | P1: custo da cadeira (gasto médio dos eleitos) e gasto da disputa por cadeira (gasto de todos os candidatos ÷ eleitos), cada eleito com gasto e votos, chance de vitória por faixa de gasto, preço por partido, despesas por tipo, receitas por fonte e o fator do IPCA |
 | `GET /api/cadeira/nao-eleitos?ano=&cargo=&uf=&municipio=` | P1: quem disputou e não se elegeu, do maior ao menor gasto (a galeria do plenário) |
+| `GET /api/legenda?uf=` | P5: eleitos por partido e por `ELEITO POR QP` / `ELEITO POR MÉDIA`, por eleição e cargo |
+| `GET /api/legenda/{partido}/eleitos?ano=&cargo=&uf=&situacao=&q=&desde=&limite=` | P5: candidatos eleitos pelo partido, com a classificação TSE, busca e paginação |
 | `GET /api/patrimonio?ano=&cargo=&uf=` | P2: candidatos e eleitos por faixa de patrimônio declarado (sem bens, R$ 0 e quartis, com limites e o candidato do meio) e a fila dos que declararam bens em 100 passos, como em `respostas/02_patrimonio.txt`; Presidente sempre nacional |
 | `GET /api/patrimonio/panorama?uf=` | P2: a taxa de cada faixa em todos os cargos e anos de uma vez, e em quantas disputas a faixa de mais bens supera a de menos |
 | `GET /api/municipios/{ibge}?cargo=&turno=` | P7, P3 e P1 no boletim: viés e alinhamento (do município e da UF), votos por partido com o viés de cada eleição, indicadores (PIB per capita, IDHM, população, eleitores ÷ população, isentos), comparecimento, prefeitos e custo da cadeira de prefeito e vereador (2020 e 2024) |

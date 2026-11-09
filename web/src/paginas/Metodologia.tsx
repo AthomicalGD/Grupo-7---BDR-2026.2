@@ -12,6 +12,7 @@ import p1Gasto from './consultas/p1_gasto.sql?raw'
 import p4Chance from './consultas/p4_chance.sql?raw'
 import p4Lugar from './consultas/p4_lugar.sql?raw'
 import p4Votos from './consultas/p4_votos.sql?raw'
+import p5Legenda from './consultas/p5_legenda.sql?raw'
 import p6Idade from './consultas/p6_idade.sql?raw'
 import p6Prefeitos from './consultas/p6_prefeitos.sql?raw'
 import p7Vies from './consultas/p7_vies.sql?raw'
@@ -21,7 +22,7 @@ import p7VotosPartido from './consultas/p7_votos_partido.sql?raw'
 function Secao({ id, titulo, resposta, children }: {
   id: string
   titulo: string
-  resposta?: { para: '/' | '/cadeira' | '/patrimonio' | '/urna' | '/escola' | '/idade' | '/reeleicao' | '/segundo-turno'; rotulo: string }
+  resposta?: { para: '/' | '/cadeira' | '/cadeira/legenda' | '/patrimonio' | '/urna' | '/escola' | '/idade' | '/reeleicao' | '/segundo-turno'; rotulo: string }
   children: ReactNode
 }) {
   return (
@@ -141,6 +142,7 @@ const INDICE = [
   ['m-cadeira', 'P1'],
   ['m-patrimonio', 'P2'],
   ['m-escolaridade', 'P4'],
+  ['m-legenda', 'P5'],
   ['m-idade', 'P6'],
   ['m-vies', 'P7'],
   ['m-carreira', 'P10'],
@@ -335,6 +337,32 @@ export function Metodologia() {
           <Consulta titulo="Chance de ser eleito por grau e cargo" sql={p4Chance} />
           <Consulta titulo="O lugar e quem ele elege (2024)" sql={p4Lugar} />
           <Consulta titulo="O lugar e em quem ele vota (2022)" sql={p4Votos} />
+        </Detalhe>
+      </Secao>
+
+      <Secao id="m-legenda" titulo="Eleitos pelo sistema proporcional (P5)" resposta={{ para: '/cadeira/legenda', rotulo: 'Ver os eleitos por partido' }}>
+        <p>
+          A P5 conta candidaturas classificadas pelo TSE como <b>ELEITO POR QP</b> ou <b>ELEITO POR MÉDIA</b>,
+          por ano, cargo e partido de filiação. A tela mostra as duas classificações separadamente e lista os candidatos de cada partido.
+        </p>
+        <ul className="list-disc space-y-2 pl-5">
+          <li><b>Pelo quociente:</b> eleito na distribuição inicial de cadeiras conquistadas pelo partido ou grupo eleitoral.</li>
+          <li><b>Pelas médias:</b> eleito na distribuição das cadeiras restantes, pelas médias previstas na regra eleitoral.</li>
+          <li><b>Voto de legenda:</b> é somado ao total partidário ou do grupo eleitoral; não é atribuído individualmente a um candidato. Os rótulos oficiais indicam a etapa em que o TSE classificou a eleição.</li>
+          <li><b>Partido mostrado:</b> é o partido de filiação do candidato. Em 2018 as cadeiras foram calculadas com os votos somados da coligação proporcional; em 2022, 2024 e 2026, com os votos somados da federação. Em 2020 não houve coligações proporcionais.</li>
+          <li><b>Escopo:</b> eleições ordinárias de 2018 a 2026. A eleição de 2026 considera os cargos proporcionais do 1º turno e somente os estados com dados carregados.</li>
+        </ul>
+        <Detalhe titulo="De onde vêm os dados">
+          <Origens
+            linhas={[
+              [<>Classificação final (<code>DS_SIT_TOT_TURNO</code>) e filiação partidária</>, ARQ('tse/candidatos/'), <>{ARQ('mandato.ds_situacao')}, {ARQ('partido')}</>],
+              ['Quociente e vagas', ARQ('tse/vagas/'), ARQ('eleicao.quantidade_de_vagas')],
+              ['Votos nominais, de legenda e válidos', <>{ARQ('tse/votacao_candidato_munzona/')} e {ARQ('tse/votacao_partido_munzona/')}</>, <>{ARQ('votacao_candidato_munzona')}, {ARQ('votacao_partido_munzona')}</>],
+            ]}
+          />
+        </Detalhe>
+        <Detalhe titulo="A consulta usada para contar os eleitos">
+          <Consulta titulo="Eleitos por quociente ou por médias, agrupados pelo partido de filiação" sql={p5Legenda} />
         </Detalhe>
       </Secao>
 

@@ -236,6 +236,29 @@ def test_gastos_p9():
     assert cliente.get("/api/gastos?candidatura=-1").status_code == 422
 
 
+def test_legenda_p5():
+    """Os totais e a lista P5 respeitam status, partido, pesquisa e paginação."""
+    consulta_p5 = Path(__file__).parent.parent / "web/src/paginas/consultas/p5_legenda.sql"
+    consultar("EXPLAIN " + consulta_p5.read_text(encoding="utf-8"))
+    leg = get("/api/legenda?uf=PI")
+    deputados = next(r for r in leg["recortes"] if (r["ano"], r["cargo"]["cod"]) == (2022, 6))
+    assert sum(p["qp"] for p in deputados["partidos"]) == deputados["total"]["qp"]
+    assert sum(p["media"] for p in deputados["partidos"]) == deputados["total"]["media"]
+    assert all(p["total"] == p["qp"] + p["media"] for p in deputados["partidos"])
+    pt = next(p for p in deputados["partidos"] if p["sigla"] == "PT")
+    eleitos_pt = get("/api/legenda/PT/eleitos?ano=2022&cargo=6&uf=PI&situacao=qp&limite=2")
+    assert eleitos_pt["total"] == pt["qp"] == 3 and len(eleitos_pt["candidatos"]) == 2
+    assert all(c["situacao"] == "ELEITO POR QP" for c in eleitos_pt["candidatos"])
+    seguinte_pt = get("/api/legenda/PT/eleitos?ano=2022&cargo=6&uf=PI&situacao=qp&desde=2&limite=2")
+    assert {c["id"] for c in seguinte_pt["candidatos"]}.isdisjoint({c["id"] for c in eleitos_pt["candidatos"]})
+    achado_pt = get("/api/legenda/PT/eleitos?ano=2022&cargo=6&uf=PI&situacao=qp&q=rejane dias")
+    assert achado_pt["achados"] == 1 and "REJANE" in achado_pt["candidatos"][0]["nome_urna"]
+    assert not [k for k in chaves(eleitos_pt) if "cpf" in k or "titulo" in k]
+    assert cliente.get("/api/legenda?uf=XX").status_code == 404
+    assert cliente.get("/api/legenda/PT/eleitos?ano=2022&cargo=6&uf=PI&situacao=outro").status_code == 422
+    assert cliente.get("/api/legenda/PT/eleitos?ano=2020&cargo=6&uf=PI").status_code == 404
+
+
 def test_idade_p6():
     """A P6 usa as contas do script 06 e as partes fecham entre si (não depende de quais UFs estão carregadas)."""
     p = cliente.get("/api/idade/perfil?ano=2024").json()

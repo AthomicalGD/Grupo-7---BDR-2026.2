@@ -2,7 +2,7 @@
 // a campanha dele gastou, e no miolo o custo da cadeira (gasto de todos os candidatos ÷ vagas).
 import { Cube, Square } from '@phosphor-icons/react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { useNavigate, useSearch } from '@tanstack/react-router'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { useLembrado } from '../lib/pilha'
 import { CARGOS_P1, consultas, semMunicipal, type Ano, type Cadeira, type UF } from '../api'
@@ -308,6 +308,9 @@ export function CadeiraPagina() {
           Tudo o que os candidatos do partido gastaram, dividido pelas cadeiras que ele levou. A cor é a posição do partido na escala de viés.
         </p>
         <PrecoPartidos partidos={dados.partidos} fator={fator} />
+        <Link to="/cadeira/legenda" className="mt-5 inline-flex items-center gap-2 rounded-xl border border-linha bg-folha px-4 py-3 text-[0.95rem] font-semibold text-acao shadow-sm transition-colors hover:border-acao hover:bg-papel focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-acao">
+          Como os partidos preencheram as cadeiras? <span aria-hidden>→</span>
+        </Link>
       </section>
 
       <section aria-labelledby="dinheiro" className="adiar mx-auto mt-16 max-w-[var(--miolo-max)]">
