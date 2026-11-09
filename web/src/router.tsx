@@ -92,6 +92,25 @@ export interface BuscaLegenda {
   situacao?: SituacaoLegenda
 }
 
+/** Os índices do eixo vertical da P3 (ver indices/indices.ts). */
+export const INDICES_P3 = ['ifdm', 'emprego_renda', 'educacao', 'saude', 'pib_pc', 'eleitores_pop', 'isentos'] as const
+export type IndiceP3 = (typeof INDICES_P3)[number]
+
+export interface BuscaIndices {
+  uf?: string
+  ano?: 2018 | 2020 | 2022 | 2024
+  /** sem ele, o IFDM geral */
+  indice?: IndiceP3
+  /** a eleição municipal da área de desempenho dos partidos; sem ela, 2020 */
+  municipal?: EleicaoMunicipalP3
+  /** o índice dos rankings dos partidos; sem ele, o IFDM geral */
+  ranking?: IndiceP3
+}
+
+/** As eleições municipais com índices dentro das regras de ano (ver api/app.py, desempenho_partidos). */
+export const MUNICIPAIS_P3 = [2012, 2016, 2020, 2024] as const
+export type EleicaoMunicipalP3 = (typeof MUNICIPAIS_P3)[number]
+
 const sim = (v: unknown) => (v === true || v === 'true' ? true : undefined)
 const numero = (v: unknown) => (Number.isFinite(Number(v)) && v !== '' && v != null ? Number(v) : undefined)
 
@@ -210,6 +229,18 @@ const reeleicao = createRoute({
     cargo: [3, 5, 6, 7, 11, 13].includes(Number(s.cargo)) ? Number(s.cargo) : undefined,
   }),
 })
+const indices = createRoute({
+  getParentRoute: () => raiz,
+  path: '/indices',
+  component: lazyRouteComponent(() => import('./indices/IndicesPagina'), 'IndicesPagina'),
+  validateSearch: (s: Record<string, unknown>): BuscaIndices => ({
+    uf: typeof s.uf === 'string' && /^[A-Z]{2}$/.test(s.uf) ? s.uf : undefined,
+    ano: ([2018, 2020, 2022, 2024] as const).find((a) => a === Number(s.ano)),
+    indice: INDICES_P3.find((i) => i === s.indice && i !== 'ifdm'),
+    municipal: MUNICIPAIS_P3.find((a) => a === Number(s.municipal) && a !== 2020),
+    ranking: INDICES_P3.find((i) => i === s.ranking && i !== 'ifdm'),
+  }),
+})
 const politico = createRoute({
   getParentRoute: () => raiz,
   path: '/politico/$id',
@@ -244,7 +275,7 @@ const segundoTurno = createRoute({
   }),
 })
 
-const arvore = raiz.addChildren([atlas.addChildren([inicio, estado, municipio]), urna, cadeira, legenda, escola, idade, patrimonio, reeleicao, segundoTurno, politico, comparar, metodologia])
+const arvore = raiz.addChildren([atlas.addChildren([inicio, estado, municipio]), urna, cadeira, legenda, escola, idade, patrimonio, reeleicao, indices, segundoTurno, politico, comparar, metodologia])
 
 export const router = createRouter({
   routeTree: arvore,
@@ -275,7 +306,7 @@ declare module '@tanstack/react-router' {
 // Baixa o código das páginas no tempo ocioso, uma por vez, depois da primeira tela: trocar de página fica imediato
 // (sem esqueleto nem espera). O 3D não entra aqui: ele é baixado só quando a tela que o usa abre.
 const ocioso = (f: () => void) => ('requestIdleCallback' in window ? window.requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 1500))
-const paginas = [urna, cadeira, legenda, escola, idade, patrimonio, reeleicao, segundoTurno, politico, metodologia]
+const paginas = [urna, cadeira, legenda, escola, idade, patrimonio, reeleicao, indices, segundoTurno, politico, metodologia]
 const proxima = () => {
   const r = paginas.shift()
   const pre = r && (r.options.component as { preload?: () => Promise<void> } | undefined)?.preload

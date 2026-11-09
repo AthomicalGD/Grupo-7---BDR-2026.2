@@ -112,7 +112,8 @@ NECESSIDADES = {
         "candidatos": EP,
         "votacao_candidato_munzona": EP,          # mais votados no município (inclui cargos estaduais/federais)
         "votacao_partido_munzona": EP,            # partidos mais votados no município
-        "detalhe_votacao_munzona": EP,            # aptos, abstenções, brancos e nulos ("isentos")
+        # aptos, abstenções, brancos e nulos ("isentos"); 2012 e 2016 para o desempenho municipal dos partidos
+        "detalhe_votacao_munzona": (2012, 2016, *EP),
         "municipio_tse_ibge": None,               # liga o código TSE ao código IBGE
         "ibge_pib": None,
         "ibge_populacao_estimada": None,
