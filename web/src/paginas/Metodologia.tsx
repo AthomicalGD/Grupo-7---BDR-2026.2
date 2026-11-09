@@ -473,6 +473,7 @@ export function Metodologia() {
         <ul className="list-disc space-y-2 pl-5">
           <li>2018, 2022 e 2026 somam presidente, governador, senado e deputados; 2020 e 2024, prefeito e vereador. Compare anos do mesmo tipo.</li>
           <li>Com os cargos de peso igual, os dois votos para o Senado em 2018 não pesam mais que os outros cargos.</li>
+          <li><b>1º ou 2º turno:</b> no 2º turno o viés usa os votos nominais dos dois finalistas (presidente, governador e prefeito), pelo partido de cada um, com a mesma conta. Só há valor onde houve 2º turno: nos anos municipais, só as cidades com mais de 200 mil eleitores que tiveram 2º turno; o resto fica como <i>sem 2º turno</i>. O 2º turno de 2026 entra quando o TSE publicar os votos.</li>
           <li>Partidos sem viés ficam fora da média (nem no numerador, nem no denominador); cada boletim mostra a parcela desses votos.</li>
           <li>Partido que só mudou de nome tem o mesmo valor; partido criado por fusão depois da onda recebe a média dos componentes (ex.: PRD em 2024 = PTB + Patriota).</li>
         </ul>

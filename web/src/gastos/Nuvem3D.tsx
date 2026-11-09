@@ -16,7 +16,7 @@ const reduzido = () => matchMedia('(prefers-reduced-motion: reduce)').matches
 const ehPropaganda = (s: { propaganda: boolean }) => s.propaganda
 
 function itensDe(d: Gastos): ItemNuvem[] {
-  return d.tipos.map((t) => ({ palavra: t.rotulo, n: t.valor, propaganda: t.propaganda, quantidade: t.quantidade, fornecedores: t.fornecedores }))
+  return d.tipos.map((t) => ({ palavra: t.rotulo, n: t.valor, propaganda: t.propaganda, quantidade: t.quantidade, fornecedores: t.fornecedores, nFornecedores: t.n_fornecedores, origens: t.origens }))
 }
 
 /** O número grande que conta ao aparecer: a parte do gasto que foi para propaganda. */

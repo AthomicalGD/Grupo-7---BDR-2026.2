@@ -22,7 +22,7 @@ export function Degraus({ r, teto, altura = 40, largura = 11, claro = false, ani
           style={{
             width: largura,
             height: Math.max(2, (altura * g.taxa) / teto),
-            background: claro ? '#d2e19a' : COR.eleito,
+            background: claro ? '#86a6dc' : COR.eleito,
             boxShadow: claro ? undefined : `inset 0 -1px 0 ${COR.eleitoBorda}`,
           }}
         />

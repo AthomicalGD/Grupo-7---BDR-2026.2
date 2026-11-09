@@ -2,7 +2,7 @@
 // a diferença de dinheiro apareça do tamanho que é). Mesmo lugar e mesma cor do plano.
 // Em cima de cada coluna, a poltrona do plano: almofada na cor do gasto, encosto e dois braços em tinta.
 // Colunas, almofadas, encostos e braços são InstancedMesh: até ~1.500 cadeiras sem pesar.
-import { ContactShadows, OrbitControls } from '@react-three/drei'
+import { OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { useReducedMotion } from 'motion/react'
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
@@ -11,7 +11,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import type { Assento } from '../api'
 import { CartaoAssento } from './Plenario'
 import { hemiciclo, ordenar, posicionar, type EscalaGasto, type Ordem } from './geometria'
-import { SombraAssentada, useAssentado } from '../relevo/sombra'
+import { SombraAssentada } from '../relevo/sombra'
 
 const R = 10, ALTURA = 5.2
 
@@ -26,8 +26,8 @@ interface Props {
 
 const caixa = new THREE.BoxGeometry(1, 1, 1)
 // cantos arredondados nas peças da poltrona (a coluna fica reta: é a barra do dado)
-const almofada = new RoundedBoxGeometry(1, 1, 1, 2, 0.3)
-const peca = new RoundedBoxGeometry(1, 1, 1, 2, 0.22)
+const almofada = new RoundedBoxGeometry(1, 1, 1, 2, 0.26)
+const peca = new RoundedBoxGeometry(1, 1, 1, 2, 0.18)
 const tmp = new THREE.Object3D()
 const BRANCO = new THREE.Color('#ffffff')
 
@@ -121,23 +121,23 @@ function Bancada({ chave, cadeiras, escala, ordem, aoPassar, aoAbrir }: Omit<Pro
         onPointerOut={() => aoPassar(null)}
         onClick={clicar}
       >
-        <meshStandardMaterial roughness={0.55} metalness={0.02} />
+        <meshLambertMaterial />
       </instancedMesh>
       {/* a almofada também responde ao ponteiro: o índice da instância é o mesmo da coluna */}
       <instancedMesh
         key={`a-${chave}-${lista.length}`} ref={assentos} args={[almofada, undefined, lista.length]} castShadow visible={assentosVisiveis}
         onPointerMove={passar} onPointerOut={() => aoPassar(null)} onClick={clicar}
       >
-        <meshStandardMaterial roughness={0.8} />
+        <meshLambertMaterial />
       </instancedMesh>
-      <instancedMesh key={`e-${chave}-${lista.length}`} ref={encostos} args={[peca, undefined, lista.length]} castShadow visible={assentosVisiveis}>
-        <meshStandardMaterial color="#18202b" roughness={0.6} />
+      <instancedMesh key={`e-${chave}-${lista.length}`} ref={encostos} args={[peca, undefined, lista.length]} visible={assentosVisiveis}>
+        <meshLambertMaterial color="#18202b" />
       </instancedMesh>
-      <instancedMesh key={`t-${chave}-${lista.length}`} ref={tampos} args={[peca, undefined, lista.length]} castShadow visible={assentosVisiveis}>
-        <meshStandardMaterial color="#e6eaed" roughness={0.7} />
+      <instancedMesh key={`t-${chave}-${lista.length}`} ref={tampos} args={[peca, undefined, lista.length]} visible={assentosVisiveis}>
+        <meshLambertMaterial color="#e6eaed" />
       </instancedMesh>
-      <instancedMesh key={`b-${chave}-${lista.length}`} ref={bracos} args={[peca, undefined, lista.length * 2]} castShadow visible={assentosVisiveis}>
-        <meshStandardMaterial color="#2f3846" roughness={0.6} />
+      <instancedMesh key={`b-${chave}-${lista.length}`} ref={bracos} args={[peca, undefined, lista.length * 2]} visible={assentosVisiveis}>
+        <meshLambertMaterial color="#2f3846" />
       </instancedMesh>
     </group>
   )
@@ -148,16 +148,15 @@ export default function Plenario3D(props: Props) {
   const cartao = useRef<HTMLDivElement>(null)
   const lista = useMemo(() => ordenar(props.cadeiras, props.ordem), [props.cadeiras, props.ordem])
   const cena = `${props.chave}-${props.ordem}-${lista.length}`
-  const assentado = useAssentado(cena, 1600)
   return (
     <div className="relative h-full w-full">
       {/* câmera fixa: o Bounds mediria as colunas ainda com altura zero, no começo da animação */}
       {/* sem baixar a resolução ao girar (o regress do drei): redimensionar o canvas a cada giro custava mais que
           desenhar as três malhas instanciadas em resolução cheia, e a cena borrava e voltava */}
-      <Canvas frameloop="demand" shadows="percentage" dpr={[1, 1.5]} camera={{ position: [0, 13.5, 17.5], fov: 36 }} aria-label="Plenário em 3D: a altura de cada cadeira é o gasto da campanha">
+      <Canvas frameloop="demand" dpr={[1, 1.25]} camera={{ position: [0, 13.5, 17.5], fov: 36 }} aria-label="Plenário em 3D: a altura de cada cadeira é o gasto da campanha">
         <SombraAssentada chave={cena} ms={1600} />
         <hemisphereLight args={['#ffffff', '#cfd6e2', 1.1]} />
-        <directionalLight position={[8, 18, 10]} intensity={1.5} castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-14} shadow-camera-right={14} shadow-camera-top={14} shadow-camera-bottom={-14} />
+        <directionalLight position={[8, 18, 10]} intensity={1.5} castShadow shadow-mapSize={[1024, 1024]} shadow-camera-left={-14} shadow-camera-right={14} shadow-camera-top={14} shadow-camera-bottom={-14} />
         <Bancada
           {...props}
           aoPassar={(i, e) => {
@@ -170,14 +169,13 @@ export default function Plenario3D(props: Props) {
         {/* piso claro com a borda em ardósia (o azul de ação): as colunas verdes não se confundem com o chão */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
           <circleGeometry args={[R * 1.2, 96, 0, Math.PI]} />
-          <meshStandardMaterial color="#c3cce0" roughness={0.95} />
+          <meshLambertMaterial color="#1d4fa0" />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
           <circleGeometry args={[R * 1.12, 96, 0, Math.PI]} />
-          <meshStandardMaterial color="#f3f5f7" roughness={0.95} />
+          <meshLambertMaterial color="#ffffff" />
         </mesh>
         {/* a sombra de contato refaz a cena inteira com desfoque a cada quadro: assentada, é feita uma vez */}
-        <ContactShadows key={assentado ? 'fixa' : 'viva'} frames={assentado ? 1 : Infinity} position={[0, 0, 0]} opacity={0.25} scale={30} blur={2.4} far={8} />
         <OrbitControls makeDefault target={[0, 1.6, -4]} enablePan={false} minDistance={10} maxDistance={40} minPolarAngle={0.35} maxPolarAngle={1.32} minAzimuthAngle={-1} maxAzimuthAngle={1} />
       </Canvas>
       {foco && lista[foco.i] && <CartaoAssento a={lista[foco.i]} fator={props.fator} x={foco.x} y={foco.y} alvo={cartao} dica="Clique para abrir a carreira" />}

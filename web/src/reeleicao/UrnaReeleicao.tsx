@@ -12,7 +12,7 @@ import { COR, emCem, type Destino } from './conta'
 
 export type Fase = 0 | 1 | 2
 
-const FITAS = ['#5e881b', '#a2bd31', '#5d6b94', '#468baf', '#76acd0', '#f19929', '#fbc700']
+const FITAS = ['#1d4fa0', '#86a6dc', '#121417', '#d6382a', '#e8836f', '#f5b800', '#ffd75e']
 const PLANTAS = {
   largo: { W: 960, H: 384, c: 18, h: 24, px: 23, py: 29, esq: [24, 52], dir: [714, 52], urna: { x: 380, topo: 158, L: 200, A: 184, fundo: 34, alto: 40 }, pilha: 9 },
   estreito: { W: 360, H: 520, c: 11, h: 15, px: 14.5, py: 18.5, esq: [14, 44], dir: [201, 44], urna: { x: 92, topo: 336, L: 158, A: 150, fundo: 26, alto: 30 }, pilha: 6.5 },

@@ -97,7 +97,7 @@ function FichasCargo({ cargos, ativo, aoEscolher }: { cargos: Cargo[]; ativo: nu
               <span className="t-numero text-[1.7rem] tabular">{taxa(c.total.taxa)}</span>
             </span>
             <span aria-hidden className="mt-2 flex h-1.5 gap-px overflow-hidden rounded-full">
-              <span style={{ width: `${cem.voltou}%`, background: marcada ? '#d2e19a' : COR.voltou }} />
+              <span style={{ width: `${cem.voltou}%`, background: marcada ? '#86a6dc' : COR.voltou }} />
               <span style={{ width: `${cem.perdeu}%`, background: marcada ? '#eae8e4' : COR.perdeu }} />
               <span className={marcada ? 'bg-white/25' : 'bg-linha'} style={{ width: `${cem.nao}%` }} />
             </span>

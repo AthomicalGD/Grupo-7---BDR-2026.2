@@ -4,6 +4,9 @@ import type { FeatureCollection, MultiPolygon, Polygon } from 'geojson'
 
 export const ANOS = [2018, 2020, 2022, 2024, 2026] as const
 export type Ano = (typeof ANOS)[number]
+/** Turno do mapa do viés: o 2º só tem presidente, governador e prefeito, e só onde houve 2º turno. */
+export type Turno = 1 | 2
+export const CARGOS_TURNO_2 = [1, 3, 11]
 export type PorAno<T> = Partial<Record<string, T>>
 
 export interface UF {
@@ -830,6 +833,9 @@ export interface LogoPartido { url: string; fonte: 'camara' | 'wikimedia'; pagin
 const sempre = { staleTime: Infinity, gcTime: 30 * 60_000 } // os dados só mudam com uma nova carga
 /** "?cargo=1" (ou "&cargo=1"), ou nada quando são todos os cargos */
 const comCargo = (cargo: number | undefined, sep: '?' | '&') => (cargo ? `${sep}cargo=${cargo}` : '')
+/** "?cargo=1&turno=2", sem o que for o padrão (todos os cargos, 1º turno) */
+const filtroVies = (cargo: number | undefined, turno: Turno) =>
+  [cargo && `cargo=${cargo}`, turno === 2 && 'turno=2'].filter(Boolean).join('&').replace(/^(?=.)/, '?')
 
 const GERAIS: Ano[] = [2018, 2022, 2026]
 const MUNICIPAIS: Ano[] = [2020, 2024]
@@ -844,11 +850,48 @@ const CARGOS_PADRAO: CargoVies[] = [
   { cod: 13, nome: 'Vereador', anos: MUNICIPAIS, municipal: true },
 ]
 
+/** O raio-x de um político: por candidatura (id_candidatura), patrimônio, receitas por origem, a fatia dos votos
+ * da disputa e a posição; e os municípios que mais votaram nele na eleição mais recente com votos. */
+export interface RaioX {
+  candidaturas: Record<string, {
+    posicao: number | null
+    concorrentes: number | null
+    pct: number | null
+    patrimonio: number | null
+    fundo_eleitoral: number | null
+    fundo_partidario: number | null
+    pessoas_fisicas: number | null
+    proprios: number | null
+    outros: number | null
+  }>
+  redutos: {
+    ano: number
+    cargo: string
+    municipios: number
+    total: number
+    metade: number
+    top: { ibge: number; nome: string; uf: string; votos: number; pct: number }[]
+  } | null
+}
+
+/** A roupa salva do bonequinho (o que o armário guardou); nulo se ninguém vestiu ainda. */
+export type VisualSalvo = Record<string, string | boolean | null>
+
+export async function salvarVisual(id: number, visual: VisualSalvo): Promise<void> {
+  const r = await fetch(`/api/politicos/${id}/visual`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(visual) })
+  if (!r.ok) throw new Error(`Não deu para salvar a roupa (${r.status})`)
+}
+
 export const consultas = {
-  ufs: (cargo?: number) =>
-    queryOptions({ queryKey: ['ufs', cargo ?? null], queryFn: ({ signal }) => get<UF[]>(`/api/ufs${comCargo(cargo, '?')}`, signal), ...sempre }),
-  uf: (sigla: string, cargo?: number) =>
-    queryOptions({ queryKey: ['uf', sigla, cargo ?? null], queryFn: ({ signal }) => get<UFDetalhe>(`/api/ufs/${sigla}${comCargo(cargo, '?')}`, signal), ...sempre }),
+  // a roupa muda quando alguém salva: sem o cache de "sempre"
+  raioX: (id: number) =>
+    queryOptions({ queryKey: ['raio-x', id], queryFn: ({ signal }) => get<RaioX>(`/api/politicos/${id}/raio-x`, signal), ...sempre }),
+  visual: (id: number) =>
+    queryOptions({ queryKey: ['visual', id], queryFn: ({ signal }) => get<VisualSalvo | null>(`/api/politicos/${id}/visual`, signal), staleTime: 30_000 }),
+  ufs: (cargo?: number, turno: Turno = 1) =>
+    queryOptions({ queryKey: ['ufs', cargo ?? null, turno], queryFn: ({ signal }) => get<UF[]>(`/api/ufs${filtroVies(cargo, turno)}`, signal), ...sempre }),
+  uf: (sigla: string, cargo?: number, turno: Turno = 1) =>
+    queryOptions({ queryKey: ['uf', sigla, cargo ?? null, turno], queryFn: ({ signal }) => get<UFDetalhe>(`/api/ufs/${sigla}${filtroVies(cargo, turno)}`, signal), ...sempre }),
   // a lista quase nunca muda: começa com a de sempre para o filtro e os textos não esperarem a API fria
   cargosVies: () =>
     queryOptions({ queryKey: ['cargos-vies'], queryFn: ({ signal }) => get<CargoVies[]>('/api/vies/cargos', signal), placeholderData: CARGOS_PADRAO, ...sempre }),
@@ -868,10 +911,10 @@ export const consultas = {
         ),
       ...sempre,
     }),
-  municipio: (ibge: number, cargo?: number) =>
+  municipio: (ibge: number, cargo?: number, turno: Turno = 1) =>
     queryOptions({
-      queryKey: ['municipio', ibge, cargo ?? null],
-      queryFn: ({ signal }) => get<Municipio>(`/api/municipios/${ibge}${comCargo(cargo, '?')}`, signal),
+      queryKey: ['municipio', ibge, cargo ?? null, turno],
+      queryFn: ({ signal }) => get<Municipio>(`/api/municipios/${ibge}${filtroVies(cargo, turno)}`, signal),
       ...sempre,
     }),
   zonas: (ibge: number, ano: number) =>

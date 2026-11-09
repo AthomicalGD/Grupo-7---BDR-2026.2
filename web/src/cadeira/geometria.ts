@@ -69,7 +69,7 @@ export function ordenar(cadeiras: Assento[], ordem: Ordem): Assento[] {
 // Verde vivo, chegando no verde da bandeira (#009c3b): quanto mais verde, mais cara a campanha. Matiz OKLab entre
 // 130° e 151° (verde de fato, sem puxar para o amarelo) e claridade sempre caindo (0,95 → 0,85 → 0,73 → 0,60 →
 // 0,49 → 0,37).
-const YLGN = interpolateRgbBasis(['#e4f7d2', '#a8e27a', '#55c45a', '#009c3b', '#00742f', '#004d22'])
+const YLGN = interpolateRgbBasis(['#eef3fb', '#c3d3ef', '#86a6dc', '#4b78c2', '#1d4fa0', '#0f2c5c']) // azulejo: cobalto
 const INICIO = 0.08 // o começo da rampa é quase papel e some nele
 
 export interface EscalaGasto {

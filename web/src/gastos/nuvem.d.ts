@@ -11,6 +11,10 @@ export interface ItemNuvem {
   propaganda: boolean
   quantidade: number
   fornecedores: { nome: string; valor: number; quantidade: number }[]
+  /** quantos fornecedores no total (os três maiores vêm em `fornecedores`) */
+  nFornecedores?: number
+  /** os tipos do TSE que formam esse gasto */
+  origens?: string[]
 }
 export interface ItemDimensionado extends ItemNuvem {
   rank: number

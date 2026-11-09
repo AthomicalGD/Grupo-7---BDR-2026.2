@@ -40,7 +40,7 @@
   --color-fita-laranja: #f19929;
   --color-fita-amarelo: #fbc700;
 
-  --color-confirma: #3f7f2a;
+  --color-confirma: #1d4fa0;
   --color-corrige: #e5732a;
   --color-branco-urna: #f4f5f2;
   /* situação: eleito no oliva (texto e carimbos) e lima nas pílulas; não eleito em cinza quente */
@@ -174,8 +174,8 @@
     --color-acao: #2f3d66;
     --color-acao-2: #222d4d;
     --color-acao-claro: #e2e5ee;
-    --color-selecao: #46601e;
-    --color-selecao-2: #344816;
+    --color-selecao: #153a77;
+    --color-selecao-2: #0f2c5c;
   }
 
   body {
@@ -501,8 +501,11 @@
   animation: surgir 520ms var(--ease-saida) forwards;
 }
 .mapa-forma {
-  transition: fill 260ms var(--ease-saida), opacity 420ms var(--ease-saida), stroke 160ms ease;
+  /* a troca de ano, turno ou cargo passa pelo mapa como uma onda de oeste para leste: cada forma espera
+     --onda (a distância da borda oeste) antes de mudar de cor */
+  transition: fill 720ms var(--ease-saida) var(--onda, 0ms), opacity 420ms var(--ease-saida), stroke 160ms ease, filter 200ms ease;
 }
+.mapa-forma[data-tipo]:hover { filter: brightness(1.07) saturate(1.08); }
 /* durante o voo da câmera: sem contornos (o traço que não escala é refeito a cada quadro) e sem transições */
 [data-voando] .mapa-forma {
   stroke: none;
@@ -563,12 +566,12 @@
   transform-box: fill-box; transform-origin: center;
   transition: fill 280ms var(--ease-saida), transform 260ms var(--ease-saida), filter 200ms;
 }
-.mapa-estados .estado-aceso path { fill: #b9cd80; }
-.mapa-estados .estado-apagado path { fill: #dfe8c4; }
+.mapa-estados .estado-aceso path { fill: #86a6dc; }
+.mapa-estados .estado-apagado path { fill: #dfe7f4; }
 .mapa-estados .estado-ativo path { fill: var(--color-selecao); animation: estado-pula 420ms var(--ease-saida); }
 .mapa-estados .estado-alvo:hover path, .mapa-estados .estado-alvo:focus-visible path { transform: scale(1.1); filter: drop-shadow(0 3px 4px rgb(42 53 80 / .3)); }
 .mapa-estados .estado-alvo:focus-visible path { stroke: var(--color-acao); stroke-width: 2.5; }
-.mapa-estados .sigla, .mapa-estados .sigla-ativa { font-size: 44px; font-weight: 800; fill: var(--color-tinta); paint-order: stroke; stroke: rgb(252 253 253 / .7); stroke-width: 6px; }
+.mapa-estados .sigla, .mapa-estados .sigla-ativa { font-size: 44px; font-weight: 800; fill: var(--color-tinta); paint-order: stroke; stroke: var(--halo); stroke-width: 6px; }
 .mapa-estados .sigla-ativa { fill: #fff; stroke: none; }
 .mapa-estados[class*="opacity-45"] .estado-alvo { cursor: default; }
 @keyframes estado-pula { 0% { transform: scale(.85); } 55% { transform: scale(1.16); } 100% { transform: none; } }
@@ -605,8 +608,8 @@
 .campo-estado:active { transform: scale(.985); }
 /* a régua do "E você?": trilho em degradê do papel ao oliva (mais bens à direita), botão grande no oliva */
 .regua-voce { -webkit-appearance: none; appearance: none; height: 28px; background: transparent; cursor: pointer; }
-.regua-voce::-webkit-slider-runnable-track { height: 8px; border-radius: 999px; background: linear-gradient(90deg, #e6eaed, #b9cd80 60%, var(--color-selecao)); }
-.regua-voce::-moz-range-track { height: 8px; border-radius: 999px; background: linear-gradient(90deg, #e6eaed, #b9cd80 60%, var(--color-selecao)); }
+.regua-voce::-webkit-slider-runnable-track { height: 8px; border-radius: 999px; background: linear-gradient(90deg, #e6eaed, #86a6dc 60%, var(--color-selecao)); }
+.regua-voce::-moz-range-track { height: 8px; border-radius: 999px; background: linear-gradient(90deg, #e6eaed, #86a6dc 60%, var(--color-selecao)); }
 .regua-voce::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; margin-top: -10px; border-radius: 50%; background: var(--color-folha); border: 4px solid var(--color-selecao); box-shadow: 0 3px 8px -2px rgb(42 53 80 / .35); transition: transform 160ms var(--ease-saida); }
 .regua-voce::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--color-folha); border: 4px solid var(--color-selecao); }
 .regua-voce:active::-webkit-slider-thumb { transform: scale(1.15); }
@@ -641,26 +644,187 @@
 .esqueleto-palco {
   background:
     radial-gradient(ellipse 70% 55% at 50% 92%, #fff6d6 0%, transparent 70%),
-    linear-gradient(180deg, #e4edf3 0%, #f1f5f6 48%, #f6f8ef 100%);
+    linear-gradient(180deg, #eef1f5 0%, #ffffff 100%);
 }
 @media (prefers-reduced-motion: reduce) { .osso { animation: none; } }
 
-/* ---------- títulos em League Spartan ---------- */
-/* A fonte dos títulos, dos números grandes e do menu (a mesma da prévia), servida pelo próprio site: buscada no
-   Google Fonts ela segurava a primeira tela por segundos. O texto corrido continua em Archivo. */
+
+/* a fonte dos títulos servida pelo próprio site (do Google Fonts ela segurava a primeira tela por segundos) */
 @font-face { font-family: "League Spartan"; font-style: normal; font-weight: 500 900; font-display: swap; src: url("/fontes/league-spartan-latin-ext.woff2") format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
 @font-face { font-family: "League Spartan"; font-style: normal; font-weight: 500 900; font-display: swap; src: url("/fontes/league-spartan-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-:root { --font-display: "League Spartan", "Archivo Variable", "Archivo", system-ui, sans-serif; }
+
+/* ═════════ Azulejo de Brasília (prévia) ═════════
+   Cada tela é um painel de azulejos de Athos Bulcão sobre o branco de Brasília: peças quadradas encaixadas,
+   rejunte em tinta, azul-cobalto, vermelho e amarelo. O dado (viés, gasto) mantém as próprias cores. */
+:root {
+  --color-papel: #ffffff;
+  --color-papel-2: #eef1f5;
+  --color-folha: #ffffff;
+  --color-tinta: #121417;
+  --color-tinta-2: #3a3f47;
+  --color-tinta-3: #5a616c;
+  --color-linha: #c9ced6;
+
+  --color-linha-2: #8d95a1;
+  --color-acao: #1d4fa0;
+  --color-acao-2: #153a77;
+  --color-acao-claro: #e5ecf7;
+  --color-selecao: #1d4fa0;
+  --color-selecao-2: #153a77;
+  --color-selecao-claro: #e5ecf7;
+  --color-selecao-tinta: #153a77;
+  --color-escolha: #f5b800;
+  --color-escolha-2: #121417;
+  --color-marcador: #f5b800;
+  --color-corrige: #d6382a;
+  --shadow-papel: none;
+  --shadow-cartao: none;
+  --azul: #1d4fa0; --vermelho: #d6382a; --amarelo: #f5b800;
+  --laco: linear-gradient(90deg, var(--azul) 0 33.3%, var(--vermelho) 0 66.6%, var(--amarelo) 0);
+  /* situação no mundo azulejo: eleito em cobalto (texto) e peça amarela (pílula); não eleito no branco de Brasília */
+  --color-eleito: #1d4fa0;
+  --color-eleito-fundo: #f5b800;
+  --color-reeleito: #0f2c5c;
+  --color-nao-eleito: #eef1f5;
+  /* as fitas decorativas viram as cores do azulejo */
+  --color-fita-verde: #1d4fa0; --color-fita-lima: #86a6dc; --color-fita-ardosia: #121417; --color-fita-petroleo: #d6382a;
+  --color-fita-celeste: #e8836f; --color-fita-laranja: #f5b800; --color-fita-amarelo: #ffd75e;
+  --font-display: "League Spartan", "Archivo", system-ui, sans-serif;
+}
+html[data-contraste="alto"] { --color-linha: #5a616c; }
+
+/* a faixa de azulejos: quartos de círculo em cobalto, um módulo de 44px, e a tira das três cores embaixo */
+.faixa-azulejo {
+  height: 50px;
+  background:
+    linear-gradient(90deg, var(--azul) 0 44px, var(--vermelho) 44px 88px, var(--amarelo) 88px 132px, #fff 132px 176px) bottom / 176px 6px repeat-x,
+    radial-gradient(circle at 0 0, var(--azul) 0 21px, transparent 22px) 0 0 / 44px 44px,
+    radial-gradient(circle at 100% 100%, var(--azul) 0 21px, transparent 22px) 0 0 / 44px 44px,
+    #fff;
+  border-bottom: 3px solid var(--color-tinta);
+}
+.faixa-azulejo-negativa {
+  background:
+    radial-gradient(circle at 100% 0, #fff 0 21px, transparent 22px) 0 0 / 44px 44px,
+    radial-gradient(circle at 0 100%, var(--amarelo) 0 21px, transparent 22px) 0 0 / 44px 44px,
+    var(--azul);
+  border-bottom: 0;
+}
+
+/* azulejo de canto macio: as peças têm cantos arredondados (14px) e os botões viram pílulas; os cantos que o
+   componente já tinha voltam a valer */
+:root { --canto: 14px; }
+.botao-vivo, .botao-contorno { border-radius: 999px !important; }
+input[class*="border"], select { border-radius: 12px !important; }
+
+/* títulos em League Spartan; sob o título, a abertura de quadrados no lugar do laço */
 .t-display, .t-h1, .t-h2, .t-h3, .t-numero { font-family: var(--font-display); font-stretch: 100%; }
 .t-display { font-weight: 900; letter-spacing: -0.03em; line-height: 0.95; font-size: clamp(2.2rem, 1.2rem + 2.4vw, 3.6rem); }
 .t-h1 { font-weight: 800; letter-spacing: -0.02em; }
 .t-numero { font-weight: 800; letter-spacing: -0.02em; }
-.nav-item { font-family: var(--font-display); font-weight: 600; letter-spacing: 0; }
+/* sob o título, contas redondas alternando as cores, como pastilhas */
+main h1.t-display::after {
+  width: 7.7rem !important; height: 18px !important; border-radius: 0 !important; margin-top: 1rem !important;
+  background:
+    radial-gradient(circle at 9px 9px, var(--azul) 8.5px, transparent 9px) 0 0 / 44px 18px repeat-x,
+    radial-gradient(circle at 31px 9px, var(--vermelho) 8.5px, transparent 9px) 0 0 / 44px 18px repeat-x !important;
+}
+main :is(h2.t-h1, h2.t-h2)::after {
+  width: 3.3rem !important; height: 10px !important; border-radius: 0 !important;
+  background:
+    radial-gradient(circle at 5px 5px, var(--azul) 4.6px, transparent 5px) 0 0 / 26px 10px repeat-x,
+    radial-gradient(circle at 18px 5px, var(--amarelo) 4.6px, transparent 5px) 0 0 / 26px 10px repeat-x !important;
+}
 
-/* a bandeira do estado entra num pulo curto ao trocar de estado */
+/* o botão principal é uma peça amarela com rejunte escuro; aperta para dentro, não flutua */
+.botao-vivo {
+  background: var(--amarelo) !important; color: var(--color-tinta) !important;
+  border: 3px solid var(--color-tinta) !important; box-shadow: none !important;
+}
+.botao-vivo:hover { background: #ffc61a !important; transform: none !important; }
+.botao-vivo:active { transform: translateY(2px) !important; }
+.botao-contorno { border: 3px solid var(--color-tinta) !important; }
+.botao-contorno:hover { background: var(--color-acao-claro) !important; transform: none !important; }
+
+/* o escolhido é a peça cheia de cobalto */
+.selecionado-fita { background: var(--azul) !important; border-color: var(--color-tinta) !important; color: #fff !important; box-shadow: none !important; }
+
+/* grupos de opções (anos, cargos, vistas) viram uma fileira de peças encaixadas, com rejunte de 3px */
+[role="radiogroup"].inline-flex { border: 3px solid var(--color-tinta) !important; padding: 0 !important; gap: 0 !important; background: var(--color-folha) !important; border-radius: 999px !important; overflow: hidden; }
+[role="radiogroup"].inline-flex > button { border-radius: 0 !important; }
+[role="radiogroup"].inline-flex > button { padding-block: .6rem !important; border-right: 3px solid var(--color-tinta); }
+[role="radiogroup"].inline-flex > button:last-child { border-right: 0; }
+
+/* cartões e campos: borda de peça, sem sombra */
+.bg-folha.border, .bg-folha[class*="border-linha"] { border-width: 2px !important; border-color: var(--color-tinta) !important; }
+/* as peças que o tema desenhou com rejunte grosso também ganham o canto macio */
+.border-\[3px\] { border-radius: var(--canto); }
+input[class*="border"] { border-width: 3px !important; border-color: var(--color-tinta) !important; }
+
+/* o menu: itens soltos, o atual numa pílula de cobalto claro (como antes), na fonte dos títulos */
+.nav-item { font-family: var(--font-display); font-weight: 600 !important; letter-spacing: 0; }
+header.sticky { border-bottom: 3px solid var(--color-tinta); }
+
+/* a bandeira entra num pulo curto ao trocar de estado */
 @keyframes bandeira-entra { from { opacity: 0; transform: translateY(4px) rotate(-3deg) scale(.94); } to { opacity: 1; transform: none; } }
 .bandeira-entra { animation: bandeira-entra 220ms var(--ease-saida) both; transform-origin: 20% 80%; }
 @media (prefers-reduced-motion: reduce) { .bandeira-entra { animation: none; } }
+
+/* O armário dos bonequinhos (comparar/Armario.tsx): o provador com o chão de azulejo, a cornija e as duas
+   portas de azulejo que abrem uma vez, para os lados, quando o armário aparece. */
+.armario[open] { animation: armario-entra 260ms var(--ease-saida) both; }
+@keyframes armario-entra { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: none; } }
+.provador {
+  min-height: 360px;
+  background:
+    radial-gradient(ellipse 70% 22% at 50% 92%, color-mix(in oklab, var(--lado) 22%, transparent), transparent 70%),
+    radial-gradient(circle at 0 0, color-mix(in oklab, var(--azul) 12%, transparent) 0 21px, transparent 22px) 0 0 / 44px 44px,
+    radial-gradient(circle at 100% 100%, color-mix(in oklab, var(--azul) 12%, transparent) 0 21px, transparent 22px) 0 0 / 44px 44px,
+    linear-gradient(#f7f9fc, #e9eef6);
+}
+@media (max-width: 1023px) { .provador { min-height: 0; } }
+.armario-cornija {
+  height: 18px;
+  border-bottom: 3px solid var(--color-tinta);
+  background:
+    radial-gradient(circle at 0 0, var(--azul) 0 8px, transparent 9px) 0 0 / 18px 18px,
+    radial-gradient(circle at 100% 100%, var(--amarelo) 0 8px, transparent 9px) 0 0 / 18px 18px,
+    #fff;
+}
+/* cada peça tem um pedaço de prateleira embaixo; lado a lado, viram uma prateleira só por fileira */
+.armario-peca { position: relative; }
+.armario-peca::after { content: ''; position: absolute; left: -8px; right: -8px; bottom: -11px; height: 5px; border-radius: 3px; background: #c4cfe3; }
+.armario-portas { perspective: 1400px; }
+.armario-porta {
+  position: absolute; top: 0; bottom: 0; width: 50%;
+  border: 3px solid var(--color-tinta);
+  background:
+    radial-gradient(circle at 0 0, #fff 0 21px, transparent 22px) 0 0 / 44px 44px,
+    radial-gradient(circle at 100% 100%, var(--amarelo) 0 21px, transparent 22px) 0 0 / 44px 44px,
+    var(--azul);
+  backface-visibility: hidden;
+}
+.armario-porta-e { left: 0; transform-origin: left center; animation: porta-e 900ms 180ms cubic-bezier(.6, 0, .25, 1) both; }
+.armario-porta-d { right: 0; transform-origin: right center; animation: porta-d 900ms 180ms cubic-bezier(.6, 0, .25, 1) both; }
+@keyframes porta-e { to { transform: rotateY(-105deg); opacity: 0; } }
+@keyframes porta-d { to { transform: rotateY(105deg); opacity: 0; } }
+.armario-puxador { position: absolute; top: 50%; width: 10px; height: 46px; margin-top: -23px; border-radius: 999px; background: #fff; border: 3px solid var(--color-tinta); }
+.armario-porta-e .armario-puxador { right: 12px; }
+.armario-porta-d .armario-puxador { left: 12px; }
+@media (prefers-reduced-motion: reduce) {
+  .armario[open] { animation: none; }
+  .armario-porta { display: none; }
+}
+
+/* o topo: um fio de cor do azulejo (azul, amarelo, vermelho), no lugar da faixa grande; o azulejo fica no rodapé */
+.fio-cor { height: 6px; background: linear-gradient(90deg, var(--azul) 0 25%, var(--amarelo) 25% 50%, var(--vermelho) 50% 75%, var(--azul) 75%); }
+
+/* o mapa em papel recortado: um grão leve de cartolina por cima de tudo (o ruído é uma imagem pequena repetida,
+   desenhada uma vez pelo navegador: não pesa no arrastar nem no zoom) */
+.mapa-papel::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: multiply; opacity: .55;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .3  0 0 0 0 .26  0 0 0 0 .2  0 0 0 .32 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
 
 /* P12, o 2º turno (segundo/): os pontos da largada caem no lugar uma vez, fileira a fileira; quem não foi
    votar é hachurado, como o "sem dados" do mapa (ausência visível) */
@@ -668,3 +832,77 @@
 .largada-ponto { transform-box: fill-box; transform-origin: center; animation: largada-cai 520ms var(--ease-saida) backwards; transition: r 120ms; }
 .segundo-hachura { background: repeating-linear-gradient(45deg, #eceef0 0 4px, #c9ced3 4px 5.5px); }
 @media (prefers-reduced-motion: reduce) { .largada-ponto { animation: none; } }
+
+/* tema escuro: o azulejo à noite. O branco de Brasília vira um azul-noite, a tinta vira o branco, o rejunte
+   (as bordas de 3px) clareia; cobalto e amarelo ficam, só o cobalto de texto clareia para o contraste (AA) */
+:root { --halo: rgb(252 253 253 / .85); --apagado: 0.3; }
+html[data-tema="escuro"] { --halo: rgb(13 19 32 / .8); --apagado: 0.62; --grau-6: #3d6cc0; --grau-7: #2f62d0; --grau-8: #5d93f5; }
+/* o armário é um móvel claro de propósito: no tema escuro ele continua com as cores do dia, para as gavetas
+   e as peças (que têm fundos claros fixos) seguirem legíveis */
+html[data-tema="escuro"] .armario {
+  --color-papel: #ffffff; --color-papel-2: #eef1f5; --color-folha: #ffffff; --color-tinta: #121417;
+  --color-tinta-2: #3a3f47; --color-tinta-3: #5a616c; --color-linha: #c9ced6; --color-linha-2: #8d95a1;
+  color-scheme: light;
+}
+html[data-tema="escuro"] .armario .bg-white { background-color: #fff; }
+:root { --lado-a-texto: #1d4fa0; --lado-b-texto: #8a6400; --lado-a-claro: #e5ecf7; --lado-b-claro: #fdf3cf; }
+html[data-tema="escuro"] {
+  color-scheme: dark;
+  --lado-a-texto: #8fb0ee; --lado-b-texto: #f5c84a; --lado-a-claro: #1a2747; --lado-b-claro: #3a3112;
+  --color-papel: #0d1320;
+  --color-papel-2: #16203a;
+  --color-folha: #121a2b;
+  --color-tinta: #eef2f8;
+  --color-tinta-2: #b9c2d2;
+  --color-tinta-3: #8f9ab0;
+  --color-linha: #2a3653;
+  --color-linha-2: #4a5878;
+  --color-acao: #8fb0ee;
+  --color-acao-2: #b6cbf4;
+  --color-acao-claro: #1a2747;
+  --color-selecao: #8fb0ee;
+  --color-selecao-2: #b6cbf4;
+  --color-selecao-claro: #1a2747;
+  --color-selecao-tinta: #b6cbf4;
+  --color-escolha-2: #eef2f8;
+  --color-escolha-claro: #3a3112;
+  --color-neutro: #1d2840;
+  --color-branco-urna: #1a2336;
+  --color-eleito: #8fb0ee;
+  --color-reeleito: #b6cbf4;
+  --color-nao-eleito: #1d2840;
+  --color-fita-ardosia: #eef2f8;
+}
+/* o botão amarelo continua com a letra escura */
+html[data-tema="escuro"] .botao-vivo { color: #121417 !important; border-color: #f5b800 !important; }
+
+/* ───────── tema escuro: o que não passa pelos tokens ───────── */
+html[data-tema="escuro"] .bg-white { background-color: var(--color-folha); }
+html[data-tema="escuro"] .so-claro,
+html:not([data-tema="escuro"]) .so-escuro { display: none !important; }
+html[data-tema="escuro"] img:not([src$=".svg"]) { filter: brightness(0.92); }
+
+/* a troca de tema: todas as cores escorrem juntas, sem nada cobrindo a tela (Moldura.tsx) */
+html.trocando-tema,
+html.trocando-tema *,
+html.trocando-tema *::before,
+html.trocando-tema *::after {
+  transition: background-color 600ms cubic-bezier(0.4, 0, 0.2, 1), color 600ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 600ms cubic-bezier(0.4, 0, 0.2, 1), fill 600ms cubic-bezier(0.4, 0, 0.2, 1),
+    stroke 600ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 600ms cubic-bezier(0.4, 0, 0.2, 1),
+    outline-color 600ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* ───────── o balão das questões (Questoes.tsx) ───────── */
+/* a faixa de azulejos no alto do cartão, a mesma do armário em miniatura */
+.faixa-questoes {
+  height: 14px;
+  border-bottom: 3px solid var(--color-tinta);
+  background:
+    radial-gradient(circle at 0 0, var(--azul) 0 6px, transparent 7px) 0 0 / 14px 14px,
+    radial-gradient(circle at 100% 100%, var(--amarelo) 0 6px, transparent 7px) 0 0 / 14px 14px,
+    var(--color-folha);
+}
+.questoes-cartao { box-shadow: 0 18px 40px -16px rgb(18 20 23 / 0.45), 0 4px 10px -4px rgb(18 20 23 / 0.2); }
+.questoes-botao { box-shadow: 0 10px 22px -10px rgb(29 79 160 / 0.7), 0 2px 4px rgb(18 20 23 / 0.18); }
+html[data-tema="escuro"] .questoes-cartao { box-shadow: 0 18px 40px -14px rgb(0 0 0 / 0.75); }

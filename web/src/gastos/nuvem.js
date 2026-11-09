@@ -11,10 +11,12 @@ import { audio as abreSom, preparaAudio } from '../lib/audio'
 import { desisteDe, quandoParado } from '../lib/parado'
 
 /* ---------- tokens (DESIGN.md do Voto Aberto) ---------- */
-const TINTA = '#18202b', FOLHA = '#fcfdfd', CARIMBO = '#3f5419'
-const FITAS = ['#5E881B', '#A2BD31', '#5D6B94', '#468BAF', '#76ACD0', '#F19929', '#FBC700']
+const TINTA = '#18202b', FOLHA = '#fcfdfd', CARIMBO = '#153a77'
+// o verso no mundo azulejo: a faixa do valor em cobalto claro e o primeiro selo em amarelo
+const FAIXA_VERSO = '#e5ecf7', SELO_VERSO = '#fde7a1'
+const FITAS = ['#1d4fa0', '#86a6dc', '#121417', '#d6382a', '#e8836f', '#f5b800', '#ffd75e']
 // a escala da bandeira (escolaridade.ts): do amarelo ao verde e ao azul, a luz sempre caindo
-export const BANDEIRA = ['#f9e99a', '#e4d948', '#a3cc4d', '#52b766', '#029e72', '#00808d', '#0d5c91', '#1c3e81']
+export const BANDEIRA = ['#fdf0bf', '#f5d76a', '#f5b800', '#a3b6dd', '#7c9bd3', '#4a78c2', '#1d4fa0', '#0f2c5c']
 const FONTE = '"Archivo Variable", Archivo, system-ui, sans-serif'
 const MONO = '"Red Hat Mono Variable", "Red Hat Mono", ui-monospace, monospace'
 
@@ -321,36 +323,67 @@ export function criaNuvem({ palco, canvas, dica, aoMudar = () => {} }) {
     g.fillStyle = FOLHA; g.fillRect(0, 0, DW, DH)
     FITAS.forEach((c, i) => { g.fillStyle = c; g.fillRect((DW / 7) * i, 0, DW / 7 + 1, 9) })
     g.textBaseline = 'alphabetic'; g.textAlign = 'left'
-    g.fillStyle = '#5f6878'; fonte(g, 600, 14, 'normal', MONO); g.letterSpacing = '2.4px'
-    g.fillText('COLA DO GASTO', 22, 36); g.letterSpacing = '0px'
-    if (p.propaganda) carimbo(g, DW - 74, 32, 0.9)
-    g.fillStyle = TINTA; escreveNome(g, p.palavra.toLocaleUpperCase('pt-BR'), 20, 88, DW - 44, 54, 26)
-    const c = casasDoValor(p.n); const y = 102
-    const x = casas(g, c.digitos, 22, y, 46, 64, 6, 52, false)
-    fonte(g, 800, 15, 'normal'); g.fillStyle = TINTA
-    const [u1, u2] = c.unidade.split(' ')
-    if (u2) { g.fillText(u1.toLowerCase(), x + 4, y + 64 - 24); g.fillText(u2.toLowerCase(), x + 4, y + 64 - 6) } else g.fillText(u1.toLowerCase(), x + 4, y + 64 - 8)
-    // a parte do gasto, em número grande, à direita
+    // 1. cabeçalho: o rótulo e, nos de propaganda, o carimbo
+    g.fillStyle = '#5f6878'; fonte(g, 600, 12.5, 'normal', MONO); g.letterSpacing = '2.4px'
+    g.fillText('COLA DO GASTO', 22, 28); g.letterSpacing = '0px'
+    if (p.propaganda) carimbo(g, DW - 66, 26, 0.7)
+    // Os polegares seguram os cantos de baixo (~85 px de altura, ~40 px para dentro): em cima vale a largura toda,
+    // embaixo só o miolo. A frente é o geral; o verso abre o gasto em camadas: quem recebeu e como o TSE chama.
+    const corta = (t, max) => { while (t.length > 4 && g.measureText(t).width > max) t = t.slice(0, -2).trimEnd() + '…'; return t }
+    // 2. o tipo do gasto, em uma ou duas linhas (a base da última em 62)
+    g.fillStyle = TINTA; escreveNome(g, p.palavra.toLocaleUpperCase('pt-BR'), 20, 62, DW - 44, 30, 16)
+    // 3. o valor, quantas despesas e a parte da campanha, numa faixa clara
+    retangulo(g, 14, 72, DW - 28, 40, 10); g.fillStyle = FAIXA_VERSO; g.fill()
+    g.fillStyle = TINTA; fonte(g, 860, 26, 'condensed')
+    const valor = reaisCurto(p.n); g.fillText(valor, 26, 101)
+    const xv = 26 + g.measureText(valor).width + 8
+    fonte(g, 600, 12.5, 'normal'); g.fillStyle = '#4b5566'
+    g.fillText(`em ${p.quantidade} ${p.quantidade === 1 ? 'despesa' : 'despesas'}`, xv, 100)
     g.textAlign = 'right'
-    fonte(g, 860, 44, 'condensed'); g.fillText(pctTexto(p.n), DW - 22, y + 42)
-    fonte(g, 600, 15, 'normal'); g.fillStyle = '#4b5566'; g.fillText('do gasto', DW - 22, y + 62)
+    fonte(g, 860, 26, 'condensed'); g.fillStyle = TINTA; const pc = pctTexto(p.n); g.fillText(pc, DW - 26, 101)
+    const wpc = g.measureText(pc).width
+    fonte(g, 600, 12.5, 'normal'); g.fillStyle = '#4b5566'; g.fillText('da campanha', DW - 26 - wpc - 6, 100)
     g.textAlign = 'left'
-    g.setLineDash([4, 4]); g.strokeStyle = '#aeb6bf'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(22, 184); g.lineTo(DW - 22, 184); g.stroke(); g.setLineDash([])
-    fonte(g, 700, 17, 'normal'); g.fillStyle = TINTA
-    g.fillText(`${p.rank}º maior de ${totalTipos} tipos · ${p.quantidade} ${p.quantidade === 1 ? 'despesa' : 'despesas'}`, 22, 208)
-    const f = p.fornecedores?.[0]
-    if (f) {
-      fonte(g, 500, 13, 'normal'); g.fillStyle = '#4b5566'
-      let nome = f.nome
-      const rot = `Quem mais recebeu (${reaisCurto(f.valor)}): `
-      const larg = DW - 44 - g.measureText(rot).width
-      fonte(g, 700, 13, 'normal')
-      while (nome.length > 4 && g.measureText(nome).width > larg) nome = nome.slice(0, -2).trimEnd() + '…'
-      fonte(g, 500, 13, 'normal'); g.fillText(rot, 22, 232)
-      fonte(g, 700, 13, 'normal'); g.fillStyle = TINTA; g.fillText(nome, 22 + DW - 44 - larg, 232)
+    // 4. o estrato de quem recebeu: a barra empilhada dos três maiores fornecedores e o resto
+    const fs = (p.fornecedores ?? []).slice(0, 3)
+    const nF = p.nFornecedores ?? fs.length
+    fonte(g, 600, 10.5, 'normal', MONO); g.fillStyle = '#5f6878'; g.letterSpacing = '1.4px'
+    g.fillText(`QUEM RECEBEU · ${nF} ${nF === 1 ? 'FORNECEDOR' : 'FORNECEDORES'}`, 22, 129); g.letterSpacing = '0px'
+    const CORES = ['#1d4fa0', '#f5b800', '#d6382a'], RESTO = '#c9ced6'
+    const resto = Math.max(0, p.n - fs.reduce((t, f) => t + f.valor, 0))
+    const fatias = [...fs.map((f, k) => ({ v: f.valor, cor: CORES[k] })), ...(resto > p.n * 0.005 ? [{ v: resto, cor: RESTO }] : [])]
+    const BX = 22, BW = DW - 44, BY = 136, BH = 16
+    g.save(); retangulo(g, BX, BY, BW, BH, 8); g.clip()
+    let bx = BX
+    fatias.forEach((f) => { const w = (BW * f.v) / Math.max(p.n, 1); g.fillStyle = f.cor; g.fillRect(bx, BY, w + 0.5, BH); bx += w })
+    g.restore()
+    retangulo(g, BX, BY, BW, BH, 8); g.lineWidth = 1.5; g.strokeStyle = TINTA; g.stroke()
+    // as linhas ficam no miolo (os polegares chegam a ~40 px das bordas)
+    const L0 = 56, L1 = DW - 56
+    const linha = (y, cor, nome, v) => {
+      g.fillStyle = cor; retangulo(g, L0, y - 9, 10, 10, 2); g.fill(); g.lineWidth = 1; g.strokeStyle = TINTA; g.stroke()
+      fonte(g, 800, 12.5, 'normal'); g.fillStyle = TINTA; g.textAlign = 'right'
+      const dir = `${reaisCurto(v)} · ${pctTexto2(v)}`; g.fillText(dir, L1, y)
+      const wd = g.measureText(dir).width
+      g.textAlign = 'left'; fonte(g, 600, 12.5, 'normal')
+      g.fillText(corta(nome, L1 - wd - 10 - (L0 + 16)), L0 + 16, y)
     }
-    g.fillStyle = '#5f6878'; fonte(g, 500, 11.5, 'normal')
-    g.fillText(`Valor exato: ${reaisExato(p.n)}. Clique fora para devolver.`, 22, DH - 16)
+    const pctTexto2 = (v) => { const q = p.n ? (100 * v) / p.n : 0; return `${q.toLocaleString('pt-BR', { maximumFractionDigits: q < 10 ? 1 : 0 })}%` }
+    let ly = 172
+    fs.forEach((f, k) => { linha(ly, CORES[k], f.nome, f.valor); ly += 17 })
+    if (nF > fs.length && resto > 0) { linha(ly, RESTO, `outros ${nF - fs.length}`, resto); ly += 17 }
+    if (!fs.length) { fonte(g, 600, 12.5, 'normal'); g.fillStyle = '#5f6878'; g.textAlign = 'center'; g.fillText('sem fornecedor identificado', DW / 2, ly); g.textAlign = 'left' }
+    // 5. como o TSE chama esse gasto (as categorias que formam o tipo)
+    g.textAlign = 'center'
+    if (p.origens?.length) {
+      fonte(g, 600, 11, 'normal'); g.fillStyle = '#4b5566'
+      g.fillText(corta(`No TSE: ${p.origens.join(' · ')}`, L1 - L0), DW / 2, 246)
+    }
+    // 6. o pé, no miolo: a posição entre os tipos e o valor exato
+    g.setLineDash([3, 4]); g.strokeStyle = '#c9ced6'; g.lineWidth = 1; g.beginPath(); g.moveTo(L0, 256); g.lineTo(L1, 256); g.stroke(); g.setLineDash([])
+    g.fillStyle = '#5f6878'; fonte(g, 500, 11, 'normal')
+    g.fillText(corta(`${p.rank}º maior de ${totalTipos} tipos · ${reaisExato(p.n)}`, L1 - L0), DW / 2, DH - 9)
+    g.textAlign = 'left'
     retangulo(g, 0.75, 0.75, DW - 1.5, DH - 1.5, 11.5); g.lineWidth = 1.5; g.strokeStyle = 'rgba(24,32,43,0.22)'; g.stroke()
     const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = ANISO; return t
   }

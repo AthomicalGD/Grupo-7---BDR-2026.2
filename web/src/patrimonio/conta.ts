@@ -3,9 +3,9 @@ import type { GrupoPatrimonio, Patrimonio } from '../api'
 
 /** Moedas: quem se elegeu no lima de "eleito" (como as cédulas que voltaram na reeleição), o resto em metal. */
 export const COR = {
-  eleito: '#9eb735',
-  eleitoBorda: '#6f8a22',
-  texto: '#55702a', // lima não tem contraste como texto: números e rótulos no oliva
+  eleito: '#1d4fa0',
+  eleitoBorda: '#0f2c5c',
+  texto: '#1d4fa0', // lima não tem contraste como texto: números e rótulos no oliva
   metal: '#d5dade',
   metalBorda: '#9aa4ae',
 } as const

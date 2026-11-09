@@ -188,7 +188,7 @@ export function CadeiraPagina() {
         )}
         <div className={`relative mx-auto max-w-[min(var(--miolo-max),calc((100dvh-120px)*1.92))] transition-opacity duration-300 ${q.isPlaceholderData ? 'opacity-55' : ''}`}>
           {busca.pe ? (
-            <div className="relative aspect-[16/10] overflow-hidden rounded-[20px] bg-[radial-gradient(ellipse_70%_55%_at_50%_92%,#fff6d6_0%,transparent_70%),linear-gradient(180deg,#e4edf3_0%,#f1f5f6_48%,#f6f8ef_100%)] sm:aspect-[16/8.5]">
+            <div className="relative aspect-[16/10] overflow-hidden rounded-[20px] border-[3px] border-[#121417] bg-[#eef1f5] sm:aspect-[16/8.5]">
               <Suspense fallback={<EsqueletoPalco />}>
                 <Plenario3D chave={chave} cadeiras={dados.cadeiras} escala={escala} fator={fator} ordem={busca.ordem ?? 'gasto'} aoAbrir={abrir} />
               </Suspense>

@@ -286,13 +286,13 @@ export function UrnaPagina() {
         )}
 
         <div className="flex flex-wrap items-center gap-3 border-t border-linha pt-5">
-          <button type="button" onClick={() => void apertar('confirma')} disabled={!escolhido || fim} className="h-11 rounded-full bg-confirma px-6 font-bold tracking-wide text-white shadow-[var(--shadow-cartao)] transition active:translate-y-[2px] disabled:opacity-40">
+          <button type="button" onClick={() => void apertar('confirma')} disabled={!escolhido || fim} className="h-11 rounded-full border-[1.5px] border-[#38b37d] bg-gradient-to-b from-[#66dea8] to-[#3fc489] px-6 font-bold tracking-wide text-[#0f2419] shadow-[inset_0_-3px_0_#268a5c] transition active:translate-y-[2px] disabled:opacity-45">
             CONFIRMA
           </button>
-          <button type="button" onClick={() => void apertar('corrige')} className="h-11 rounded-full bg-corrige px-5 font-bold tracking-wide text-tinta shadow-[var(--shadow-cartao)] transition active:translate-y-[2px]">
+          <button type="button" onClick={() => void apertar('corrige')} className="h-11 rounded-full border-[1.5px] border-[#d36a26] bg-gradient-to-b from-[#f6964c] to-[#e8732a] px-5 font-bold tracking-wide text-[#1b1d1f] shadow-[inset_0_-3px_0_#a9521a] transition active:translate-y-[2px]">
             CORRIGE
           </button>
-          <button type="button" onClick={() => void apertar('branco')} className="inline-flex h-11 items-center gap-2 rounded-full border-[1.5px] border-linha-2 bg-branco-urna px-5 font-bold tracking-wide text-tinta transition hover:border-tinta active:translate-y-[2px]">
+          <button type="button" onClick={() => void apertar('branco')} className="inline-flex h-11 items-center gap-2 rounded-full border-[1.5px] border-[#c9cdd0] bg-gradient-to-b from-[#fdfdfc] to-[#e8e9e6] px-5 font-bold tracking-wide text-[#1b1d1f] shadow-[inset_0_-3px_0_#b9bec1] transition hover:border-[#8d95a1] active:translate-y-[2px]">
             <Shuffle size={16} weight="bold" aria-hidden /> BRANCO sorteia
           </button>
           <button type="button" onClick={() => setSom(alternarSom())} aria-pressed={som} className="ml-auto inline-flex h-11 items-center gap-2 rounded-full px-3 text-[0.85rem] font-semibold text-tinta-2 hover:bg-folha" aria-label={som ? 'Desligar o som da urna' : 'Ligar o som da urna'}>

@@ -76,23 +76,23 @@ const Cadeira = memo(function Cadeira({ p, cor, encosto, total, leve }: { p: Pos
       <g className={leve ? undefined : 'cadeira-senta'} style={leve ? undefined : { animationDelay: atraso }}>
         {p.perdeu ? (
           // banquinho sem encosto nem braços: quem disputou e não levou a cadeira
-          <circle
-            r={p.d >= 11 ? 0.36 : 0.44} fill={vazio ? 'var(--color-folha)' : cor} fillOpacity={0.75}
+          <rect
+            x={p.d >= 11 ? -0.34 : -0.42} y={p.d >= 11 ? -0.34 : -0.42} width={p.d >= 11 ? 0.68 : 0.84} height={p.d >= 11 ? 0.68 : 0.84} rx={0.16} fill={vazio ? 'var(--color-folha)' : cor} fillOpacity={0.75}
             stroke="var(--color-tinta)" strokeOpacity={0.4} strokeWidth={1} vectorEffect="non-scaling-stroke" strokeDasharray={vazio ? '2 1.5' : undefined}
           />
         ) : p.d >= 11 ? (
           // poltrona vista de cima: sombra curta, encosto arredondado, dois braços e a almofada na cor do gasto
           <>
-            <rect x={-0.43} y={-0.44} width={0.94} height={0.94} rx={0.2} fill="var(--color-tinta)" opacity={0.13} />
+            <rect x={-0.43} y={-0.44} width={0.94} height={0.94} rx={0.14} fill="var(--color-tinta)" opacity={0.13} />
             <rect x={-0.48} y={-0.52} width={0.96} height={0.28} rx={0.14} fill={encosto ?? 'var(--color-tinta)'} opacity={encosto ? 1 : 0.88} />
-            <rect x={-0.48} y={-0.34} width={0.15} height={0.74} rx={0.075} fill="var(--color-tinta)" opacity={0.74} />
-            <rect x={0.33} y={-0.34} width={0.15} height={0.74} rx={0.075} fill="var(--color-tinta)" opacity={0.74} />
+            <rect x={-0.48} y={-0.34} width={0.15} height={0.74} rx={0.14} fill="var(--color-tinta)" opacity={0.74} />
+            <rect x={0.33} y={-0.34} width={0.15} height={0.74} rx={0.14} fill="var(--color-tinta)" opacity={0.74} />
             <rect
-              x={-0.32} y={-0.3} width={0.64} height={0.68} rx={0.16}
+              x={-0.32} y={-0.3} width={0.64} height={0.68} rx={0.14}
               fill={vazio ? 'var(--color-folha)' : cor}
               stroke={vazio ? 'var(--color-tinta)' : undefined} strokeOpacity={0.35} strokeWidth={1} vectorEffect="non-scaling-stroke" strokeDasharray={vazio ? '2 2' : undefined}
             />
-            {!vazio && <rect x={-0.26} y={-0.25} width={0.52} height={0.22} rx={0.1} fill="#fff" opacity={0.22} />}
+            {!vazio && <rect x={-0.26} y={-0.25} width={0.52} height={0.22} rx={0.14} fill="#fff" opacity={0.22} />}
           </>
         ) : (
           <circle r={0.48} fill={vazio ? 'var(--color-folha)' : cor} stroke="var(--color-tinta)" strokeOpacity={0.3} strokeWidth={0.07} />

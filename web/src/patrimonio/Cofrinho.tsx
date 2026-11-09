@@ -62,8 +62,8 @@ function voosDosCacos(lista: { centro: [number, number] }[], gx: number, gy: num
 }
 
 /** Um metal de moeda: a face, a borda escura entre uma moeda e outra e o brilho da de cima. */
-interface Metal { face: string; borda: string; brilho: string }
-const OURO: Metal = { face: '#e8b52a', borda: '#9c6f06', brilho: '#ffe486' }
+export interface Metal { face: string; borda: string; brilho: string }
+export const OURO: Metal = { face: '#e8b52a', borda: '#9c6f06', brilho: '#ffe486' }
 // do grupo com menos bens ao com mais: cobre, bronze, prata e ouro (a fila cortada em quatro)
 const METAIS: Metal[] = [
   { face: '#c47a45', borda: '#7a4421', brilho: '#eab08a' },

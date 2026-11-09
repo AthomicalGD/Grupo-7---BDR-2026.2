@@ -1,14 +1,13 @@
-import { gradienteVies, SATURA } from '../lib/vies'
+import { faixasMapa, SATURA } from '../lib/vies'
 import { SATURA_RELATIVO, SATURA_UF } from './valores'
 
 /** `brasil`: o mapa mostra os estados (escala de ±40); dentro de um estado, os municípios (±75). */
-export function Legenda({ relativo = false, brasil = false }: { relativo?: boolean; brasil?: boolean }) {
+export function Legenda({ relativo = false, brasil = false, semDados = 'Sem dados carregados' }: { relativo?: boolean; brasil?: boolean; semDados?: string }) {
   const satura = relativo ? SATURA_RELATIVO : brasil ? SATURA_UF : SATURA
-  const cores = gradienteVies(satura)
   return (
     <div className="flex flex-wrap items-end gap-x-6 gap-y-2 text-[0.78rem] text-tinta-2">
       <div className="w-[min(340px,100%)]">
-        <div className="h-2.5 rounded-full" style={{ background: `linear-gradient(90deg, ${cores.join(',')})` }} />
+        <div className="h-2.5 rounded-full" style={{ background: faixasMapa(satura) }} />
         <div className="mt-1.5 flex justify-between font-semibold">
           <span>
             <span className="tabular">−{satura}</span> {relativo ? 'mais à esquerda que o estado' : 'Esquerda'}
@@ -25,12 +24,12 @@ export function Legenda({ relativo = false, brasil = false }: { relativo?: boole
             <rect width="26" height="12" fill="url(#hachura-legenda)" />
             <defs>
               <pattern id="hachura-legenda" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)">
-                <rect width="5" height="5" fill="#eceef0" />
-                <line x1="0" y1="0" x2="0" y2="5" stroke="#c9ced3" strokeWidth="1.6" />
+                <rect width="5" height="5" fill="var(--color-neutro)" />
+                <line x1="0" y1="0" x2="0" y2="5" stroke="var(--color-linha-2)" strokeWidth="1.6" />
               </pattern>
             </defs>
           </svg>
-          Sem dados carregados
+          {semDados}
         </div>
       )}
     </div>

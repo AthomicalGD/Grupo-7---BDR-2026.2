@@ -3,7 +3,7 @@ import { Bandeira } from '../componentes/Bandeira'
 import type { Ano, MunicipioResumo, UF } from '../api'
 import { inteiro, vies as fmtVies } from '../lib/formato'
 import { useLoja } from '../lib/loja'
-import { corVies, ladoVies, SATURA } from '../lib/vies'
+import { corMapa, ladoVies, SATURA } from '../lib/vies'
 import { SATURA_RELATIVO, SATURA_UF, valorMunicipio } from './valores'
 
 import { hover } from './hover'
@@ -15,7 +15,7 @@ export function Regua({ valor, satura = SATURA, largura = 132 }: { valor: number
     <svg width={largura} height={14} aria-hidden className="block">
       <rect x={0} y={6} width={largura} height={2} rx={1} fill="var(--color-linha)" />
       <rect x={largura / 2 - 0.5} y={3} width={1} height={8} fill="var(--color-linha-2)" />
-      <circle cx={x} cy={7} r={5} fill={corVies(valor, satura)} stroke="var(--color-folha)" strokeWidth={2} />
+      <circle cx={x} cy={7} r={5} fill={corMapa(valor, satura)} stroke="var(--color-folha)" strokeWidth={2} />
     </svg>
   )
 }
