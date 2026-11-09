@@ -12,6 +12,8 @@ import p1Gasto from './consultas/p1_gasto.sql?raw'
 import p4Chance from './consultas/p4_chance.sql?raw'
 import p4Lugar from './consultas/p4_lugar.sql?raw'
 import p4Votos from './consultas/p4_votos.sql?raw'
+import p6Idade from './consultas/p6_idade.sql?raw'
+import p6Prefeitos from './consultas/p6_prefeitos.sql?raw'
 import p7Vies from './consultas/p7_vies.sql?raw'
 import p7VotosPartido from './consultas/p7_votos_partido.sql?raw'
 
@@ -19,7 +21,7 @@ import p7VotosPartido from './consultas/p7_votos_partido.sql?raw'
 function Secao({ id, titulo, resposta, children }: {
   id: string
   titulo: string
-  resposta?: { para: '/' | '/cadeira' | '/patrimonio' | '/urna' | '/escola' | '/reeleicao' | '/segundo-turno'; rotulo: string }
+  resposta?: { para: '/' | '/cadeira' | '/patrimonio' | '/urna' | '/escola' | '/idade' | '/reeleicao' | '/segundo-turno'; rotulo: string }
   children: ReactNode
 }) {
   return (
@@ -139,6 +141,7 @@ const INDICE = [
   ['m-cadeira', 'P1'],
   ['m-patrimonio', 'P2'],
   ['m-escolaridade', 'P4'],
+  ['m-idade', 'P6'],
   ['m-vies', 'P7'],
   ['m-carreira', 'P10'],
   ['m-reeleicao', 'P10a'],
@@ -332,6 +335,49 @@ export function Metodologia() {
           <Consulta titulo="Chance de ser eleito por grau e cargo" sql={p4Chance} />
           <Consulta titulo="O lugar e quem ele elege (2024)" sql={p4Lugar} />
           <Consulta titulo="O lugar e em quem ele vota (2022)" sql={p4Votos} />
+        </Detalhe>
+      </Secao>
+
+      <Secao id="m-idade" titulo="Idade do município, alternância de poder e idade dos eleitos (P6)" resposta={{ para: '/idade', rotulo: 'Ver a resposta na idade' }}>
+        <p>
+          Lugares mais velhos ou mais jovens trocam mais de prefeito? Quão velhos são os eleitos? E <b>jovem vota no jovem</b>,
+          velho vota no velho? O perfil etário de cada município vem de quem compareceu no 1º turno, que o TSE publica por
+          zona e faixa de idade em cada eleição; a idade da população (Censo 2022) confere.
+        </p>
+        <p className="rounded-xl border border-linha bg-folha px-5 py-4 text-tinta">
+          idade votada de uma zona = média da idade dos candidatos, pesada pelos votos que cada um recebeu ali
+        </p>
+        <ul className="list-disc space-y-2 pl-5">
+          <li><b>Idades:</b> em anos completos. A do candidato, na data do 1º turno (15 de novembro em 2020, eleição adiada pela pandemia). A de quem votou, o meio da faixa do TSE (ano a ano de 16 a 20, depois de 5 em 5; 100 ou mais conta como 100).</li>
+          <li><b>Terços:</b> os municípios em três grupos de mesmo tamanho pela idade média de quem votou, no país e dentro de cada estado. As comparações dos atos 2 a 4 são feitas dentro do estado, porque a idade muda muito entre regiões.</li>
+          <li><b>Alternância:</b> cada passagem de mandato de prefeito, de 1996 a 2024, recebe uma marca: mesmo partido (renomeações, como PMDB para MDB, contam como o mesmo), troca de partido ou troca com ressalva, quando o partido do prefeito anterior foi incorporado ao do novo entre as duas eleições (DEM e PSL no UNIÃO, PTB e Patriota no PRD). O índice sai nas duas leituras da fusão.</li>
+          <li><b>Jovem vota no jovem:</b> o voto é secreto, então a conta compara zonas. Para deputado, todas as zonas do estado têm os mesmos candidatos; para vereador e prefeito, só se comparam zonas do mesmo município. Cada efeito aparece também comparando zonas de mesma escolaridade de quem votou (% com superior completo), porque nas cidades as zonas mais velhas são também as mais escolarizadas.</li>
+          <li><b>Efeitos:</b> a inclinação dentro do estado (ou do município), em anos a cada 5 anos de idade de quem votou, com intervalo de 95% por reamostragem de municípios.</li>
+        </ul>
+        <Detalhe titulo="De onde vêm os dados">
+          <Origens
+            linhas={[
+              [<>Quem compareceu, por zona e faixa etária (<code>CD_FAIXA_ETARIA</code>, <code>QT_COMPARECIMENTO</code>)</>, ARQ('tse/comparecimento_abstencao/'), <>{ARQ('perfil_etario_munzona')}, {ARQ('faixa_etaria')}</>],
+              ['Prefeitos eleitos de 1996 a 2024 e o partido', ARQ('tse/candidatos/'), <>{ARQ('mandato')}, {ARQ('partido')}</>],
+              [<>Idade de cada candidato (<code>DT_NASCIMENTO</code>)</>, ARQ('tse/candidatos/'), ARQ('politico.dt_nascimento')],
+              ['Votos de cada candidato por zona', ARQ('tse/votacao_candidato_munzona/'), ARQ('votacao_candidato_munzona')],
+              ['Idade média da população (Censo 2022, idade simples)', ARQ('ibge/censo2022/populacao_idade_simples_tabela9514.csv'), ARQ('ibge_censo_municipio')],
+              ['Renomeações e fusões de partidos', ARQ('banco/referencia/sucessao_partidos.csv'), 'e as anteriores a 2018, no script'],
+            ]}
+          />
+        </Detalhe>
+        <Detalhe titulo="Desafios">
+          <ul className="list-disc space-y-2 pl-5">
+            <li><b>A idade do eleitor sumia na carga:</b> o arquivo do TSE traz a faixa etária, mas o banco guardava só a escolaridade. A migração 015 criou <code>perfil_etario_munzona</code> e <code>faixa_etaria</code>, e o loader passou a gravar as duas.</li>
+            <li><b>Abaeté (MG) era baiano:</b> o arquivo de candidatos de 2000 traz 5 linhas do município com a UF errada, e a carga o cadastrava na Bahia. O loader agora usa a UF da correspondência TSE x IBGE.</li>
+            <li><b>Dois prefeitos no mesmo ano:</b> em 2000 o TSE marca o vice como eleito em 30 municípios (sempre do mesmo partido); a passagem compara os dois.</li>
+            <li><b>Fusão não é troca nem continuidade:</b> por isso fica marcada à parte, e a fusão só conta se aconteceu entre as duas eleições (DEM em 2016 e PSL em 2020 é troca).</li>
+            <li><b>Idade e escolaridade andam juntas:</b> sem comparar zonas de mesma escolaridade, o efeito da idade some (correlação de 0,85 entre as duas, dentro das cidades).</li>
+          </ul>
+        </Detalhe>
+        <Detalhe titulo="As consultas">
+          <Consulta titulo="Idade média de quem votou, por município" sql={p6Idade} />
+          <Consulta titulo="Prefeitos eleitos, a base das passagens" sql={p6Prefeitos} />
         </Detalhe>
       </Secao>
 
@@ -565,7 +611,7 @@ export function Metodologia() {
       <Secao id="m-fontes" titulo="Fontes">
         <ul className="space-y-2">
           <li><b>TSE, Portal de Dados Abertos</b> (<a className="text-acao underline underline-offset-4" href="https://dadosabertos.tse.jus.br" target="_blank" rel="noreferrer">dadosabertos.tse.jus.br</a>): candidaturas, votação por município e zona, comparecimento por escolaridade, prestação de contas, correspondência de municípios e fotos.</li>
-          <li><b>IBGE, SIDRA</b> (<a className="text-acao underline underline-offset-4" href="https://sidra.ibge.gov.br" target="_blank" rel="noreferrer">sidra.ibge.gov.br</a>): IPCA de outubro (tabela 1737), PIB municipal (5938), população estimada (6579), Censo 2022 (4709, idade 9515 e nível de instrução das pessoas de 18 anos ou mais, 10061).</li>
+          <li><b>IBGE, SIDRA</b> (<a className="text-acao underline underline-offset-4" href="https://sidra.ibge.gov.br" target="_blank" rel="noreferrer">sidra.ibge.gov.br</a>): IPCA de outubro (tabela 1737), PIB municipal (5938), população estimada (6579), Censo 2022 (4709, população por idade simples 9514, idade mediana e envelhecimento 9515 e nível de instrução das pessoas de 18 anos ou mais, 10061).</li>
           <li><b>IBGE, APIs de malhas e localidades:</b> contornos dos estados e municípios (GeoJSON) e regiões intermediárias.</li>
           <li><b>Atlas Brasil (PNUD, Ipea, FJP)</b>, pelo Ipeadata: IDHM; o mais recente é o do Censo 2010.</li>
           <li><b>Harvard Dataverse:</b> classificação ideológica dos partidos por especialistas (Bolognesi, Codato, Ribeiro e Silva).</li>

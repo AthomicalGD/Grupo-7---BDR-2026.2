@@ -32,6 +32,14 @@ TABELAS = {
     "ibge_censo2022_populacao": Tabela(4709, (93,), "populacao/censo2022_populacao_tabela4709.csv"),
     # Índice de envelhecimento (10612) e idade mediana (10613).
     "ibge_censo2022_idade": Tabela(9515, (10612, 10613), "censo2022/idade_mediana_envelhecimento_tabela9515.csv"),
+    # População por idade simples (Menos de 1 ano, 1 ano, ..., 100 anos ou mais), total de sexo e de forma de
+    # declaração da idade: dá a idade média exata (P6). As faixas (0 a 4 anos etc.) ficam de fora para cada UF
+    # caber no limite de valores por consulta do SIDRA.
+    "ibge_censo2022_idades": Tabela(
+        9514, (93,), "censo2022/populacao_idade_simples_tabela9514.csv",
+        classificacoes=((2, "6794"), (286, "113635"),
+                        (287, ",".join(map(str, [*range(6557, 6654), *range(6656, 6660)])))),
+    ),
     # Todos os níveis de instrução; total de grupo de idade (18+), sexo e cor/raça.
     "ibge_censo2022_instrucao": Tabela(
         10061, (2667, 1002667), "censo2022/nivel_instrucao_18mais_tabela10061.csv",

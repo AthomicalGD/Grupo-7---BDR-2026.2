@@ -1,16 +1,20 @@
 // Boletim do Município: sai da fenda como o papel térmico do boletim de urna.
-// Responde a P7 (viés no tempo e espectro) e traz a P3 (indicadores) e os prefeitos (ponte para a P10).
+// Responde a P7 (viés no tempo e espectro) e traz a P3 (indicadores), a galeria dos prefeitos e a idade (P6) e a
+// ponte para a carreira de cada prefeito (P10).
 import { ArrowRight, X } from '@phosphor-icons/react'
+import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import { encode } from 'uqr'
 import { enderecoParaOutroAparelho } from '../lib/rede'
-import type { Ano, Municipio } from '../api'
+import { consultas, type Ano, type Municipio } from '../api'
 import { Retrato } from '../componentes/Retrato'
 import { AlinhamentoCamara } from '../graficos/AlinhamentoCamara'
 import { Espectro } from '../graficos/Espectro'
 import { ViesTempo } from '../graficos/ViesTempo'
 import { decimal, nomeProprio, pct, plural, reais, reaisCurto } from '../lib/formato'
+import { Galeria } from '../idade/Galeria'
+import { anos as fmtAnos, COR_TERCO, NOME_TERCO, resumoPassagens, tintaSobreSepia } from '../idade/sepia'
 import { Trilha } from './Trilha'
 import { Zonas } from './Zonas'
 
@@ -85,6 +89,70 @@ function Indicador({ valor, rotulo, fonte }: { valor: string; rotulo: string; fo
   )
 }
 
+/** Os prefeitos na galeria compacta (1996 a 2024, com a marca de cada passagem) e a idade de quem votou (P6).
+ *  Enquanto a P6 não chega, a lista simples de prefeitos que já veio com o município. */
+function PrefeitosEIdade({ m }: { m: Municipio }) {
+  const { data: idade } = useQuery(consultas.idadeMunicipio(m.ibge))
+  const a24 = idade?.anos['2024']
+  return (
+    <>
+      <Linha i={3}>
+        <h3 className="t-h3">Prefeitos eleitos</h3>
+        {idade?.galeria.length ? (
+          <>
+            <p className="mb-4 text-[0.85rem] text-tinta-3">De 1996 a 2024, com a marca de cada passagem: = mesmo partido, ≠ troca, ~ com ressalva (fusão)</p>
+            <Galeria dados={idade} compacta />
+            {idade.passagens && <p className="t-mono mt-3 text-[0.74rem] uppercase tracking-[0.04em] text-tinta-2">{resumoPassagens(idade.passagens)}</p>}
+          </>
+        ) : (
+          <>
+            <p className="mb-4 text-[0.85rem] text-tinta-3">Abra a carreira de cada um</p>
+            <ol className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+              {m.prefeitos.map((p) => (
+                <li key={p.ano + p.nome}>
+                  <Link to="/politico/$id" params={{ id: String(p.id_politico) }} className="group block">
+                    <Retrato foto={p.foto} nome={p.nome} tamanho={52} className="transition-transform group-hover:-translate-y-0.5" />
+                    <p className="mt-1.5 tabular text-[0.78rem] font-bold">{p.ano}{p.turno === 2 ? ' · 2º turno' : ''}</p>
+                    <p className="line-clamp-2 text-[0.8rem] leading-snug group-hover:underline">{nomeProprio(p.nome)}</p>
+                    <p className="t-mono text-[0.7rem] text-tinta-3">{p.partido}</p>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </>
+        )}
+      </Linha>
+      {a24 && (
+        <>
+          <Picote />
+          <Linha i={4}>
+            <p className="t-mono text-[0.78rem] tracking-[0.2em] text-tinta-2">IDADE</p>
+            <dl className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1.5 text-[0.86rem]">
+              <dt className="text-tinta-2">Quem votou em 2024</dt>
+              <dd className="tabular text-right font-bold text-tinta">{fmtAnos(a24.idade)} anos</dd>
+              <dt className="text-tinta-2">Terço no estado e no país</dt>
+              <dd className="flex justify-end gap-1.5">
+                {([['estado', a24.terco_uf], ['país', a24.terco]] as const).map(([onde, t]) => (
+                  <span key={onde} className="rounded-full px-2 py-0.5 text-[0.74rem] font-semibold" style={{ background: COR_TERCO[t], color: tintaSobreSepia(t === 1 ? 1 : t === 2 ? 3 : 5) }}>
+                    {onde}: {NOME_TERCO[t]}
+                  </span>
+                ))}
+              </dd>
+              <dt className="text-tinta-2">População (Censo 2022)</dt>
+              <dd className="tabular text-right text-tinta">{fmtAnos(idade?.idade_pop)} anos</dd>
+              <dt className="text-tinta-2">Quem votou com 60+ / com 16 a 29</dt>
+              <dd className="tabular text-right text-tinta">{pct(a24.pct_60, 0)} / {pct(a24.pct_16_29, 0)}</dd>
+            </dl>
+            <Link to="/idade" search={{ uf: m.uf === 'DF' ? undefined : m.uf, ibge: m.ibge }} className="mt-4 inline-flex items-center gap-1.5 text-[0.86rem] font-semibold text-acao hover:underline">
+              Jovem vota no jovem? Ver a P6 <ArrowRight size={14} weight="bold" aria-hidden />
+            </Link>
+          </Linha>
+        </>
+      )}
+    </>
+  )
+}
+
 export function Boletim({ m, ano, cargo, aoFechar }: { m: Municipio; ano: Ano; cargo?: string; aoFechar: () => void }) {
   const ind = m.indicadores
   const [emitido] = useState(() => new Date().toLocaleDateString('pt-BR'))
@@ -142,22 +210,7 @@ export function Boletim({ m, ano, cargo, aoFechar }: { m: Municipio; ano: Ano; c
               </Linha>
 
               <Picote />
-              <Linha i={3}>
-                <h3 className="t-h3">Prefeitos eleitos</h3>
-                <p className="mb-4 text-[0.85rem] text-tinta-3">Abra a carreira de cada um</p>
-                <ol className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
-                  {m.prefeitos.map((p) => (
-                    <li key={p.ano + p.nome}>
-                      <Link to="/politico/$id" params={{ id: String(p.id_politico) }} className="group block">
-                        <Retrato foto={p.foto} nome={p.nome} tamanho={52} className="transition-transform group-hover:-translate-y-0.5" />
-                        <p className="mt-1.5 tabular text-[0.78rem] font-bold">{p.ano}{p.turno === 2 ? ' · 2º turno' : ''}</p>
-                        <p className="line-clamp-2 text-[0.8rem] leading-snug group-hover:underline">{nomeProprio(p.nome)}</p>
-                        <p className="t-mono text-[0.78rem] text-tinta-3">{p.partido}</p>
-                      </Link>
-                    </li>
-                  ))}
-                </ol>
-              </Linha>
+              <PrefeitosEIdade m={m} />
 
               {m.cadeiras.length > 0 && (
                 <>

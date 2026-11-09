@@ -300,13 +300,22 @@
 /* Escola: os gráficos entram uma vez quando aparecem: as barras se revelam da esquerda, as fitas surgem depois. */
 @keyframes revela-esquerda { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 .revela-esquerda { animation: revela-esquerda 900ms var(--ease-saida) both; }
+@keyframes revela-direita { from { clip-path: inset(0 0 0 100%); } to { clip-path: inset(0 0 0 0); } }
+.revela-direita { animation: revela-direita 900ms var(--ease-saida) both; }
 @keyframes cresce-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 .cresce-x { transform-origin: left center; animation: cresce-x 800ms var(--ease-saida) both; }
 @keyframes surge { from { opacity: 0; } to { opacity: 1; } }
 .surge { animation: surge 600ms ease both; }
 
+/* P6: as molduras da galeria penduram uma vez, da esquerda para a direita: descem e balançam como um quadro na parede. */
+@keyframes pendura { 0% { transform: translateY(-6px) rotate(-1.8deg); } 55% { transform: translateY(1px) rotate(1.1deg); } 80% { transform: rotate(-.4deg); } 100% { transform: none; } }
+.pendura { transform-origin: 50% 0; animation: pendura 640ms var(--ease-saida) both; }
+.municipios-idade { opacity: 0; transition: opacity 120ms ease; }
+.municipios-idade.acesos { opacity: 1; transition: opacity 520ms var(--ease-saida); }
+
 @media (prefers-reduced-motion: reduce) {
-  .revela-esquerda, .cresce-x, .surge { animation: none; }
+  .pendura { animation: none; }
+  .revela-esquerda, .revela-direita, .cresce-x, .surge { animation: none; }
   [role="radio"][aria-checked="true"], .pagina-entra, .revela, .faixa-presidencial { animation: none; }
   main h1.t-display::after, main :is(h2.t-h1, h2.t-h2)::after { animation: none; transform: none; }
   .botao-vivo, .botao-contorno { transition: none; }

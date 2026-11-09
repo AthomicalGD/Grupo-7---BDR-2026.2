@@ -85,6 +85,7 @@ ITENS = {i.chave: i for i in (
     Item("ibge_populacao_estimada", "ibge", "População residente estimada (SIDRA 6579)"),
     Item("ibge_censo2022_populacao", "ibge", "População residente do Censo 2022 (SIDRA 4709)"),
     Item("ibge_censo2022_idade", "ibge", "Idade mediana e índice de envelhecimento, Censo 2022 (SIDRA 9515)"),
+    Item("ibge_censo2022_idades", "ibge", "População por idade simples, Censo 2022 (SIDRA 9514)"),
     Item("ibge_censo2022_instrucao", "ibge", "Pessoas de 18+ anos por nível de instrução, Censo 2022 (SIDRA 10061)"),
     # ---- Atlas Brasil / PNUD (via Ipeadata) ------------------------------------
     Item("idhm", "ipea", "IDHM e subíndices (educação, longevidade, renda) por município"),
@@ -133,11 +134,12 @@ NECESSIDADES = {
         "vagas": EP,
     },
     6: {  # perfil etário do município x alternância e idade dos eleitos
-        "candidatos": EP,                         # idade na posse, partido do vencedor
+        "candidatos": EP,                         # nascimento (idade na eleição), partido do vencedor
         "comparecimento_abstencao": EP,           # eleitorado e comparecimento por faixa etária
         "votacao_candidato_munzona": EP,          # voto por zona x perfil etário da zona
         "municipio_tse_ibge": None,
         "ibge_censo2022_idade": None,             # idade mediana e índice de envelhecimento
+        "ibge_censo2022_idades": None,            # população por idade simples: idade média exata
     },
     7: {  # votos por partido ao longo do tempo, com escala ideológica
         "candidatos": EP,

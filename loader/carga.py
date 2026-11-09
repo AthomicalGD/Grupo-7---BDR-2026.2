@@ -152,7 +152,9 @@ def _municipios(x: _Execucao) -> None:
         -- (Abaeté-MG ficou na BA, sem código IBGE, e os votos dela nunca entravam)
         ON CONFLICT (cd_municipio) DO UPDATE SET cd_ibge = EXCLUDED.cd_ibge, cd_uf = EXCLUDED.cd_uf
         WHERE municipio.cd_ibge IS NULL""", "municipio")
-    # Municípios citados pelo TSE e ausentes da correspondência TSE x IBGE (ex.: extintos).
+    # Municípios citados pelo TSE e ausentes da correspondência TSE x IBGE (ex.: extintos). Quem está na
+    # correspondência como de outra UF fica fora: o arquivo de candidatos de 2000 traz 5 linhas de Abaeté (MG) com
+    # SG_UF "BA", e sem esse filtro a carga da BA cadastrava Abaeté como baiano (e o MG perdia o município).
     x.sql("""
         INSERT INTO municipio (cd_municipio, nm_municipio, cd_uf)
         SELECT DISTINCT ON (cd) cd, COALESCE(nome, 'MUNICÍPIO ' || cd), %(cd_uf)s
@@ -164,7 +166,7 @@ def _municipios(x: _Execucao) -> None:
             UNION SELECT DISTINCT cd_municipio, nm_municipio FROM {s}detalhe
             UNION SELECT DISTINCT cd_municipio, nm_municipio FROM {s}perfil
         ) m
-        WHERE cd IS NOT NULL
+        WHERE cd IS NOT NULL AND cd NOT IN (SELECT cd_municipio FROM stg_municipio)
         ORDER BY cd, nome NULLS LAST
         ON CONFLICT (cd_municipio) DO NOTHING""", "municipio")
 
@@ -369,6 +371,17 @@ def atualizar_resumos(cur) -> None:
                 "REFRESH MATERIALIZED VIEW votos_candidato_uf; REFRESH MATERIALIZED VIEW politico_busca")
 
 
+# P6 (migração 015): o mesmo perfil do TSE somado por faixa etária. A faixa inválida (-3) fica fora.
+PERFIL_ETARIO = """
+        INSERT INTO perfil_etario_munzona (id_zona, ano_eleicao, cd_faixa, qtd_eleitores, qtd_comparecimento)
+        SELECT z.id_zona, v.ano, f.cd_faixa, COALESCE(sum(v.qt_aptos), 0), COALESCE(sum(v.qt_comparecimento), 0)
+        FROM {{s}}perfil v
+        JOIN tmp_zona z ON {zona}
+        JOIN faixa_etaria f ON f.cd_faixa = v.faixa
+        WHERE v.ano IS NOT NULL
+        GROUP BY 1, 2, 3"""
+
+
 def _votacao(x: _Execucao) -> None:
     x.sql("""
         INSERT INTO zona_eleitoral (cd_municipio, numero)
@@ -417,6 +430,9 @@ def _votacao(x: _Execucao) -> None:
         JOIN tmp_zona z ON {zona}
         WHERE v.ano IS NOT NULL AND v.grau IS NOT NULL
         GROUP BY 1, 2, 3""", "perfil_eleitorado_munzona")
+    x.sql(PERFIL_ETARIO.format(zona=zona), "perfil_etario_munzona")
+    x.descartadas["perfil_sem_faixa_etaria"] = x.contar(
+        "SELECT count(*) FROM {s}perfil v WHERE NOT EXISTS (SELECT 1 FROM faixa_etaria f WHERE f.cd_faixa = v.faixa)")
     x.sql(f"""
         INSERT INTO votacao_municipio (id_eleicao, cd_municipio, qt_aptos, qt_comparecimento,
                                        qt_brancos, qt_nulos, qt_abstencoes)

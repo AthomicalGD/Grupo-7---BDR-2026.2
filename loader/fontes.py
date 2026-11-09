@@ -121,10 +121,10 @@ def _chave_pessoa(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _agregar_perfil(df: pd.DataFrame) -> pd.DataFrame:
-    """O arquivo tem um corte por gênero, idade, raça etc.; só interessa escolaridade no 1º turno."""
+    """O arquivo tem um corte por gênero, idade, raça etc.; interessam escolaridade (P4) e faixa etária (P6) no 1º turno."""
     df = df[df["turno"].eq(1).fillna(False)]
     df = df.assign(grau=df["grau"].fillna("NÃO INFORMADO"))
-    chaves = ["sg_uf", "ano", "turno", "cd_municipio", "nm_municipio", "nr_zona", "grau"]
+    chaves = ["sg_uf", "ano", "turno", "cd_municipio", "nm_municipio", "nr_zona", "grau", "faixa"]
     return df.groupby(chaves, dropna=False, as_index=False)[["qt_aptos", "qt_comparecimento"]].sum()
 
 
@@ -170,7 +170,7 @@ CONJUNTOS = [
     }),
     Conjunto("perfil", "tse/comparecimento_abstencao", "perfil_comparecimento_abstencao_*.csv", {
         "ANO_ELEICAO": ("ano", "int"), "NR_TURNO": ("turno", "int"), **ZONA,
-        "DS_GRAU_ESCOLARIDADE": ("grau", "texto"), "QT_APTOS": ("qt_aptos", "int"),
+        "DS_GRAU_ESCOLARIDADE": ("grau", "texto"), "CD_FAIXA_ETARIA": ("faixa", "int"), "QT_APTOS": ("qt_aptos", "int"),
         "QT_COMPARECIMENTO": ("qt_comparecimento", "int"),
     }, pos=_agregar_perfil, apelidos={"DS_GRAU_ESCOLARIDADE": ("DS_GRAU_INSTRUCAO",)}),   # 2026: DS_GRAU_INSTRUCAO
 ]
