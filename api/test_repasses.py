@@ -2,7 +2,7 @@
 
 Uso (da pasta do projeto): python -m api.test_repasses
 """
-from api.app import conta_repasses
+from api.app import conta_patrimonio_recursos, conta_repasses
 
 
 def linha(i, eleito, fe=0.0, fp=0.0, pf=0.0, proprios=0.0, outros=0.0, votos=0):
@@ -61,6 +61,35 @@ def test_sem_ninguem():
     d = conta_repasses([linha(1, False)], 5, 2022)
     assert d["resumo"]["com_receita"] == 0 and d["valor"]["grupos"] == []
     assert d["parcela"]["eleito_menor"] is None and d["valor"]["media"] is None
+
+
+
+def bens(patrimonio, publico, receita):
+    return {"patrimonio": patrimonio, "publico": publico, "receita": receita}
+
+
+def test_patrimonio_recursos():
+    # 2 sem bens, 1 com R$ 0 e 200 com bens de 1 a 200 (o mais rico recebe todo o resto do fundo)
+    linhas = [bens(None, 100, 100), bens(None, 0, 0), bens(0, 50, 150)]
+    linhas += [bens(float(i), 1.0, 2.0) for i in range(1, 200)] + [bens(200.0, 651.0, 1000.0)]
+    d = conta_patrimonio_recursos(linhas)
+    assert d["candidatos"] == 203 and d["com_bens"] == 200 and d["publico"] == 100 + 50 + 199 + 651
+    g = {x["id"]: x for x in d["grupos"]}
+    assert list(g) == ["sem_bens", "zero", "q1", "q2", "q3", "q4"]
+    assert g["sem_bens"]["candidatos"] == 2 and g["sem_bens"]["pct_publico"] == 10.0
+    assert sum(x["candidatos"] for x in d["grupos"]) == 203
+    assert abs(sum(x["pct_publico"] for x in d["grupos"]) - 100) < 0.05
+    assert abs(sum(x["pct_receita"] for x in d["grupos"]) - 100) < 0.05
+    assert g["q1"]["de"] == 1 and g["q4"]["ate"] == 200
+    um = d["um_por_cento"]                       # 1% de 200 = 2 pessoas: patrimônio 199 e 200
+    assert um["candidatos"] == 2 and um["a_partir_de"] == 199
+    assert um["publico"] == 652 and um["pct_publico"] == 65.2
+
+
+def test_patrimonio_recursos_poucos():
+    d = conta_patrimonio_recursos([bens(10.0, 0, 0), bens(None, 0, 0)])
+    assert d["um_por_cento"]["candidatos"] == 1 and d["um_por_cento"]["pct_publico"] is None   # ninguém recebeu
+    assert conta_patrimonio_recursos([])["grupos"] == [] and conta_patrimonio_recursos([])["um_por_cento"] is None
 
 
 if __name__ == "__main__":

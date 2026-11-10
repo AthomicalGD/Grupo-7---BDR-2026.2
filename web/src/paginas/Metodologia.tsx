@@ -17,12 +17,14 @@ import p6Idade from './consultas/p6_idade.sql?raw'
 import p6Prefeitos from './consultas/p6_prefeitos.sql?raw'
 import p7Vies from './consultas/p7_vies.sql?raw'
 import p7VotosPartido from './consultas/p7_votos_partido.sql?raw'
+import p8Patrimonio from './consultas/p8_patrimonio.sql?raw'
+import p8Repasses from './consultas/p8_repasses.sql?raw'
 
 /** Seção da metodologia; `resposta` leva à tela em que a questão é respondida. */
 function Secao({ id, titulo, resposta, children }: {
   id: string
   titulo: string
-  resposta?: { para: '/' | '/cadeira' | '/cadeira/legenda' | '/patrimonio' | '/urna' | '/escola' | '/idade' | '/reeleicao' | '/indices' | '/segundo-turno'; rotulo: string }
+  resposta?: { para: '/' | '/cadeira' | '/cadeira/legenda' | '/patrimonio' | '/urna' | '/escola' | '/idade' | '/reeleicao' | '/indices' | '/repasses' | '/segundo-turno'; rotulo: string }
   children: ReactNode
 }) {
   return (
@@ -146,6 +148,7 @@ const INDICE = [
   ['m-legenda', 'P5'],
   ['m-idade', 'P6'],
   ['m-vies', 'P7'],
+  ['m-repasses', 'P8'],
   ['m-carreira', 'P10'],
   ['m-reeleicao', 'P10a'],
   ['m-segundo-turno', '2º turno'],
@@ -214,7 +217,7 @@ export function Metodologia() {
         </p>
         <ul className="list-disc space-y-2 pl-5">
           <li><b>Entra inteiro:</b> viés político (P7), escolaridade (P4, com deputados e senador; presidente e governador ficam de fora porque a disputa de 2º turno ainda não terminou) e carreira do político (P10).</li>
-          <li><b>Entra com ressalva:</b> patrimônio (P2) e reeleição (P10a). Quem foi ao 2º turno ainda não tem resultado: fica fora do patrimônio dos eleitos e, na reeleição, aparece à parte como <i>aguardando o 2º turno</i>, sem contar na taxa.</li>
+          <li><b>Entra com ressalva:</b> patrimônio (P2), reeleição (P10a) e repasses públicos (P8). Na P8, as receitas são as da prestação de contas final do 1º turno, publicada em 04/11/2026; de quem foi ao 2º turno (governador), o dinheiro dessa etapa só entra até onde já está no relatório financeiro parcial. Quem foi ao 2º turno ainda não tem resultado: fica fora do patrimônio dos eleitos e, na reeleição, aparece à parte como <i>aguardando o 2º turno</i>, sem contar na taxa.</li>
           <li><b>Fica de fora:</b> custo da cadeira (P1) e propaganda (P9), porque as contas ainda estão incompletas e o IPCA de outubro de 2026 não saiu. O 2º turno (questão extra) já foi publicado e entra.</li>
           <li><b>Mudanças no arquivo:</b> a escolaridade do candidato passou a se chamar <code>DS_GRAU_INSTRUCAO</code> (era <code>DS_GRAU_ESCOLARIDADE</code>); a carga aceita os dois nomes. A situação da candidatura (<code>DS_SITUACAO_CANDIDATURA</code>) vem toda como <code>#NE</code>, então a situação usada é a do resultado (<code>DS_SIT_TOT_TURNO</code>).</li>
           <li><b>Candidaturas sem resultado:</b> as que vêm com <code>#NULO</code> no resultado (indeferidas, renunciadas ou ainda em julgamento) ficam sem situação final e não contam como eleitas nem como não eleitas.</li>
@@ -306,7 +309,9 @@ export function Metodologia() {
           <li><b>O IFDM nas eleições de 2018 a 2024:</b> o Índice Firjan de Desenvolvimento Municipal é anual, vai de 0 a 1 e é a média simples de três áreas (Emprego e renda, Educação e Saúde), feitas com registros administrativos (emprego formal, Inep, DataSUS). Usamos a edição de 2025, que revisou o método e refez a série de 2013 a 2023. Cada eleição usa o IFDM do mesmo ano; 2024 usa o de 2023, o mais recente. O IFDM não é o IDHM com outro nome: mede outras coisas, com outras fontes, e por isso aparece com o próprio nome.</li>
           <li><b>Como o IFDM chega ao banco:</b> o site da Firjan não deixa baixar a planilha por programa, então ela é baixada pelo navegador e posta em <code>dados/firjan/</code>. O <code>python -m loader.ifdm</code> lê e grava a tabela <code>ifdm_municipio</code>. Como a planilha muda entre edições, o leitor acha sozinho a coluna do código IBGE, o ano, a área e a nota de cada coluna (os rankings ficam de fora); com <code>--simular</code>, só mostra o que achou.</li>
           <li><b>Os outros índices:</b> PIB per capita (o PIB do ano mais recente até a eleição sobre a população do ano mais próximo); eleitores por habitante (eleitores aptos por 100 habitantes; passa de 100 onde há títulos de quem já se mudou); isentos (brancos, nulos e abstenções sobre os aptos). Os eleitores e os isentos são do 1º turno, no voto para presidente nos anos gerais e para prefeito nos municipais.</li>
-          <li><b>Desempenho municipal dos partidos:</b> só eleições municipais (2012, 2016, 2020 e 2024), com o partido do prefeito eleito em cada município (eleições suplementares ficam de fora). O <b>perfil</b> é a média simples do índice nos municípios onde o partido elegeu o prefeito, com o ano do índice mais perto da eleição, de 2 anos antes a 1 depois (no empate, o anterior). A <b>evolução</b> é a média da variação do índice nesses municípios: o primeiro valor pela mesma regra e o segundo o mais longe depois da eleição, até o ano da eleição municipal seguinte, para que entre os dois só caiba a eleição analisada. O ano vale para o recorte todo, e o município sem o índice naquele ano fica de fora. O PIB per capita varia em % (nominal, sem descontar a inflação) e os outros em pontos; os isentos são os do voto para prefeito, e os eleitores por habitante usam os aptos de qualquer eleição. A população do PIB per capita e dos eleitores por habitante segue a mesma regra de ano. Por isso nem todo índice existe em toda eleição: em 2012 há o IFDM e os isentos (o PIB e a população no banco começam em 2017); em 2024, a evolução só sai para os eleitores por habitante (de 2024 a 2026).</li>
+          <li><b>Desempenho municipal dos partidos:</b> só eleições municipais (2012, 2016, 2020 e 2024), com o partido do prefeito eleito em cada município (eleições suplementares ficam de fora). O <b>perfil</b> é a média simples do índice nos municípios onde o partido elegeu o prefeito, com o ano do índice mais perto da eleição, de 2 anos antes a 1 depois (no empate, o anterior). A <b>evolução</b> é a média da variação do índice nesses municípios: o primeiro valor pela mesma regra e o segundo o mais longe depois da eleição, até o ano da eleição municipal seguinte, para que entre os dois só caiba a eleição analisada. O ano vale para o recorte todo, e o município sem o índice naquele ano fica de fora. O PIB per capita varia em % (nominal, sem descontar a inflação) e os outros em pontos; os isentos são os do voto para prefeito, e os eleitores por habitante usam os aptos de qualquer eleição. A população do PIB per capita e dos eleitores por habitante segue a mesma regra de ano. O PIB e a população vêm de 2010 em diante; em 2010, ano de Censo, o IBGE não publica estimativa e vale a população do Censo 2010 (SIDRA 202), como em 2022 vale a do Censo 2022. Mesmo assim nem todo índice existe em toda eleição: em 2024, a evolução só sai para os eleitores por habitante (de 2024 a 2026).</li>
+          <li><b>Porte dos municípios:</b> a média de um partido mistura municípios muito diferentes, e o tamanho da cidade pesa em quase todos os índices. Por isso os rankings podem ser feitos só entre municípios de porte parecido, pela população no ano da eleição (a mesma regra de ano do perfil): <b>Pequeno</b>, com menos de 50 mil habitantes; <b>Médio</b>, de 50 mil a 100 mil; e <b>Grande</b>, com mais de 100 mil. O porte é o mesmo em todos os índices, e o município sem população no ano fica fora de todo porte. Escolhido um porte, o perfil e a evolução de cada partido usam só os municípios dele, e ao lado de cada partido aparece a diferença para a média de todos os municípios daquele porte com o índice, ganhe quem ganhar (em “Todos”, para a média de todos os municípios do recorte).</li>
+          <li><b>Isentos ao contrário:</b> brancos, nulos e abstenções medem quem não escolheu ninguém, então quanto menos, melhor. Nos rankings de isentos, o perfil vai do menor para o maior e a evolução da maior queda para a maior alta; nos outros índices, do maior para o menor.</li>
           <li><b>Correlação:</b> a de Pearson (r, de −1 a +1) sobre os municípios com os dois valores, cada um com o mesmo peso (o tamanho do ponto, pelos eleitores, é só visual). No PIB per capita, sobre o logaritmo, como o eixo. Chamamos de fraca abaixo de 0,3, moderada até 0,5 e forte acima disso. A linha tracejada é a reta de mínimos quadrados.</li>
           <li><b>Segundo gráfico, o voto que se repete:</b> no eixo horizontal, o desvio padrão do viés do município só nas eleições municipais, 2020 e 2024 (populacional: a raiz da variância da P7), só para quem tem viés nas duas; no vertical, o IFDM mais recente. As gerais ficam de fora porque têm outros cargos (presidente a deputado contra prefeito e vereador), e a troca de cargos mudaria o viés mesmo sem o eleitor mudar de lado. As municipais anteriores não entram porque o viés depende da pesquisa com especialistas, que começa em 2018. Com duas eleições, o desvio padrão é a metade da diferença entre os dois viéses. Desvio pequeno quer dizer que o município vota parecido nas duas eleições, para qualquer lado: o lado não entra na conta.</li>
         </ul>
@@ -320,7 +325,7 @@ export function Metodologia() {
           <Origens
             linhas={[
               [<>IFDM e as três áreas, por município e ano (Firjan, edição 2025, série 2013–2023)</>, <><a className="text-acao underline underline-offset-4" target="_blank" rel="noreferrer" href="https://www.firjan.com.br/ifdm/downloads/">Firjan, IFDM</a>, {ARQ('Serie-Historica-IFDM-2013-a-2023.xlsx')}, baixado à mão em {ARQ('dados/firjan/')}</>, ARQ('ifdm_municipio')],
-              ['PIB municipal (SIDRA 5938) e população (6579 e Censo 2022, 4709)', <>{ARQ('dados/ibge/pib/')} e {ARQ('dados/ibge/populacao/')}</>, <>{ARQ('indices_municipio.pib')}, {ARQ('populacao')}</>],
+              ['PIB municipal (SIDRA 5938) e população (6579, Censo 2010, 202, e Censo 2022, 4709), desde 2010', <>{ARQ('dados/ibge/pib/')} e {ARQ('dados/ibge/populacao/')}</>, <>{ARQ('indices_municipio.pib')}, {ARQ('populacao')}</>],
               ['Eleitores aptos, brancos, nulos e abstenções', ARQ('dados/tse/detalhe_votacao_munzona/'), ARQ('votacao_municipio')],
               ['Viés do município em cada eleição', 'o mesmo da P7', ARQ('vies_votos_cargo')],
               [<>Logos dos partidos, ao lado da sigla nos rankings (só identificação; a licença de cada arquivo do Commons fica no manifesto)</>,
@@ -512,6 +517,59 @@ export function Metodologia() {
         </Detalhe>
       </Secao>
 
+      <Secao id="m-repasses" titulo="Repasses públicos e sucesso eleitoral (P8)" resposta={{ para: '/repasses', rotulo: 'Ver a resposta nos repasses' }}>
+        <p>
+          A pergunta compara a <b>taxa de eleição</b> de quem depende mais do dinheiro público com a de quem se financiou por
+          outras fontes. <b>Repasse público</b> é o que a campanha recebeu do <b>fundo eleitoral</b> (FEFC, o “fundo especial”)
+          e do <b>fundo partidário</b>. A conta é refeita para cada cargo, ano e lugar (todos os estados carregados, um estado
+          ou, para prefeito e vereador, um município).
+        </p>
+        <p className="rounded-xl border border-linha bg-folha px-5 py-4 text-tinta">
+          parcela pública = (fundo eleitoral + fundo partidário) ÷ receita total declarada
+          <br />
+          taxa de sucesso = eleitos ÷ candidatos do grupo
+        </p>
+        <ul className="list-disc space-y-2 pl-5">
+          <li><b>Quem entra:</b> só quem declarou alguma receita. Sem receita não há parcela; esses candidatos ficam fora dos dois gráficos e a tela diz quantos são e quantos deles se elegeram.</li>
+          <li><b>Gráfico 1, a parcela:</b> os candidatos são separados em faixas iguais de parcela pública: 5 por padrão (de 20 em 20 pontos), e a tela deixa escolher de 2 a 10. Quem tem 100% entra na última faixa. Cada barra mostra quantos candidatos a faixa tem; com menos de 5, a barra fica só no contorno.</li>
+          <li><b>Médias da parcela:</b> a média simples da parcela de cada candidato, separada entre eleitos e não eleitos.</li>
+          <li><b>Gráfico 2, o valor:</b> quem não recebeu nada dos fundos fica numa barra à parte; quem recebeu é dividido em quartis pelo valor (quantil linear, como na P2). Se valores repetidos fazem dois cortes coincidirem, as faixas se juntam e a tela avisa.</li>
+          <li><b>Média de recebimento:</b> a média do repasse de todos os candidatos com receita, só de quem recebeu algo, dos eleitos e dos não eleitos.</li>
+          <li><b>Os casos extremos:</b> o eleito com a menor parcela e o não eleito com a maior; o eleito que menos recebeu e o não eleito que mais recebeu. Quando há empate (muitos têm 100% ou R$ 0), aparece o de maior receita total, e a tela diz quantos outros empataram.</li>
+          <li><b>Anos:</b> 2018 a 2026, em valores da época (cada recorte é de um ano só, então não precisa corrigir a inflação). Em 2026, a prestação de contas final do 1º turno; para governador, o dinheiro do 2º turno ainda está incompleto, e a tela avisa. A P1 só vai até 2024 porque precisa do IPCA de outubro; por isso a P8 soma as receitas na própria consulta, em vez de usar a view <code>campanha</code>.</li>
+          <li><b>Resultado:</b> eleito é quem tem mandato na disputa, inclusive pelo 2º turno; suplementares ficam de fora.</li>
+          <li><b>Para quem foi o dinheiro (patrimônio):</b> os candidatos são separados pelos bens declarados ao TSE em cada candidatura, nos grupos da P2: sem registro de bens, bens somando R$ 0 e quartis de quem declarou bens (o mesmo quantil linear). Para cada grupo, a parte dos candidatos e a parte do dinheiro da eleição que ele recebeu: só os fundos públicos ou toda a receita, à escolha. Aqui entram todos os candidatos, mesmo sem receita (receberam R$ 0), porque a pergunta é para onde foi o dinheiro. A conta é feita em cada eleição do cargo (2018 e 2022, ou 2020 e 2024), com os quartis refeitos em cada uma.</li>
+          <li><b>O 1% mais rico:</b> o 1% de maior patrimônio entre quem declarou bens acima de R$ 0, arredondado para cima (ao menos 1 pessoa). Com menos de 100 pessoas com bens, o “1%” é só o candidato mais rico, e a tela avisa.</li>
+        </ul>
+        <Detalhe titulo="De onde vêm os dados">
+          <Origens
+            linhas={[
+              ['Receitas por fonte (DS_FONTE_RECEITA: FUNDO ESPECIAL, FUNDO PARTIDARIO, OUTROS RECURSOS)', ARQ('tse/receitas_candidatos/'), <>{ARQ('receita_de_campanha')}, somada por fonte na view {ARQ('campanha')}</>],
+              ['Candidaturas, partido e resultado', ARQ('tse/candidatos/'), <>{ARQ('politico_eleicao')}, {ARQ('mandato')}</>],
+              ['Patrimônio declarado', ARQ('tse/bens_candidatos/'), ARQ('bem.vr_bem_candidato')],
+              ['A conta', ARQ('api/app.py'), <>{ARQ('conta_repasses')} e {ARQ('conta_patrimonio_recursos')}, servidas em {ARQ('/api/repasses')} e {ARQ('/api/repasses/patrimonio')}</>],
+            ]}
+          />
+        </Detalhe>
+        <Detalhe titulo="Desafios">
+          <ul className="list-disc space-y-2 pl-5">
+            <li><b>Muita gente com R$ 0:</b> boa parte dos candidatos não recebe nada dos fundos. Se entrassem nos quartis, os primeiros quartis seriam só zeros; por isso viram um grupo à parte.</li>
+            <li><b>Empates nos extremos:</b> dezenas de não eleitos dependeram 100% dos fundos. Escolher um deles ao acaso mudaria a cada consulta; o critério fixo é a maior receita.</li>
+            <li><b>O que conta como “outra fonte”:</b> só as duas fontes públicas declaradas contam como repasse. O que veio do partido sem ser de fundo público, de outros candidatos, de vaquinhas e de rendimentos conta como outra fonte, como na prestação de contas.</li>
+          </ul>
+        </Detalhe>
+        <Detalhe titulo="Limitações">
+          <ul className="list-disc space-y-2 pl-5">
+            <li><b>O dinheiro segue a chance:</b> o partido decide quem recebe o fundo e tende a dar mais a quem já acha competitivo. A associação não prova que o repasse elege.</li>
+            <li><b>É o que foi declarado:</b> receitas não declaradas, ou declaradas com a fonte errada, não aparecem. O patrimônio também é o declarado: ninguém confere, e quem não declarou bens não é necessariamente pobre.</li>
+          </ul>
+        </Detalhe>
+        <Detalhe titulo="As consultas">
+          <Consulta titulo="Repasse público, receita total, parcela e resultado de cada candidato" sql={p8Repasses} />
+          <Consulta titulo="Patrimônio declarado e dinheiro recebido de cada candidato" sql={p8Patrimonio} />
+        </Detalhe>
+      </Secao>
+
       <Secao id="m-gastos" titulo="Onde a campanha investe em propaganda (P9)">
         <p>
           A resposta é por campanha e mora na <b>ficha de cada político</b>, em “Para onde foi o dinheiro das campanhas”: cada tipo de gasto vira um santinho
@@ -678,7 +736,7 @@ export function Metodologia() {
       <Secao id="m-fontes" titulo="Fontes">
         <ul className="space-y-2">
           <li><b>TSE, Portal de Dados Abertos</b> (<a className="text-acao underline underline-offset-4" href="https://dadosabertos.tse.jus.br" target="_blank" rel="noreferrer">dadosabertos.tse.jus.br</a>): candidaturas, votação por município e zona, comparecimento por escolaridade, prestação de contas, correspondência de municípios e fotos.</li>
-          <li><b>IBGE, SIDRA</b> (<a className="text-acao underline underline-offset-4" href="https://sidra.ibge.gov.br" target="_blank" rel="noreferrer">sidra.ibge.gov.br</a>): IPCA de outubro (tabela 1737), PIB municipal (5938), população estimada (6579), Censo 2022 (4709, população por idade simples 9514, idade mediana e envelhecimento 9515 e nível de instrução das pessoas de 18 anos ou mais, 10061).</li>
+          <li><b>IBGE, SIDRA</b> (<a className="text-acao underline underline-offset-4" href="https://sidra.ibge.gov.br" target="_blank" rel="noreferrer">sidra.ibge.gov.br</a>): IPCA de outubro (tabela 1737), PIB municipal (5938), população estimada (6579), Censo 2010 (população, 202), Censo 2022 (4709, população por idade simples 9514, idade mediana e envelhecimento 9515 e nível de instrução das pessoas de 18 anos ou mais, 10061).</li>
           <li><b>IBGE, APIs de malhas e localidades:</b> contornos dos estados e municípios (GeoJSON) e regiões intermediárias.</li>
           <li><b>Atlas Brasil (PNUD, Ipea, FJP)</b>, pelo Ipeadata: IDHM; o mais recente é o do Censo 2010.</li>
           <li><b>Firjan</b> (<a className="text-acao underline underline-offset-4" href="https://www.firjan.com.br/ifdm/" target="_blank" rel="noreferrer">firjan.com.br/ifdm</a>): Índice Firjan de Desenvolvimento Municipal (IFDM), série histórica de 2013 a 2023, edição 2025.</li>

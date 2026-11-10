@@ -3,7 +3,7 @@
 // parcela pública da receita, em faixas iguais (padrão 5, de 20 em 20 pontos), com a parcela média de eleitos e
 // não eleitos e os dois casos que fogem da regra; (2) a taxa por valor recebido, em quartis, com quem não recebeu
 // nada à parte, a média de recebimento e, de novo, os dois casos extremos. Conta em api/app.py (conta_repasses).
-import { ArrowRight, ArrowsLeftRight, Bank, HandCoins, X } from '@phosphor-icons/react'
+import { X } from '@phosphor-icons/react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
@@ -15,9 +15,10 @@ import { ErroCarga } from '../componentes/ErroCarga'
 import { Escolha } from '../componentes/Escolha'
 import { Retrato } from '../componentes/Retrato'
 import { SeletorEstado } from '../componentes/SeletorEstado'
-import { inteiro, noEstado, nomeProprio, pct, plural, reais, reaisCurto, ufsFrase } from '../lib/formato'
+import { inteiro, noEstado, nomeProprio, pct, reais, reaisCurto, ufsFrase } from '../lib/formato'
 import type { BuscaRepasses } from '../router'
 import { BarrasTaxa, type BarraTaxa } from './BarrasTaxa'
+import { PatrimonioRecursosSecao } from './PatrimonioRecursos'
 
 const FAIXAS = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 const CINZA = '#8a929b'
@@ -139,9 +140,6 @@ function Valor({ dados }: { dados: Repasses }) {
     detalhe: g.id === 'zero' ? 'R$ 0' : g.de === g.ate ? reaisCurto(g.de) : `${reaisCurto(g.de)} a ${reaisCurto(g.ate)}`,
     cor: g.id === 'zero' ? CINZA : undefined,
   }))
-  const qs = v.grupos.filter((g) => g.id !== 'zero')
-  const zero = v.grupos.find((g) => g.id === 'zero')
-  const [q1, q4] = [qs[0], qs.at(-1)]
   return (
     <>
       <div className="mt-6">
@@ -154,11 +152,6 @@ function Valor({ dados }: { dados: Repasses }) {
           sql="p8Repasses"
         />
       </div>
-      <p className="mt-6 max-w-[64ch] text-[1.02rem] leading-relaxed text-tinta-2">
-        {v.quartis === 4 ? 'Quem recebeu foi dividido em 4 grupos com o mesmo número de pessoas, do menor repasse ao maior.' : `Quem recebeu foi dividido em ${v.quartis} ${v.quartis === 1 ? 'grupo' : 'grupos'}: valores repetidos não deixam formar 4 quartis.`}
-        {q1 && q4 && q1 !== q4 && <> No quartil de menos repasse, {b(pct(q1.taxa, 0))} se elegeram; no de mais, {b(pct(q4.taxa, 0))}.</>}
-        {zero && <> {plural(zero.candidatos, 'candidato não recebeu', 'candidatos não receberam')} nada dos fundos (barra cinza): {b(pct(zero.taxa, 0))} se elegeram.</>}
-      </p>
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
         <div className="grid gap-4">
           <div className="rounded-[18px] border border-linha bg-folha p-4">
@@ -196,8 +189,9 @@ export function RepassesPagina() {
   const [aviso, setAviso] = useState('')
 
   const cargo = CARGOS_P1.find((c) => c.cod === busca.cargo) ?? CARGOS_P1[0]
-  const anos: Ano[] = cargo.municipal ? [2020, 2024] : [2018, 2022]
-  const ano = busca.ano && anos.includes(busca.ano) ? busca.ano : anos[1]
+  // 2026 com a prestação de contas final do 1º turno (a do 2º turno ainda não saiu: aviso logo abaixo do resumo)
+  const anos: Ano[] = cargo.municipal ? [2020, 2024] : [2018, 2022, 2026]
+  const ano = busca.ano && anos.includes(busca.ano) ? busca.ano : anos[anos.length - 1]
   const vereador = cargo.cod === 13
   const lugares = useMemo(() => semMunicipal(carregadas, cargo.municipal), [carregadas, cargo.municipal])
   // vereador do Brasil inteiro são centenas de milhares de candidatos: sempre um estado (o Piauí, se houver)
@@ -207,6 +201,7 @@ export function RepassesPagina() {
   const faixas = busca.faixas ?? 5
   const q = useQuery({ ...consultas.repasses(ano, cargo.cod, municipio ? '' : uf, municipio, faixas), enabled: !!ufs && (!vereador || !!uf || !!municipio), placeholderData: keepPreviousData })
   const dados = q.data
+  const qp = useQuery({ ...consultas.repassesPatrimonio(ano, cargo.cod, municipio ? '' : uf, municipio), enabled: !!ufs && (!vereador || !!uf || !!municipio), placeholderData: keepPreviousData })
 
   useEffect(() => {
     document.title = 'Quem depende de dinheiro público se elege mais? · Voto Aberto'
@@ -295,6 +290,14 @@ export function RepassesPagina() {
                 <span className="text-[0.85em] text-tinta-3"> Outros {inteiro(r!.sem_receita.candidatos)} não declararam receita nenhuma e ficam fora das contas ({inteiro(r!.sem_receita.eleitos)} deles se elegeram).</span>
               )}
             </p>
+            {dados.ano === 2026 && (
+              <p className="mt-4 max-w-[72ch] rounded-xl border border-escolha/50 bg-escolha-claro px-4 py-3 text-[0.9rem] text-tinta">
+                <b>2026:</b> receitas da prestação de contas final do 1º turno, publicada pelo TSE em 04/11/2026.
+                {dados.cargo.cod === 3
+                  ? ' Quem foi ao 2º turno ainda não entregou a prestação final dessa etapa: do dinheiro do 2º turno, só entra o que já está no relatório financeiro parcial.'
+                  : ' Este cargo foi decidido no 1º turno, então as contas estão completas.'}
+              </p>
+            )}
 
             {r!.com_receita === 0 ? (
               <p className="mt-10 text-tinta-2">Nenhum candidato com receita declarada nesta seleção.</p>
@@ -302,10 +305,6 @@ export function RepassesPagina() {
               <>
                 <section aria-labelledby="parcela" className="mt-14">
                   <h2 id="parcela" className="t-h2">Quanto da receita veio de fundos públicos</h2>
-                  <p className="mt-3 max-w-[64ch] text-tinta-2">
-                    Candidatos agrupados pela parte da receita que veio dos fundos: 0% é quem se financiou só com outras fontes
-                    (doações, dinheiro próprio), 100% quem dependeu só dos fundos. A barra é a parte de cada faixa que se elegeu.
-                  </p>
                   <Parcela dados={dados} faixas={faixas} aoFaixas={(n) => mudar({ faixas: n === 5 ? undefined : n })} />
                 </section>
 
@@ -316,37 +315,24 @@ export function RepassesPagina() {
                   </p>
                   <Valor dados={dados} />
                 </section>
+
+                <section aria-labelledby="ricos" className="mt-20">
+                  <h2 id="ricos" className="t-h2">Para quem foi o dinheiro: patrimônio dos candidatos</h2>
+                  {qp.data ? (
+                    <div aria-busy={qp.isPlaceholderData} className={`transition-opacity duration-300 ${qp.isPlaceholderData ? 'opacity-55' : ''}`}>
+                      <PatrimonioRecursosSecao dados={qp.data} dinheiro={busca.dinheiro ?? 'publico'} aoDinheiro={(d) => mudar({ dinheiro: d === 'receita' ? 'receita' : undefined })} />
+                    </div>
+                  ) : qp.error ? (
+                    <div className="mt-6"><ErroCarga erro={qp.error} compacto aoTentar={qp.refetch} /></div>
+                  ) : (
+                    <Atrasado><div className="mt-6"><EsqueletoBloco altura={320} linhas={0} rotulo="Somando os bens..." /></div></Atrasado>
+                  )}
+                </section>
               </>
             )}
           </div>
         )}
 
-        <section aria-labelledby="nao-diz" className="adiar mt-24">
-          <h2 id="nao-diz" className="t-h2">O que a conta não diz</h2>
-          <ul className="mt-8 grid gap-x-10 gap-y-6 md:grid-cols-3">
-            {[
-              { Icone: Bank, titulo: 'O partido escolhe quem recebe', texto: 'O fundo vai mais para quem o partido já acha que tem chance: o dinheiro segue a chance, não só a cria.' },
-              { Icone: HandCoins, titulo: 'É o que foi declarado', texto: 'Receitas de outros candidatos e do partido sem fundo público contam como outras fontes. Valores da época.' },
-              { Icone: ArrowsLeftRight, titulo: 'Andar junto não é causar', texto: 'Quem tem mais dinheiro, de qualquer fonte, costuma ter mais carreira e mais voto.' },
-            ].map(({ Icone, titulo, texto }) => (
-              <li key={titulo} className="flex items-start gap-3.5">
-                <span className="grid size-12 shrink-0 place-items-center rounded-full bg-selecao-claro text-selecao-tinta"><Icone size={26} weight="fill" aria-hidden /></span>
-                <span>
-                  <span className="block font-bold text-tinta">{titulo}</span>
-                  <span className="mt-0.5 block text-[0.92rem] leading-snug text-tinta-2">{texto}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-10 flex flex-wrap gap-x-6 gap-y-2 border-t border-linha pt-4 text-[0.88rem]">
-            <Link to="/cadeira" className="inline-flex items-center gap-1.5 font-semibold text-acao hover:underline">
-              De onde vem e para onde vai o dinheiro de cada disputa <ArrowRight size={14} weight="bold" aria-hidden />
-            </Link>
-            <Link to="/metodologia" className="inline-flex items-center gap-1.5 font-semibold text-acao hover:underline">
-              Fontes e método <ArrowRight size={14} weight="bold" aria-hidden />
-            </Link>
-          </div>
-        </section>
       </div>
     </div>
   )

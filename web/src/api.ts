@@ -337,6 +337,46 @@ export interface Repasses {
   }
 }
 
+/** Uma parte dos candidatos (grupo de patrimônio ou o 1% mais rico) e o dinheiro que ela recebeu. */
+export interface FatiaRecursos {
+  candidatos: number
+  /** % de todos os candidatos do recorte */
+  pct_candidatos: number | null
+  /** fundo eleitoral + fundo partidário recebido, R$ da época */
+  publico: number
+  pct_publico: number | null
+  /** toda a receita declarada */
+  receita: number
+  pct_receita: number | null
+}
+
+export interface GrupoPatrimonioRecursos extends FatiaRecursos {
+  id: 'sem_bens' | 'zero' | `q${number}`
+  rotulo: string
+  /** patrimônio do primeiro e do último do grupo; null em "sem bens" */
+  de: number | null
+  ate: number | null
+}
+
+export interface EleicaoPatrimonioRecursos {
+  ano: number
+  candidatos: number
+  /** quantos declararam bens acima de R$ 0 (a base dos quartis e do 1%) */
+  com_bens: number
+  publico: number
+  receita: number
+  grupos: GrupoPatrimonioRecursos[]
+  um_por_cento: (FatiaRecursos & { a_partir_de: number }) | null
+}
+
+export interface PatrimonioRecursos {
+  ano: number
+  cargo: { cod: CodCargoP1; nome: string }
+  escopo: { ufs: string[]; municipio: { ibge: number; nome: string } | null }
+  /** as eleições do mesmo cargo, da mais antiga à mais recente */
+  eleicoes: EleicaoPatrimonioRecursos[]
+}
+
 // ───────── P2: patrimônio declarado e taxa de eleição ─────────
 
 /** O DF não tem eleição municipal: nos recortes de prefeito e vereador ele não é um estado escolhível. */
@@ -861,13 +901,17 @@ export interface PartidoRanking {
   prefeitos: number
   /** códigos IBGE dos municípios que entraram na média (os nomes ficam em `municipios`) */
   cidades: number[]
-  /** só no perfil: a soma da população desses municípios no ano `ano_populacao` */
+  /** a soma da população desses municípios no ano `ano_populacao` (no perfil e na evolução) */
   populacao?: number | null
 }
 export interface RankingsIndice {
-  perfil: { ano: number; partidos: PartidoRanking[] } | null
+  /** `media_porte`: a média de todos os municípios do porte escolhido (ganhe quem ganhar), a referência de cada partido;
+   *  `municipios`: quantos municípios entraram */
+  perfil: { ano: number; media_porte: number | null; municipios: number; partidos: PartidoRanking[] } | null
   /** variação de `de` até `ate`: em % no PIB per capita, em pontos nos outros */
-  evolucao: { de: number; ate: number; partidos: PartidoRanking[] } | null
+  evolucao: { de: number; ate: number; media_porte: number | null; municipios: number; partidos: PartidoRanking[] } | null
+  /** quanto menos, melhor (isentos): os rankings vão do menor para o maior */
+  menor_melhor: boolean
 }
 export interface DesempenhoPartidos {
   uf: string
@@ -876,6 +920,10 @@ export interface DesempenhoPartidos {
   eleicoes: number[]
   prefeitos: number
   ano_populacao: number | null
+  porte: 'todos' | 'pequeno' | 'medio' | 'grande'
+  /** o porte pela população do ano `ano` (abaixo de limites[0], pequeno; acima de limites[1], grande; entre, médio)
+   *  e quantos municípios com prefeito eleito caem em cada um */
+  portes: { ano: number | null; limites: [number, number]; municipios: Record<'pequeno' | 'medio' | 'grande', number> }
   municipios: Record<string, { nome: string; uf: string }>
   indices: Record<string, RankingsIndice>
 }
@@ -1039,6 +1087,13 @@ export const consultas = {
         get<Repasses>(`/api/repasses?ano=${ano}&cargo=${cargo}&uf=${uf}&faixas=${faixas}${municipio ? `&municipio=${municipio}` : ''}`, signal),
       ...sempre,
     }),
+  repassesPatrimonio: (ano: number, cargo: number, uf = '', municipio?: number) =>
+    queryOptions({
+      queryKey: ['repasses-patrimonio', ano, cargo, uf, municipio ?? null],
+      queryFn: ({ signal }) =>
+        get<PatrimonioRecursos>(`/api/repasses/patrimonio?ano=${ano}&cargo=${cargo}&uf=${uf}${municipio ? `&municipio=${municipio}` : ''}`, signal),
+      ...sempre,
+    }),
   patrimonio: (ano: number, cargo: number, uf = '') =>
     queryOptions({
       queryKey: ['patrimonio', ano, cargo, uf],
@@ -1083,10 +1138,10 @@ export const consultas = {
     queryOptions({ queryKey: ['indices', uf], queryFn: ({ signal }) => get<IndicesVies>(`/api/indices?uf=${uf}`, signal), ...sempre }),
   logosPartidos: () =>
     queryOptions({ queryKey: ['logos-partidos'], queryFn: ({ signal }) => get<Record<string, LogoPartido>>('/api/partidos/logos', signal), ...sempre }),
-  indicesPartidos: (uf: string, ano: number) =>
+  indicesPartidos: (uf: string, ano: number, porte = 'todos') =>
     queryOptions({
-      queryKey: ['indices-partidos', uf, ano],
-      queryFn: ({ signal }) => get<DesempenhoPartidos>(`/api/indices/partidos?uf=${uf}&ano=${ano}`, signal),
+      queryKey: ['indices-partidos', uf, ano, porte],
+      queryFn: ({ signal }) => get<DesempenhoPartidos>(`/api/indices/partidos?uf=${uf}&ano=${ano}&porte=${porte}`, signal),
       ...sempre,
     }),
   pessoasReeleicao: (uf: string, cargo: number, eleitosEm: number, grupo: GrupoReeleicao, limite: number, busca = '') =>

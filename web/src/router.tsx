@@ -78,6 +78,8 @@ export interface BuscaRepasses {
   municipio?: number
   /** em quantas faixas iguais a parcela pública é dividida (padrão 5, de 20 em 20) */
   faixas?: number
+  /** o dinheiro repartido entre os grupos de patrimônio; sem ele, só os fundos públicos */
+  dinheiro?: 'receita'
 }
 
 export interface BuscaSegundoTurno {
@@ -117,7 +119,13 @@ export interface BuscaIndices {
   municipal?: EleicaoMunicipalP3
   /** o índice dos rankings dos partidos; sem ele, o IFDM geral */
   ranking?: IndiceP3
+  /** o porte dos municípios pela população (menos de 50 mil, 50 mil a 100 mil, mais de 100 mil); sem ele, todos */
+  porte?: PorteP3
 }
+
+/** Os portes dos municípios da P3 pela população: menos de 50 mil, de 50 mil a 100 mil e mais de 100 mil (api/app.py, porte_de). */
+export const PORTES_P3 = ['pequeno', 'medio', 'grande'] as const
+export type PorteP3 = (typeof PORTES_P3)[number]
 
 /** As eleições municipais com índices dentro das regras de ano (ver api/app.py, desempenho_partidos). */
 export const MUNICIPAIS_P3 = [2012, 2016, 2020, 2024] as const
@@ -239,10 +247,11 @@ const repasses = createRoute({
   component: lazyRouteComponent(() => import('./repasses/RepassesPagina'), 'RepassesPagina'),
   validateSearch: (s: Record<string, unknown>): BuscaRepasses => ({
     cargo: [3, 5, 6, 7, 11, 13].includes(Number(s.cargo)) ? Number(s.cargo) : undefined,
-    ano: ([2018, 2020, 2022, 2024] as const).find((a) => a === Number(s.ano)),
+    ano: ([2018, 2020, 2022, 2024, 2026] as const).find((a) => a === Number(s.ano)),
     uf: typeof s.uf === 'string' && /^[A-Z]{2}$/.test(s.uf) ? s.uf : undefined,
     municipio: numero(s.municipio),
     faixas: Number.isInteger(Number(s.faixas)) && Number(s.faixas) >= 2 && Number(s.faixas) <= 10 && Number(s.faixas) !== 5 ? Number(s.faixas) : undefined,
+    dinheiro: s.dinheiro === 'receita' ? 'receita' : undefined,
   }),
 })
 const reeleicao = createRoute({
@@ -264,6 +273,7 @@ const indices = createRoute({
     indice: INDICES_P3.find((i) => i === s.indice && i !== 'ifdm'),
     municipal: MUNICIPAIS_P3.find((a) => a === Number(s.municipal) && a !== 2020),
     ranking: INDICES_P3.find((i) => i === s.ranking && i !== 'ifdm'),
+    porte: PORTES_P3.find((p) => p === s.porte),
   }),
 })
 const politico = createRoute({
