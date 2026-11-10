@@ -675,6 +675,37 @@ Recursos desta interface, todos no `web/src`:
 - **Aviso de dados não carregados** (`componentes/ErroCarga.tsx`): quando a API responde 503 "está vazia: rode ...", a tela
   mostra o comando que falta, em vez de dizer que o banco está desligado.
 
+#### As telas das questões novas (P6, P3, P5)
+
+As três telas seguem a mesma receita: **a pergunta é o título, o veredito responde na primeira dobra** (a palavra-resposta numa
+peça de azulejo, `componentes/Veredito.tsx`, ao lado de uma frase curta), **um gráfico herói por pergunta** com os rótulos
+escritos direto nos dados, e o detalhe (tabelas, "como ler", listas longas) só sob demanda. Cada uma tem a sua assinatura,
+sempre nas três cores do azulejo, com rejunte de 3px (`.peca` em `index.css`):
+
+| Tela | Rota | Assinatura | Peças (em `web/src`) |
+|---|---|---|---|
+| Idade (P6) | `/idade` | a **faixa etária** de seis pastilhas sépia sob cada pergunta e a **régua de idade** (5 anos a mais de quem votou contra os 1,7 ano do deputado votado, na mesma escala); atalhos para as quatro perguntas | `idade/Regua.tsx`, `IdadePagina.tsx` |
+| Índices (P3) | `/indices` | a **dispersão** como protagonista (nomes dos maiores municípios no próprio ponto) e o **termômetro** da correlação em sete peças; uma só barra de escolhas (estado, eleição, índice); os rankings de partidos foram para o fim | `componentes/Termometro.tsx`, `indices/` |
+| Legenda (P5) | `/cadeira/legenda` | o **mosaico de cadeiras**: uma pastilha por cadeira (cobalto = quociente, amarelo = médias), agrupadas por partido; o veredito conta quantos partidos juntam metade das cadeiras | `legenda/Mosaico.tsx`, `LegendaPagina.tsx` |
+
+Estados cuidados: carregando (esqueleto), erro (`ErroCarga`, com o comando que falta quando a API diz "está vazia") e **sem dado**.
+Sem o IFDM no banco, `/indices` abre no PIB per capita, marca os índices do IFDM com "sem dado" e troca os gráficos por uma peça
+que ensina os dois passos (`indices/SemDado.tsx`); com `python -m loader.ifdm` tudo volta ao normal sozinho.
+Referências de design (Dribbble) e o que cada uma ensinou: `docs/inspiracoes-novas-questoes.md`.
+
+Como conferir (versão de produção, mais leve para o computador):
+
+```bash
+cd web
+npx vite build && API_ALVO=http://127.0.0.1:8001 npx vite preview --port 4190
+# em outro terminal: os testes (um worker) contra esse site e as capturas de tela
+SITE=http://localhost:4190 npx playwright test -c playwright.preview.config.ts --project=desktop --project=celular e2e/idade e2e/indices e2e/legenda
+node scripts/capturar.mjs depois http://localhost:4190     # desktop 1440x900 e celular 390x844, claro e escuro
+```
+
+As capturas de antes e depois ficam em `docs/capturas-novas-questoes/` (`antes-*` e `depois-*`; `-dobra` é só a primeira tela).
+`playwright.preview.config.ts` roda os testes contra um site já no ar, sem subir o servidor de desenvolvimento.
+
 Dicas: a primeira consulta de cada tela pode levar de segundos a meio minuto (a API monta caches em disco e fica rápida
 depois); com a máquina lenta, use sempre `npm run apresentar` em vez de `npm run dev`.
 
