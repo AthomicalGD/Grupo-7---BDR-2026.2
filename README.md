@@ -196,7 +196,7 @@ python -m loader.remover AC RS
 | 5 | Quantos candidatos de dado partido foram eleitos pelo sistema proporcional? | `scripts/05_votos_legenda.py` -> `respostas/05_votos_legenda.txt` | `/cadeira/legenda` / não tem |
 | 6 | Idade média do município x alternância de poder e idade dos eleitos | `scripts/06_idade_alternancia.py` -> `respostas/06_idade_alternancia.txt` e `06_passagens_prefeitura.csv` | `/idade` e boletim do município (galeria dos prefeitos e idade) / não tem |
 | 7 | Viés político de um município ou região na linha do tempo | `scripts/07_vies_politico_municipio.py` -> `respostas/07_vies_politico_municipio.txt` | `/`, `/uf/{sigla}` e boletim do município / `/`, `/uf/{sigla}` e município |
-| 8 | Sucesso de candidatos dependentes de repasses públicos x financiados por outras fontes | não há | Receitas por fonte (fundos públicos) em `/cadeira` |
+| 8 | Sucesso de candidatos dependentes de repasses públicos x financiados por outras fontes | não há (conta em `api/app.py`, `conta_repasses`) | `/repasses` (e as receitas por fonte em `/cadeira`) / não tem |
 | 9 | Onde o candidato investe em propaganda (nuvem de palavras)? | `scripts/09_nuvem_despesas.py` -> `respostas/09_nuvem_despesas/` | Ficha do político / não tem |
 | 10 | Sobrevivência da carreira de um político | (busca) `respostas/10b_historico_politico.txt`; (taxa de reeleição) `scripts/10a_taxa_reeleicao.py` -> `respostas/10a_taxa_reeleicao.txt` | `/urna`, ficha do político e `/reeleicao` / `/urna`, `/politico/{id}` e `/reeleicao` |
 
@@ -421,9 +421,19 @@ python scripts/svd_camara.py --nome eleicao_2026 --inicio 2023-02-01 --fim 2026-
 
 - **Sem script de resposta.** As receitas de cada candidatura, com a fonte (`DS_FONTE_RECEITA`: FUNDO ESPECIAL =
   FEFC, FUNDO PARTIDARIO, OUTROS RECURSOS), estão em `receita_de_campanha` e somadas por fonte na view `campanha`.
-- **No site:** só a parte das receitas: em `/cadeira`, quanto do dinheiro que entrou nas campanhas veio de fundos
-  públicos (fundo eleitoral e fundo partidário), por cargo, ano e estado. A comparação de sucesso entre os grupos
-  ainda não existe.
+- **Conta (`conta_repasses` em `api/app.py`):** repasse público = fundo eleitoral + fundo partidário; parcela pública =
+  repasse ÷ receita total declarada. Quem não declarou receita nenhuma fica fora (e é contado à parte). Valores da época.
+  - **Gráfico 1:** taxa de eleição por faixa de parcela pública, em faixas iguais (padrão 5, de 20 em 20 pontos; a
+    tela deixa escolher de 2 a 10; 100% entra na última). Mostra quantos candidatos há em cada faixa, a parcela média
+    de eleitos e de não eleitos, o eleito com a menor parcela e o não eleito com a maior.
+  - **Gráfico 2:** taxa de eleição por valor do repasse: quem não recebeu nada numa barra à parte e quem recebeu em
+    quartis (quantil linear, como na P2). Mostra a média de recebimento (de todos, de quem recebeu, de eleitos e de não
+    eleitos), o eleito que menos recebeu e o não eleito que mais recebeu.
+  - Nos extremos, o empate (muitos com 100% ou com R$ 0) é desfeito pela maior receita, e a tela diz quantos empataram.
+- **Recorte:** os cargos e anos da P1 (2018 a 2024; 2026 ainda não tem IPCA nem a view `campanha`), por estado ou
+  todos; prefeito e vereador também por município (vereador sempre pede um estado ou município).
+- **No site:** `/repasses` (pelo balão "Questões" e pelo link na seção de receitas de `/cadeira`). API: `/api/repasses`.
+  Testes: `python -m api.test_repasses` (a conta, sem banco) e `test_repasses_p8` em `api/test_api.py`.
 
 ### P9. Onde o candidato investe em propaganda (nuvem de palavras)?
 
@@ -518,6 +528,7 @@ python -m uvicorn api.app:app --port 8000
 | `GET /api/legenda?uf=` | P5: eleitos por partido e por `ELEITO POR QP` / `ELEITO POR MÉDIA`, por eleição e cargo |
 | `GET /api/legenda/{partido}/eleitos?ano=&cargo=&uf=&situacao=&q=&desde=&limite=` | P5: candidatos eleitos pelo partido, com a classificação TSE, busca e paginação |
 | `GET /api/patrimonio?ano=&cargo=&uf=` | P2: candidatos e eleitos por faixa de patrimônio declarado (sem bens, R$ 0 e quartis, com limites e o candidato do meio) e a fila dos que declararam bens em 100 passos, como em `respostas/02_patrimonio.txt`; Presidente sempre nacional |
+| `GET /api/repasses?ano=&cargo=&uf=&municipio=&faixas=5` | P8: taxa de eleição por faixa de parcela pública da receita (faixas iguais, 1 a 10) e por valor do repasse (sem repasse + quartis), médias de parcela e de recebimento de eleitos e não eleitos e os casos extremos; `municipio` só para prefeito e vereador |
 | `GET /api/patrimonio/panorama?uf=` | P2: a taxa de cada faixa em todos os cargos e anos de uma vez, e em quantas disputas a faixa de mais bens supera a de menos |
 | `GET /api/municipios/{ibge}?cargo=&turno=` | P7, P3 e P1 no boletim: viés e alinhamento (do município e da UF), votos por partido com o viés de cada eleição, indicadores (PIB per capita, IDHM, população, eleitores ÷ população, isentos), comparecimento, prefeitos e custo da cadeira de prefeito e vereador (2020 e 2024) |
 | `GET /api/municipios/{ibge}/zonas?ano=` | As zonas eleitorais do município: aptos, comparecimento, superior completo de quem foi votar e o mais votado (prefeito ou presidente) |
@@ -581,6 +592,7 @@ Abra http://localhost:5173. O Vite repassa `/api` para a API em `127.0.0.1:8000`
 | Boletim do município: viés, espectro do voto, alinhamento na Câmara, galeria dos prefeitos (1996 a 2024) e idade de quem votou, custo da cadeira, indicadores, QR code | `/uf/PI/2211001` | P7, P1, P3, P6 | `/uf/PI/2211001`, sem a galeria e a idade |
 | Urna de consulta (UE2020 em vetor): busca pelo nome e cédula de filtros (cargo, ano, estado, partido, resultado) | `/urna` | P10 | `/urna` (lista de políticos) |
 | Ficha da carreira: situação atual, fita das eleições, trajetória com os partidos, custo das campanhas, nuvem de gastos, santinhos | `/politico/{id}` (o id muda quando o banco é recriado) | P10, P9, P1 | `/politico/{id}`, sem a nuvem |
+| Repasses: quem depende de dinheiro público se elege mais? Taxa de eleição por parcela pública da receita (faixas ajustáveis) e por valor recebido (quartis), com médias e os casos extremos; por cargo, ano, estado ou município | `/repasses` | P8 | não tem |
 | Reeleição: quem tenta a reeleição, volta? Taxa por cargo e estado, ciclo a ciclo, e as pessoas | `/reeleicao` | P10a | `/reeleicao` |
 | O que muda no 2º turno: a largada das 135 disputas (um ponto por disputa, na parte do vencedor no 1º turno; as viradas em ouro, à esquerda da metade), as fichas de cada uma com as linhas que se cruzam, filtros por cargo, ano e viradas, e a disputa aberta com os votos de um turno ao outro, de onde vieram os votos novos e o mapa de onde o líder mudou | `/segundo-turno` | 12 (extra) | não tem |
 | Fontes, método e limitações | `/metodologia` | todas | não tem |

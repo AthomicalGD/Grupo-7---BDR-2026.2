@@ -70,6 +70,16 @@ export interface BuscaPatrimonio {
   uf?: string
 }
 
+export interface BuscaRepasses {
+  cargo?: number
+  ano?: Ano
+  uf?: string
+  /** só prefeito e vereador */
+  municipio?: number
+  /** em quantas faixas iguais a parcela pública é dividida (padrão 5, de 20 em 20) */
+  faixas?: number
+}
+
 export interface BuscaSegundoTurno {
   /** a disputa aberta (id da eleição do 2º turno) */
   d?: number
@@ -223,6 +233,18 @@ const patrimonio = createRoute({
     uf: typeof s.uf === 'string' && /^[A-Z]{2}$/.test(s.uf) ? s.uf : undefined,
   }),
 })
+const repasses = createRoute({
+  getParentRoute: () => raiz,
+  path: '/repasses',
+  component: lazyRouteComponent(() => import('./repasses/RepassesPagina'), 'RepassesPagina'),
+  validateSearch: (s: Record<string, unknown>): BuscaRepasses => ({
+    cargo: [3, 5, 6, 7, 11, 13].includes(Number(s.cargo)) ? Number(s.cargo) : undefined,
+    ano: ([2018, 2020, 2022, 2024] as const).find((a) => a === Number(s.ano)),
+    uf: typeof s.uf === 'string' && /^[A-Z]{2}$/.test(s.uf) ? s.uf : undefined,
+    municipio: numero(s.municipio),
+    faixas: Number.isInteger(Number(s.faixas)) && Number(s.faixas) >= 2 && Number(s.faixas) <= 10 && Number(s.faixas) !== 5 ? Number(s.faixas) : undefined,
+  }),
+})
 const reeleicao = createRoute({
   getParentRoute: () => raiz,
   path: '/reeleicao',
@@ -278,7 +300,7 @@ const segundoTurno = createRoute({
   }),
 })
 
-const arvore = raiz.addChildren([atlas.addChildren([inicio, estado, municipio]), urna, cadeira, legenda, escola, idade, patrimonio, reeleicao, indices, segundoTurno, politico, comparar, metodologia])
+const arvore = raiz.addChildren([atlas.addChildren([inicio, estado, municipio]), urna, cadeira, legenda, escola, idade, patrimonio, repasses, reeleicao, indices, segundoTurno, politico, comparar, metodologia])
 
 export const router = createRouter({
   routeTree: arvore,
@@ -309,7 +331,7 @@ declare module '@tanstack/react-router' {
 // Baixa o código das páginas no tempo ocioso, uma por vez, depois da primeira tela: trocar de página fica imediato
 // (sem esqueleto nem espera). O 3D não entra aqui: ele é baixado só quando a tela que o usa abre.
 const ocioso = (f: () => void) => ('requestIdleCallback' in window ? window.requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 1500))
-const paginas = [urna, cadeira, legenda, escola, idade, patrimonio, reeleicao, indices, segundoTurno, politico, metodologia]
+const paginas = [urna, cadeira, legenda, escola, idade, patrimonio, repasses, reeleicao, indices, segundoTurno, politico, metodologia]
 const proxima = () => {
   const r = paginas.shift()
   const pre = r && (r.options.component as { preload?: () => Promise<void> } | undefined)?.preload

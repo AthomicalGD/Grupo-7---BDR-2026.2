@@ -283,3 +283,22 @@ def test_idade_p6():
     if abaete["carregada"]:
         assert abaete["uf"] == "MG" and [g["ano"] for g in abaete["galeria"]] == list(range(1996, 2025, 4))
         assert abaete["galeria"][0]["passagem"] is None and all(g["passagem"] for g in abaete["galeria"][1:])
+
+
+def test_repasses_p8():
+    """A P8 fecha entre si: as faixas e os grupos somam a base, e os casos extremos são do grupo certo."""
+    d = get("/api/repasses?ano=2022&cargo=6&uf=PI")
+    r, p, v = d["resumo"], d["parcela"], d["valor"]
+    assert r["com_receita"] + r["sem_receita"]["candidatos"] == r["candidatos"] > 0
+    assert len(p["faixas"]) == 5 and sum(f["candidatos"] for f in p["faixas"]) == r["com_receita"]
+    assert sum(f["eleitos"] for f in p["faixas"]) == r["eleitos"]
+    assert sum(g["candidatos"] for g in v["grupos"]) == r["com_receita"]
+    assert p["eleito_menor"]["eleito"] and not p["nao_eleito_maior"]["eleito"]
+    assert p["eleito_menor"]["parcela"] <= p["media_eleitos"] and v["eleito_menor"]["publico"] <= v["media_eleitos"]
+    assert len(get("/api/repasses?ano=2022&cargo=6&uf=PI&faixas=10")["parcela"]["faixas"]) == 10
+    the = get("/api/repasses?ano=2024&cargo=13&municipio=2211001")
+    assert the["escopo"]["municipio"]["nome"] == "Teresina"
+    assert cliente.get("/api/repasses?ano=2024&cargo=13").status_code == 422      # vereador pede estado ou município
+    assert cliente.get("/api/repasses?ano=2022&cargo=6&municipio=2211001").status_code == 422
+    assert cliente.get("/api/repasses?ano=2024&cargo=6").status_code == 404
+    assert cliente.get("/api/repasses?ano=2022&cargo=6&faixas=11").status_code == 422

@@ -1801,6 +1801,145 @@ def cadeira(ano: int, cargo: int, ufs: tuple[str, ...], municipio: int | None) -
     }
 
 
+# ───────── P8: quem depende de repasses públicos se elege mais? ─────────
+# Repasse público = fundo eleitoral (FEFC, "FUNDO ESPECIAL") + fundo partidário, das receitas da view campanha
+# (migração 011). Parcela pública = repasse ÷ receita total declarada. Quem não declarou receita nenhuma não tem
+# parcela: fica fora dos dois gráficos e é contado à parte. Valores da época (cada recorte é de um ano só).
+# Gráfico 1: faixas iguais de parcela (padrão 5, de 20 em 20 pontos; 100% entra na última).
+# Gráfico 2: o valor absoluto do repasse; quem não recebeu nada é um grupo à parte e quem recebeu é dividido em
+# quartis (limites pelo quantil linear, como na P2; limites repetidos juntam as faixas).
+
+FAIXAS_P8 = range(1, 11)
+
+
+def _pessoa_p8(r: dict, ano: int) -> dict:
+    return {"id": r["id"], "nome": r["nome"], "partido": r["partido"], "uf": r["uf"], "local": r["nm_municipio"],
+            "eleito": bool(r["eleito"]), "publico": round(r["publico"], 2), "total": round(r["total"], 2),
+            "parcela": round(r["parcela"], 2), "votos": r["votos"],
+            "foto": foto_url(ano, r["uf"], r["sq"], r["cd_municipio"])}
+
+
+def _extremo_p8(linhas: list[dict], chave: str, menor: bool, ano: int) -> dict | None:
+    """Quem tem o menor (ou maior) valor da chave; no empate, quem declarou mais receita. `empatados` conta os
+    outros com o mesmo valor (100% de parcela, por exemplo, costuma ter muitos)."""
+    if not linhas:
+        return None
+    alvo = (min if menor else max)(r[chave] for r in linhas)
+    iguais = [r for r in linhas if abs(r[chave] - alvo) < 0.005]
+    escolhido = max(iguais, key=lambda r: (r["total"], r["votos"]))
+    return {**_pessoa_p8(escolhido, ano), "empatados": len(iguais) - 1}
+
+
+def _media_p8(valores: list[float]) -> float | None:
+    return round(sum(valores) / len(valores), 2) if valores else None
+
+
+def _grupo_p8(rotulo: str, linhas: list[dict], **extra) -> dict:
+    n, e = len(linhas), sum(bool(r["eleito"]) for r in linhas)
+    return {"rotulo": rotulo, **extra, "candidatos": n, "eleitos": e, "taxa": round(100 * e / n, 1) if n else None}
+
+
+def conta_repasses(linhas: list[dict], faixas: int, ano: int) -> dict:
+    """A conta da P8 sobre as linhas de campanhas() (pura: os testes a chamam sem banco)."""
+    fontes = ("fundo_eleitoral", "fundo_partidario", "pessoas_fisicas", "proprios", "outros")
+    base, sem_receita = [], []
+    for r in linhas:
+        total = sum(r[f] for f in fontes)
+        publico = r["fundo_eleitoral"] + r["fundo_partidario"]
+        if total <= 0:
+            sem_receita.append(r)
+            continue
+        # o "outros" da view é a diferença para o total e pode sair levemente negativo: a parcela fica em 0 a 100
+        base.append({**r, "total": total, "publico": publico, "parcela": max(0.0, min(100.0, 100 * publico / total))})
+    eleitos = [r for r in base if r["eleito"]]
+    perdedores = [r for r in base if not r["eleito"]]
+
+    # 1. parcela pública em faixas iguais
+    largura = 100 / faixas
+    grupos = [[] for _ in range(faixas)]
+    for r in base:
+        grupos[min(int(r["parcela"] // largura), faixas - 1)].append(r)
+    por_parcela = [_grupo_p8(f"{round(i * largura):g}% a {round((i + 1) * largura):g}%", g,
+                             de=round(i * largura, 2), ate=round((i + 1) * largura, 2))
+                   for i, g in enumerate(grupos)]
+
+    # 2. valor do repasse: sem repasse + quartis de quem recebeu
+    sem_repasse = [r for r in base if r["publico"] <= 0]
+    receberam = sorted((r for r in base if r["publico"] > 0), key=lambda r: r["publico"])
+    por_valor = []
+    if sem_repasse:
+        por_valor.append(_grupo_p8("Sem repasse", sem_repasse, id="zero", de=0, ate=0, media=0))
+    if receberam:
+        valores = [r["publico"] for r in receberam]
+        limites = sorted({_quantil(valores, p) for p in (0, 0.25, 0.5, 0.75, 1)})
+        quartos = [[] for _ in range(max(1, len(limites) - 1))]
+        for r in receberam:
+            quartos[min(bisect.bisect_left(limites[1:], r["publico"]), len(quartos) - 1)].append(r)
+        quartos = [q for q in quartos if q]
+        quatro = len(quartos) == 4
+        for i, q in enumerate(quartos, 1):
+            v = [r["publico"] for r in q]
+            por_valor.append(_grupo_p8(f"Q{i}" if quatro else f"Faixa {i}/{len(quartos)}", q, id=f"q{i}",
+                                       de=round(v[0], 2), ate=round(v[-1], 2), media=_media_p8(v)))
+
+    return {
+        "resumo": {"candidatos": len(linhas), "com_receita": len(base), "eleitos": len(eleitos),
+                   "taxa": round(100 * len(eleitos) / len(base), 1) if base else None,
+                   "sem_receita": _grupo_p8("Sem receita declarada", sem_receita),
+                   "receberam": len(receberam)},
+        "parcela": {
+            "faixas": por_parcela,
+            "media_eleitos": _media_p8([r["parcela"] for r in eleitos]),
+            "media_nao_eleitos": _media_p8([r["parcela"] for r in perdedores]),
+            "eleito_menor": _extremo_p8(eleitos, "parcela", True, ano),
+            "nao_eleito_maior": _extremo_p8(perdedores, "parcela", False, ano),
+        },
+        "valor": {
+            "grupos": por_valor,
+            "quartis": sum(g["id"].startswith("q") for g in por_valor),
+            "media": _media_p8([r["publico"] for r in base]),
+            "media_receberam": _media_p8([r["publico"] for r in receberam]),
+            "media_eleitos": _media_p8([r["publico"] for r in eleitos]),
+            "media_nao_eleitos": _media_p8([r["publico"] for r in perdedores]),
+            "eleito_menor": _extremo_p8(eleitos, "publico", True, ano),
+            "nao_eleito_maior": _extremo_p8(perdedores, "publico", False, ano),
+        },
+    }
+
+
+@lru_cache(maxsize=64)
+def repasses(ano: int, cargo: int, ufs: tuple[str, ...], municipio: int | None, faixas: int) -> dict:
+    m = MUNICIPIOS.get(municipio) if municipio else None
+    return {"ano": ano, "cargo": {"cod": cargo, "nome": CARGOS_P1[cargo]},
+            "escopo": {"ufs": list(ufs), "municipio": {"ibge": municipio, "nome": m["municipio"]} if m else None},
+            **conta_repasses(campanhas(ano, cargo, ufs, municipio), faixas, ano)}
+
+
+@app.get("/api/repasses")
+def repasses_endpoint(ano: int, cargo: int, uf: str = "", municipio: int | None = None,
+                      faixas: int = Query(5, ge=FAIXAS_P8.start, le=FAIXAS_P8.stop - 1)):
+    """P8: taxa de eleição por parcela pública da receita (faixas iguais) e por valor do repasse (quartis)."""
+    if cargo not in CARGOS_P1:
+        raise HTTPException(404, f"Cargo fora da P8: {cargo}")
+    if ano not in ipca() or (ano % 4 == 0) != (cargo in MUNICIPAIS):
+        raise HTTPException(404, f"Não houve eleição para {CARGOS_P1[cargo].lower()} em {ano}")
+    if municipio is not None and cargo not in MUNICIPAIS:
+        raise HTTPException(422, "O município só vale para prefeito e vereador")
+    ufs = tuple(sorted(s for s in carregadas() if s != "BR"))
+    if uf:
+        if uf.upper() not in ufs:
+            raise HTTPException(404, f"UF sem dados: {uf}")
+        ufs = (uf.upper(),)
+        sem_municipal(uf, cargo in MUNICIPAIS)
+    if municipio is not None:
+        if municipio not in MUNICIPIOS or MUNICIPIOS[municipio]["sg_uf"] not in ufs:
+            raise HTTPException(404, f"Município sem dados: {municipio}")
+        ufs = (MUNICIPIOS[municipio]["sg_uf"],)
+    elif cargo == 13 and not uf:
+        raise HTTPException(422, "Para vereador, escolha um estado ou um município")
+    return repasses(ano, cargo, ufs, municipio, faixas)
+
+
 # ───────── Eleitos pelo sistema proporcional (P5) ─────────
 
 CARGOS_P5 = {6: "Deputado federal", 7: "Deputado estadual", 13: "Vereador"}

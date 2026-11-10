@@ -284,6 +284,59 @@ export interface Cadeira {
   receitas: Record<'fundo_eleitoral' | 'fundo_partidario' | 'pessoas_fisicas' | 'proprios' | 'outros', number>
 }
 
+// ───────── P8: repasses públicos e sucesso ─────────
+
+/** Um candidato citado na P8 (o eleito com menos dinheiro público, o derrotado com mais). */
+export interface PessoaRepasse {
+  /** id_politico, para abrir a carreira */
+  id: number
+  nome: string
+  partido: string | null
+  uf: string
+  local: string | null
+  eleito: boolean
+  /** fundo eleitoral + fundo partidário, em R$ da época */
+  publico: number
+  /** receita total declarada */
+  total: number
+  /** público ÷ total, de 0 a 100 */
+  parcela: number
+  votos: number
+  foto: string | null
+  /** quantos outros têm o mesmo valor */
+  empatados: number
+}
+
+export interface GrupoRepasse {
+  rotulo: string
+  id?: string
+  de: number
+  ate: number
+  media?: number
+  candidatos: number
+  eleitos: number
+  /** % de eleitos; null quando a faixa está vazia */
+  taxa: number | null
+}
+
+export interface Repasses {
+  ano: number
+  cargo: { cod: CodCargoP1; nome: string }
+  escopo: { ufs: string[]; municipio: { ibge: number; nome: string } | null }
+  resumo: { candidatos: number; com_receita: number; eleitos: number; taxa: number | null; sem_receita: GrupoRepasse; receberam: number }
+  parcela: { faixas: GrupoRepasse[]; media_eleitos: number | null; media_nao_eleitos: number | null; eleito_menor: PessoaRepasse | null; nao_eleito_maior: PessoaRepasse | null }
+  valor: {
+    grupos: GrupoRepasse[]
+    quartis: number
+    media: number | null
+    media_receberam: number | null
+    media_eleitos: number | null
+    media_nao_eleitos: number | null
+    eleito_menor: PessoaRepasse | null
+    nao_eleito_maior: PessoaRepasse | null
+  }
+}
+
 // ───────── P2: patrimônio declarado e taxa de eleição ─────────
 
 /** O DF não tem eleição municipal: nos recortes de prefeito e vereador ele não é um estado escolhível. */
@@ -977,6 +1030,13 @@ export const consultas = {
       queryKey: ['nao-eleitos', ano, cargo, uf, municipio ?? null],
       queryFn: ({ signal }) =>
         get<Assento[]>(`/api/cadeira/nao-eleitos?ano=${ano}&cargo=${cargo}&uf=${uf}${municipio ? `&municipio=${municipio}` : ''}`, signal),
+      ...sempre,
+    }),
+  repasses: (ano: number, cargo: number, uf = '', municipio?: number, faixas = 5) =>
+    queryOptions({
+      queryKey: ['repasses', ano, cargo, uf, municipio ?? null, faixas],
+      queryFn: ({ signal }) =>
+        get<Repasses>(`/api/repasses?ano=${ano}&cargo=${cargo}&uf=${uf}&faixas=${faixas}${municipio ? `&municipio=${municipio}` : ''}`, signal),
       ...sempre,
     }),
   patrimonio: (ano: number, cargo: number, uf = '') =>
