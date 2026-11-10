@@ -130,14 +130,17 @@ def consultar(sql: str, params=None) -> list[dict]:
 CACHE_API = DADOS / "cache_api"
 # Aumente ao mudar uma conta ou consulta (o que muda um resultado); mudanças que não mudam resultados
 # (tamanho dos caches, textos de erro) não precisam, e assim não obrigam a refazer tudo.
-VERSAO_CONTAS = 3
+VERSAO_CONTAS = 5
 
 
 @lru_cache(maxsize=1)
 def versao_cache() -> str:
     dados = consultar("""
         SELECT md5(COALESCE((SELECT string_agg(sg_uf || carregada_em::text, ',' ORDER BY sg_uf) FROM carga_uf), '')
-                || COALESCE((SELECT string_agg(t::text, ',' ORDER BY t::text) FROM vies_partido_onda t), '')) AS v""")[0]["v"]
+                || COALESCE((SELECT string_agg(t::text, ',' ORDER BY t::text) FROM vies_partido_onda t), '')
+                -- os índices municipais podem ser regravados sem nova carga de UF (python -m loader.indices)
+                || COALESCE((SELECT count(*) || '/' || sum(COALESCE(populacao, 0)) || '/' || sum(COALESCE(pib, 0))
+                             FROM indices_municipio)::text, '')) AS v""")[0]["v"]
     # as fotos também entram: com o disco das fotos desconectado, as contas guardariam "sem foto" para todos
     fotos = sum(1 for _ in (DADOS / PASTA_FOTOS).glob("*/*.zip"))
     versao = f"{dados[:10]}{fotos:x}-{VERSAO_CONTAS}"
@@ -1389,9 +1392,17 @@ def indices(uf: str = TODOS):
 #   municipal seguinte; assim, entre os dois, só cabe a eleição analisada.
 # O PIB per capita varia em % (nominal) e os outros em pontos. Os isentos são os do voto para prefeito, para comparar
 # sempre o mesmo cargo; os eleitores por habitante usam os aptos de qualquer eleição (o eleitorado é o mesmo).
+# Porte: pela população do município no ano da eleição (a mesma regra de ano do perfil): Pequeno com menos de 50 mil
+# habitantes, Médio de 50 mil a 100 mil e Grande com mais de 100 mil. Vale para todos os índices. Com um porte
+# escolhido, os rankings só usam os municípios dele, e a média do porte (todos os municípios dele com o índice, ganhe
+# quem ganhar) é a referência de cada partido. Município sem população no ano fica fora de todo porte.
+# Isentos: quanto menos, melhor; os rankings dele vão do menor para o maior.
 ELEICOES_MUNICIPAIS = (2012, 2016, 2020, 2024)
 ANTES, DEPOIS, MANDATO = 2, 1, 4
 INDICES_PARTIDOS = ("ifdm", "emprego_renda", "educacao", "saude", "pib_pc", "eleitores_pop", "isentos")
+PORTES_P3 = ("pequeno", "medio", "grande")
+PORTE_MEDIO, PORTE_GRANDE = 50_000, 100_000   # habitantes: abaixo de 50 mil, pequeno; acima de 100 mil, grande
+MENOR_MELHOR_P3 = {"isentos"}
 
 SQL_PREFEITOS_ELEITOS = f"""
 SELECT DISTINCT ON (m.cd_ibge) m.cd_ibge, pa.sigla
@@ -1455,8 +1466,14 @@ def series_partidos(ufs: list[str]) -> tuple[dict, dict]:
     return s, pop
 
 
-def _ranking(prefeitos: dict, valores: dict, pop: dict | None = None) -> list[dict]:
-    """Média por partido de `valores` ({ibge: valor}) nos municípios onde ele elegeu o prefeito, da maior para a menor."""
+def porte_de(habitantes: int) -> str:
+    """Pequeno: menos de 50 mil habitantes; médio: de 50 mil a 100 mil; grande: mais de 100 mil."""
+    return "pequeno" if habitantes < PORTE_MEDIO else "grande" if habitantes > PORTE_GRANDE else "medio"
+
+
+def _ranking(prefeitos: dict, valores: dict, pop: dict | None = None, menor_melhor: bool = False) -> list[dict]:
+    """Média por partido de `valores` ({ibge: valor}) nos municípios onde ele elegeu o prefeito, do melhor para o pior:
+    da maior para a menor média, ou da menor para a maior quando `menor_melhor` (isentos)."""
     grupos = defaultdict(list)
     for ibge, sigla in prefeitos.items():
         if ibge in valores:
@@ -1468,43 +1485,58 @@ def _ranking(prefeitos: dict, valores: dict, pop: dict | None = None) -> list[di
         if pop is not None:
             linha["populacao"] = sum(pop.get(c, 0) for c in cidades) or None
         linhas.append(linha)
-    return sorted(linhas, key=lambda l: (-l["media"], -l["prefeitos"], l["sigla"]))
+    return sorted(linhas, key=lambda l: (l["media"] if menor_melhor else -l["media"], -l["prefeitos"], l["sigla"]))
 
 
-@lru_cache(maxsize=64)
+@lru_cache(maxsize=128)
 @em_disco
-def desempenho_partidos(sigla: str, ano: int) -> dict:
+def desempenho_partidos(sigla: str, ano: int, porte: str = "todos") -> dict:
     ufs = sorted(carregadas() - {"BR"}) if sigla == TODOS else [sigla]
     prefeitos = {r["cd_ibge"]: r["sigla"] for r in consultar(SQL_PREFEITOS_ELEITOS, {"ano": ano, "ufs": [UFS[u]["cd_ibge"] for u in ufs]})}
     series, pop = series_partidos(ufs)
     ano_pop = ano_perto({a for d in pop.values() for a in d}, ano)
     pop_ano = {ibge: d[ano_pop] for ibge, d in pop.items() if ano_pop in d}
+    grupo = {ibge: porte_de(n) for ibge, n in pop_ano.items()}
+    no_porte = (lambda i: True) if porte == "todos" else (lambda i: grupo.get(i) == porte)
+    # os portes contam os municípios com prefeito eleito na eleição (os dos rankings)
+    portes = {"ano": ano_pop, "limites": [PORTE_MEDIO, PORTE_GRANDE],
+              "municipios": {p: sum(grupo.get(i) == p for i in prefeitos) for p in PORTES_P3}}
 
     indices = {}
     for k, serie in series.items():
         anos = {a for d in serie.values() for a in d}
+        menor = k in MENOR_MELHOR_P3
         perfil = evolucao = None
         if (a := ano_perto(anos, ano)) is not None:
-            perfil = {"ano": a, "partidos": _ranking(prefeitos, {i: d[a] for i, d in serie.items() if a in d}, pop_ano)}
-        if par := anos_evolucao(anos, ano):
-            de, ate = par
-            delta = {i: (100 * (d[ate] / d[de] - 1) if k == "pib_pc" else d[ate] - d[de])
-                     for i, d in serie.items() if de in d and ate in d and (k != "pib_pc" or d[de] > 0)}
-            evolucao = {"de": de, "ate": ate, "partidos": _ranking(prefeitos, delta)}
-        indices[k] = {"perfil": perfil, "evolucao": evolucao}
+            valores = {i: d[a] for i, d in serie.items() if a in d}
+            escolhidos = {i: v for i, v in valores.items() if no_porte(i)}
+            perfil = {"ano": a, "media_porte": round(statistics.fmean(escolhidos.values()), 4) if escolhidos else None,
+                      "municipios": len(escolhidos), "partidos": _ranking(prefeitos, escolhidos, pop_ano, menor)}
+            if par := anos_evolucao(anos, ano):
+                de, ate = par
+                delta = {i: (100 * (d[ate] / d[de] - 1) if k == "pib_pc" else d[ate] - d[de])
+                         for i, d in serie.items() if de in d and ate in d and (k != "pib_pc" or d[de] > 0) and no_porte(i)}
+                # a população é a mesma do perfil (a do ano da eleição), somada só nos municípios com a variação
+                evolucao = {"de": de, "ate": ate, "media_porte": round(statistics.fmean(delta.values()), 4) if delta else None,
+                            "municipios": len(delta), "partidos": _ranking(prefeitos, delta, pop_ano, menor)}
+        indices[k] = {"perfil": perfil, "evolucao": evolucao, "menor_melhor": menor}
     nomes = {ibge: {"nome": MUNICIPIOS[ibge]["municipio"], "uf": MUNICIPIOS[ibge]["sg_uf"]} for ibge in prefeitos if ibge in MUNICIPIOS}
-    return {"uf": sigla, "ufs": ufs, "ano": ano, "eleicoes": list(ELEICOES_MUNICIPAIS), "prefeitos": len(prefeitos),
-            "ano_populacao": ano_pop, "municipios": nomes, "indices": indices}
+    return {"uf": sigla, "ufs": ufs, "ano": ano, "porte": porte, "eleicoes": list(ELEICOES_MUNICIPAIS), "prefeitos": len(prefeitos),
+            "ano_populacao": ano_pop, "portes": portes, "municipios": nomes, "indices": indices}
 
 
 @app.get("/api/indices/partidos")
-def indices_partidos(uf: str = TODOS, ano: int = 2020):
+def indices_partidos(uf: str = TODOS, ano: int = 2020, porte: str = "todos"):
     """P3: desempenho municipal dos partidos numa eleição municipal: o perfil (média de cada índice nos municípios onde
-    o partido elegeu o prefeito) e a evolução (média da variação do índice durante o mandato), por partido."""
+    o partido elegeu o prefeito) e a evolução (média da variação do índice durante o mandato), por partido; com
+    `porte`, só os municípios daquele porte pela população (pequeno: menos de 50 mil; medio: 50 mil a 100 mil; grande:
+    mais de 100 mil habitantes)."""
     if ano not in ELEICOES_MUNICIPAIS:
         raise HTTPException(404, f"Eleição municipal sem índices: {ano} (use {', '.join(map(str, ELEICOES_MUNICIPAIS))})")
+    if porte not in ("todos", *PORTES_P3):
+        raise HTTPException(422, f"Porte desconhecido: {porte} (use todos, {', '.join(PORTES_P3)})")
     ufs = _ufs_p10(uf)
-    return desempenho_partidos(TODOS if len(ufs) > 1 or uf.strip().upper() in ("", TODOS) else ufs[0], ano)
+    return desempenho_partidos(TODOS if len(ufs) > 1 or uf.strip().upper() in ("", TODOS) else ufs[0], ano, porte)
 
 
 # ───────── A roupa do bonequinho (migração 017) ─────────
@@ -1799,6 +1831,279 @@ def cadeira(ano: int, cargo: int, ufs: tuple[str, ...], municipio: int | None) -
         "despesas": despesas[:8] + ([{"categoria": "Outras", "valor": outras}] if outras else []),
         "receitas": {f: round(sum(r[f] for r in linhas), 2) for f in fontes},
     }
+
+
+# ───────── P8: quem depende de repasses públicos se elege mais? ─────────
+# Repasse público = fundo eleitoral (FEFC, "FUNDO ESPECIAL") + fundo partidário, das receitas da view campanha
+# (migração 011). Parcela pública = repasse ÷ receita total declarada. Quem não declarou receita nenhuma não tem
+# parcela: fica fora dos dois gráficos e é contado à parte. Valores da época (cada recorte é de um ano só).
+# Gráfico 1: faixas iguais de parcela (padrão 5, de 20 em 20 pontos; 100% entra na última).
+# Gráfico 2: o valor absoluto do repasse; quem não recebeu nada é um grupo à parte e quem recebeu é dividido em
+# quartis (limites pelo quantil linear, como na P2; limites repetidos juntam as faixas).
+
+FAIXAS_P8 = range(1, 11)
+# 2026 entra com a prestação de contas final do 1º turno (publicada em 04/11/2026); de quem foi ao 2º turno só há,
+# por ora, o relatório financeiro parcial do 2º turno. A view campanha (P1) só tem os anos com IPCA, então a P8 soma
+# as receitas na própria consulta e não muda a ficha do político nem o raio-x, que leem a view.
+ANOS_P8 = (2018, 2020, 2022, 2024, 2026)
+
+SQL_CAMPANHAS_P8 = """
+SELECT pe.id_politico_eleicao, pe.id_eleicao, pe.id_politico AS id, p.nome, pe.sq_candidato AS sq,
+       e.cd_municipio, m.cd_ibge AS municipio_ibge, m.nm_municipio, COALESCE(u.sigla, um.sigla) AS uf,
+       COALESCE(v.votos, 0) AS votos,
+       COALESCE(r.fundo_eleitoral, 0) AS fundo_eleitoral, COALESCE(r.fundo_partidario, 0) AS fundo_partidario,
+       COALESCE(r.pessoas_fisicas, 0) AS pessoas_fisicas, COALESCE(r.proprios, 0) AS proprios,
+       COALESCE(r.total, 0) - COALESCE(r.fundo_eleitoral, 0) - COALESCE(r.fundo_partidario, 0)
+         - COALESCE(r.pessoas_fisicas, 0) - COALESCE(r.proprios, 0) AS outros,
+       ma.id_mandato IS NOT NULL AS eleito, pa.sigla AS partido, pa.numero, pa.vies_politico AS vies
+FROM politico_eleicao pe
+JOIN politico p          ON p.id_politico = pe.id_politico
+JOIN eleicao e           ON e.id_eleicao = pe.id_eleicao
+LEFT JOIN municipio m    ON m.cd_municipio = e.cd_municipio
+LEFT JOIN uf um          ON um.cd_ibge = m.cd_uf
+LEFT JOIN uf u           ON u.cd_ibge = e.cd_uf
+LEFT JOIN mandato ma     ON ma.id_politico_eleicao = pe.id_politico_eleicao
+LEFT JOIN partido pa     ON pa.id_partido = COALESCE(pe.id_partido, ma.id_partido)
+-- as mesmas somas da view campanha (migração 011), feitas aqui para valer em qualquer ano
+LEFT JOIN LATERAL (
+    SELECT sum(vr_receita) FILTER (WHERE ds_fonte_receita = 'FUNDO ESPECIAL')   AS fundo_eleitoral,
+           sum(vr_receita) FILTER (WHERE ds_fonte_receita = 'FUNDO PARTIDARIO') AS fundo_partidario,
+           sum(vr_receita) FILTER (WHERE ds_fonte_receita = 'OUTROS RECURSOS'
+                                     AND ds_origem_receita = 'Recursos de pessoas físicas') AS pessoas_fisicas,
+           sum(vr_receita) FILTER (WHERE ds_fonte_receita = 'OUTROS RECURSOS'
+                                     AND ds_origem_receita = 'Recursos próprios')           AS proprios,
+           sum(vr_receita) AS total
+    FROM receita_de_campanha rc WHERE rc.id_politico_eleicao = pe.id_politico_eleicao
+) r ON true
+LEFT JOIN LATERAL (
+    SELECT sum(vc.qtd_votos_nominais) AS votos
+    FROM votacao_candidato_munzona vc JOIN eleicao ev ON ev.id_eleicao = vc.id_eleicao
+    WHERE vc.id_politico_eleicao = pe.id_politico_eleicao AND ev.turno = 1
+) v ON true
+WHERE e.ano = %(ano)s AND e.cod_cargo = ANY(CASE %(cargo)s::int WHEN 7 THEN ARRAY[7, 8] ELSE ARRAY[%(cargo)s::int] END) AND e.tipo <> 1
+  AND COALESCE(u.sigla, um.sigla) = ANY(%(ufs)s)
+  AND (%(municipio)s::int IS NULL OR m.cd_ibge = %(municipio)s::int)
+"""
+
+
+@lru_cache(maxsize=8)
+@em_disco
+def campanhas_p8(ano: int, cargo: int, ufs: tuple[str, ...], municipio: int | None) -> list[dict]:
+    """As candidaturas do recorte com as receitas por fonte e os votos do 1º turno (as colunas de campanhas(), sem a
+    despesa), em qualquer ano da P8."""
+    linhas = consultar(SQL_CAMPANHAS_P8, {"ano": ano, "cargo": cargo, "ufs": list(ufs), "municipio": municipio})
+    for r in linhas:
+        for k in ("fundo_eleitoral", "fundo_partidario", "pessoas_fisicas", "proprios", "outros"):
+            r[k] = float(r[k])
+        r["votos"] = int(r["votos"])
+    return linhas
+
+
+def _pessoa_p8(r: dict, ano: int) -> dict:
+    return {"id": r["id"], "nome": r["nome"], "partido": r["partido"], "uf": r["uf"], "local": r["nm_municipio"],
+            "eleito": bool(r["eleito"]), "publico": round(r["publico"], 2), "total": round(r["total"], 2),
+            "parcela": round(r["parcela"], 2), "votos": r["votos"],
+            "foto": foto_url(ano, r["uf"], r["sq"], r["cd_municipio"])}
+
+
+def _extremo_p8(linhas: list[dict], chave: str, menor: bool, ano: int) -> dict | None:
+    """Quem tem o menor (ou maior) valor da chave; no empate, quem declarou mais receita. `empatados` conta os
+    outros com o mesmo valor (100% de parcela, por exemplo, costuma ter muitos)."""
+    if not linhas:
+        return None
+    alvo = (min if menor else max)(r[chave] for r in linhas)
+    iguais = [r for r in linhas if abs(r[chave] - alvo) < 0.005]
+    escolhido = max(iguais, key=lambda r: (r["total"], r["votos"]))
+    return {**_pessoa_p8(escolhido, ano), "empatados": len(iguais) - 1}
+
+
+def _media_p8(valores: list[float]) -> float | None:
+    return round(sum(valores) / len(valores), 2) if valores else None
+
+
+def _grupo_p8(rotulo: str, linhas: list[dict], **extra) -> dict:
+    n, e = len(linhas), sum(bool(r["eleito"]) for r in linhas)
+    return {"rotulo": rotulo, **extra, "candidatos": n, "eleitos": e, "taxa": round(100 * e / n, 1) if n else None}
+
+
+def conta_repasses(linhas: list[dict], faixas: int, ano: int) -> dict:
+    """A conta da P8 sobre as linhas de campanhas() (pura: os testes a chamam sem banco)."""
+    fontes = ("fundo_eleitoral", "fundo_partidario", "pessoas_fisicas", "proprios", "outros")
+    base, sem_receita = [], []
+    for r in linhas:
+        total = sum(r[f] for f in fontes)
+        publico = r["fundo_eleitoral"] + r["fundo_partidario"]
+        if total <= 0:
+            sem_receita.append(r)
+            continue
+        # o "outros" da view é a diferença para o total e pode sair levemente negativo: a parcela fica em 0 a 100
+        base.append({**r, "total": total, "publico": publico, "parcela": max(0.0, min(100.0, 100 * publico / total))})
+    eleitos = [r for r in base if r["eleito"]]
+    perdedores = [r for r in base if not r["eleito"]]
+
+    # 1. parcela pública em faixas iguais
+    largura = 100 / faixas
+    grupos = [[] for _ in range(faixas)]
+    for r in base:
+        grupos[min(int(r["parcela"] // largura), faixas - 1)].append(r)
+    por_parcela = [_grupo_p8(f"{round(i * largura):g}% a {round((i + 1) * largura):g}%", g,
+                             de=round(i * largura, 2), ate=round((i + 1) * largura, 2))
+                   for i, g in enumerate(grupos)]
+
+    # 2. valor do repasse: sem repasse + quartis de quem recebeu
+    sem_repasse = [r for r in base if r["publico"] <= 0]
+    receberam = sorted((r for r in base if r["publico"] > 0), key=lambda r: r["publico"])
+    por_valor = []
+    if sem_repasse:
+        por_valor.append(_grupo_p8("Sem repasse", sem_repasse, id="zero", de=0, ate=0, media=0))
+    if receberam:
+        valores = [r["publico"] for r in receberam]
+        limites = sorted({_quantil(valores, p) for p in (0, 0.25, 0.5, 0.75, 1)})
+        quartos = [[] for _ in range(max(1, len(limites) - 1))]
+        for r in receberam:
+            quartos[min(bisect.bisect_left(limites[1:], r["publico"]), len(quartos) - 1)].append(r)
+        quartos = [q for q in quartos if q]
+        quatro = len(quartos) == 4
+        for i, q in enumerate(quartos, 1):
+            v = [r["publico"] for r in q]
+            por_valor.append(_grupo_p8(f"Q{i}" if quatro else f"Faixa {i}/{len(quartos)}", q, id=f"q{i}",
+                                       de=round(v[0], 2), ate=round(v[-1], 2), media=_media_p8(v)))
+
+    return {
+        "resumo": {"candidatos": len(linhas), "com_receita": len(base), "eleitos": len(eleitos),
+                   "taxa": round(100 * len(eleitos) / len(base), 1) if base else None,
+                   "sem_receita": _grupo_p8("Sem receita declarada", sem_receita),
+                   "receberam": len(receberam)},
+        "parcela": {
+            "faixas": por_parcela,
+            "media_eleitos": _media_p8([r["parcela"] for r in eleitos]),
+            "media_nao_eleitos": _media_p8([r["parcela"] for r in perdedores]),
+            "eleito_menor": _extremo_p8(eleitos, "parcela", True, ano),
+            "nao_eleito_maior": _extremo_p8(perdedores, "parcela", False, ano),
+        },
+        "valor": {
+            "grupos": por_valor,
+            "quartis": sum(g["id"].startswith("q") for g in por_valor),
+            "media": _media_p8([r["publico"] for r in base]),
+            "media_receberam": _media_p8([r["publico"] for r in receberam]),
+            "media_eleitos": _media_p8([r["publico"] for r in eleitos]),
+            "media_nao_eleitos": _media_p8([r["publico"] for r in perdedores]),
+            "eleito_menor": _extremo_p8(eleitos, "publico", True, ano),
+            "nao_eleito_maior": _extremo_p8(perdedores, "publico", False, ano),
+        },
+    }
+
+
+@lru_cache(maxsize=64)
+def repasses(ano: int, cargo: int, ufs: tuple[str, ...], municipio: int | None, faixas: int) -> dict:
+    m = MUNICIPIOS.get(municipio) if municipio else None
+    return {"ano": ano, "cargo": {"cod": cargo, "nome": CARGOS_P1[cargo]},
+            "escopo": {"ufs": list(ufs), "municipio": {"ibge": municipio, "nome": m["municipio"]} if m else None},
+            **conta_repasses(campanhas_p8(ano, cargo, ufs, municipio), faixas, ano)}
+
+
+def _escopo_p8(ano: int, cargo: int, uf: str, municipio: int | None) -> tuple[str, ...]:
+    """Confere o recorte da P8 (cargo, ano, UF, município) e devolve as UFs dele."""
+    if cargo not in CARGOS_P1:
+        raise HTTPException(404, f"Cargo fora da P8: {cargo}")
+    if ano not in ANOS_P8 or (ano % 4 == 0) != (cargo in MUNICIPAIS):
+        raise HTTPException(404, f"Não houve eleição para {CARGOS_P1[cargo].lower()} em {ano}")
+    if municipio is not None and cargo not in MUNICIPAIS:
+        raise HTTPException(422, "O município só vale para prefeito e vereador")
+    ufs = tuple(sorted(s for s in carregadas() if s != "BR"))
+    if uf:
+        if uf.upper() not in ufs:
+            raise HTTPException(404, f"UF sem dados: {uf}")
+        ufs = (uf.upper(),)
+        sem_municipal(uf, cargo in MUNICIPAIS)
+    if municipio is not None:
+        if municipio not in MUNICIPIOS or MUNICIPIOS[municipio]["sg_uf"] not in ufs:
+            raise HTTPException(404, f"Município sem dados: {municipio}")
+        ufs = (MUNICIPIOS[municipio]["sg_uf"],)
+    elif cargo == 13 and not uf:
+        raise HTTPException(422, "Para vereador, escolha um estado ou um município")
+    return ufs
+
+
+@app.get("/api/repasses")
+def repasses_endpoint(ano: int, cargo: int, uf: str = "", municipio: int | None = None,
+                      faixas: int = Query(5, ge=FAIXAS_P8.start, le=FAIXAS_P8.stop - 1)):
+    """P8: taxa de eleição por parcela pública da receita (faixas iguais) e por valor do repasse (quartis)."""
+    return repasses(ano, cargo, _escopo_p8(ano, cargo, uf, municipio), municipio, faixas)
+
+
+# P8 x patrimônio (P2): que parte do dinheiro de cada eleição foi para cada grupo de patrimônio declarado. Os grupos
+# são os da P2 (sem registro de bens, total R$ 0 e quartis de quem declarou bens, pelo mesmo quantil linear) e o
+# 1% mais rico é o 1% de maior patrimônio entre quem declarou bens (ao menos 1 pessoa). Entram todas as candidaturas
+# da P1, mesmo sem receita (receberam 0): a pergunta é para onde foi o dinheiro, não quem se elegeu. "Público" é o
+# fundo eleitoral + o fundo partidário; "receita", tudo o que a campanha declarou ter recebido.
+
+SQL_BENS_P8 = """
+SELECT id_politico_eleicao, sum(vr_bem_candidato)::double precision AS patrimonio
+FROM bem WHERE id_politico_eleicao = ANY(%s) GROUP BY 1
+"""
+
+
+def _fatia_p8(linhas: list[dict], totais: dict, n_total: int) -> dict:
+    publico = sum(r["publico"] for r in linhas)
+    receita = sum(r["receita"] for r in linhas)
+    return {"candidatos": len(linhas), "pct_candidatos": round(100 * len(linhas) / n_total, 2) if n_total else None,
+            "publico": round(publico, 2), "pct_publico": round(100 * publico / totais["publico"], 2) if totais["publico"] else None,
+            "receita": round(receita, 2), "pct_receita": round(100 * receita / totais["receita"], 2) if totais["receita"] else None}
+
+
+def conta_patrimonio_recursos(linhas: list[dict]) -> dict:
+    """Linhas com patrimonio (None = sem registro de bens), publico e receita. Pura: os testes a chamam sem banco."""
+    totais = {"publico": sum(r["publico"] for r in linhas), "receita": sum(r["receita"] for r in linhas)}
+    n = len(linhas)
+    grupos = []
+    sem_bens = [r for r in linhas if r["patrimonio"] is None]
+    zeros = [r for r in linhas if r["patrimonio"] is not None and r["patrimonio"] <= 0]
+    positivos = sorted((r for r in linhas if r["patrimonio"] is not None and r["patrimonio"] > 0), key=lambda r: r["patrimonio"])
+    if sem_bens:
+        grupos.append({"id": "sem_bens", "rotulo": "Sem bens declarados", "de": None, "ate": None, **_fatia_p8(sem_bens, totais, n)})
+    if zeros:
+        grupos.append({"id": "zero", "rotulo": "Bens somando R$ 0", "de": 0, "ate": 0, **_fatia_p8(zeros, totais, n)})
+    topo = None
+    if positivos:
+        valores = [r["patrimonio"] for r in positivos]
+        limites = sorted({_quantil(valores, q) for q in (0, 0.25, 0.5, 0.75, 1)})
+        quartos = [[] for _ in range(max(1, len(limites) - 1))]
+        for r in positivos:
+            quartos[min(bisect.bisect_left(limites[1:], r["patrimonio"]), len(quartos) - 1)].append(r)
+        quartos = [q for q in quartos if q]
+        quatro = len(quartos) == 4
+        for i, q in enumerate(quartos, 1):
+            grupos.append({"id": f"q{i}", "rotulo": f"Q{i}" if quatro else f"Faixa {i}/{len(quartos)}",
+                           "de": round(q[0]["patrimonio"], 2), "ate": round(q[-1]["patrimonio"], 2), **_fatia_p8(q, totais, n)})
+        k = max(1, math.ceil(len(positivos) / 100))
+        ricos = positivos[-k:]
+        topo = {"a_partir_de": round(ricos[0]["patrimonio"], 2), **_fatia_p8(ricos, totais, n)}
+    return {"candidatos": n, "com_bens": len(positivos), "publico": round(totais["publico"], 2),
+            "receita": round(totais["receita"], 2), "grupos": grupos, "um_por_cento": topo}
+
+
+@lru_cache(maxsize=64)
+def patrimonio_recursos(ano: int, cargo: int, ufs: tuple[str, ...], municipio: int | None) -> dict:
+    linhas = campanhas_p8(ano, cargo, ufs, municipio)
+    bens = {r["id_politico_eleicao"]: r["patrimonio"]
+            for r in consultar(SQL_BENS_P8, ([r["id_politico_eleicao"] for r in linhas],))} if linhas else {}
+    fontes = ("fundo_eleitoral", "fundo_partidario", "pessoas_fisicas", "proprios", "outros")
+    return {"ano": ano, **conta_patrimonio_recursos([
+        {"patrimonio": bens.get(r["id_politico_eleicao"]), "publico": r["fundo_eleitoral"] + r["fundo_partidario"],
+         "receita": sum(r[f] for f in fontes)} for r in linhas])}
+
+
+@app.get("/api/repasses/patrimonio")
+def repasses_patrimonio(ano: int, cargo: int, uf: str = "", municipio: int | None = None):
+    """P8 x P2: a parte do dinheiro público (e de toda a receita) que cada grupo de patrimônio recebeu, no ano pedido
+    e em cada eleição do mesmo cargo, e quanto ficou com o 1% mais rico."""
+    ufs = _escopo_p8(ano, cargo, uf, municipio)
+    m = MUNICIPIOS.get(municipio) if municipio else None
+    anos = [a for a in ANOS_P8 if (a % 4 == 0) == (cargo in MUNICIPAIS)]
+    return {"ano": ano, "cargo": {"cod": cargo, "nome": CARGOS_P1[cargo]},
+            "escopo": {"ufs": list(ufs), "municipio": {"ibge": municipio, "nome": m["municipio"]} if m else None},
+            "eleicoes": [patrimonio_recursos(a, cargo, ufs, municipio) for a in anos]}
 
 
 # ───────── Eleitos pelo sistema proporcional (P5) ─────────

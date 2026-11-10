@@ -123,7 +123,7 @@ function Resposta({ d, ano, indice, noUF, trocando }: { d: IndicesVies; ano: num
       </section>
 
       <section aria-labelledby="constancia" className="adiar mt-16 max-w-[var(--miolo-max)]">
-        <h2 id="constancia" className="t-h2">O IFDM e o voto que se repete</h2>
+        <h2 id="constancia" className="t-h2">O IFDM e a variação de viés</h2>
         <p className="mt-1 max-w-[64ch] text-[0.95rem] text-tinta-2">
           Agora sem olhar o lado e só nas eleições municipais: à esquerda ficam os municípios que votaram parecido em {anosDesvio} (o
           viés quase não mudou), à direita os que mais mudaram. Na altura, o IFDM{d.ifdm_recente ? ` de ${d.ifdm_recente}` : ''}, o mais recente.
@@ -216,9 +216,11 @@ export function IndicesPagina() {
         noUF={noUF}
         ano={busca.municipal ?? 2020}
         indice={busca.ranking ?? 'ifdm'}
+        porte={busca.porte}
         aoMudar={(s) => mudar({
           ...('ano' in s && { municipal: s.ano === 2020 ? undefined : s.ano }),
           ...('indice' in s && { ranking: s.indice === 'ifdm' ? undefined : s.indice }),
+          ...('porte' in s && { porte: s.porte }),
         })}
       />
 

@@ -225,7 +225,7 @@ def municipios(raiz: Path) -> pd.DataFrame:
 
 def _sidra(raiz: Path, tabela: str) -> pd.DataFrame | None:
     """Tabela do SIDRA baixada pelo crawler: cd_ibge, ano, variavel, valor."""
-    caminho = next(iter(sorted((raiz / "ibge").rglob(f"*tabela{tabela}*.csv"))), None)
+    caminho = next(iter(sorted((raiz / "ibge").rglob(f"*tabela{tabela}.csv"))), None)
     if caminho is None:
         print(f"  aviso: tabela SIDRA {tabela} não encontrada em {raiz / 'ibge'}")
         return None
@@ -250,6 +250,7 @@ def indices(raiz: Path) -> pd.DataFrame:
     serie(_sidra(raiz, "5938"), "pib")
     serie(_sidra(raiz, "6579"), "populacao")
     serie(_sidra(raiz, "4709"), "populacao_censo")
+    serie(_sidra(raiz, "202"), "populacao_censo2010")
     idade = _sidra(raiz, "9515")
     serie(idade, "mediana_idade", "mediana")
     serie(idade, "indice_envelhecimento", "envelhecimento")
@@ -269,7 +270,9 @@ def indices(raiz: Path) -> pd.DataFrame:
     for c in colunas:
         if c not in df:
             df[c] = pd.NA
-    if "populacao_censo" in df:
-        df["populacao"] = df["populacao"].fillna(df["populacao_censo"])
+    # nos anos de Censo (2010 e 2022) não há estimativa: vale a contagem do Censo
+    for censo in ("populacao_censo", "populacao_censo2010"):
+        if censo in df:
+            df["populacao"] = df["populacao"].fillna(df[censo])
     df["populacao"] = df["populacao"].round().astype("Int64")
     return df[colunas]

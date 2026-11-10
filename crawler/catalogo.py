@@ -85,6 +85,7 @@ ITENS = {i.chave: i for i in (
     Item("ibge_pib", "ibge", "PIB municipal a preços correntes (SIDRA 5938), para o PIB per capita"),
     Item("ibge_populacao_estimada", "ibge", "População residente estimada (SIDRA 6579)"),
     Item("ibge_censo2022_populacao", "ibge", "População residente do Censo 2022 (SIDRA 4709)"),
+    Item("ibge_censo2010_populacao", "ibge", "População residente do Censo 2010 (SIDRA 202)"),
     Item("ibge_censo2022_idade", "ibge", "Idade mediana e índice de envelhecimento, Censo 2022 (SIDRA 9515)"),
     Item("ibge_censo2022_idades", "ibge", "População por idade simples, Censo 2022 (SIDRA 9514)"),
     Item("ibge_censo2022_instrucao", "ibge", "Pessoas de 18+ anos por nível de instrução, Censo 2022 (SIDRA 10061)"),
@@ -116,9 +117,10 @@ NECESSIDADES = {
         # aptos, abstenções, brancos e nulos ("isentos"); 2012 e 2016 para o desempenho municipal dos partidos
         "detalhe_votacao_munzona": (2012, 2016, *EP),
         "municipio_tse_ibge": None,               # liga o código TSE ao código IBGE
-        "ibge_pib": None,
+        "ibge_pib": None,                         # 2010 em diante (a eleição municipal de 2012 usa 2010 a 2013)
         "ibge_populacao_estimada": None,
         "ibge_censo2022_populacao": None,
+        "ibge_censo2010_populacao": None,         # 2010 é ano de Censo: não há estimativa
         "idhm": None,
     },
     4: {  # escolaridade do candidato x do eleitorado que votou

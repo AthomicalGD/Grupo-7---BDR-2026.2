@@ -25,10 +25,14 @@ class Tabela:
 
 
 TABELAS = {
-    # PIB a preços correntes (mil R$); dividido pela população do ano dá o per capita.
-    "ibge_pib": Tabela(5938, (37,), "pib/pib_municipios_tabela5938.csv", ano_min=2017),
-    # Estimativas anuais. Não existem para 2022 e 2023: em 2022 use o Censo.
-    "ibge_populacao_estimada": Tabela(6579, (9324,), "populacao/estimativas_populacao_tabela6579.csv", ano_min=2017),
+    # PIB a preços correntes (mil R$); dividido pela população do ano dá o per capita. Desde 2010: a P3 usa a eleição
+    # municipal de 2012, que aceita índices de 2010 a 2013 (2 anos antes a 1 depois).
+    "ibge_pib": Tabela(5938, (37,), "pib/pib_municipios_tabela5938.csv", ano_min=2010),
+    # Estimativas anuais desde 2010. Não existem nos anos de Censo (2010, 2022) nem em 2007 e 2023: em 2010 e 2022, o Censo.
+    "ibge_populacao_estimada": Tabela(6579, (9324,), "populacao/estimativas_populacao_tabela6579.csv", ano_min=2010),
+    # Censo 2010: a população de 2010, que a estimativa não tem. A tabela vai de 1970 a 2010; total de sexo e situação.
+    "ibge_censo2010_populacao": Tabela(202, (93,), "populacao/censo2010_populacao_tabela202.csv", ano_min=2010,
+                                       classificacoes=((2, "0"), (1, "0"))),
     "ibge_censo2022_populacao": Tabela(4709, (93,), "populacao/censo2022_populacao_tabela4709.csv"),
     # Índice de envelhecimento (10612) e idade mediana (10613).
     "ibge_censo2022_idade": Tabela(9515, (10612, 10613), "censo2022/idade_mediana_envelhecimento_tabela9515.csv"),

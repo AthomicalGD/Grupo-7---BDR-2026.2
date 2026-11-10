@@ -319,6 +319,9 @@ export function CadeiraPagina() {
           <Recibo dados={dados} fator={fator} titulo={titulo} />
           <Fontes dados={dados} fator={fator} />
         </div>
+        <Link to="/repasses" search={{ cargo: cargo.cod, ano, uf: uf || undefined, municipio: vereador ? municipio : undefined }} className="mt-8 inline-flex items-center gap-2 rounded-xl border border-linha bg-folha px-4 py-3 text-[0.95rem] font-semibold text-acao shadow-sm transition-colors hover:border-acao hover:bg-papel focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-acao">
+          Quem depende de dinheiro público se elege mais? <span aria-hidden>→</span>
+        </Link>
       </section>
 
       <section aria-labelledby="voto" className="adiar mx-auto mt-16 max-w-[var(--miolo-max)]">

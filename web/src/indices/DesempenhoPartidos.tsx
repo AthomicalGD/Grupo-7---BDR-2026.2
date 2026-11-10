@@ -2,7 +2,7 @@
 // do índice escolhido: o perfil (a média do índice nos municípios onde ganhou, no ano mais perto da eleição) e a
 // evolução (a média da variação do índice durante o mandato). As regras de ano ficam na API (desempenho_partidos)
 // e na Metodologia (#m-indices).
-import { Question } from '@phosphor-icons/react'
+import { CaretDown, Question } from '@phosphor-icons/react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { useId, useState } from 'react'
@@ -12,7 +12,7 @@ import { ErroCarga } from '../componentes/ErroCarga'
 import { Escolha } from '../componentes/Escolha'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { inteiro, plural } from '../lib/formato'
-import { INDICES_P3, MUNICIPAIS_P3, type EleicaoMunicipalP3, type IndiceP3 } from '../router'
+import { INDICES_P3, MUNICIPAIS_P3, PORTES_P3, type EleicaoMunicipalP3, type IndiceP3, type PorteP3 } from '../router'
 import { INDICES } from './indices'
 
 /** Em que unidade sai a variação de cada índice. */
@@ -124,25 +124,54 @@ function AnosReferencia({ d, escolhido }: { d: Dados; escolhido: IndiceP3 }) {
   )
 }
 
-function Ranking({ titulo, explica, nota, partidos, valor, comPopulacao, nomes, comUF, vazio }: {
+/** Quantos partidos cada ranking mostra antes do botão "ver os demais". */
+const TOPO = 5
+
+const NOME_PORTE: Record<PorteP3, string> = { pequeno: 'Pequeno', medio: 'Médio', grande: 'Grande' }
+
+/** A faixa de população de cada porte (os cortes de 50 mil e 100 mil habitantes vêm da API). */
+function faixaPorte(porte: PorteP3, [medio, grande]: [number, number]) {
+  const mil = (n: number) => `${inteiro(n / 1000)} mil`
+  if (porte === 'pequeno') return `menos de ${mil(medio)} hab.`
+  if (porte === 'medio') return `${inteiro(medio / 1000)} a ${mil(grande)} hab.`
+  return `mais de ${mil(grande)} hab.`
+}
+
+function Ranking({ titulo, explica, nota, partidos, valor, diferenca, referencia, porteRotulo = '', nomes, comUF, vazio }: {
   titulo: string
   explica: string
   nota: string
   partidos: PartidoRanking[] | null
   valor: (v: number) => string
-  comPopulacao?: boolean
+  /** a diferença de um partido para a referência, com sinal */
+  diferenca: (v: number) => string
+  /** a média de todos os municípios do porte (ou de todos): a referência de cada partido */
+  referencia: { valor: number; rotulo: string } | null
+  /** " do porte" quando há porte escolhido */
+  porteRotulo?: string
   nomes: Dados['municipios']
   comUF: boolean
   vazio: string
 }) {
+  // fechado de novo a cada eleição ou índice: quem chama troca a key do ranking
+  const [todos, setTodos] = useState(false)
+  const id = useId()
+  const resto = Math.max(0, (partidos?.length ?? 0) - TOPO)
+  const visiveis = todos ? partidos : partidos?.slice(0, TOPO)
   return (
     <div className="min-w-0">
       <h3 className="t-h3">{titulo}</h3>
       <p className="mt-1 text-[0.9rem] leading-relaxed text-tinta-2">{explica}</p>
       {partidos?.length ? (
         <>
-          <ol className="mt-3 border-t border-linha">
-            {partidos.map((p, i) => (
+          {referencia && (
+            <p className="mt-3 flex flex-wrap items-baseline justify-between gap-x-3 rounded-lg bg-papel-2 px-3 py-1.5 text-[0.82rem] text-tinta-2">
+              <span>{referencia.rotulo}</span>
+              <b className="tabular text-tinta">{valor(referencia.valor)}</b>
+            </p>
+          )}
+          <ol id={id} className="mt-2 border-t border-linha">
+            {visiveis!.map((p, i) => (
               <li key={p.sigla} className="grid grid-cols-[1.6rem_minmax(0,1fr)_auto_1.75rem] items-center gap-x-3 border-b border-linha py-1.5">
                 <span className="tabular text-[0.8rem] text-tinta-3">{i + 1}º</span>
                 <div className="flex min-w-0 items-center gap-2.5">
@@ -151,15 +180,34 @@ function Ranking({ titulo, explica, nota, partidos, valor, comPopulacao, nomes, 
                     <span className="block truncate text-[0.9rem] font-bold">{p.sigla}</span>
                     <span className="block text-[0.76rem] text-tinta-3">
                       {plural(p.prefeitos, 'prefeito', 'prefeitos')}
-                      {comPopulacao && p.populacao != null && <> · {inteiro(p.populacao)} hab.</>}
+                      {p.populacao != null && <> · {inteiro(p.populacao)} hab.</>}
                     </span>
                   </div>
                 </div>
-                <span className="tabular text-[0.92rem] font-bold">{valor(p.media)}</span>
+                <span className="text-right">
+                  <span className="tabular block text-[0.92rem] font-bold">{valor(p.media)}</span>
+                  {referencia && (
+                    <span className="tabular block text-[0.72rem] text-tinta-3" title={`Diferença para: ${referencia.rotulo.toLowerCase()}`}>
+                      {diferenca(p.media - referencia.valor)} vs. média{porteRotulo}
+                    </span>
+                  )}
+                </span>
                 <Cidades sigla={p.sigla} cidades={p.cidades} nomes={nomes} comUF={comUF} />
               </li>
             ))}
           </ol>
+          {resto > 0 && (
+            <button
+              type="button"
+              aria-expanded={todos}
+              aria-controls={id}
+              onClick={() => setTodos((t) => !t)}
+              className="mt-2 inline-flex min-h-9 items-center gap-1.5 rounded-full px-2.5 text-[0.86rem] font-semibold text-acao hover:bg-papel"
+            >
+              <CaretDown size={14} weight="bold" aria-hidden className={`transition-transform duration-200 ${todos ? 'rotate-180' : ''}`} />
+              {todos ? `Mostrar só os ${TOPO} primeiros` : `Ver os outros ${plural(resto, 'partido', 'partidos')}`}
+            </button>
+          )}
           <p className="mt-2 text-[0.76rem] text-tinta-3">{nota}</p>
         </>
       ) : (
@@ -169,19 +217,27 @@ function Ranking({ titulo, explica, nota, partidos, valor, comPopulacao, nomes, 
   )
 }
 
-export function DesempenhoPartidos({ sigla, noUF, ano, indice, aoMudar }: {
+export function DesempenhoPartidos({ sigla, noUF, ano, indice, porte, aoMudar }: {
   /** uma UF ou TODOS */
   sigla: string
   noUF: string
   ano: EleicaoMunicipalP3
   indice: IndiceP3
-  aoMudar: (s: { ano?: EleicaoMunicipalP3; indice?: IndiceP3 }) => void
+  /** o porte dos municípios no índice; sem ele, todos */
+  porte?: PorteP3
+  aoMudar: (s: { ano?: EleicaoMunicipalP3; indice?: IndiceP3; porte?: PorteP3 }) => void
 }) {
-  const q = useQuery({ ...consultas.indicesPartidos(sigla, ano), placeholderData: keepPreviousData })
+  const q = useQuery({ ...consultas.indicesPartidos(sigla, ano, porte ?? 'todos'), placeholderData: keepPreviousData })
   const def = INDICES[indice]
   const d = q.data
   const r = d?.indices[indice]
   const comUF = (d?.ufs.length ?? 0) > 1
+  const menor = r?.menor_melhor ?? false
+  const ordem = menor ? 'do menor para o maior (aqui, quanto menos, melhor)' : 'da maior para a menor'
+  const doPorte = porte ? `dos municípios de porte ${NOME_PORTE[porte].toLowerCase()}` : 'de todos os municípios'
+  // a diferença no perfil sai na unidade do índice; na evolução, na da variação (pontos, ou pontos percentuais no PIB)
+  // (no PIB per capita a variação é em %, então a diferença do perfil sai em reais, com o formato do próprio índice)
+  const difPerfil = indice === 'pib_pc' ? (v: number) => `${v < 0 ? '−' : v > 0 ? '+' : ''}${def.formato(Math.abs(v))}` : def.variacao
 
   return (
     <section aria-labelledby="desempenho-partidos" className="mt-10 max-w-[var(--miolo-max)]">
@@ -208,6 +264,26 @@ export function DesempenhoPartidos({ sigla, noUF, ano, indice, aoMudar }: {
             ))}
           </div>
         </div>
+        <div>
+          <p className="t-rotulo mb-2 text-tinta-2" id="rotulo-porte">Porte dos municípios (população)</p>
+          <div role="radiogroup" aria-labelledby="rotulo-porte" className="flex flex-wrap gap-2">
+            <Escolha ativo={!porte} aoClicar={() => aoMudar({ porte: undefined })}>Todos</Escolha>
+            {PORTES_P3.map((p) => (
+              <Escolha key={p} ativo={p === porte} aoClicar={() => aoMudar({ porte: p })}
+                rotulo={d?.portes ? `${NOME_PORTE[p]}: ${faixaPorte(p, d.portes.limites)}, ${plural(d.portes.municipios[p], 'município', 'municípios')}` : NOME_PORTE[p]}>
+                {NOME_PORTE[p]}
+                {d?.portes && <span className="tabular text-[0.76rem] font-normal opacity-80">{faixaPorte(p, d.portes.limites)}</span>}
+              </Escolha>
+            ))}
+          </div>
+          {d?.portes && (
+            <p className="mt-2 max-w-[64ch] text-[0.8rem] text-tinta-3">
+              Pela população de {d.portes.ano}, entre os municípios que elegeram prefeito em {d.ano}:{' '}
+              {PORTES_P3.map((p) => `${inteiro(d.portes!.municipios[p])} ${NOME_PORTE[p].toLowerCase()}${d.portes!.municipios[p] === 1 ? '' : 's'}`).join(', ')}.
+              O porte vale para todos os índices.
+            </p>
+          )}
+        </div>
       </div>
 
       {q.error && d && (
@@ -221,23 +297,33 @@ export function DesempenhoPartidos({ sigla, noUF, ano, indice, aoMudar }: {
           <p className="mt-5 max-w-[64ch] text-[0.9rem] leading-relaxed text-tinta-2">{def.explica}</p>
           <div className="mt-5 grid gap-10 lg:grid-cols-2 lg:gap-8">
             <Ranking
+              key={`perfil-${d.ano}-${indice}-${d.porte}`}
               titulo="Perfil de índice"
-              explica={`A média do ${def.eixo} nos municípios onde cada partido elegeu o prefeito em ${d.ano}, da maior para a menor.`}
+              explica={`A média do ${def.eixo} nos municípios${porte ? ` de porte ${NOME_PORTE[porte].toLowerCase()}` : ''} onde cada partido elegeu o prefeito em ${d.ano}, ${ordem}.`}
+              diferenca={difPerfil}
+              porteRotulo={porte ? ' do porte' : ''}
+              referencia={r.perfil?.media_porte != null ? { valor: r.perfil.media_porte, rotulo: `Média ${doPorte} (${inteiro(r.perfil.municipios)})` } : null}
               nota={r.perfil
                 ? `${def.eixo} de ${r.perfil.ano}${r.perfil.ano !== d.ano ? ` (o mais perto da eleição de ${d.ano})` : ''}. ` +
                   (d.ano_populacao ? `População de ${d.ano_populacao}.` : 'Sem população dentro das regras de ano para esta eleição.')
                 : ''}
               partidos={r.perfil?.partidos ?? null}
               valor={def.formato}
-              comPopulacao
               nomes={d.municipios}
               comUF={comUF}
               vazio={`Sem ${def.eixo} entre ${d.ano - 2} e ${d.ano + 1}, a distância máxima da eleição de ${d.ano}.`}
             />
             <Ranking
+              key={`evolucao-${d.ano}-${indice}-${d.porte}`}
               titulo="Evolução de índice"
-              explica={`A média da variação do ${def.eixo} durante o mandato, nos municípios onde cada partido elegeu o prefeito em ${d.ano}, da maior para a menor.`}
-              nota={r.evolucao ? `Variação de ${r.evolucao.de} a ${r.evolucao.ate}, ${UNIDADE[indice]}.` : ''}
+              explica={`A média da variação do ${def.eixo} durante o mandato, nos municípios${porte ? ` de porte ${NOME_PORTE[porte].toLowerCase()}` : ''} onde cada partido elegeu o prefeito em ${d.ano}, ${ordem}.`}
+              diferenca={def.variacao}
+              porteRotulo={porte ? ' do porte' : ''}
+              referencia={r.evolucao?.media_porte != null ? { valor: r.evolucao.media_porte, rotulo: `Variação média ${doPorte} (${inteiro(r.evolucao.municipios)})` } : null}
+              nota={r.evolucao
+                ? `Variação de ${r.evolucao.de} a ${r.evolucao.ate}, ${UNIDADE[indice]}. ` +
+                  (d.ano_populacao ? `População de ${d.ano_populacao}, só dos municípios com a variação.` : 'Sem população dentro das regras de ano para esta eleição.')
+                : ''}
               partidos={r.evolucao?.partidos ?? null}
               valor={def.variacao}
               nomes={d.municipios}
@@ -252,8 +338,8 @@ export function DesempenhoPartidos({ sigla, noUF, ano, indice, aoMudar }: {
           </p>
           <TabelaAlternavel
             titulo={`${def.eixo} por partido, prefeitos eleitos em ${d.ano} ${noUF}`}
-            colunas={['Partido', 'Prefeitos (perfil)', 'População', `Perfil: ${def.eixo}${r.perfil ? ` ${r.perfil.ano}` : ''}`, 'Prefeitos (evolução)',
-              `Evolução${r.evolucao ? ` ${r.evolucao.de}–${r.evolucao.ate}` : ''}`]}
+            colunas={['Partido', 'Prefeitos (perfil)', 'População (perfil)', `Perfil: ${def.eixo}${r.perfil ? ` ${r.perfil.ano}` : ''}`, 'Prefeitos (evolução)',
+              'População (evolução)', `Evolução${r.evolucao ? ` ${r.evolucao.de}–${r.evolucao.ate}` : ''}`]}
             linhas={() => {
               const evol = new Map((r.evolucao?.partidos ?? []).map((p) => [p.sigla, p]))
               const siglas = [...new Set([...(r.perfil?.partidos ?? []).map((p) => p.sigla), ...evol.keys()])]
@@ -261,7 +347,7 @@ export function DesempenhoPartidos({ sigla, noUF, ano, indice, aoMudar }: {
               return siglas.map((s) => {
                 const p = perf.get(s), e = evol.get(s)
                 return [s, p ? inteiro(p.prefeitos) : '-', p?.populacao != null ? inteiro(p.populacao) : '-', p ? def.formato(p.media) : '-',
-                  e ? inteiro(e.prefeitos) : '-', e ? def.variacao(e.media) : '-']
+                  e ? inteiro(e.prefeitos) : '-', e?.populacao != null ? inteiro(e.populacao) : '-', e ? def.variacao(e.media) : '-']
               })
             }}
           />

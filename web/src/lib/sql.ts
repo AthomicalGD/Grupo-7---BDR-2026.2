@@ -10,9 +10,11 @@ import p4Lugar from '../paginas/consultas/p4_lugar.sql?raw'
 import p4Votos from '../paginas/consultas/p4_votos.sql?raw'
 import p7Vies from '../paginas/consultas/p7_vies.sql?raw'
 import p7VotosPartido from '../paginas/consultas/p7_votos_partido.sql?raw'
+import p8Patrimonio from '../paginas/consultas/p8_patrimonio.sql?raw'
+import p8Repasses from '../paginas/consultas/p8_repasses.sql?raw'
 
 export const SQL = {
-  p1Campanha, p1Gasto, p2Patrimonio, p4Chance, p4Lugar, p4Votos, p7Vies, p7VotosPartido, p10Carreira, p10Reeleicao, p12SegundoTurno,
+  p1Campanha, p1Gasto, p2Patrimonio, p4Chance, p4Lugar, p4Votos, p7Vies, p7VotosPartido, p8Patrimonio, p8Repasses, p10Carreira, p10Reeleicao, p12SegundoTurno,
 } as const
 
 export type ConsultaSql = keyof typeof SQL
