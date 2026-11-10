@@ -139,6 +139,10 @@ function BarraUtilitaria({ aula, aoAula, aoTour, questoes, aoQuestoes }: { aula:
 
 function Cabecalho() {
   const caminho = useRouterState({ select: (s) => s.location.pathname })
+  // a página atual aparece no menu mesmo quando ele rola (as últimas ficam escondidas à direita no celular)
+  useEffect(() => {
+    document.querySelector('nav[aria-label="Principal"] [aria-current="page"]')?.scrollIntoView({ inline: 'center', block: 'nearest' })
+  }, [caminho])
   return (
     <header className="sticky top-0 z-30 bg-folha">
       <div className="mx-auto flex h-14 max-w-[var(--casca-max)] items-center justify-between gap-2 px-4 max-[379px]:gap-1 max-[379px]:px-3 sm:gap-6 md:px-[var(--casca-margem)]">
@@ -147,8 +151,9 @@ function Cabecalho() {
           <img src={letreiroNegativo} alt="" className="so-escuro hidden h-9 w-auto lg:block" />
           <img src={simbolo} alt="Voto Aberto" className="h-8 w-auto max-[379px]:h-7 lg:hidden" />
         </Link>
-        <nav aria-label="Principal">
-          <ul className="flex items-center gap-0 sm:gap-1.5">
+        {/* no celular o menu não cabe: ele rola de lado (sem barra) em vez de alargar a página inteira */}
+        <nav aria-label="Principal" className="min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <ul className="flex w-max items-center gap-0 sm:gap-1.5">
             {NAV.map((item) => {
               const ativo = item.ativo(caminho)
               const Icone = item.icone
