@@ -1,10 +1,10 @@
-import { expect, registrar, test } from './base'
+import { expect, moduloAtual, registrar, test } from './base'
 
 test('P4: o caderno, os santinhos, o plenário e o boletim respondem as perguntas A e B com os números da resposta', async ({ page }) => {
   test.setTimeout(90_000) // percorre a página toda: régua, chance, mapa por estado, boletim e ranking
   await page.goto('/escola')
   await expect(page.getByRole('heading', { name: 'Quanto estudou quem senta na cadeira?' })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Escola', exact: true })).toHaveAttribute('aria-current', 'page')
+  await moduloAtual(page, 'Escola')
   // abre em 2022: superior completo é 9% de quem votou, 52% dos candidatos e 77% dos eleitos (AC, BA, GO, PA, PE, PI)
   await expect(page.getByText(/superior completo era 9% de quem votou, 52% de quem se candidatou e 77% de quem se elegeu/)).toBeVisible()
   await registrar(page, 'escola')

@@ -1,10 +1,10 @@
-import { expect, test } from './base'
+import { expect, moduloAtual, test } from './base'
 
 test('P5: filtra partidos, abre os eleitos e usa o carimbo com a categoria oficial', async ({ page, erros }) => {
   await page.goto('/cadeira/legenda?ano_p5=2022&cargo=6&uf=PI')
 
   await expect(page.getByRole('heading', { name: 'Como os partidos preencheram as cadeiras?' })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Cadeira', exact: true })).toHaveAttribute('aria-current', 'page')
+  await moduloAtual(page, 'Cadeira')
   await expect(page.getByText(/Em 2022, Piauí, foram eleitos 10 deputados federais/)).toBeVisible()
 
   const qp = page.getByRole('button', { name: /^PT: .* eleitos pelo quociente/ })

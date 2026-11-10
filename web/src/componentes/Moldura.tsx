@@ -1,8 +1,8 @@
-import { Archive, Armchair, ArrowsClockwise, BookOpenText, ChartScatter, GraduationCap, Hourglass, Intersect, MapTrifold, Moon, PiggyBank, Sun, type Icon } from '@phosphor-icons/react'
+import { Archive, Armchair, ArrowsClockwise, BookOpenText, CaretDown, ChartScatter, GraduationCap, Hourglass, Intersect, MapTrifold, Moon, PiggyBank, Sun, type Icon } from '@phosphor-icons/react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'motion/react'
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { consultas } from '../api'
 import letreiro from '../assets/marca/letreiro-horizontal.svg'
 import letreiroNegativo from '../assets/marca/letreiro-horizontal-negativo.svg'
@@ -35,18 +35,18 @@ function usePreferencia(chave: string, atributo: string, inicial: string) {
 // Cada módulo tem um ícone; o ativo vira uma pílula no oliva claro da seleção (o mesmo papel em todo o
 // sistema), com o laço das fitas embaixo. A pílula desliza entre os itens (mola) e o ícone pula e fica
 // cheio ao chegar.
-type ItemNav = { para: '/' | '/urna' | '/cadeira' | '/escola' | '/idade' | '/patrimonio' | '/reeleicao' | '/indices' | '/segundo-turno' | '/metodologia'; rotulo: string; curto?: string; icone: Icon; ativo: (p: string) => boolean }
+type ItemNav = { para: '/' | '/urna' | '/cadeira' | '/escola' | '/idade' | '/patrimonio' | '/reeleicao' | '/indices' | '/segundo-turno' | '/metodologia'; rotulo: string; icone: Icon; ativo: (p: string) => boolean }
 const NAV: ItemNav[] = [
   { para: '/', rotulo: 'Mapa', icone: MapTrifold, ativo: (p) => p === '/' || p.startsWith('/uf') },
   { para: '/urna', rotulo: 'Urna', icone: Archive, ativo: (p) => p.startsWith('/urna') || p.startsWith('/politico') },
   { para: '/cadeira', rotulo: 'Cadeira', icone: Armchair, ativo: (p) => p.startsWith('/cadeira') },
   { para: '/escola', rotulo: 'Escola', icone: GraduationCap, ativo: (p) => p.startsWith('/escola') },
   { para: '/idade', rotulo: 'Idade', icone: Hourglass, ativo: (p) => p.startsWith('/idade') },
-  { para: '/patrimonio', rotulo: 'Patrimônio', curto: 'Bens', icone: PiggyBank, ativo: (p) => p.startsWith('/patrimonio') },
+  { para: '/patrimonio', rotulo: 'Patrimônio', icone: PiggyBank, ativo: (p) => p.startsWith('/patrimonio') },
   { para: '/reeleicao', rotulo: 'Reeleição', icone: ArrowsClockwise, ativo: (p) => p.startsWith('/reeleicao') },
   { para: '/indices', rotulo: 'Índices', icone: ChartScatter, ativo: (p) => p.startsWith('/indices') },
-  { para: '/segundo-turno', rotulo: '2º turno', curto: 'Virada', icone: Intersect, ativo: (p) => p.startsWith('/segundo-turno') },
-  { para: '/metodologia', rotulo: 'Metodologia', curto: 'Método', icone: BookOpenText, ativo: (p) => p.startsWith('/metodologia') },
+  { para: '/segundo-turno', rotulo: '2º turno', icone: Intersect, ativo: (p) => p.startsWith('/segundo-turno') },
+  { para: '/metodologia', rotulo: 'Metodologia', icone: BookOpenText, ativo: (p) => p.startsWith('/metodologia') },
 ]
 
 function BarraUtilitaria({ aula, aoAula, aoTour, questoes, aoQuestoes }: { aula: boolean; aoAula: (v: boolean) => void; aoTour: () => void; questoes: boolean; aoQuestoes: (v: boolean) => void }) {
@@ -139,69 +139,119 @@ function BarraUtilitaria({ aula, aoAula, aoTour, questoes, aoQuestoes }: { aula:
 
 function Cabecalho() {
   const caminho = useRouterState({ select: (s) => s.location.pathname })
-  // a página atual aparece no menu mesmo quando ele rola (as últimas ficam escondidas à direita no celular)
+  const atual = NAV.find((i) => i.ativo(caminho))
+
+  // até o tablet o menu é um painel que abre sob demanda (dez itens não cabem em linha sem apertar tudo)
+  const [aberto, setAberto] = useState(false)
+  const caixa = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    document.querySelector('nav[aria-label="Principal"] [aria-current="page"]')?.scrollIntoView({ inline: 'center', block: 'nearest' })
-  }, [caminho])
+    if (!aberto) return
+    const fora = (e: PointerEvent) => {
+      if (!caixa.current?.contains(e.target as Node)) setAberto(false)
+    }
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      setAberto(false)
+      caixa.current?.querySelector<HTMLButtonElement>('button[aria-controls]')?.focus()
+    }
+    document.addEventListener('pointerdown', fora)
+    document.addEventListener('keydown', esc)
+    return () => {
+      document.removeEventListener('pointerdown', fora)
+      document.removeEventListener('keydown', esc)
+    }
+  }, [aberto])
+
+  const principais = NAV.filter((i) => i.para !== '/metodologia')
+  const metodo = NAV[NAV.length - 1]
   return (
-    <header className="sticky top-0 z-30 bg-folha">
-      <div className="mx-auto flex h-14 max-w-[var(--casca-max)] items-center justify-between gap-2 px-4 max-[379px]:gap-1 max-[379px]:px-3 sm:gap-6 md:px-[var(--casca-margem)]">
+    <header ref={caixa} className="sticky top-0 z-30 bg-folha">
+      <div className="mx-auto flex h-14 max-w-[var(--casca-max)] items-center gap-4 px-4 md:px-[var(--casca-margem)] lg:gap-6">
         <Link to="/" className="shrink-0" aria-label="Voto Aberto, página inicial">
-          <img src={letreiro} alt="Voto Aberto" className="so-claro hidden h-9 w-auto lg:block" />
-          <img src={letreiroNegativo} alt="" className="so-escuro hidden h-9 w-auto lg:block" />
-          <img src={simbolo} alt="Voto Aberto" className="h-8 w-auto max-[379px]:h-7 lg:hidden" />
+          <img src={letreiro} alt="Voto Aberto" className="so-claro hidden h-9 w-auto xl:block" />
+          <img src={letreiroNegativo} alt="" className="so-escuro hidden h-9 w-auto xl:block" />
+          <img src={simbolo} alt="Voto Aberto" className="h-8 w-auto xl:hidden" />
         </Link>
-        {/* no celular o menu não cabe: ele rola de lado (sem barra) em vez de alargar a página inteira */}
-        <nav aria-label="Principal" className="min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <ul className="flex w-max items-center gap-0 sm:gap-1.5">
+
+        {/* tela larga: só o nome de cada módulo, o atual na pílula; a Metodologia (que não é um módulo) fica à parte, à direita */}
+        <nav aria-label="Principal" className="hidden min-w-0 flex-1 lg:block">
+          <ul className="flex items-center gap-1">
+            {principais.map((item) => (
+              <li key={item.para} className="relative">
+                <ItemMenu item={item} ativo={item.ativo(caminho)} />
+              </li>
+            ))}
+            <li className="relative ml-auto">
+              <ItemMenu item={metodo} ativo={metodo.ativo(caminho)} discreto />
+            </li>
+          </ul>
+        </nav>
+
+        {/* tablet e celular: um botão com o módulo em que se está; o resto abre sob demanda */}
+        <button
+          type="button"
+          aria-expanded={aberto}
+          aria-controls="menu-modulos"
+          onClick={() => setAberto(!aberto)}
+          className="alvo-44 ml-auto inline-flex items-center gap-2 rounded-full border-2 border-tinta bg-papel px-4 font-[family-name:var(--font-display)] text-[0.95rem] font-semibold text-tinta lg:hidden"
+        >
+          {atual && <atual.icone size={18} weight="fill" aria-hidden />}
+          <span className="sr-only">Módulos: </span>
+          {atual?.rotulo ?? 'Módulos'}
+          <CaretDown size={14} weight="bold" aria-hidden className={`transition-transform ${aberto ? 'rotate-180' : ''}`} />
+        </button>
+      </div>
+
+      {aberto && (
+        <nav id="menu-modulos" aria-label="Principal" className="border-t-[3px] border-tinta bg-folha lg:hidden">
+          <ul className="mx-auto grid max-w-[var(--casca-max)] grid-cols-2 gap-2 px-4 py-3 sm:grid-cols-3 md:px-[var(--casca-margem)]">
             {NAV.map((item) => {
               const ativo = item.ativo(caminho)
               const Icone = item.icone
               return (
-                <li key={item.para} className="relative">
-                  {ativo && (
-                    <motion.span
-                      layoutId="nav-pilula"
-                      aria-hidden
-                      className="absolute inset-x-0 inset-y-1 rounded-full sm:inset-y-0.5"
-                      style={{ background: 'var(--color-selecao-claro)' }}
-                      transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                    />
-                  )}
+                <li key={item.para}>
                   <Link
                     to={item.para}
-                    className={`nav-item relative flex items-center gap-1.5 whitespace-nowrap rounded-full px-[2px] py-2 text-[0.8rem] transition-colors max-sm:text-[0.78rem] max-sm:[font-stretch:76%] max-[379px]:px-[1px] max-[379px]:text-[0.76rem] sm:px-3 lg:max-xl:px-2 sm:text-[0.97rem] ${ativo ? 'font-semibold' : 'text-tinta-2 hover:bg-papel hover:text-tinta'}`}
-                    style={ativo ? { color: 'var(--color-selecao-tinta)' } : undefined}
                     aria-current={ativo ? 'page' : undefined}
-                    aria-label={item.curto ? item.rotulo : undefined}
+                    onClick={() => setAberto(false)}
+                    className={`flex min-h-12 items-center gap-2.5 rounded-[var(--canto)] border-2 border-tinta px-3 font-[family-name:var(--font-display)] text-[0.95rem] font-semibold ${ativo ? '' : 'bg-papel text-tinta hover:bg-papel-2'}`}
+                    style={ativo ? { background: 'var(--color-selecao-claro)', color: 'var(--color-selecao-tinta)' } : undefined}
                   >
-                    <motion.span
-                      key={ativo ? 'ativo' : 'parado'}
-                      aria-hidden
-                      className="hidden lg:inline-flex"
-                      initial={ativo ? { scale: 0.6, rotate: -12 } : false}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ type: 'spring', stiffness: 520, damping: 14 }}
-                    >
-                      <Icone size={19} weight={ativo ? 'fill' : 'regular'} />
-                    </motion.span>
-                    {item.curto ? (
-                      <>
-                        <span aria-hidden className="lg:hidden">{item.curto}</span>
-                        <span aria-hidden className="hidden lg:inline">{item.rotulo}</span>
-                      </>
-                    ) : (
-                      item.rotulo
-                    )}
+                    <Icone size={20} weight={ativo ? 'fill' : 'regular'} aria-hidden />
+                    {item.rotulo}
                   </Link>
                 </li>
               )
             })}
           </ul>
         </nav>
-      </div>
-      {/* azulejo: o rejunte de 3px do cabeçalho substitui a onda das fitas */}
+      )}
     </header>
+  )
+}
+
+/** Um item do menu em tela larga: só o nome, sem ícone (dez ícones em fila eram o ruído). */
+function ItemMenu({ item, ativo, discreto = false }: { item: ItemNav; ativo: boolean; discreto?: boolean }) {
+  return (
+    <>
+      {ativo && (
+        <motion.span
+          layoutId="nav-pilula"
+          aria-hidden
+          className="absolute inset-0 rounded-full"
+          style={{ background: 'var(--color-selecao-claro)' }}
+          transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+        />
+      )}
+      <Link
+        to={item.para}
+        className={`nav-item relative block whitespace-nowrap rounded-full px-3 py-2 transition-colors lg:max-xl:px-2.5 ${discreto ? 'text-[0.88rem]' : 'text-[0.95rem]'} ${ativo ? '' : 'text-tinta-2 hover:bg-papel hover:text-tinta'}`}
+        style={ativo ? { color: 'var(--color-selecao-tinta)' } : undefined}
+        aria-current={ativo ? 'page' : undefined}
+      >
+        {item.rotulo}
+      </Link>
+    </>
   )
 }
 

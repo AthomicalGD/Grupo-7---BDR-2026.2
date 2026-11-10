@@ -27,3 +27,10 @@ export async function cabeNaTela(page: Page) {
   expect(janela, 'o navegador encolheu a página: algo passou da largura').toBeLessThanOrEqual(largura)
   expect(rolagem, 'rolagem lateral').toBeLessThanOrEqual(largura)
 }
+
+/** O módulo em que se está: na tela larga é o link da barra com aria-current; no celular, o botão que abre o menu. */
+export async function moduloAtual(page: Page, rotulo: string) {
+  const botao = page.getByRole('button', { name: /^Módulos:/ })
+  if (await botao.isVisible()) await expect(botao).toContainText(rotulo)
+  else await expect(page.getByRole('link', { name: rotulo, exact: true })).toHaveAttribute('aria-current', 'page')
+}

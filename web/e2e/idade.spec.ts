@@ -1,10 +1,10 @@
-import { expect, registrar, test } from './base'
+import { expect, moduloAtual, registrar, test } from './base'
 
 test('P6: o mapa sépia, as passagens de mandato, a galeria, a pirâmide e os halteres respondem "jovem vota no jovem?"', async ({ page }) => {
   test.setTimeout(120_000) // a primeira visita monta a base da P6 na API (~18 s), se não estiver em cache
   await page.goto('/idade')
   await expect(page.getByRole('heading', { level: 1, name: 'Jovem vota no jovem?' })).toBeVisible({ timeout: 60_000 })
-  await expect(page.getByRole('link', { name: 'Idade', exact: true })).toHaveAttribute('aria-current', 'page')
+  await moduloAtual(page, 'Idade')
   // a resposta do topo compara zonas de mesma escolaridade, com os mesmos candidatos a deputado
   await expect(page.getByText(/zonas onde quem votou é 5 anos mais velho dão votos a deputados/)).toBeVisible({ timeout: 30_000 })
   await expect(page.getByRole('img', { name: /idade média de quem votou em 2024/ })).toBeVisible()

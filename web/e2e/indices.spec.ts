@@ -1,11 +1,11 @@
-import { cabeNaTela, expect, registrar, test } from './base'
+import { cabeNaTela, expect, moduloAtual, registrar, test } from './base'
 
 // P3 (/indices): veredito + termômetro + gráfico herói; sem o IFDM no banco, o estado vazio ensina o comando.
 test('P3: o veredito, o termômetro e a dispersão respondem ao índice escolhido', async ({ page, erros }) => {
   test.setTimeout(120_000)
   await page.goto('/indices?indice=pib_pc')
   await expect(page.getByRole('heading', { level: 1, name: 'Os índices do município e o voto' })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Índices', exact: true })).toHaveAttribute('aria-current', 'page')
+  await moduloAtual(page, 'Índices')
   const s1 = page.locator('section[aria-labelledby="indice-vies"]')
   await expect(s1.getByRole('heading', { name: 'O lado do voto acompanha o índice?' })).toBeVisible({ timeout: 60_000 })
   // o veredito é uma palavra (a força da correlação) e o termômetro mostra o r
