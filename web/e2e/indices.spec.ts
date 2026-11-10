@@ -1,4 +1,4 @@
-import { expect, registrar, test } from './base'
+import { cabeNaTela, expect, registrar, test } from './base'
 
 // P3 (/indices): veredito + termômetro + gráfico herói; sem o IFDM no banco, o estado vazio ensina o comando.
 test('P3: o veredito, o termômetro e a dispersão respondem ao índice escolhido', async ({ page, erros }) => {
@@ -20,7 +20,7 @@ test('P3: o veredito, o termômetro e a dispersão respondem ao índice escolhid
   // trocar a eleição muda a frase do veredito
   await page.getByRole('radio', { name: '2022', exact: true }).click()
   await expect(s1.getByText(/em 2022/).first()).toBeVisible({ timeout: 30_000 })
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  await cabeNaTela(page)
   await registrar(page, 'indices-azulejo')
   expect(erros).toEqual([])
 })

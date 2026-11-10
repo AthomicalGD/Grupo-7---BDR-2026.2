@@ -15,13 +15,13 @@ for (const tela of lista.split(',')) {
   for (const [tam, viewport] of Object.entries(TAMANHOS)) {
     for (const tema of ['claro', 'escuro']) {
       if (so && so !== `${tam}-${tema}`) continue
-      const ctx = await navegador.newContext({ viewport, reducedMotion: 'reduce', deviceScaleFactor: tam === 'celular' ? 2 : 1 })
+      const ctx = await navegador.newContext({ viewport, reducedMotion: 'reduce', deviceScaleFactor: tam === 'celular' ? 2 : 1, isMobile: tam === 'celular', hasTouch: tam === 'celular' })
       await ctx.addInitScript((t) => localStorage.setItem('va-tema', t), tema)
       const page = await ctx.newPage()
       await page.goto(site + TELAS[tela], { waitUntil: 'networkidle', timeout: 120_000 }).catch(() => {})
       await page.waitForSelector('h1', { timeout: 90_000 }).catch(() => {})
       await page.screenshot({ path: `${saida}${fase}-${tela}-${tam}-${tema}-dobra.jpg`, type: 'jpeg', quality: 70 })
-      await page.addStyleTag({ content: '.adiar{content-visibility:visible!important;contain-intrinsic-size:none!important}' })
+      await page.addStyleTag({ content: '.adiar{content-visibility:visible!important;contain:paint!important;contain-intrinsic-size:none!important}' })
       await page.waitForTimeout(2500)
       // as seções "adiar" só desenham ao chegar perto: rola a página inteira antes da foto
       const alto = await page.evaluate(() => document.documentElement.scrollHeight)

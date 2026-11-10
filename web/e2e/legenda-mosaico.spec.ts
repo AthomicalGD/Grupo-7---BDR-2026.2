@@ -1,4 +1,4 @@
-import { expect, registrar, test } from './base'
+import { cabeNaTela, expect, registrar, test } from './base'
 
 // P5 (/cadeira/legenda): o veredito da concentração e o mosaico de cadeiras; estados vazio e de erro.
 test('P5: o veredito conta quantos partidos juntam metade das cadeiras e o mosaico abre os eleitos', async ({ page, erros }) => {
@@ -11,7 +11,7 @@ test('P5: o veredito conta quantos partidos juntam metade das cadeiras e o mosai
   await page.locator('[title^="PT:"]').first().click()
   await expect(page.getByRole('button', { name: /^PT: .* eleitos pelo quociente/ })).toHaveAttribute('aria-expanded', 'true')
   await expect(page.getByText('REJANE DIAS', { exact: false }).first()).toBeVisible()
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  await cabeNaTela(page)
   await registrar(page, 'legenda-mosaico')
   expect(erros).toEqual([])
 })

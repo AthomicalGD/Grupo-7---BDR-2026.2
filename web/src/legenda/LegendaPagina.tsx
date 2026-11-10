@@ -19,6 +19,7 @@ const ROTULO_STATUS: Record<SituacaoLegenda, string> = {
 }
 
 /** o mosaico não passa de ~330 pastilhas: acima disso, cada uma vale várias cadeiras */
+const VISIVEIS = 8
 const MAX_PASTILHAS = 330
 const unidadeMosaico = (total: number) => (total > MAX_PASTILHAS ? Math.ceil(total / MAX_PASTILHAS) : 1)
 
@@ -214,6 +215,7 @@ export function LegendaPagina() {
   const q = useQuery({ ...consultas.legenda(busca.uf ?? ''), placeholderData: keepPreviousData })
   const ufs = useQuery(consultas.ufs())
   const dados = q.data
+  const [todos, setTodos] = useState(false)
 
   useEffect(() => {
     document.title = 'Eleitos pelo sistema proporcional · Voto Aberto'
@@ -273,7 +275,7 @@ export function LegendaPagina() {
       <div className="peca mt-6 grid gap-x-8 gap-y-4 p-4 sm:grid-cols-2 lg:grid-cols-[auto_auto_minmax(13rem,1fr)] lg:items-start" role="group" aria-label="Escolhas do mosaico">
         <fieldset className="min-w-0">
           <legend className="t-rotulo mb-2 text-tinta-2">Eleição</legend>
-          <div role="radiogroup" aria-label="Eleição" className="flex gap-2 overflow-x-auto pb-1.5 sm:flex-wrap sm:overflow-visible [&>button]:shrink-0">
+          <div role="radiogroup" aria-label="Eleição" className="flex flex-wrap gap-2">
             {anos.map((a) => <Escolha key={a} ativo={a === ano} aoClicar={() => escolherAno(a)}>{a}</Escolha>)}
           </div>
         </fieldset>
@@ -318,7 +320,7 @@ export function LegendaPagina() {
 
             <div className={`peca mt-6 p-4 sm:p-5 ${q.isPlaceholderData ? 'opacity-60' : ''}`}>
               <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[0.88rem] text-tinta-2" aria-label="Como ler o mosaico">
-                <span className="inline-flex items-center gap-2"><span className="size-4 rounded-[3px] bg-[var(--azul)]" aria-hidden />pelo quociente</span>
+                <span className="inline-flex items-center gap-2"><span className="size-4 rounded-[3px] bg-eleito" aria-hidden />pelo quociente</span>
                 <span className="inline-flex items-center gap-2"><span className="size-4 rounded-[3px] bg-[var(--amarelo)]" aria-hidden />pelas médias</span>
                 <span className="text-tinta-3">{unidade === 1 ? 'Cada pastilha é uma cadeira.' : `Cada pastilha são ${unidade} cadeiras.`} Toque num partido para ver quem foi eleito.</span>
               </div>
@@ -329,7 +331,7 @@ export function LegendaPagina() {
             <p className="apoio mt-1 text-[0.95rem] text-tinta-2">As barras comparam o total de cada um. Toque num trecho para ver os eleitos.</p>
             <div className={`mt-3 ${q.isPlaceholderData ? 'opacity-60' : ''}`}>
               <ul aria-label={`Partidos com eleitos: ${ano}, ${cargo.nome}`}>
-                {recorte.partidos.map((p) => (
+                {recorte.partidos.filter((p, i) => todos || i < VISIVEIS || p.sigla === partidoAberto?.sigla).map((p) => (
                   <LinhaPartido
                     key={p.sigla}
                     p={p}
@@ -343,6 +345,11 @@ export function LegendaPagina() {
                   />
                 ))}
               </ul>
+              {recorte.partidos.length > VISIVEIS && (
+                <button type="button" onClick={() => setTodos((t) => !t)} className="peca peca-link alvo-44 mt-3 px-4 text-[0.9rem] font-bold text-tinta">
+                  {todos ? `Mostrar só os ${VISIVEIS} maiores` : `Ver os ${recorte.partidos.length} partidos`}
+                </button>
+              )}
               <TabelaAlternavel
                 titulo={`Candidatos eleitos por partido, ${cargo.nome}, ${ano}`}
                 colunas={['Partido', 'Por quociente', 'Pelas médias', 'Total']}

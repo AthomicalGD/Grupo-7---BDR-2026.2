@@ -1,4 +1,4 @@
-import { expect, registrar, test } from './base'
+import { cabeNaTela, expect, registrar, test } from './base'
 
 // A cara nova da P6 (veredito, régua de idade, atalhos das perguntas, detalhes sob demanda) e o estado de erro.
 test('P6: o veredito e a régua respondem na primeira dobra, e os atalhos levam a cada pergunta', async ({ page, erros }) => {
@@ -12,7 +12,7 @@ test('P6: o veredito e a régua respondem na primeira dobra, e os atalhos levam 
   // o veredito é uma palavra curta numa peça, ao lado da frase
   await expect(page.getByText(/^(Pouco|Não se vê|Ao contrário)\.$/).first()).toBeVisible()
   // tudo cabe na largura (nada de rolagem horizontal), inclusive no celular
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  await cabeNaTela(page)
 
   // os atalhos são âncoras: levam ao ato certo
   const atalhos = page.getByRole('navigation', { name: 'Ir para uma pergunta desta página' })

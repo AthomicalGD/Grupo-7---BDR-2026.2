@@ -36,7 +36,7 @@ export function LegendaMosaico({ partidos, unidade, aberto, aoAbrir }: {
             </p>
             <div className="grid gap-[2px]" style={{ gridTemplateColumns: `repeat(${colunas}, var(--t))` }}>
               {Array.from({ length: n }, (_, i) => (
-                <span key={i} className="block aspect-square rounded-[3px]" style={{ background: i < q ? 'var(--azul)' : 'var(--amarelo)' }} />
+                <span key={i} className="block aspect-square rounded-[3px]" style={{ background: i < q ? 'var(--color-eleito)' : 'var(--amarelo)' }} />
               ))}
             </div>
           </div>

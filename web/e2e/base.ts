@@ -18,3 +18,12 @@ export async function registrar(page: Page, nome: string) {
   await page.waitForTimeout(700) // deixa as entradas animadas assentarem
   await page.screenshot({ path: `e2e/__screenshots__/${test.info().project.name}-${nome}.png` })
 }
+
+/** A página não alarga além da tela. No celular emulado o navegador "encolhe" a página quando algo estoura, e então
+ *  scrollWidth e innerWidth crescem juntos: por isso a conta é contra a largura da janela do teste, não só contra innerWidth. */
+export async function cabeNaTela(page: Page) {
+  const largura = page.viewportSize()!.width
+  const { rolagem, janela } = await page.evaluate(() => ({ rolagem: document.documentElement.scrollWidth, janela: window.innerWidth }))
+  expect(janela, 'o navegador encolheu a página: algo passou da largura').toBeLessThanOrEqual(largura)
+  expect(rolagem, 'rolagem lateral').toBeLessThanOrEqual(largura)
+}
