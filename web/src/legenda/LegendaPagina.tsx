@@ -7,14 +7,20 @@ import { Escolha } from '../componentes/Escolha'
 import { Atrasado, EsqueletoBloco, EsqueletoPagina } from '../componentes/Esqueleto'
 import { ErroCarga } from '../componentes/ErroCarga'
 import { Retrato } from '../componentes/Retrato'
+import { Veredito } from '../componentes/Veredito'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { inteiro, nomeProprio } from '../lib/formato'
 import type { BuscaLegenda } from '../router'
+import { LegendaMosaico } from './Mosaico'
 
 const ROTULO_STATUS: Record<SituacaoLegenda, string> = {
   qp: 'pelo quociente',
   media: 'pelas médias',
 }
+
+/** o mosaico não passa de ~330 pastilhas: acima disso, cada uma vale várias cadeiras */
+const MAX_PASTILHAS = 330
+const unidadeMosaico = (total: number) => (total > MAX_PASTILHAS ? Math.ceil(total / MAX_PASTILHAS) : 1)
 
 const CARGOS_PLURAL: Record<number, string> = {
   6: 'deputados federais',
@@ -149,7 +155,7 @@ function LinhaPartido({
   const id = useId()
   const total = p.total || 1
   return (
-    <li className="border-t border-linha py-3 first:border-0">
+    <li id={`linha-${p.sigla}`} className="scroll-mt-24 border-t border-linha py-3 first:border-0">
       <div className="grid gap-x-5 gap-y-2 sm:grid-cols-[minmax(7rem,0.7fr)_minmax(0,2fr)] sm:items-center">
         <div className="flex min-w-0 items-baseline justify-between gap-3 sm:block">
           <span className="truncate font-bold text-tinta" title={p.nome ?? p.sigla}>{p.sigla}</span>
@@ -241,36 +247,48 @@ export function LegendaPagina() {
     if (busca.partido === sigla && situacao === tipo) mudar({ partido: undefined, situacao: undefined })
     else mudar({ partido: sigla, situacao: tipo })
   }
+  // vindo do mosaico: abre os eleitos do partido e leva a tela até a linha dele
+  const abrirDoMosaico = (sigla: string, tipo: SituacaoLegenda) => {
+    mudar({ partido: sigla, situacao: tipo })
+    const reduz = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    setTimeout(() => document.getElementById(`linha-${sigla}`)?.scrollIntoView({ behavior: reduz ? 'auto' : 'smooth', block: 'start' }), 60)
+  }
+  // a concentração: quantos partidos, dos maiores para os menores, juntam metade das cadeiras
+  const ordenados = [...abertos].sort((a, b) => b.total - a.total)
+  const metade = (recorte?.total.eleitos ?? 0) / 2
+  const grandes = ordenados.filter((_, i) => ordenados.slice(0, i).reduce((t, p) => t + p.total, 0) < metade)
+  const lista = grandes.map((p) => p.sigla)
+  const unidade = unidadeMosaico(recorte?.total.eleitos ?? 0)
 
   return (
     <main className="mx-auto max-w-[var(--casca-max)] px-4 pb-12 pt-6 md:px-[var(--casca-margem)] md:pt-7">
-      <header className="max-w-[68ch]">
-        <Link to="/cadeira" className="mb-4 inline-flex items-center gap-1.5 rounded-md px-1 py-1 text-[0.82rem] font-semibold text-acao hover:bg-papel">
+      <header>
+        <Link to="/cadeira" className="alvo-44 mb-2 inline-flex items-center gap-1.5 rounded-md px-1 py-1 text-[0.86rem] font-semibold text-acao hover:bg-papel">
           <ArrowLeft size={15} weight="bold" aria-hidden /> Quanto custa uma cadeira?
         </Link>
         <h1 className="t-display">Como os partidos preencheram as cadeiras?</h1>
-        <p className="mt-3 text-[1.06rem] text-tinta-2">Eleitos pelo sistema proporcional, agrupados pelo partido de filiação.</p>
+        <p className="apoio mt-3 text-[1.06rem] text-tinta-2">Eleitos pelo sistema proporcional, agrupados pelo partido de filiação.</p>
       </header>
 
-      <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(13rem,0.8fr)]">
+      <div className="peca mt-6 grid gap-x-8 gap-y-4 p-4 sm:grid-cols-2 lg:grid-cols-[auto_auto_minmax(13rem,1fr)] lg:items-start" role="group" aria-label="Escolhas do mosaico">
         <fieldset className="min-w-0">
           <legend className="t-rotulo mb-2 text-tinta-2">Eleição</legend>
-          <div role="radiogroup" aria-label="Eleição" className="flex flex-wrap gap-2">
+          <div role="radiogroup" aria-label="Eleição" className="flex gap-2 overflow-x-auto pb-1.5 sm:flex-wrap sm:overflow-visible [&>button]:shrink-0">
             {anos.map((a) => <Escolha key={a} ativo={a === ano} aoClicar={() => escolherAno(a)}>{a}</Escolha>)}
           </div>
         </fieldset>
         <fieldset className="min-w-0">
           <legend className="t-rotulo mb-2 text-tinta-2">Cargo</legend>
-          <div role="radiogroup" aria-label="Cargo" className="flex flex-wrap gap-2">
+          <div role="radiogroup" aria-label="Cargo" className="flex gap-2 overflow-x-auto pb-1.5 sm:flex-wrap sm:overflow-visible [&>button]:shrink-0">
             {cargos.map((c) => <Escolha key={c.cod} ativo={c.cod === cargo?.cod} aoClicar={() => escolherCargo(c.cod)}>{c.nome}</Escolha>)}
           </div>
         </fieldset>
-        <label className="grid content-start gap-2">
+        <label className="grid content-start gap-2 sm:col-span-2 lg:col-span-1">
           <span className="t-rotulo text-tinta-2">Estado</span>
           <select
             value={busca.uf ?? ''}
             onChange={(e) => escolherUF(e.target.value)}
-            className="h-10 w-full rounded-xl border border-linha bg-folha px-3 text-[0.9rem] text-tinta outline-none focus:border-tinta"
+            className="h-11 w-full rounded-xl border border-linha bg-folha px-3 text-[0.9rem] text-tinta outline-none focus:border-tinta focus-visible:outline-2 focus-visible:outline-acao"
           >
             <option value="">Todos os estados com dados</option>
             {[...dados.ufs].sort().map((sigla) => <option key={sigla} value={sigla}>{nomesUF.get(sigla) ?? sigla}</option>)}
@@ -287,21 +305,29 @@ export function LegendaPagina() {
         <p className="mt-8 rounded-xl border border-linha bg-folha px-5 py-4 text-tinta-2">Não há resultados proporcionais neste recorte.</p>
       ) : (
         <section aria-labelledby="resumo-legenda" aria-busy={q.isPlaceholderData} className={`mt-8 transition-opacity ${q.isPlaceholderData ? 'opacity-55' : ''}`}>
-          <div className="mx-auto max-w-[var(--miolo-max)]">
+          <div>
             <h2 id="resumo-legenda" className="sr-only">Eleitos proporcionais por partido</h2>
-            <p className="max-w-[72ch] text-[clamp(1.05rem,0.95rem+0.4vw,1.28rem)] leading-relaxed text-tinta-2">
-              Em {ano}, {escopoLocal}, foram eleitos <b className="tabular text-tinta">{inteiro(recorte.total.eleitos)}</b> {CARGOS_PLURAL[cargo.cod]}:
-              {' '}<b className="tabular text-tinta">{inteiro(recorte.total.qp)}</b> pelo quociente e{' '}
-              <b className="tabular text-tinta">{inteiro(recorte.total.media)}</b> pelas médias.
-            </p>
+            {abertos.length > 0 && recorte.total.eleitos > 0 && (
+              <Veredito grande tom="amarelo" palavra={<>{lista.length} <span className="block text-[0.5em] leading-none">{lista.length === 1 ? 'partido' : 'partidos'}</span></>}>
+                {lista.length === 1 ? 'sozinho ficou' : 'ficaram'} com metade das cadeiras: <b className="text-tinta">{lista.join(', ')}</b>.{' '}
+                Em {ano}, {escopoLocal}, foram eleitos <b className="tabular text-tinta">{inteiro(recorte.total.eleitos)}</b> {CARGOS_PLURAL[cargo.cod]}:
+                {' '}<b className="tabular text-tinta">{inteiro(recorte.total.qp)}</b> pelo quociente e{' '}
+                <b className="tabular text-tinta">{inteiro(recorte.total.media)}</b> pelas médias.
+              </Veredito>
+            )}
 
-            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[0.82rem] text-tinta-2" aria-label="Legenda do gráfico">
-              <span className="inline-flex items-center gap-2"><span className="size-3 rounded-sm bg-eleito" aria-hidden />Pelo quociente</span>
-              <span className="inline-flex items-center gap-2"><span className="size-3 rounded-sm" style={{ backgroundImage: 'repeating-linear-gradient(135deg, var(--color-fita-laranja) 0 3px, var(--color-fita-amarelo) 3px 6px)' }} aria-hidden />Pelas médias</span>
-              <span className="text-tinta-3">Toque em um trecho para ver quem foi eleito.</span>
+            <div className={`peca mt-6 p-4 sm:p-5 ${q.isPlaceholderData ? 'opacity-60' : ''}`}>
+              <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[0.88rem] text-tinta-2" aria-label="Como ler o mosaico">
+                <span className="inline-flex items-center gap-2"><span className="size-4 rounded-[3px] bg-[var(--azul)]" aria-hidden />pelo quociente</span>
+                <span className="inline-flex items-center gap-2"><span className="size-4 rounded-[3px] bg-[var(--amarelo)]" aria-hidden />pelas médias</span>
+                <span className="text-tinta-3">{unidade === 1 ? 'Cada pastilha é uma cadeira.' : `Cada pastilha são ${unidade} cadeiras.`} Toque num partido para ver quem foi eleito.</span>
+              </div>
+              <LegendaMosaico partidos={ordenados} unidade={unidade} aberto={partidoAberto?.sigla} aoAbrir={abrirDoMosaico} />
             </div>
 
-            <div className={`mt-5 ${q.isPlaceholderData ? 'opacity-60' : ''}`}>
+            <h3 className="t-h2 mt-10">Partido por partido</h3>
+            <p className="apoio mt-1 text-[0.95rem] text-tinta-2">As barras comparam o total de cada um. Toque num trecho para ver os eleitos.</p>
+            <div className={`mt-3 ${q.isPlaceholderData ? 'opacity-60' : ''}`}>
               <ul aria-label={`Partidos com eleitos: ${ano}, ${cargo.nome}`}>
                 {recorte.partidos.map((p) => (
                   <LinhaPartido
