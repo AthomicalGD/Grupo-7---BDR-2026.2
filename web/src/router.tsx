@@ -239,7 +239,7 @@ const indices = createRoute({
   validateSearch: (s: Record<string, unknown>): BuscaIndices => ({
     uf: typeof s.uf === 'string' && /^[A-Z]{2}$/.test(s.uf) ? s.uf : undefined,
     ano: ([2018, 2020, 2022, 2024] as const).find((a) => a === Number(s.ano)),
-    indice: INDICES_P3.find((i) => i === s.indice && i !== 'ifdm'),
+    indice: INDICES_P3.find((i) => i === s.indice),
     municipal: MUNICIPAIS_P3.find((a) => a === Number(s.municipal) && a !== 2020),
     ranking: INDICES_P3.find((i) => i === s.ranking && i !== 'ifdm'),
   }),
