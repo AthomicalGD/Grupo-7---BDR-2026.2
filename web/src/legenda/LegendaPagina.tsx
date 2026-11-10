@@ -8,6 +8,7 @@ import { Atrasado, EsqueletoBloco, EsqueletoPagina } from '../componentes/Esquel
 import { ErroCarga } from '../componentes/ErroCarga'
 import { Retrato } from '../componentes/Retrato'
 import { Veredito } from '../componentes/Veredito'
+import { LogoPartido } from '../componentes/LogoPartido'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { inteiro, nomeProprio } from '../lib/formato'
 import type { BuscaLegenda } from '../router'
@@ -159,7 +160,10 @@ function LinhaPartido({
     <li id={`linha-${p.sigla}`} className="scroll-mt-24 border-t border-linha py-3 first:border-0">
       <div className="grid gap-x-5 gap-y-2 sm:grid-cols-[minmax(7rem,0.7fr)_minmax(0,2fr)] sm:items-center">
         <div className="flex min-w-0 items-baseline justify-between gap-3 sm:block">
-          <span className="truncate font-bold text-tinta" title={p.nome ?? p.sigla}>{p.sigla}</span>
+          <span className="flex min-w-0 items-center gap-2">
+            <LogoPartido sigla={p.sigla} />
+            <span className="truncate font-bold text-tinta" title={p.nome ?? p.sigla}>{p.sigla}</span>
+          </span>
           <span className="tabular shrink-0 text-[0.82rem] text-tinta-2 sm:mt-0.5 sm:block">{inteiro(p.total)} eleitos</span>
         </div>
         <div>
