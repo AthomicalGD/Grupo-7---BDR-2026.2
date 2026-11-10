@@ -31,6 +31,7 @@ REMOCOES = [
     ("votacao_partido_munzona", "id_eleicao IN (SELECT id_eleicao FROM tmp_ano_el_todas) AND {zona}"),
     ("votacao_municipio", "id_eleicao IN (SELECT id_eleicao FROM tmp_ano_el_todas) AND {mun}"),
     ("perfil_eleitorado_munzona", "ano_eleicao = %(ano)s AND {zona}"),
+    ("perfil_etario_munzona", "ano_eleicao = %(ano)s AND {zona}"),  # P6: sem isto, recarregar o ano dá chave duplicada
     ("votacao_partido_municipio", "ano_eleicao = %(ano)s AND {mun}"),
     ("mandato", "id_politico_eleicao IN (SELECT id_politico_eleicao FROM tmp_ano_pe)"),
     ("bem", "id_politico_eleicao IN (SELECT id_politico_eleicao FROM tmp_ano_pe)"),

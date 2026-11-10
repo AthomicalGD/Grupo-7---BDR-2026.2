@@ -34,8 +34,8 @@ export function Atlas() {
   const cargosDoTurno = turno === 2 ? cargos.data?.filter((c) => CARGOS_TURNO_2.includes(c.cod)) : cargos.data
   const doCargo = cargos.data?.find((c) => c.cod === cargo)
   // com um cargo escolhido, só os anos em que ele foi disputado; o ano pedido vai para o válido mais próximo.
-  // No 2º turno, 2026 fica de fora até o TSE publicar os votos
-  const anos: readonly Ano[] = (doCargo?.anos.length ? doCargo.anos : ANOS).filter((a) => turno === 1 || a !== 2026)
+  // (o 2º turno de 2026 foi publicado pelo TSE em novembro de 2026 e já está no banco)
+  const anos: readonly Ano[] = doCargo?.anos.length ? doCargo.anos : ANOS
   const pedido: Ano = busca.ano ?? 2022
   const ano: Ano = anos.includes(pedido) ? pedido : anos.reduce((a, b) => (Math.abs(b - pedido) < Math.abs(a - pedido) ? b : a))
   const relativo = !!busca.relativo

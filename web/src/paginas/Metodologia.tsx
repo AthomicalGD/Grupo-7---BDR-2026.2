@@ -210,12 +210,12 @@ export function Metodologia() {
         <p>
           O TSE publica uma eleição aos poucos. Em outubro de 2026 já estavam no Portal de Dados Abertos as candidaturas, os bens,
           o resultado do 1º turno (votos por zona, detalhe da votação e comparecimento por escolaridade) e a prestação de contas
-          parcial; o 2º turno e a prestação de contas final ainda não. Por isso 2026 entra só nas perguntas em que o que já saiu basta.
+          parcial; a prestação de contas final ainda não. O 2º turno saiu em novembro de 2026 e já está no banco. Por isso 2026 entra só nas perguntas em que o que já saiu basta.
         </p>
         <ul className="list-disc space-y-2 pl-5">
           <li><b>Entra inteiro:</b> viés político (P7), escolaridade (P4, com deputados e senador; presidente e governador ficam de fora porque a disputa de 2º turno ainda não terminou) e carreira do político (P10).</li>
           <li><b>Entra com ressalva:</b> patrimônio (P2) e reeleição (P10a). Quem foi ao 2º turno ainda não tem resultado: fica fora do patrimônio dos eleitos e, na reeleição, aparece à parte como <i>aguardando o 2º turno</i>, sem contar na taxa.</li>
-          <li><b>Fica de fora:</b> custo da cadeira (P1) e propaganda (P9), porque as contas ainda estão incompletas e o IPCA de outubro de 2026 não saiu; e o 2º turno (questão extra), que o TSE ainda não publicou.</li>
+          <li><b>Fica de fora:</b> custo da cadeira (P1) e propaganda (P9), porque as contas ainda estão incompletas e o IPCA de outubro de 2026 não saiu. O 2º turno (questão extra) já foi publicado e entra.</li>
           <li><b>Mudanças no arquivo:</b> a escolaridade do candidato passou a se chamar <code>DS_GRAU_INSTRUCAO</code> (era <code>DS_GRAU_ESCOLARIDADE</code>); a carga aceita os dois nomes. A situação da candidatura (<code>DS_SITUACAO_CANDIDATURA</code>) vem toda como <code>#NE</code>, então a situação usada é a do resultado (<code>DS_SIT_TOT_TURNO</code>).</li>
           <li><b>Candidaturas sem resultado:</b> as que vêm com <code>#NULO</code> no resultado (indeferidas, renunciadas ou ainda em julgamento) ficam sem situação final e não contam como eleitas nem como não eleitas.</li>
           <li><b>Viés de 2026:</b> como em 2024, usa a onda de 2022 dos especialistas, a última publicada, agora estendida por quatro anos; o alinhamento na Câmara usa a 57ª legislatura até a véspera do 1º turno.</li>
@@ -620,7 +620,7 @@ export function Metodologia() {
           <li><b>De onde vieram os votos novos:</b> só os totais de cada turno, na mesma régua dos eleitores aptos (os dois finalistas, os outros candidatos, brancos e nulos, e quem não foi votar). O voto é secreto: dá para comparar os totais, não seguir cada eleitor.</li>
           <li><b>As cores dos finalistas:</b> pelo lado do partido (o viés da P7): esquerda em vermelho, direita em azul. Se os dois são do mesmo lado, o mais à ponta fica com a cor do lado e o outro com o amarelo.</li>
           <li><b>Onde o líder mudou:</b> presidente por estado, governador por município e prefeito por zona eleitoral, somando os votos por zona.</li>
-          <li><b>Fora da conta:</b> antes de 2018 (o banco não tem os votos por zona), o 2º turno de 2026 (o TSE ainda não publicou os votos), os vices (vão na chapa do titular) e as disputas sem os votos do 1º turno no banco (Piracicaba 2020 e Aracaju 2024).</li>
+          <li><b>Fora da conta:</b> antes de 2018 (o banco não tem os votos por zona), os vices (vão na chapa do titular) e as disputas sem os votos do 1º turno no banco (Piracicaba 2020 e Aracaju 2024).</li>
         </ul>
         <p>
           De 2018 a 2024 foram 135 segundos turnos e 36 viradas (26,7%): nenhuma nos dois da Presidência, 6 em 26 governos e 30 em
