@@ -5,10 +5,10 @@
 // galeria dos ex-prefeitos), (3) se quem se elege é mais velho que quem vota (a pirâmide) e (4) se jovem vota no
 // jovem (os halteres por terço de zonas). Fecha com o que a conta não diz. As contas são as de
 // scripts/06_idade_alternancia.py, que a API importa.
-import { ArrowRight, EyeSlash, GitMerge, Ruler, X } from '@phosphor-icons/react'
+import { ArrowRight, CaretDown, EyeSlash, GitMerge, Ruler, X } from '@phosphor-icons/react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ANOS, CARGOS_IDADE, consultas, type Ano, type EfeitoIdade } from '../api'
 import { BuscaMunicipio } from '../atlas/BuscaMunicipio'
 import { CedulaAnos } from '../atlas/CedulaAnos'
@@ -16,6 +16,7 @@ import { Alternador } from '../atlas/PainelEstado'
 import { Atrasado, EsqueletoBloco, EsqueletoPagina } from '../componentes/Esqueleto'
 import { ErroCarga } from '../componentes/ErroCarga'
 import { Escolha } from '../componentes/Escolha'
+import { Veredito } from '../componentes/Veredito'
 import { SeletorEstado } from '../componentes/SeletorEstado'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { CAPITAIS } from '../lib/capitais'
@@ -26,6 +27,7 @@ import { HalteresIdade } from './HalteresIdade'
 import { MapaIdade } from './MapaIdade'
 import { Passagens, PorPorte, type Leitura } from './Passagens'
 import { Piramide } from './Piramide'
+import { FaixaSepia, ReguaIdade } from './Regua'
 import { anos, claro, comSinal, COR_TERCO, maiuscula, NOME_TERCO, resumoPassagens, SEPIA, tintaSobreSepia } from './sepia'
 
 const TERESINA = 2211001
@@ -34,10 +36,6 @@ const MUNICIPAIS: Ano[] = [2020, 2024]
 /** "+1,7 ano (de +1,2 a +2,3)": o efeito e o intervalo de 95% */
 const efeitoTexto = (e: EfeitoIdade | null | undefined, unidade = 'ano') =>
   !e ? '-' : `${comSinal(e.b)} ${Math.abs(e.b) >= 2 ? `${unidade}s` : unidade} (de ${comSinal(e.lo)} a ${comSinal(e.hi)})`
-
-function Resposta({ children }: { children: ReactNode }) {
-  return <p className="mt-3 max-w-[66ch] text-[clamp(1.04rem,0.95rem+0.35vw,1.2rem)] leading-[1.5] text-tinta-2">{children}</p>
-}
 
 export function IdadePagina() {
   const busca = useSearch({ from: '/idade' })
@@ -92,52 +90,76 @@ export function IdadePagina() {
 
   return (
     <div className="mx-auto max-w-[var(--casca-max)] px-4 pb-12 pt-6 md:px-[var(--casca-margem)] md:pt-7" aria-busy={perfil.isPlaceholderData}>
-      <header className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-        <div>
-          <h1 className="t-display">Jovem vota no jovem?</h1>
-          <p className="mt-3 max-w-[62ch] text-[clamp(1.08rem,0.95rem+0.5vw,1.32rem)] font-medium leading-[1.42] text-tinta-2" style={{ fontStretch: '96%' }}>
-            {topo && claro(topo) === 1 ? (
-              <>
-                <b className="text-tinta">Pouco.</b> Comparando lugares de mesma escolaridade{onde}, zonas onde quem votou é 5 anos mais velho dão votos a deputados{' '}
-                <b className="tabular text-tinta">{anos(topo.b)} {Math.abs(topo.b) >= 2 ? 'anos' : 'ano'}</b> mais velhos. Sem esse cuidado, quase nada muda
-                {topoBruto ? <> ({comSinal(topoBruto.b)} ano)</> : null}.
-              </>
-            ) : topo ? (
-              <>
-                <b className="text-tinta">Não se vê.</b> Mesmo comparando lugares de mesma escolaridade{onde}, a idade de quem votou não muda a idade dos deputados votados ({comSinal(topo.b)} ano a cada 5 anos).
-              </>
+      <header>
+        <h1 className="t-display">Jovem vota no jovem?</h1>
+        <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-start">
+          <div>
+            {topo ? (
+              <Veredito grande tom="amarelo" palavra={claro(topo) === 1 ? 'Pouco.' : claro(topo) === -1 ? 'Ao contrário.' : 'Não se vê.'}>
+                {claro(topo) === 1 ? (
+                  <>
+                    Comparando lugares de mesma escolaridade{onde}, zonas onde quem votou é 5 anos mais velho dão votos a deputados{' '}
+                    <b className="tabular text-tinta">{anos(topo.b)} {Math.abs(topo.b) >= 2 ? 'anos' : 'ano'}</b> mais velhos. Sem esse cuidado, quase nada muda
+                    {topoBruto ? <> ({comSinal(topoBruto.b)} ano)</> : null}.
+                  </>
+                ) : (
+                  <>
+                    Mesmo comparando lugares de mesma escolaridade{onde}, a idade de quem votou {claro(topo) === -1 ? 'muda ao contrário a idade' : 'não muda a idade'} dos deputados votados ({comSinal(topo.b)} ano a cada 5 anos).
+                  </>
+                )}
+              </Veredito>
             ) : (
-              'Calculando a resposta...'
+              <Veredito grande tom="branco" palavra="...">Calculando a resposta...</Veredito>
             )}
-          </p>
-          <p className="mt-2 text-[0.82rem] text-tinta-3">
-            Idade de quem compareceu no 1º turno (TSE, por zona), prefeitos eleitos desde 1996 e votos por zona · o voto é secreto: a conta compara lugares, não pessoas
-          </p>
+            <p className="mt-4 max-w-[60ch] text-[0.84rem] text-tinta-3">
+              Idade de quem foi votar no 1º turno (TSE, por zona), prefeitos eleitos desde 1996 e votos por zona. O voto é secreto: a conta compara lugares, não pessoas.
+            </p>
+            <fieldset className="mt-5 max-w-[22rem] min-w-0">
+              <legend className="t-rotulo mb-1.5 text-tinta-2">Estado</legend>
+              <SeletorEstado malha={malha} ufs={carregadas} escolhida={uf} aoEscolher={(s) => mudar({ uf: s, ibge: undefined })} />
+            </fieldset>
+          </div>
+          {topo ? <ReguaIdade comEscolaridade={topo} semEscolaridade={topoBruto} /> : <EsqueletoBloco altura={220} linhas={0} rotulo="Medindo a régua..." />}
         </div>
-        <div className="grid min-w-0 gap-3 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-end lg:grid-cols-1">
-          <fieldset>
-            <legend className="t-rotulo mb-1.5 text-tinta-2">Eleição (mapa)</legend>
-            <CedulaAnos ano={ano} anos={ANOS} linhaDoTempo={true} aoMudar={(a) => mudar({ ano: a })} />
-          </fieldset>
-          <fieldset className="min-w-0">
-            <legend className="t-rotulo mb-1.5 text-tinta-2">Estado</legend>
-            <SeletorEstado malha={malha} ufs={carregadas} escolhida={uf} aoEscolher={(s) => mudar({ uf: s, ibge: undefined })} />
-          </fieldset>
+
+        <div className="mt-6">
+          <nav aria-label="Ir para uma pergunta desta página">
+            <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {[
+                { id: 'ato-1', titulo: 'Mapa da idade', sub: 'Onde o Brasil é mais velho?' },
+                { id: 'ato-2', titulo: 'Troca de prefeito', sub: 'Lugar mais velho troca mais?' },
+                { id: 'ato-3', titulo: 'Eleitos e eleitores', sub: 'Quem se elege é mais velho?' },
+                { id: 'ato-4', titulo: 'Voto por zona', sub: 'O voto acompanha a idade?' },
+              ].map((a) => (
+                <li key={a.id}>
+                  <a href={`#${a.id}`} className="peca peca-link alvo-44 block h-full px-3 py-2 no-underline">
+                    <span className="block font-[family-name:var(--font-display)] text-[0.98rem] font-extrabold leading-tight text-tinta">{a.titulo}</span>
+                    <span className="mt-0.5 block text-[0.76rem] leading-tight text-tinta-2">{a.sub}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
       </header>
 
       {/* 1. onde o Brasil é mais velho: o mapa sépia, os extremos, os terços e o envelhecimento */}
-      <section aria-labelledby="ato-1" className="mt-16">
+      <section aria-labelledby="ato-1" className="mt-16 scroll-mt-20">
+        <FaixaSepia className="mb-3" />
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <h2 id="ato-1" className="t-h1">{ufInfo ? `Onde o eleitorado ${noEstado(ufInfo.sigla, ufInfo.nome)} é mais velho?` : 'Onde o Brasil é mais velho?'}</h2>
           {selo}
         </div>
-        <Resposta>
-          Em {ano}, quem votou{onde} tinha em média <b className="tabular text-tinta">{anos(p.ponderada)} anos</b>: de{' '}
+        <Veredito tom="azul" palavra={<>{anos(p.ponderada)} <span className="block text-[0.5em] leading-none">anos</span></>}>
+          Em {ano}, quem votou{onde} tinha em média esta idade: de{' '}
           <b className="tabular text-tinta">{anos(p.mais_jovem.idade)}</b> em {p.mais_jovem.nome} ({p.mais_jovem.uf}) a{' '}
           <b className="tabular text-tinta">{anos(p.mais_velho.idade)}</b> em {p.mais_velho.nome} ({p.mais_velho.uf}). De {primeiro.ano} a {ultimo.ano}, a média dos municípios subiu de{' '}
           <b className="tabular text-tinta">{anos(primeiro.media)}</b> para <b className="tabular text-tinta">{anos(ultimo.media)} anos</b>.
-        </Resposta>
+        </Veredito>
+        <fieldset className="mt-6">
+          <legend className="t-rotulo mb-1.5 text-tinta-2">Eleição do mapa</legend>
+          <CedulaAnos ano={ano} anos={ANOS} linhaDoTempo={true} aoMudar={(a) => mudar({ ano: a })} />
+        </fieldset>
 
         <div className="mt-8 grid grid-cols-1 gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
           <div className="min-w-0">
@@ -196,14 +218,15 @@ export function IdadePagina() {
       </section>
 
       {/* 2. lugar mais velho troca mais de prefeito? as passagens e a galeria dos ex-prefeitos */}
-      <section aria-labelledby="ato-2" className="adiar mt-20">
+      <section aria-labelledby="ato-2" className="adiar mt-20 scroll-mt-20">
+        <FaixaSepia className="mb-3" />
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <h2 id="ato-2" className="t-h1">Lugar mais velho troca mais de prefeito?</h2>
           {selo}
         </div>
         {alt.data ? (
           <>
-            <Resposta>
+            <Veredito tom="amarelo" palavra={claro(alt.data.efeitos.estrita) === 0 ? 'Não.' : claro(alt.data.efeitos.estrita) > 0 ? <>Um pouco <span className="block text-[0.6em] leading-none">mais</span></> : <>Um pouco <span className="block text-[0.6em] leading-none">menos</span></>}>
               {claro(alt.data.efeitos.estrita) === 0 ? <b className="text-tinta">Não troca mais de partido.</b> : <b className="text-tinta">{claro(alt.data.efeitos.estrita) > 0 ? 'Troca um pouco mais de partido.' : 'Troca um pouco menos de partido.'}</b>}{' '}
               Desde 1996, a troca de partido fica em{' '}
               <b className="tabular text-tinta">{alt.data.tercos.map((t) => pct(leitura === 'estrita' ? t.troca_estrita : t.troca_ampla, 0)).join(', ')}</b> das passagens, do terço mais jovem ao mais velho
@@ -211,7 +234,7 @@ export function IdadePagina() {
                 <>. Troca um pouco mais de pessoa: a cada 5 anos a mais de quem votou, <b className="tabular text-tinta">{comSinal(alt.data.efeitos.pessoa!.b)} pontos</b> de prefeitos novos (reelege menos)</>
               ) : null}
               .
-            </Resposta>
+            </Veredito>
             <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
               <span className="text-[0.82rem] text-tinta-3">Fusão de partidos conta como</span>
               <Alternador rotulo="Como contar a fusão de partidos" valor={leitura} aoMudar={setLeitura} opcoes={[{ valor: 'estrita', rotulo: 'troca' }, { valor: 'ampla', rotulo: 'continuidade' }]} />
@@ -221,7 +244,11 @@ export function IdadePagina() {
               Cada passagem é um prefeito eleito sucedendo o anterior ({inteiro(alt.data.total.passagens)} desde 1996). Renomeações, como PMDB para MDB, contam como o mesmo partido; quando o partido anterior foi incorporado ao do novo entre as duas eleições, a troca fica marcada à parte ({inteiro(alt.data.total.fusao)}).
             </p>
             <div className="mt-5"><Passagens dados={alt.data} leitura={leitura} /></div>
-            <div className="mt-8 grid gap-x-10 gap-y-8 lg:grid-cols-2">
+            <details className="peca mt-8 px-4 py-3">
+              <summary className="alvo-44 flex cursor-pointer items-center gap-2 font-bold text-tinta">
+                <CaretDown size={14} weight="bold" aria-hidden /> Por tamanho do município e as trocas com ressalva
+              </summary>
+              <div className="mt-4 grid gap-x-10 gap-y-8 lg:grid-cols-2">
               <div>
                 <h3 className="t-h3">Por tamanho do município</h3>
                 <p className="mt-1 text-[0.86rem] text-tinta-3">% das passagens com troca de partido (fusão conta como troca)</p>
@@ -239,7 +266,8 @@ export function IdadePagina() {
                   ))}
                 </ul>
               </div>
-            </div>
+              </div>
+            </details>
           </>
         ) : (
           <Atrasado><EsqueletoBloco altura={260} rotulo="Contando as passagens de mandato..." /></Atrasado>
@@ -275,7 +303,8 @@ export function IdadePagina() {
       </section>
 
       {/* 3. quem se elege é mais velho que quem vota? a pirâmide e o prêmio de idade */}
-      <section aria-labelledby="ato-3" className="adiar mt-20">
+      <section aria-labelledby="ato-3" className="adiar mt-20 scroll-mt-20">
+        <FaixaSepia className="mb-3" />
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <h2 id="ato-3" className="t-h1">Quem se elege é mais velho que quem vota?</h2>
           {selo}
@@ -288,11 +317,11 @@ export function IdadePagina() {
           const premio = e.efeitos.premio_ver
           return (
             <>
-              <Resposta>
-                <b className="text-tinta">Sim.</b> Em {e.ano}{onde}, prefeitos eleitos tinham em média <b className="tabular text-tinta">{anos(pre.idade_eleitos)} anos</b>, vereadores{' '}
+              <Veredito tom="amarelo" palavra={pre.idade_eleitos > e.idade_quem_votou || ver.idade_eleitos > e.idade_quem_votou ? 'Sim.' : 'Não.'}>
+                Em {e.ano}{onde}, prefeitos eleitos tinham em média <b className="tabular text-tinta">{anos(pre.idade_eleitos)} anos</b>, vereadores{' '}
                 <b className="tabular text-tinta">{anos(ver.idade_eleitos)}</b> e quem votou <b className="tabular text-tinta">{anos(e.idade_quem_votou)}</b>. Quem tem de 18 a 34 anos é{' '}
                 <b className="tabular text-tinta">{pct(jovensVotou, 0)}</b> de quem votou e <b className="tabular text-tinta">{pct(jovensVer, 0)}</b> dos vereadores.
-              </Resposta>
+              </Veredito>
               <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
                 <div role="radiogroup" aria-label="Cargo" className="flex flex-wrap gap-2">
                   <Escolha ativo={cargoPiramide === '13'} aoClicar={() => setCargoPiramide('13')}>Vereador</Escolha>
@@ -339,7 +368,8 @@ export function IdadePagina() {
       </section>
 
       {/* 4. jovem vota no jovem? os halteres por terço de zonas, com e sem a escolaridade fixa */}
-      <section aria-labelledby="ato-4" className="adiar mt-20">
+      <section aria-labelledby="ato-4" className="adiar mt-20 scroll-mt-20">
+        <FaixaSepia className="mb-3" />
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <h2 id="ato-4" className="t-h1">Jovem vota no jovem?</h2>
           {selo}
@@ -350,11 +380,10 @@ export function IdadePagina() {
           const mesma = escolaridade === 'mesma'
           return (
             <>
-              <Resposta>
-                {claro(fixa) === 1 ? <b className="text-tinta">Um pouco.</b> : claro(fixa) === -1 ? <b className="text-tinta">Ao contrário, um pouco.</b> : <b className="text-tinta">Não se vê.</b>}{' '}
+              <Veredito tom="amarelo" palavra={claro(fixa) === 1 ? 'Um pouco.' : claro(fixa) === -1 ? 'Ao contrário.' : 'Não se vê.'}>
                 Para {v.nome.toLowerCase()} em {v.ano}, entre {v.comparacao}: sem comparar a escolaridade, 5 anos a mais de quem votou mudam a idade dos votados em{' '}
                 <b className="tabular text-tinta">{efeitoTexto(bruto)}</b>; comparando zonas de mesma escolaridade, em <b className="tabular text-tinta">{efeitoTexto(fixa)}</b>.
-              </Resposta>
+              </Veredito>
               <div className="-mx-4 mt-6 flex snap-x gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0" role="radiogroup" aria-label="Cargo">
                 {CARGOS_IDADE.map((c) => (
                   <Escolha key={c.cod} ativo={c.cod === cargoVoto.cod} aoClicar={() => mudar({ cargo: c.cod, voto: undefined })}>{c.nome}</Escolha>

@@ -906,3 +906,21 @@ html.trocando-tema *::after {
 .questoes-cartao { box-shadow: 0 18px 40px -16px rgb(18 20 23 / 0.45), 0 4px 10px -4px rgb(18 20 23 / 0.2); }
 .questoes-botao { box-shadow: 0 10px 22px -10px rgb(29 79 160 / 0.7), 0 2px 4px rgb(18 20 23 / 0.18); }
 html[data-tema="escuro"] .questoes-cartao { box-shadow: 0 18px 40px -14px rgb(0 0 0 / 0.75); }
+
+/* ═════════ Questões novas (P6 idade, P3 índices, P5 legenda): peças compartilhadas ═════════
+   A peça é o azulejo da página: rejunte de 3px em tinta e canto macio. O veredito é a peça colorida com a palavra-resposta. */
+.peca { border: 3px solid var(--color-tinta); border-radius: var(--canto); background: var(--color-folha); }
+.peca-azul { background: var(--azul); color: #fff; }
+.peca-amarela { background: var(--amarelo); color: #121417; }
+.peca-vermelha { background: var(--vermelho); color: #fff; }
+/* barras de resposta que crescem uma vez ao aparecer (nada contínuo; param no movimento reduzido) */
+@keyframes barra-cresce { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.barra-cresce { transform-origin: left center; animation: barra-cresce 700ms var(--ease-saida) both; }
+@media (prefers-reduced-motion: reduce) { .barra-cresce { animation: none; } }
+/* alvo de toque de 44px nos atalhos e chips */
+.alvo-44 { min-height: 44px; }
+/* o texto de apoio das respostas: linguagem de jornal, no máximo ~60 caracteres por linha */
+.apoio { max-width: 60ch; }
+/* foco visível nas peças clicáveis (o rejunte já é escuro: o anel é amarelo + tinta) */
+.peca-link:focus-visible { outline: 3px solid var(--amarelo); outline-offset: 2px; box-shadow: 0 0 0 5px var(--color-tinta); }
+.peca-link:hover { background: var(--color-acao-claro); }
