@@ -836,7 +836,7 @@ header.sticky { border-bottom: 3px solid var(--color-tinta); }
 /* tema escuro: o azulejo à noite. O branco de Brasília vira um azul-noite, a tinta vira o branco, o rejunte
    (as bordas de 3px) clareia; cobalto e amarelo ficam, só o cobalto de texto clareia para o contraste (AA) */
 :root { --halo: rgb(252 253 253 / .85); --apagado: 0.3; }
-html[data-tema="escuro"] { --halo: rgb(13 19 32 / .8); --apagado: 0.62; --grau-6: #3d6cc0; --grau-7: #2f62d0; --grau-8: #5d93f5; }
+html[data-tema="escuro"] { --halo: rgb(13 19 32 / .8); --apagado: 0.62; --grau-5: #27a2b3; --grau-6: #3a8ad0; --grau-7: #4f86e0; --grau-8: #7eadf7; }
 /* o armário é um móvel claro de propósito: no tema escuro ele continua com as cores do dia, para as gavetas
    e as peças (que têm fundos claros fixos) seguirem legíveis */
 html[data-tema="escuro"] .armario {
@@ -892,6 +892,12 @@ html.trocando-tema *::after {
     stroke 600ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 600ms cubic-bezier(0.4, 0, 0.2, 1),
     outline-color 600ms cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
+
+/* a troca de tema por círculo (Moldura.tsx): as duas imagens da página ficam paradas e o círculo é desenhado em JS */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-old(root) { z-index: 1; }
+::view-transition-new(root) { z-index: 2; }
+@media (prefers-reduced-motion: reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation-duration: 0s !important; } }
 
 /* ───────── o balão das questões (Questoes.tsx) ───────── */
 /* a faixa de azulejos no alto do cartão, a mesma do armário em miniatura */
