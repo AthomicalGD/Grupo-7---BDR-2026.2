@@ -32,14 +32,20 @@ export function destinoDe(o: Origem): string {
   if (p.startsWith('/uf/')) return 'ao estado'
   if (p === '/') return 'ao mapa'
   if (p.startsWith('/urna')) return 'à urna'
+  if (p.startsWith('/cadeira/legenda')) return 'à legenda'
   if (p.startsWith('/cadeira')) return 'ao plenário'
+  if (p.startsWith('/idade')) return 'à idade'
+  if (p.startsWith('/indices')) return 'aos índices'
+  if (p.startsWith('/repasses')) return 'aos repasses'
+  if (p.startsWith('/segundo-turno')) return 'ao 2º turno'
   if (p.startsWith('/escola')) return 'à escola'
   if (p.startsWith('/patrimonio')) return 'ao patrimônio'
   if (p.startsWith('/reeleicao')) return 'à reeleição'
   if (p.startsWith('/metodologia')) return 'à metodologia'
   if (p.startsWith('/politico')) return 'ao político anterior'
   if (p.startsWith('/comparar')) return 'à comparação'
-  return ''
+  // tela que a lista não conhece: ainda assim volta para ela, só sem dizer o nome
+  return 'à tela anterior'
 }
 
 const guardados = new Map<string, unknown>()

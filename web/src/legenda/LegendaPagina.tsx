@@ -1,4 +1,4 @@
-import { ArrowLeft, CaretDown, MagnifyingGlass } from '@phosphor-icons/react'
+import { CaretDown, MagnifyingGlass } from '@phosphor-icons/react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useEffect, useId, useState } from 'react'
@@ -7,6 +7,7 @@ import { Escolha } from '../componentes/Escolha'
 import { Atrasado, EsqueletoBloco, EsqueletoPagina } from '../componentes/Esqueleto'
 import { ErroCarga } from '../componentes/ErroCarga'
 import { Retrato } from '../componentes/Retrato'
+import { Voltar } from '../componentes/Voltar'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { inteiro, nomeProprio } from '../lib/formato'
 import type { BuscaLegenda } from '../router'
@@ -245,9 +246,7 @@ export function LegendaPagina() {
   return (
     <main className="mx-auto max-w-[var(--casca-max)] px-4 pb-12 pt-6 md:px-[var(--casca-margem)] md:pt-7">
       <header className="max-w-[68ch]">
-        <Link to="/cadeira" className="mb-4 inline-flex items-center gap-1.5 rounded-md px-1 py-1 text-[0.82rem] font-semibold text-acao hover:bg-papel">
-          <ArrowLeft size={15} weight="bold" aria-hidden /> Quanto custa uma cadeira?
-        </Link>
+        <Voltar para="/cadeira" rotulo="Quanto custa uma cadeira?" className="mb-4 inline-flex items-center gap-1.5 rounded-md px-1 py-1 text-[0.82rem] font-semibold text-acao hover:bg-papel" />
         <h1 className="t-display">Como os partidos preencheram as cadeiras?</h1>
         <p className="mt-3 text-[1.06rem] text-tinta-2">Eleitos pelo sistema proporcional, agrupados pelo partido de filiação.</p>
       </header>
