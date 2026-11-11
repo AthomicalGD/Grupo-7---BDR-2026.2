@@ -701,6 +701,40 @@ Recursos desta interface, todos no `web/src`:
 Dicas: a primeira consulta de cada tela pode levar de segundos a meio minuto (a API monta caches em disco e fica rápida
 depois); com a máquina lenta, use sempre `npm run apresentar` em vez de `npm run dev`.
 
+### Subir tudo com um comando, e o que deixa o sistema leve
+
+```bash
+python scripts/subir_sistema.py            # Docker, banco, ANALYZE se faltar, API (porta livre a partir da 8000) e site de produção
+python scripts/subir_sistema.py --sem-site # só o banco e a API
+```
+
+O script pula o que já estiver de pé, abre o Docker Desktop se o motor estiver desligado e só refaz o build do site se o
+código mudou. Ele roda no seu terminal (Ctrl+C derruba a API e o site; o banco fica ligado).
+
+O que foi feito para o sistema não travar (medido num teste com o cache vazio: as 13 telas principais respondendo ao mesmo
+tempo levavam 124 s e passaram a 66 s; a reeleição de todos os estados foi de 35 s para 15 s):
+
+- **Banco servindo, não só carregando.** O `docker-compose.yml` agora liga `jit=off`, `random_page_cost=1.1` (SSD),
+  `effective_cache_size`, `effective_io_concurrency=200` e até 4 processos paralelos por consulta. Cada carga
+  (`loader`, `loader.ano`, `loader.perfil_etario`) termina com `ANALYZE`: sem as estatísticas das tabelas novas o
+  planejador escolhe planos às cegas.
+- **API.** Uma conta pesada de cada vez por resultado (`em_disco` trava por arquivo: quem chega durante a conta espera o
+  resultado em vez de refazê-la), as contas mais lentas aquecem em paralelo logo ao subir, e a P10a calcula quatro
+  estados por vez. O resultado é o mesmo byte a byte (conferido contra o código antigo).
+- **Memória do Windows.** O WSL2 sem limite fica com metade da RAM. Crie `C:\Users\<você>\.wslconfig` com
+  `[wsl2] memory=6GB processors=8 swap=2GB` e `[experimental] autoMemoryReclaim=gradual`, depois `wsl --shutdown` e reabra o
+  Docker Desktop. (Num notebook de 16 GB a RAM livre foi de 1,5 GB para 7 GB.)
+
+**Discos.** Os dados grandes ficam no disco externo, em `D:\Projetos\BDR-Grupo7\dados` (no notebook dele, o USB aparece
+como D:), e `dados/*` é um atalho (junction) para lá: `tse/*`, `camara`, `ibge`, `colonial`, `partidos`, `cache_malhas`,
+`ideologia_partidos`, `ipea_atlas` e `firjan`. No C: ficam só `cache_api` (o cache das contas, que o sistema recria) e
+`_controle`. O Docker guarda o banco no C: (`AppData\Local\Docker`, mais de 100 GB): não dá para mover para o D porque o WSL
+não roda em disco exFAT; se precisar do espaço, mude a "Disk image location" nas configurações do Docker Desktop para um
+disco NTFS.
+
+**IFDM (P3).** O site da Firjan bloqueia download automático. Baixe pelo navegador a "Série Histórica IFDM 2013 a 2023"
+em https://www.firjan.com.br/ifdm/downloads/, salve em `dados/firjan/` e rode `python -m loader.ifdm`.
+
 ### Abrir no celular (QR code do boletim)
 
 Com `npm run rede` ou `npm run rede:publico`, o terminal mostra um endereço com `?chave=...`. Abra-o

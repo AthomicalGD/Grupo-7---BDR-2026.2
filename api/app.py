@@ -30,6 +30,7 @@ import traceback
 import unicodedata
 import zlib
 from collections import Counter, defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 from functools import lru_cache, wraps
 from pathlib import Path
@@ -153,9 +154,20 @@ def versao_cache() -> str:
 
 # Com o disco por baixo, a memória guarda poucos resultados das contas que devolvem listas grandes
 # (candidatos de cada partido, campanhas de um cargo inteiro): ler do disco leva milissegundos.
+_TRAVAS: dict[Path, threading.Lock] = {}
+_TRAVAS_MESTRA = threading.Lock()
+
+
+def _trava_de(arquivo: Path) -> threading.Lock:
+    with _TRAVAS_MESTRA:
+        return _TRAVAS.setdefault(arquivo, threading.Lock())
+
+
 def em_disco(f):
     """Guarda o resultado de f(*args) em disco (ver versao_cache). Vai por baixo do lru_cache: a memória
-    responde primeiro, o disco depois de reiniciar, a conta só na primeira vez de cada versão."""
+    responde primeiro, o disco depois de reiniciar, a conta só na primeira vez de cada versão.
+    Uma conta de cada vez por resultado: se o aquecimento do início já está fazendo a P10a e alguém abre a
+    Reeleição, a visita espera esse resultado em vez de refazer a conta (antes as duas rodavam juntas)."""
     @wraps(f)
     def g(*args, **kw):
         chave = hashlib.sha1(repr((args, sorted(kw.items()))).encode()).hexdigest()[:20]
@@ -164,16 +176,25 @@ def em_disco(f):
             return pickle.loads(arquivo.read_bytes())
         except (OSError, pickle.UnpicklingError, EOFError):
             pass
-        valor = f(*args, **kw)
-        try:
-            arquivo.parent.mkdir(parents=True, exist_ok=True)
-            temp = arquivo.with_suffix(f".{threading.get_ident()}.tmp")
-            temp.write_bytes(pickle.dumps(valor, protocol=pickle.HIGHEST_PROTOCOL))
-            temp.replace(arquivo)
-        except OSError:   # sem espaço ou sem permissão: segue só com a memória
-            pass
-        return valor
+        with _trava_de(arquivo):
+            try:   # quem estava na frente pode ter acabado de gravar
+                return pickle.loads(arquivo.read_bytes())
+            except (OSError, pickle.UnpicklingError, EOFError):
+                pass
+            return _calcula_e_guarda(f, arquivo, args, kw)
     return g
+
+
+def _calcula_e_guarda(f, arquivo: Path, args, kw):
+    valor = f(*args, **kw)
+    try:
+        arquivo.parent.mkdir(parents=True, exist_ok=True)
+        temp = arquivo.with_suffix(f".{threading.get_ident()}.tmp")
+        temp.write_bytes(pickle.dumps(valor, protocol=pickle.HIGHEST_PROTOCOL))
+        temp.replace(arquivo)
+    except OSError:   # sem espaço ou sem permissão: segue só com a memória
+        pass
+    return valor
 
 
 SQL_CARREGADAS = "SELECT u.sigla FROM carga_uf c JOIN uf u ON u.sigla = c.sg_uf ORDER BY 1"
@@ -301,6 +322,10 @@ async def _ciclo_de_vida(_app):
     threading.Thread(target=_aquecer_patrimonio, daemon=True).start()
     # a P6 monta a base uma vez (~18 s): idem
     threading.Thread(target=_aquecer_idade, daemon=True).start()
+    # as contas mais lentas a frio (a P10a ~35 s, a P4 ~20 s, o 2º turno ~12 s) ficavam no fim da fila do _aquecer, atrás
+    # de minutos de viés por estado e ano: duas linhas próprias, em paralelo, para a 1ª visita não esperar
+    threading.Thread(target=_aquecer_reeleicao, daemon=True).start()
+    threading.Thread(target=_aquecer_escola_e_segundo_turno, daemon=True).start()
     yield
 
 
@@ -1128,7 +1153,13 @@ def _ufs_p10(uf: str) -> list[str]:
 @em_disco
 def reeleicao_uf(sigla: str) -> dict:
     ufs = sorted(carregadas() - {"BR"}) if sigla == TODOS else [sigla]
-    linhas = [r for u in ufs for r in linhas_reeleicao(u)]
+    # uma consulta por UF (~1 s cada, bem mais em SP e MG): quatro de cada vez, na mesma ordem de sempre no resultado
+    if len(ufs) > 1:
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            por_uf = list(pool.map(linhas_reeleicao, ufs))
+    else:
+        por_uf = [linhas_reeleicao(u) for u in ufs]
+    linhas = [r for rs in por_uf for r in rs]
     validas = [r for r in linhas if r["ha_proxima"]]   # fora: a eleição seguinte ainda não está no banco
     cargos = []
     for cod, nome in CARGOS_P10.items():
@@ -1149,6 +1180,28 @@ def reeleicao_uf(sigla: str) -> dict:
             "municipais": _soma_reeleicao(municipais) if municipais else None,
             "fora": [{"cod": c, "cargo": CARGOS_P10[c], "eleitos_em": a} for c, a in fora],
             "ligados_por_nome": sum(r["ligados"] for r in validas)}
+
+
+def _aquecer_reeleicao() -> None:
+    try:
+        reeleicao_uf(TODOS)
+        veteranos()   # o BRANCO da urna sorteia daqui
+    except Exception:  # noqa: BLE001 - banco fora do ar: a conta é feita quando a página pedir
+        traceback.print_exc()
+
+
+def _aquecer_escola_e_segundo_turno() -> None:
+    try:
+        segundos_turnos()
+        for ano in ANOS_ESCOLA:
+            try:
+                escola_ano(ano, "")
+                municipios_escola(ano)
+            except HTTPException:   # ano fora do banco
+                pass
+        escola_comparar_tudo()
+    except Exception:  # noqa: BLE001
+        traceback.print_exc()
 
 
 def _aquecer() -> None:

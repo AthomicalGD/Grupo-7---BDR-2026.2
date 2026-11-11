@@ -21,6 +21,9 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     shm_size: 1g
+    # Os quatro últimos -c (jit, random_page_cost, effective_cache_size, effective_io_concurrency e paralelismo) servem
+    # as telas, não a carga: o JIT custa centenas de ms em consulta curta, o disco é SSD e o planejador precisa saber
+    # quanta memória o sistema empresta de cache. (Comentário fora do bloco: dentro dele o # viraria argumento.)
     # Ajustes para carga em massa (dezenas de milhões de linhas por UF grande). Para apresentar com
     # pouca memória livre: PG_MEMORIA=256MB PG_TRABALHO=16MB docker compose up -d db
     command: >
@@ -32,6 +35,11 @@ services:
       -c max_wal_size=8GB
       -c checkpoint_timeout=15min
       -c synchronous_commit=off
+      -c jit=off
+      -c random_page_cost=1.1
+      -c effective_cache_size=${PG_CACHE_EFETIVO:-5GB}
+      -c effective_io_concurrency=200
+      -c max_parallel_workers_per_gather=4
     healthcheck:
       # Por TCP: na primeira inicialização o servidor temporário do entrypoint só escuta no socket local.
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
