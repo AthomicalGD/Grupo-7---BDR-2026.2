@@ -1,10 +1,11 @@
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
+import { useNavigate, useParams, useRouter, useSearch } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'motion/react'
 import { lazy, Suspense, useCallback, useEffect } from 'react'
 import { ANOS, CARGOS_TURNO_2, consultas, type Ano, type MunicipioBusca, type Turno } from '../api'
 import { Atrasado, EsqueletoBloco, EsqueletoPagina, EsqueletoPalco } from '../componentes/Esqueleto'
 import { ErroCarga } from '../componentes/ErroCarga'
+import { destinoDe, useOrigem } from '../lib/pilha'
 import type { BuscaAtlas } from '../router'
 import { Boletim } from './Boletim'
 import { CedulaAnos } from './CedulaAnos'
@@ -27,6 +28,10 @@ export function Atlas() {
   const params = useParams({ strict: false }) as { sigla?: string; ibge?: string }
   const busca = useSearch({ strict: false }) as BuscaAtlas
   const navegar = useNavigate()
+  const router = useRouter()
+  // fechar o boletim volta à tela de onde se veio quando ela é de fora do mapa (os Índices, a Idade...); do resto, ao estado
+  const origem = useOrigem()
+  const veioDeFora = !!origem && origem.pathname !== '/' && !origem.pathname.startsWith('/uf/')
   const turno: Turno = busca.turno ?? 1
   // no 2º turno só há presidente, governador e prefeito: outro cargo pedido vira a média dos três
   const cargo = turno === 2 && busca.cargo && !CARGOS_TURNO_2.includes(busca.cargo) ? undefined : busca.cargo
@@ -92,7 +97,7 @@ export function Atlas() {
   let painel
   if (ibge) {
     painel = municipio.data ? (
-      <Boletim m={municipio.data} ano={ano} cargo={doCargo?.nome} aoFechar={() => irUF(sigla!)} />
+      <Boletim m={municipio.data} ano={ano} cargo={doCargo?.nome} aoFechar={() => (veioDeFora ? router.history.back() : irUF(sigla!))} voltaPara={veioDeFora ? destinoDe(origem!) : undefined} />
     ) : municipio.isError ? (
       <ErroCarga erro={municipio.error} compacto aoTentar={municipio.refetch} />
     ) : (

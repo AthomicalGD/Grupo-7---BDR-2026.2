@@ -153,7 +153,7 @@ function PrefeitosEIdade({ m }: { m: Municipio }) {
   )
 }
 
-export function Boletim({ m, ano, cargo, aoFechar }: { m: Municipio; ano: Ano; cargo?: string; aoFechar: () => void }) {
+export function Boletim({ m, ano, cargo, aoFechar, voltaPara }: { m: Municipio; ano: Ano; cargo?: string; aoFechar: () => void; voltaPara?: string }) {
   const ind = m.indicadores
   const [emitido] = useState(() => new Date().toLocaleDateString('pt-BR'))
   const url = typeof window !== 'undefined' ? enderecoParaOutroAparelho() : ''
@@ -172,7 +172,7 @@ export function Boletim({ m, ano, cargo, aoFechar }: { m: Municipio; ano: Ano; c
                 {m.uf} · Região intermediária {m.regiao_intermediaria} · IBGE {m.ibge}
               </p>
             </div>
-            <button type="button" onClick={aoFechar} className="-mr-2 rounded-full p-2 text-tinta-2 hover:bg-papel hover:text-tinta" aria-label="Fechar o boletim e voltar ao estado">
+            <button type="button" onClick={aoFechar} className="-mr-2 rounded-full p-2 text-tinta-2 hover:bg-papel hover:text-tinta" aria-label={`Fechar o boletim e voltar ${voltaPara ?? 'ao estado'}`}>
               <X size={20} weight="bold" />
             </button>
           </Linha>

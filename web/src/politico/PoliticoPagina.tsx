@@ -1,14 +1,14 @@
 // Ficha da carreira (P10): retrato 3x4 com o carimbo da situação atual, a fita da carreira (uma
 // casa por eleição, preenchida quando venceu), a resposta em texto, a trajetória por cargo com a
 // faixa dos partidos, as campanhas com custo (P1) e para onde foi o dinheiro (P9), e os santinhos.
-import { ArrowLeft, ArrowRight, ArrowsLeftRight, CaretLeft, CaretRight } from '@phosphor-icons/react'
+import { ArrowRight, ArrowsLeftRight, CaretLeft, CaretRight } from '@phosphor-icons/react'
 import { useQuery } from '@tanstack/react-query'
-import { Link, useParams, useRouter, useSearch } from '@tanstack/react-router'
+import { Link, useParams, useSearch } from '@tanstack/react-router'
 import { motion, useReducedMotion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { destinoDe, useOrigem } from '../lib/pilha'
 import { consultas, type Candidatura, type Politico } from '../api'
 import { Compartilhar } from '../componentes/Compartilhar'
+import { Voltar } from '../componentes/Voltar'
 import { Atrasado, EsqueletoPagina } from '../componentes/Esqueleto'
 import { ErroCarga } from '../componentes/ErroCarga'
 import { Retrato } from '../componentes/Retrato'
@@ -190,9 +190,7 @@ export function PoliticoPagina() {
   const viesPartido = useMemo(() => (partidos ? new Map(partidos.map((x) => [x.sigla, x.vies])) : undefined), [partidos])
   const reduz = useReducedMotion()
   // o Voltar leva à tela de onde se veio (o boletim, o plenário, a escola...), como ela estava; sem ela (link
-  // direto), a urna
-  const origem = useOrigem()
-  const router = useRouter()
+  // direto), a urna (componentes/Voltar.tsx)
 
   useEffect(() => {
     if (p) document.title = `${nomeProprio(p.nome)} · Voto Aberto`
@@ -209,15 +207,7 @@ export function PoliticoPagina() {
   return (
     <div className="mx-auto max-w-[var(--casca-max)] px-4 pb-16 pt-6 md:px-[var(--casca-margem)]">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
-      {origem && destinoDe(origem) ? (
-        <button type="button" onClick={() => router.history.back()} className="inline-flex items-center gap-1.5 text-[0.88rem] font-semibold text-acao hover:underline">
-          <ArrowLeft size={14} weight="bold" aria-hidden /> Voltar {destinoDe(origem)}
-        </button>
-      ) : (
-        <Link to="/urna" className="inline-flex items-center gap-1.5 text-[0.88rem] font-semibold text-acao hover:underline">
-          <ArrowLeft size={14} weight="bold" aria-hidden /> Nova consulta na urna
-        </Link>
-      )}
+      <Voltar para="/urna" rotulo="Nova consulta na urna" className="inline-flex items-center gap-1.5 text-[0.88rem] font-semibold text-acao hover:underline" />
         <Link to="/comparar" search={{ a: p.id }} className="inline-flex items-center gap-1.5 text-[0.88rem] font-semibold text-acao hover:underline">
           <ArrowsLeftRight size={14} weight="bold" aria-hidden /> Comparar com outro político
         </Link>
