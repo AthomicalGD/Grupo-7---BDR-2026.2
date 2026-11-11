@@ -141,7 +141,8 @@ def versao_cache() -> str:
                 || COALESCE((SELECT string_agg(t::text, ',' ORDER BY t::text) FROM vies_partido_onda t), '')
                 -- os índices municipais podem ser regravados sem nova carga de UF (python -m loader.indices)
                 || COALESCE((SELECT count(*) || '/' || sum(COALESCE(populacao, 0)) || '/' || sum(COALESCE(pib, 0))
-                             FROM indices_municipio)::text, '')) AS v""")[0]["v"]
+                             FROM indices_municipio)::text, '')
+                || COALESCE((SELECT count(*)::text FROM ifdm_municipio), '')) AS v""")[0]["v"]
     # as fotos também entram: com o disco das fotos desconectado, as contas guardariam "sem foto" para todos
     fotos = sum(1 for _ in (DADOS / PASTA_FOTOS).glob("*/*.zip"))
     versao = f"{dados[:10]}{fotos:x}-{VERSAO_CONTAS}"
