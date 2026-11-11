@@ -6,7 +6,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
 import { consultas, type Ano, type Malha, type MunicipioResumo, type UF, type UFDetalhe } from '../api'
 import { useLoja } from '../lib/loja'
-import { corVies } from '../lib/vies'
+import { corMapa } from '../lib/vies'
 import { formas, formasCedo, formasGuardadas, LADO, projecaoBrasil, type Caixa, type Forma } from './geo'
 import { Dica } from './Dica'
 import { hover, type Foco } from './hover'
@@ -200,7 +200,7 @@ export function Mapa(p: Props) {
 
   const nomeAno = p.sigla ? `${ufSel?.nome ?? p.sigla}, por município` : 'Brasil, por estado'
   return (
-    <div ref={caixaRef} className="relative h-full w-full touch-none select-none">
+    <div ref={caixaRef} className="mapa-papel relative h-full w-full touch-none select-none">
       <svg
         ref={svgRef}
         viewBox={`${vista.x} ${vista.y} ${vista.w} ${vista.h}`}
@@ -211,12 +211,18 @@ export function Mapa(p: Props) {
       >
         <defs>
           <pattern id="hachura" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)">
-            <rect width="5" height="5" fill="#eceef0" />
-            <line x1="0" y1="0" x2="0" y2="5" stroke="#c9ced3" strokeWidth="1.6" />
+            <rect width="5" height="5" fill="var(--color-neutro)" />
+            <line x1="0" y1="0" x2="0" y2="5" stroke="var(--color-linha-2)" strokeWidth="1.6" />
           </pattern>
         </defs>
         <g ref={cameraRef} onPointerMove={moverHover} onPointerLeave={() => { clearTimeout(espera.current); hover.set(null) }} onClick={clicar}>
           <CamadaUFs formas={formasUF} ufPorCodigo={ufPorCodigo} ano={p.ano} sigla={p.sigla} vazarAtiva={mostraMunicipios} aoEscolher={p.aoEscolherUF} aoApontar={apontarUF} />
+          {/* a sombra do estado: o contorno dele, deslocado, por baixo dos municípios (um caminho só, sem filtro) */}
+          {mostraMunicipios && formaUFSel && (() => {
+            const [[x0, y0], [x1, y1]] = formaUFSel.caixa
+            const passo = Math.max(x1 - x0, y1 - y0)
+            return <path d={formaUFSel.d} fill="#121417" opacity={0.2} transform={`translate(${passo * 0.006} ${passo * 0.011})`} pointerEvents="none" />
+          })()}
           {mostraMunicipios && (
             <CamadaMunicipios
               key={p.sigla}
@@ -230,12 +236,12 @@ export function Mapa(p: Props) {
             />
           )}
           {formaUFSel && (
-            <path d={formaUFSel.d} fill="none" stroke="var(--color-tinta)" strokeWidth={1.6} vectorEffect="non-scaling-stroke" pointerEvents="none" />
+            <path d={formaUFSel.d} fill="none" stroke="var(--color-tinta)" strokeWidth={2.8} strokeLinejoin="round" vectorEffect="non-scaling-stroke" pointerEvents="none" />
           )}
           {formaMunSel && (
             <path
               d={formaMunSel.d}
-              fill={corVies(valorMunicipio(munPorIbge.get(formaMunSel.codigo), p.ano, p.relativo, vUF), p.relativo ? SATURA_RELATIVO : undefined)}
+              fill={corMapa(valorMunicipio(munPorIbge.get(formaMunSel.codigo), p.ano, p.relativo, vUF), p.relativo ? SATURA_RELATIVO : undefined)}
               stroke="var(--color-tinta)"
               strokeWidth={2.6}
               strokeLinejoin="round"
@@ -296,16 +302,16 @@ const CamadaUFs = memo(function CamadaUFs({
             data-codigo={f.codigo}
             data-tipo="uf"
             className="mapa-forma outline-none"
-            fill={ativa && vazarAtiva ? 'var(--color-papel)' : uf?.carregada ? corVies(v, SATURA_UF) : 'url(#hachura)'}
+            fill={ativa && vazarAtiva ? 'var(--color-papel)' : uf?.carregada ? corMapa(v, SATURA_UF) : 'url(#hachura)'}
             opacity={outra ? 0.32 : 1}
-            stroke="#fcfdfd"
-            strokeWidth={1.1}
+            stroke="var(--color-folha)"
+            strokeWidth={1.6}
             strokeLinejoin="round"
             vectorEffect="non-scaling-stroke"
             tabIndex={uf?.carregada && !ativa ? 0 : undefined}
             role={uf?.carregada ? 'link' : undefined}
             aria-label={uf ? `${uf.nome}: ${uf.carregada ? `viés ${v?.toFixed(1) ?? 'sem dado'} em ${ano}` : 'sem dados carregados'}` : undefined}
-            style={{ cursor: uf?.carregada ? 'pointer' : 'not-allowed' }}
+            style={{ cursor: uf?.carregada ? 'pointer' : 'not-allowed', ['--onda' as string]: `${Math.round((f.centro[0] / LADO) * 420)}ms` }}
             onFocus={(e) => {
               const r = e.currentTarget.getBoundingClientRect()
               hover.set({ tipo: 'uf', codigo: f.codigo, x: r.left + r.width / 2, y: r.top + r.height / 2 })
@@ -373,9 +379,10 @@ const CamadaMunicipios = memo(function CamadaMunicipios({
               data-codigo={f.codigo}
               data-tipo="municipio"
               className="mapa-forma cursor-pointer"
-              fill={corVies(valorMunicipio(munPorIbge.get(f.codigo), ano, relativo, vUF), relativo ? SATURA_RELATIVO : undefined)}
-              stroke="#fcfdfd"
-              strokeWidth={0.55}
+              style={{ ['--onda' as string]: `${Math.round(i * 55)}ms` }}
+              fill={corMapa(valorMunicipio(munPorIbge.get(f.codigo), ano, relativo, vUF), relativo ? SATURA_RELATIVO : undefined)}
+              stroke="var(--color-folha)"
+              strokeWidth={1.2}
               strokeLinejoin="round"
               vectorEffect="non-scaling-stroke"
             />

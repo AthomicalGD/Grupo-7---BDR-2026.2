@@ -4,7 +4,7 @@
 import { ShareNetwork } from '@phosphor-icons/react'
 import { useState } from 'react'
 
-const FITAS = ['#5e881b', '#a2bd31', '#5d6b94', '#468baf', '#76acd0', '#f19929', '#fbc700']
+const FITAS = ['#1d4fa0', '#86a6dc', '#121417', '#d6382a', '#e8836f', '#f5b800', '#ffd75e']
 const W = 1200, H = 630
 
 export interface Cartao {

@@ -1,9 +1,9 @@
 import { ArrowLeft, ArrowRight } from '@phosphor-icons/react'
 import { geoConicEqualArea, geoPath } from 'd3-geo'
 import { useMemo } from 'react'
-import type { Ano, Malha, MunicipioBusca, UF } from '../api'
+import type { Ano, Malha, MunicipioBusca, Turno, UF } from '../api'
 import { decimal, vies as fmtVies } from '../lib/formato'
-import { corVies } from '../lib/vies'
+import { corMapa, corVies } from '../lib/vies'
 import { SATURA_UF } from './valores'
 import { BuscaMunicipio } from './BuscaMunicipio'
 import { silhueta } from './geo'
@@ -17,6 +17,7 @@ interface Props {
   aoMudarAno: (a: Ano) => void
   /** nome do cargo do filtro (#10), se houver */
   cargo?: string
+  turno?: Turno
   aoEscolherUF: (sigla: string) => void
   aoApontarUF?: (sigla: string) => void
   aoEscolherMunicipio: (m: MunicipioBusca) => void
@@ -24,7 +25,7 @@ interface Props {
 
 const ORDEM_REGIOES = ['Norte', 'Nordeste', 'Centro-Oeste', 'Sudeste', 'Sul']
 
-export function PainelBrasil({ ufs, malha, ano, anos, aoMudarAno, cargo, aoEscolherUF, aoApontarUF, aoEscolherMunicipio }: Props) {
+export function PainelBrasil({ ufs, malha, ano, anos, aoMudarAno, cargo, turno = 1, aoEscolherUF, aoApontarUF, aoEscolherMunicipio }: Props) {
   const silhuetas = useMemo(() => new Map(ufs.map((u) => [u.sigla, silhueta(malha, u.cd_ibge, 40)])), [ufs, malha])
   const carregadas = ufs.filter((u) => u.carregada).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
   const faltam = ufs.filter((u) => !u.carregada)
@@ -38,7 +39,9 @@ export function PainelBrasil({ ufs, malha, ano, anos, aoMudarAno, cargo, aoEscol
         <h1 className="t-display">Para onde o voto pendeu</h1>
         <p className="max-w-[54ch] text-[1.05rem] leading-relaxed text-tinta-2">
           Viés partidário de cada estado e município de 2018 a 2026, de −100 (esquerda) a +100 (direita), calculado
-          {cargo ? <> só com os votos válidos para <b className="font-semibold text-tinta">{cargo.toLowerCase()}</b>.</> : ' com os votos válidos de todos os cargos.'}
+          {turno === 2
+            ? <> com os votos dos dois finalistas no <b className="font-semibold text-tinta">2º turno</b>{cargo ? <> para {cargo.toLowerCase()}</> : ' (presidente, governador e prefeito)'}. Só onde houve 2º turno: nos anos municipais, só as cidades grandes.</>
+            : cargo ? <> só com os votos válidos para <b className="font-semibold text-tinta">{cargo.toLowerCase()}</b>.</> : ' com os votos válidos de todos os cargos.'}
         </p>
       </header>
 
@@ -67,7 +70,7 @@ export function PainelBrasil({ ufs, malha, ano, anos, aoMudarAno, cargo, aoEscol
                   className="group flex w-full items-center gap-2.5 rounded-2xl border border-linha bg-folha px-3 py-2.5 text-left transition-[border-color,transform,box-shadow] hover:border-tinta hover:shadow-[var(--shadow-cartao)] active:scale-[0.99]"
                 >
                   <svg viewBox="0 0 40 40" className="size-9 shrink-0 overflow-visible" aria-hidden>
-                    <path d={silhuetas.get(u.sigla)} fill={corVies(v, SATURA_UF)} stroke="var(--color-tinta)" strokeWidth={0.9} strokeLinejoin="round" className="mapa-forma" />
+                    <path d={silhuetas.get(u.sigla)} fill={corMapa(v, SATURA_UF)} stroke="var(--color-tinta)" strokeWidth={0.9} strokeLinejoin="round" className="mapa-forma" />
                   </svg>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-semibold">{u.nome}</span>
@@ -150,7 +153,7 @@ function Mapinhos({ ufs, malha, ano, anos, aoMudarAno }: { ufs: UF[]; malha: Mal
             >
               <svg viewBox={`0 0 ${LADO_MAPINHO} ${LADO_MAPINHO}`} className="mx-auto block w-full max-w-[112px]" aria-hidden>
                 {estados.map(({ d, uf }, i) => (
-                  <path key={i} d={d} fill={uf?.carregada ? corVies(uf.vies[a], SATURA_UF) : '#eceef0'} stroke="#fcfdfd" strokeWidth={0.5} />
+                  <path key={i} d={d} fill={uf?.carregada ? corMapa(uf.vies[a], SATURA_UF) : '#eceef0'} stroke="#fcfdfd" strokeWidth={0.5} />
                 ))}
               </svg>
               <span className={`mt-1 block text-center text-[0.86rem] tabular ${a === ano ? 'font-bold text-tinta' : 'font-semibold text-tinta-2'}`}>{a}</span>

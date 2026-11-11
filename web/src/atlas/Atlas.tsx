@@ -2,7 +2,7 @@ import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-quer
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'motion/react'
 import { lazy, Suspense, useCallback, useEffect } from 'react'
-import { ANOS, consultas, type Ano, type MunicipioBusca } from '../api'
+import { ANOS, CARGOS_TURNO_2, consultas, type Ano, type MunicipioBusca, type Turno } from '../api'
 import { Atrasado, EsqueletoBloco, EsqueletoPagina, EsqueletoPalco } from '../componentes/Esqueleto'
 import { ErroCarga } from '../componentes/ErroCarga'
 import type { BuscaAtlas } from '../router'
@@ -13,6 +13,7 @@ import { Mapa } from './Mapa'
 import { PainelBrasil } from './PainelBrasil'
 import { PainelEstado } from './PainelEstado'
 import { PilulaCargo, SeletorCargo } from './SeletorCargo'
+import { SeletorTurno } from './SeletorTurno'
 
 const Relevo3D = lazy(() => import('../relevo/Relevo3D'))
 
@@ -26,10 +27,14 @@ export function Atlas() {
   const params = useParams({ strict: false }) as { sigla?: string; ibge?: string }
   const busca = useSearch({ strict: false }) as BuscaAtlas
   const navegar = useNavigate()
-  const cargo = busca.cargo
+  const turno: Turno = busca.turno ?? 1
+  // no 2º turno só há presidente, governador e prefeito: outro cargo pedido vira a média dos três
+  const cargo = turno === 2 && busca.cargo && !CARGOS_TURNO_2.includes(busca.cargo) ? undefined : busca.cargo
   const cargos = useQuery(consultas.cargosVies())
+  const cargosDoTurno = turno === 2 ? cargos.data?.filter((c) => CARGOS_TURNO_2.includes(c.cod)) : cargos.data
   const doCargo = cargos.data?.find((c) => c.cod === cargo)
-  // com um cargo escolhido, só os anos em que ele foi disputado; o ano pedido vai para o válido mais próximo
+  // com um cargo escolhido, só os anos em que ele foi disputado; o ano pedido vai para o válido mais próximo.
+  // (o 2º turno de 2026 foi publicado pelo TSE em novembro de 2026 e já está no banco)
   const anos: readonly Ano[] = doCargo?.anos.length ? doCargo.anos : ANOS
   const pedido: Ano = busca.ano ?? 2022
   const ano: Ano = anos.includes(pedido) ? pedido : anos.reduce((a, b) => (Math.abs(b - pedido) < Math.abs(a - pedido) ? b : a))
@@ -40,10 +45,10 @@ export function Atlas() {
 
   const malhaBrasil = useQuery(consultas.malhaBrasil())
   // a troca de cargo mantém o mapa anterior até o novo chegar (sem piscar o "carregando")
-  const ufs = useQuery({ ...consultas.ufs(cargo), placeholderData: keepPreviousData })
+  const ufs = useQuery({ ...consultas.ufs(cargo, turno), placeholderData: keepPreviousData })
   const malhaUF = useQuery({ ...consultas.malhaUF(sigla ?? ''), enabled: !!sigla })
-  const detalheUF = useQuery({ ...consultas.uf(sigla ?? '', cargo), enabled: !!sigla, placeholderData: (anterior) => (anterior?.sigla === sigla ? anterior : undefined) })
-  const municipio = useQuery({ ...consultas.municipio(ibge ?? 0, cargo), enabled: !!ibge, placeholderData: (anterior) => (anterior?.ibge === ibge ? anterior : undefined) })
+  const detalheUF = useQuery({ ...consultas.uf(sigla ?? '', cargo, turno), enabled: !!sigla, placeholderData: (anterior) => (anterior?.sigla === sigla ? anterior : undefined) })
+  const municipio = useQuery({ ...consultas.municipio(ibge ?? 0, cargo, turno), enabled: !!ibge, placeholderData: (anterior) => (anterior?.ibge === ibge ? anterior : undefined) })
 
   const mudarBusca = useCallback(
     (parcial: Partial<BuscaAtlas>) => navegar({ to: '.', search: (s: BuscaAtlas) => ({ ...s, ...parcial }), replace: true }),
@@ -51,6 +56,7 @@ export function Atlas() {
   )
   const mudarAno = useCallback((a: Ano) => mudarBusca({ ano: a }), [mudarBusca])
   const mudarCargo = useCallback((c: number | undefined) => mudarBusca({ cargo: c }), [mudarBusca])
+  const mudarTurno = useCallback((t: Turno) => mudarBusca({ turno: t === 2 ? 2 : undefined }), [mudarBusca])
   const irUF = useCallback(
     (s: string) => navegar({ to: '/uf/$sigla', params: { sigla: s }, search: (b: BuscaAtlas) => b }),
     [navegar],
@@ -65,9 +71,9 @@ export function Atlas() {
   const preverUF = useCallback(
     (s: string) => {
       void cliente.prefetchQuery(consultas.malhaUF(s))
-      void cliente.prefetchQuery(consultas.uf(s, cargo))
+      void cliente.prefetchQuery(consultas.uf(s, cargo, turno))
     },
-    [cliente, cargo],
+    [cliente, cargo, turno],
   )
   const escolherNaBusca = useCallback((m: MunicipioBusca) => irMunicipio(m.ibge, m.uf), [irMunicipio])
 
@@ -111,7 +117,7 @@ export function Atlas() {
       <Atrasado><EsqueletoBloco altura="34dvh" linhas={3} rotulo={`Apurando ${nomeUF ?? sigla}...`} /></Atrasado>
     )
   } else {
-    painel = <PainelBrasil ufs={ufs.data} malha={malhaBrasil.data} ano={ano} anos={anos} aoMudarAno={mudarAno} cargo={doCargo?.nome} aoEscolherUF={irUF} aoApontarUF={preverUF} aoEscolherMunicipio={escolherNaBusca} />
+    painel = <PainelBrasil ufs={ufs.data} malha={malhaBrasil.data} ano={ano} anos={anos} aoMudarAno={mudarAno} cargo={doCargo?.nome} turno={turno} aoEscolherUF={irUF} aoApontarUF={preverUF} aoEscolherMunicipio={escolherNaBusca} />
   }
 
   return (
@@ -121,7 +127,12 @@ export function Atlas() {
           ano={ano}
           anos={anos}
           aoMudar={mudarAno}
-          extra={cargos.data && <SeletorCargo cargos={cargos.data} cargo={cargo} aoMudar={mudarCargo} />}
+          extra={cargosDoTurno && (
+            <div className="flex flex-wrap items-center gap-2">
+              <SeletorTurno turno={turno} aoMudar={mudarTurno} />
+              <SeletorCargo cargos={cargosDoTurno} cargo={cargo} aoMudar={mudarCargo} />
+            </div>
+          )}
         />
         <div className="relative h-[58dvh] min-h-[340px] lg:h-auto lg:min-h-0 lg:flex-1">
           {relevo && detalheUF.data && malhaUF.data ? (
@@ -157,7 +168,7 @@ export function Atlas() {
             )}
           </AnimatePresence>
         </div>
-        <Legenda relativo={relativo && !!sigla} brasil={!sigla} />
+        <Legenda relativo={relativo && !!sigla} brasil={!sigla} semDados={turno === 2 ? 'Sem 2º turno' : undefined} />
       </section>
 
       <section aria-live="polite" className="min-w-0 pb-8">

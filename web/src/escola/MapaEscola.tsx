@@ -351,7 +351,7 @@ export function MapaEscola({ municipios, ufs, medida, selecionado, aoEscolher, c
                 const u = porCodigo.get(e.cd)
                 if (!u || !ufs.includes(u.sigla) || !Number.isFinite(e.centro[0])) return null
                 return (
-                  <text key={e.cd} x={e.centro[0]} y={e.centro[1]} textAnchor="middle" pointerEvents="none" opacity={foco ? 0 : 1} className="estado-rotulo t-numero" style={{ paintOrder: 'stroke', stroke: 'rgb(252 253 253 / .85)', strokeWidth: 3, transitionDuration: foco ? '200ms' : '600ms', transitionDelay: foco ? '0ms' : '500ms' }}>
+                  <text key={e.cd} x={e.centro[0]} y={e.centro[1]} textAnchor="middle" pointerEvents="none" opacity={foco ? 0 : 1} className="estado-rotulo t-numero" style={{ paintOrder: 'stroke', stroke: 'var(--halo)', strokeWidth: 3, transitionDuration: foco ? '200ms' : '600ms', transitionDelay: foco ? '0ms' : '500ms' }}>
                     <tspan x={e.centro[0]} fontSize={13} fontWeight={700} fill="var(--color-tinta)">{u.sigla}</tspan>
                     <tspan x={e.centro[0]} dy={15} fontSize={12} fill="var(--color-tinta-2)">{fmt(mediaUF.get(u.sigla))}</tspan>
                   </text>

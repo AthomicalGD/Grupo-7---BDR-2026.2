@@ -4,9 +4,9 @@
 // Cada braço mantém a própria matiz e varia luminosidade e croma em OKLCH, então os
 // passos de luminosidade dos dois lados são iguais (validado no protótipo).
 
-const ESQ = [0.5, 0.15, 46] as const
+const ESQ = [0.55, 0.18, 29] as const // azulejo: o vermelho de Athos
 const MEIO = [0.935, 0.004, 250] as const
-const DIR = [0.45, 0.11, 254] as const
+const DIR = [0.42, 0.14, 262] as const // azulejo: o cobalto
 export const SATURA = 75
 
 export function oklchParaHex(L: number, C: number, H: number): string {
@@ -58,3 +58,31 @@ export function ladoVies(v: number | null | undefined): string {
 
 export const gradienteVies = (satura = SATURA) =>
   [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1].map((f) => corVies(f * satura, satura))
+
+// O mapa (estilo "papel recortado"): a mesma escala, mas em FAIXAS_MAPA degraus por lado e com mais croma, como
+// cartolina colorida. Cada município cai num degrau inteiro; qualquer inclinação, por menor, já ganha o primeiro
+// degrau (o zero exato fica neutro). Os outros gráficos continuam com a escala contínua de corVies.
+export const FAIXAS_MAPA = 6
+const cacheMapa = new Map<string, string>()
+export function corMapa(v: number | null | undefined, satura = SATURA): string {
+  if (v == null || Number.isNaN(v)) return 'var(--color-papel-2)'
+  const t = Math.ceil(Math.min(1, Math.abs(v) / satura) ** 0.85 * FAIXAS_MAPA) / FAIXAS_MAPA
+  const chave = (v < 0 ? -t : t) + '/' + satura
+  let cor = cacheMapa.get(chave)
+  if (!cor) {
+    const alvo = v < 0 ? ESQ : DIR
+    cor = oklchParaHex(MEIO[0] + (alvo[0] - MEIO[0]) * t * 0.92, (MEIO[1] + (alvo[1] - MEIO[1]) * (1 - (1 - t) ** 2.2)) * (1.5 - 0.42 * t), alvo[2])
+    cacheMapa.set(chave, cor)
+  }
+  return cor
+}
+/** A legenda do mapa: os mesmos degraus, em faixas de borda seca. */
+export function faixasMapa(satura = SATURA): string {
+  const passos: string[] = []
+  const n = FAIXAS_MAPA * 2 + 1
+  for (let i = 0; i < n; i++) {
+    const k = i - FAIXAS_MAPA, v = k === 0 ? 0 : (Math.sign(k) * satura * (Math.abs(k) / FAIXAS_MAPA) ** (1 / 0.85))
+    passos.push(`${corMapa(v, satura)} ${(100 * i) / n}% ${(100 * (i + 1)) / n}%`)
+  }
+  return `linear-gradient(90deg, ${passos.join(', ')})`
+}

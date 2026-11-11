@@ -46,7 +46,7 @@ export function CedulaAnos({ ano, aoMudar, anos = ANOS, linhaDoTempo = true, ext
 
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-linha bg-folha p-1.5 pr-2 shadow-[var(--shadow-cartao)]">
-      <div role="radiogroup" aria-label="Ano da eleição" className="grid flex-1 grid-cols-3 sm:flex sm:flex-wrap" onKeyDown={teclado}>
+      <div role="radiogroup" aria-label="Ano da eleição" className="grid min-w-[min(100%,430px)] flex-1 grid-cols-3 sm:flex sm:flex-wrap" onKeyDown={teclado}>
         {anos.map((a) => {
           const marcado = a === ano
           return (

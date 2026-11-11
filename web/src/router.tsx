@@ -11,6 +11,8 @@ export interface BuscaAtlas {
   ano?: Ano
   /** só o voto para este cargo (#10); sem ele, a média dos cargos */
   cargo?: number
+  /** 2: o viés do 2º turno (presidente, governador e prefeito); sem ele, o 1º */
+  turno?: 2
   relativo?: boolean
   relevo?: boolean
 }
@@ -135,6 +137,7 @@ const atlas = createRoute({
   validateSearch: (s: Record<string, unknown>): BuscaAtlas => ({
     ano: ANOS.includes(Number(s.ano) as Ano) ? (Number(s.ano) as Ano) : undefined,
     cargo: CARGOS_ATLAS.includes(Number(s.cargo)) ? Number(s.cargo) : undefined,
+    turno: Number(s.turno) === 2 ? 2 : undefined,
     relativo: s.relativo === true || s.relativo === 'true' ? true : undefined,
     relevo: s.relevo === true || s.relevo === 'true' ? true : undefined,
   }),

@@ -2,7 +2,7 @@
 // O período da onda é 240 px; o desenho anda exatamente um período e recomeça sem emenda.
 import { useIsFetching } from '@tanstack/react-query'
 
-const FITAS = ['#5E881B', '#A2BD31', '#5D6B94', '#468BAF', '#76ACD0', '#F19929', '#FBC700']
+const FITAS = ['#1d4fa0', '#86a6dc', '#121417', '#d6382a', '#e8836f', '#f5b800', '#ffd75e']
 const PERIODO = 240
 const LARGURA = 2400 + PERIODO
 

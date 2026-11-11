@@ -6,6 +6,13 @@
     <title>Voto Aberto</title>
     <meta name="description" content="Viés político de estados e municípios, quanto custa cada cadeira e a carreira de cada político desde 1994, com dados abertos do TSE e do IBGE." />
     <meta name="theme-color" content="#18202B" />
+    <!-- o tema antes da primeira pintura: sem piscar o claro para quem escolheu o escuro -->
+    <script>
+      try {
+        var t = localStorage.getItem('va-tema') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'escuro' : 'claro')
+        document.documentElement.setAttribute('data-tema', t)
+      } catch (e) {}
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/icone-180.png" />
     <link rel="preload" href="/fontes/league-spartan-latin.woff2" as="font" type="font/woff2" crossorigin />

@@ -12,11 +12,11 @@ export const POUCOS = 10
 export const TODOS = 'TODOS'
 
 export const COR = {
-  voltou: '#9eb735', // lima de eleito
-  perdeu: '#c9c2b4', // cinza quente de não eleito
-  tentou: '#5d6b94', // fita ardósia
-  nao: '#eae8e4', // papel
-  texto: '#55702a', // oliva para números e rótulos de quem voltou
+  voltou: '#1d4fa0', // azulejo: cobalto
+  perdeu: '#e8836f', // azulejo: vermelho claro
+  tentou: '#f5b800', // azulejo: amarelo
+  nao: '#eef1f5', // branco de Brasília
+  texto: '#1d4fa0', // cobalto
 } as const
 
 /** As três partes em 100, pelo maior resto: a soma dá sempre 100. Quem aguarda um 2º turno ainda não
@@ -34,5 +34,5 @@ export function emCem(c: ContaReeleicao): Record<Destino, number> {
 
 // a cor de quem voltou, do claro ao fechado, para pintar uma taxa (silhuetas dos estados); começa em 30%
 // para a menor taxa não sumir no papel
-const rampa = piecewise(interpolateLab, ['#f2f6e4', '#d2e19a', COR.voltou, '#708d33', '#45591d'])
+const rampa = piecewise(interpolateLab, ['#eef3fb', '#c3d3ef', '#4b78c2', COR.voltou, '#0f2c5c'])
 export const corDaTaxa = (taxa: number) => rampa(Math.max(0, Math.min(1, (taxa - 30) / 60)))

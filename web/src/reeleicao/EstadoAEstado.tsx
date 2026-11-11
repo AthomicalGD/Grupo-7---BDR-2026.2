@@ -20,7 +20,7 @@ import { COR, corDaTaxa, POUCOS, TODOS } from './conta'
 type UFCarregada = { sigla: string; nome: string; cd_ibge: number }
 const MOLA = { type: 'spring', stiffness: 170, damping: 26 } as const
 // a cor de identidade de cada estado (não é dado): as fitas da marca, sem o lima, que aqui é "voltaram"
-const IDENTIDADE = ['#5e881b', '#5d6b94', '#f19929', '#468baf', '#fbc700', '#76acd0']
+const IDENTIDADE = ['#1d4fa0', '#d6382a', '#f5b800', '#121417', '#86a6dc', '#e8836f']
 const pct = (n: number | null | undefined) => (n == null ? '-' : `${inteiro(Math.round(n))}%`)
 
 /** A caixa da maior parte do estado (sem ilhas como Fernando de Noronha), para a câmera enquadrar o estado. */

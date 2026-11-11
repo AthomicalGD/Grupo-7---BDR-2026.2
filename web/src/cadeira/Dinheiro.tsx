@@ -30,10 +30,10 @@ const CURTO: Record<string, string> = {
 }
 
 const FONTES = [
-  { chave: 'fundo_eleitoral', nome: 'Fundo eleitoral', cor: '#2B4C8C', publico: true },
-  { chave: 'fundo_partidario', nome: 'Fundo partidário', cor: '#6F8CC4', publico: true },
-  { chave: 'pessoas_fisicas', nome: 'Doações de pessoas', cor: '#FBC700', publico: false },
-  { chave: 'proprios', nome: 'Do próprio bolso', cor: '#F19929', publico: false },
+  { chave: 'fundo_eleitoral', nome: 'Fundo eleitoral', cor: '#1d4fa0', publico: true },
+  { chave: 'fundo_partidario', nome: 'Fundo partidário', cor: '#86a6dc', publico: true },
+  { chave: 'pessoas_fisicas', nome: 'Doações de pessoas', cor: '#f5b800', publico: false },
+  { chave: 'proprios', nome: 'Do próprio bolso', cor: '#d6382a', publico: false },
   { chave: 'outros', nome: 'Outras origens', cor: '#AEB6BF', publico: false },
 ] as const
 

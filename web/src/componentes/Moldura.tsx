@@ -1,15 +1,15 @@
-import { Archive, Armchair, ArrowsClockwise, BookOpenText, ChartScatter, GraduationCap, Hourglass, Intersect, MapTrifold, PiggyBank, type Icon } from '@phosphor-icons/react'
+import { Archive, Armchair, ArrowsClockwise, BookOpenText, ChartScatter, GraduationCap, Hourglass, Intersect, MapTrifold, Moon, PiggyBank, Sun, type Icon } from '@phosphor-icons/react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, Outlet, useRouterState } from '@tanstack/react-router'
-import { motion } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { consultas } from '../api'
 import letreiro from '../assets/marca/letreiro-horizontal.svg'
 import letreiroNegativo from '../assets/marca/letreiro-horizontal-negativo.svg'
 import simbolo from '../assets/marca/simbolo.svg'
-import { Fita } from './Fita'
 import { ModoAula } from './ModoAula'
 import { NestaPagina } from './NestaPagina'
+import { Questoes } from './Questoes'
 import { Tour, useTour } from './Tour'
 
 // Preferências de leitura (alto contraste, tamanho da fonte e margens), guardadas só neste navegador.
@@ -49,8 +49,20 @@ const NAV: ItemNav[] = [
   { para: '/metodologia', rotulo: 'Metodologia', curto: 'Método', icone: BookOpenText, ativo: (p) => p.startsWith('/metodologia') },
 ]
 
-function BarraUtilitaria({ aula, aoAula, aoTour }: { aula: boolean; aoAula: (v: boolean) => void; aoTour: () => void }) {
+function BarraUtilitaria({ aula, aoAula, aoTour, questoes, aoQuestoes }: { aula: boolean; aoAula: (v: boolean) => void; aoTour: () => void; questoes: boolean; aoQuestoes: (v: boolean) => void }) {
   const [contraste, setContraste] = usePreferencia('va-contraste', 'data-contraste', 'normal')
+  // o index.html já pôs o tema (o salvo, ou o do sistema) antes da primeira pintura
+  const [tema, setTema] = usePreferencia('va-tema', 'data-tema', document.documentElement.getAttribute('data-tema') ?? 'claro')
+  // a troca de tema: nada cobre a tela, as cores do site escorrem juntas do claro para o escuro (index.css)
+  const trocarTema = () => {
+    const novo = tema === 'escuro' ? 'claro' : 'escuro'
+    const raiz = document.documentElement
+    raiz.classList.add('trocando-tema')
+    setTema(novo)
+    raiz.setAttribute('data-tema', novo)
+    setTimeout(() => raiz.classList.remove('trocando-tema'), 700)
+  }
+
   const [fonte, setFonte] = usePreferencia('va-fonte', 'data-fonte', '0')
   const [margem, setMargem] = usePreferencia('va-margem', 'data-margem', '1')
   const botao = 'rounded px-2 py-0.5 hover:bg-folha/70 disabled:opacity-40 disabled:hover:bg-transparent'
@@ -66,6 +78,12 @@ function BarraUtilitaria({ aula, aoAula, aoTour }: { aula: boolean; aoAula: (v: 
           <button type="button" className={`${botao} max-sm:hidden`} aria-pressed={aula} onClick={() => aoAula(!aula)}>
             Sala de aula
           </button>
+          {/* liga o balão das questões no canto da tela; o ponto diz se está ligado */}
+          <button type="button" className={`${botao} inline-flex items-center gap-1.5`} aria-pressed={questoes} onClick={() => aoQuestoes(!questoes)}
+            title={questoes ? 'Esconder o balão das questões' : 'Mostrar o balão das questões'}>
+            <span aria-hidden className={`size-2 rounded-full border-[1.5px] transition-colors ${questoes ? 'border-[var(--azul)] bg-[var(--azul)]' : 'border-tinta-3 bg-transparent'}`} />
+            Questões
+          </button>
           <span aria-hidden className="mx-1 h-3 w-px bg-linha-2 max-sm:hidden" />
           <button
             type="button"
@@ -74,6 +92,26 @@ function BarraUtilitaria({ aula, aoAula, aoTour }: { aula: boolean; aoAula: (v: 
             onClick={() => setContraste(contraste === 'alto' ? 'normal' : 'alto')}
           >
             Alto contraste
+          </button>
+          <button
+            type="button"
+            className={`${botao} relative grid size-6 place-items-center overflow-hidden !p-0`}
+            aria-label={tema === 'escuro' ? 'Usar o tema claro' : 'Usar o tema escuro'}
+            title={tema === 'escuro' ? 'Tema claro' : 'Tema escuro'}
+            onClick={trocarTema}
+          >
+            <AnimatePresence initial={false} mode="popLayout">
+              <motion.span
+                key={tema}
+                initial={{ y: 14, rotate: -90, opacity: 0 }}
+                animate={{ y: 0, rotate: 0, opacity: 1 }}
+                exit={{ y: -14, rotate: 90, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 380, damping: 26 }}
+                className="grid place-items-center"
+              >
+                {tema === 'escuro' ? <Moon size={15} weight="fill" aria-hidden /> : <Sun size={15} weight="bold" aria-hidden />}
+              </motion.span>
+            </AnimatePresence>
           </button>
           <span aria-hidden className="mx-1 h-3 w-px bg-linha-2" />
           <button type="button" className={botao} aria-label="Diminuir o texto" disabled={fonte === '0'} onClick={() => setFonte(String(Math.max(0, +fonte - 1)))}>
@@ -105,7 +143,8 @@ function Cabecalho() {
     <header className="sticky top-0 z-30 bg-folha">
       <div className="mx-auto flex h-14 max-w-[var(--casca-max)] items-center justify-between gap-2 px-4 max-[379px]:gap-1 max-[379px]:px-3 sm:gap-6 md:px-[var(--casca-margem)]">
         <Link to="/" className="shrink-0" aria-label="Voto Aberto, página inicial">
-          <img src={letreiro} alt="Voto Aberto" className="hidden h-9 w-auto lg:block" />
+          <img src={letreiro} alt="Voto Aberto" className="so-claro hidden h-9 w-auto lg:block" />
+          <img src={letreiroNegativo} alt="" className="so-escuro hidden h-9 w-auto lg:block" />
           <img src={simbolo} alt="Voto Aberto" className="h-8 w-auto max-[379px]:h-7 lg:hidden" />
         </Link>
         <nav aria-label="Principal">
@@ -122,9 +161,7 @@ function Cabecalho() {
                       className="absolute inset-x-0 inset-y-1 rounded-full sm:inset-y-0.5"
                       style={{ background: 'var(--color-selecao-claro)' }}
                       transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                    >
-                      <span className="absolute inset-x-3 -bottom-[7px] h-1 rounded-full sm:inset-x-4" style={{ background: 'var(--laco)' }} />
-                    </motion.span>
+                    />
                   )}
                   <Link
                     to={item.para}
@@ -158,7 +195,7 @@ function Cabecalho() {
           </ul>
         </nav>
       </div>
-      <Fita viva />
+      {/* azulejo: o rejunte de 3px do cabeçalho substitui a onda das fitas */}
     </header>
   )
 }
@@ -171,31 +208,15 @@ const TituloRodape = ({ cor, children }: { cor: string; children: ReactNode }) =
   </h2>
 )
 
-/** As sete fitas da marca em diagonal, saindo do canto inferior direito do rodapé (como as faixas do TSE). */
-const FITAS_RODAPE = ['#5E881B', '#A2BD31', '#5D6B94', '#468BAF', '#76ACD0', '#F19929', '#FBC700']
-function FitasDiagonais() {
-  const W = 420, H = 260, LARGURA = 15, VAO = 5, INCLINA = 0.62
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} aria-hidden className="pointer-events-none absolute bottom-0 right-0 h-[110px] w-auto sm:h-[230px]">
-      {FITAS_RODAPE.map((cor, i) => {
-        // faixa paralela: começa na base e sobe até a borda direita
-        const a = 150 + i * (LARGURA + VAO)
-        const b = a + LARGURA
-        return <polygon key={cor} points={`${a},${H} ${b},${H} ${W},${H - (W - b) * INCLINA} ${W},${H - (W - a) * INCLINA}`} fill={cor} />
-      })}
-    </svg>
-  )
-}
-
 // O rodapé: a ardósia funda da marca, como o rodapé institucional do TSE, mas com a nossa assinatura:
 // as sete fitas da marca cruzam o canto inferior direito em diagonal.
 function Rodape() {
   const { data: ufs } = useQuery(consultas.ufs())
   const carregadas = ufs?.filter((u) => u.carregada && u.sigla !== 'BR') ?? []
   return (
-    <footer className="relative mt-16 overflow-hidden bg-[linear-gradient(180deg,#1d2b4b_0%,#162139_100%)] text-[#cdd5e1]">
-      <Fita altura={7} />
-      <FitasDiagonais />
+    <footer className="relative mt-16 overflow-hidden bg-[#1d4fa0] text-[#e5ecf7]">
+      <div className="faixa-azulejo faixa-azulejo-negativa" aria-hidden />
+
       <div className="relative mx-auto grid max-w-[var(--casca-max)] gap-10 px-4 pb-10 pt-12 md:grid-cols-[1.25fr_1fr_1fr] md:px-[var(--casca-margem)]">
         <div className="space-y-4">
           <img src={letreiroNegativo} alt="Voto Aberto" className="h-11 w-auto" />
@@ -204,12 +225,12 @@ function Rodape() {
             1994, com dados abertos coletados, modelados e carregados pelo Grupo 7.
           </p>
           <p className="inline-flex items-center gap-2 rounded-full bg-white/8 px-3 py-1.5 text-[0.82rem] font-semibold text-white ring-1 ring-white/15">
-            <span className="size-2 rounded-full bg-[#fbc700]" aria-hidden />
+            <span className="size-2 rounded-full bg-[#f5b800]" aria-hidden />
             Este não é um site oficial da Justiça Eleitoral.
           </p>
         </div>
         <div>
-          <TituloRodape cor="#a2bd31">Fontes dos dados</TituloRodape>
+          <TituloRodape cor="#f5b800">Fontes dos dados</TituloRodape>
           <ul className="space-y-2.5 text-sm leading-snug">
             <li><b className="font-semibold text-white">TSE</b>, Portal de Dados Abertos: candidaturas, votação, contas de campanha, fotos</li>
             <li><b className="font-semibold text-white">IBGE</b>: malhas municipais, PIB, população, Censo 2022, IPCA</li>
@@ -218,7 +239,7 @@ function Rodape() {
           </ul>
         </div>
         <div>
-          <TituloRodape cor="#76acd0">Estados carregados no banco</TituloRodape>
+          <TituloRodape cor="#86a6dc">Estados carregados no banco</TituloRodape>
           <ul className="flex flex-wrap gap-1.5" aria-label="Estados carregados">
             {carregadas.length ? (
               carregadas.map((u) => (
@@ -258,6 +279,8 @@ function EntradaDaPagina() {
 
 export function Moldura() {
   const tour = useTour()
+  // o balão das questões: desligado até a pessoa ligar na barra de cima (fica lembrado neste navegador)
+  const [questoes, setQuestoes] = usePreferencia('va-questoes', 'data-questoes', 'nao')
   // a sala de aula vale só nesta visita: quem fecha o projetor não volta com a letra gigante
   const [aula, setAula] = useState(false)
   useEffect(() => {
@@ -272,13 +295,15 @@ export function Moldura() {
       >
         Pular para o conteúdo
       </a>
-      <BarraUtilitaria aula={aula} aoAula={setAula} aoTour={tour.abrir} />
+      <div className="fio-cor" aria-hidden />
+      <BarraUtilitaria aula={aula} aoAula={setAula} aoTour={tour.abrir} questoes={questoes === 'sim'} aoQuestoes={(v) => setQuestoes(v ? 'sim' : 'nao')} />
       <Cabecalho />
       <main id="conteudo" className="flex-1">
         <EntradaDaPagina />
       </main>
       {!aula && <Rodape />}
       {aula ? <ModoAula aoSair={() => setAula(false)} /> : <NestaPagina />}
+      {!aula && questoes === 'sim' && <Questoes />}
       {tour.aberto && <Tour aoFechar={tour.fechar} />}
     </div>
   )

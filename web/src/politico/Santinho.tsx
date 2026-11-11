@@ -16,7 +16,7 @@ import { cargo as fmtCargo, inteiro, nomeProprio, reaisCurto, vies as fmtVies } 
 import { corVies } from '../lib/vies'
 import { giraFolha, preparaFolha } from './papel'
 
-const FITAS = ['#5E881B', '#A2BD31', '#5D6B94', '#468BAF', '#76ACD0', '#F19929', '#FBC700']
+const FITAS = ['#1D4FA0', '#D6382A', '#F5B800', '#1D4FA0', '#D6382A', '#F5B800', '#1D4FA0']
 
 /** Família de cor de cada cargo (código do TSE), nas cores do Brasil, em oklch: luz, croma, matiz. */
 const COR_CARGO: Record<number, readonly [number, number, number]> = {
@@ -59,7 +59,7 @@ const ONDAS = FITAS.map((_, i) => {
 const CARIMBO: Record<string, string> = {
   Eleito: 'var(--color-selecao-tinta)',
   'Eleito no 2º turno': 'var(--color-selecao-tinta)',
-  Reeleito: '#2c3c12',
+  Reeleito: '#0f2c5c',
   'Não eleito': 'var(--color-tinta-2)',
 }
 

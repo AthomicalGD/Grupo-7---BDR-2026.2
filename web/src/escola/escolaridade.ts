@@ -4,12 +4,20 @@
 // se lê do claro ao escuro. Quanto mais estudo, mais fundo o azul.
 import { useLayoutEffect, useRef, useState, type RefObject } from 'react'
 
-export const TINTA_ESCOLA = ['#f9e99a', '#e4d948', '#a3cc4d', '#52b766', '#029e72', '#00808d', '#0d5c91', '#1c3e81']
+export const TINTA_ESCOLA = ['#fdf0bf', '#f5d76a', '#f5b800', '#a3b6dd', '#7c9bd3', '#4a78c2', '#1d4fa0', '#0f2c5c'] // azulejo: do amarelo (menos estudo) ao cobalto (mais)
 
 /** Tinta do texto sobre cada tom: escura nos quatro claros, papel nos quatro escuros. */
-export const tintaSobreGrau = (nivel: number) => (nivel <= 4 ? 'var(--color-tinta)' : 'var(--color-folha)')
+export const tintaSobreGrau = (nivel: number) => (nivel <= 4 ? '#121417' : '#ffffff')
 
-export const cor = (nivel: number) => TINTA_ESCOLA[nivel - 1]
+// no tema escuro os dois azuis mais fundos sumiriam no fundo: --grau-N (index.css) os clareia
+export const cor = (nivel: number) => `var(--grau-${nivel}, ${TINTA_ESCOLA[nivel - 1]})`
+
+/** A cor de verdade por trás de um "var(--x, reserva)", no tema atual: o 3D (three.js) não entende var(). */
+export function corSolida(c: string): string {
+  const m = /^var\((--[\w-]+),\s*([^)]+)\)$/.exec(c)
+  if (!m) return c
+  return getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim() || m[2].trim()
+}
 
 /** De 0 a 100 nos 8 tons da escala (o mapa): cada tom cobre 12,5 pontos. */
 export const corDe100 = (v: number | null | undefined) => (v == null ? null : cor(Math.min(8, Math.floor(v / 12.5) + 1)))
@@ -17,7 +25,8 @@ export const corDe100 = (v: number | null | undefined) => (v == null ? null : co
 export const SUPERIOR = 8
 
 /** Opacidade de uma unidade: cheia no grau em destaque, recuada nos outros. */
-export const alfa = (g: number, destaque: number | null) => (destaque == null || g === destaque ? 1 : 0.3)
+// os graus fora do destaque esmaecem; quanto, depende do tema (--apagado no index.css: sobre o escuro, 0,3 vira lama)
+export const alfa = (g: number, destaque: number | null) => (destaque == null || g === destaque ? 1 : 'var(--apagado)')
 
 export const soma = (v: number[]) => v.reduce((s, x) => s + x, 0)
 

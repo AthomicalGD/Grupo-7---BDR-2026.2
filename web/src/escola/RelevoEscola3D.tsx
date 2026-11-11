@@ -4,6 +4,7 @@
 import type { ReactNode } from 'react'
 import type { Malha } from '../api'
 import { PalcoRelevo, RelevoDe } from '../relevo/Relevo3D'
+import { corSolida } from './escolaridade'
 
 const ALTURA_MAX = 16
 
@@ -31,7 +32,7 @@ export default function RelevoEscola3D({ malha, valor, cor, teto, rotulo, seleci
       <RelevoDe
         malha={malha}
         altura={(c) => 0.4 + (Math.min(teto, valor.get(c) ?? 0) / teto) * ALTURA_MAX}
-        cor={(c) => cor(valor.get(c)) ?? '#dfe3e7'}
+        cor={(c) => corSolida(cor(valor.get(c)) ?? '#dfe3e7')}
         selecionado={selecionado}
         aoEscolher={aoEscolher}
         etiqueta={rotulo}
