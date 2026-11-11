@@ -23,16 +23,24 @@ export function CedulaAnos({ ano, aoMudar, anos = ANOS, linhaDoTempo = true, ext
     atual.current = ano
   }, [ano])
 
+  // aoMudar muda de identidade a cada ano (ele depende da busca): fica numa ref, senão o efeito abaixo recomeçava a
+  // cada passo e, ao chegar no último ano, voltava ao primeiro em vez de parar nele
+  const mudar = useRef(aoMudar)
+  const lista = useRef(anos)
+  useEffect(() => {
+    mudar.current = aoMudar
+    lista.current = anos
+  })
+
   useEffect(() => {
     if (!tocando) return
-    if (atual.current === anos[anos.length - 1]) aoMudar(anos[0])
     const id = setInterval(() => {
-      const i = anos.indexOf(atual.current)
-      if (i >= anos.length - 1) return setTocando(false)
-      aoMudar(anos[i + 1])
+      const i = lista.current.indexOf(atual.current)
+      if (i >= lista.current.length - 1) return setTocando(false)
+      mudar.current(lista.current[i + 1])
     }, PASSO_MS)
     return () => clearInterval(id)
-  }, [tocando, aoMudar, anos])
+  }, [tocando])
 
   const teclado = (e: KeyboardEvent) => {
     const i = anos.indexOf(ano)
@@ -84,7 +92,11 @@ export function CedulaAnos({ ano, aoMudar, anos = ANOS, linhaDoTempo = true, ext
       {extra && <div className="border-l border-dashed border-linha-2 pl-2 max-sm:w-full max-sm:border-l-0 max-sm:border-t max-sm:pl-0 max-sm:pt-1.5">{extra}</div>}
       {linhaDoTempo && <button
         type="button"
-        onClick={() => setTocando((t) => !t)}
+        onClick={() => {
+          // dar o play estando no último ano recomeça do primeiro; no meio do caminho, continua dali
+          if (!tocando && atual.current === anos[anos.length - 1]) aoMudar(anos[0])
+          setTocando((t) => !t)
+        }}
         aria-pressed={tocando}
         className="botao-vivo h-10 w-full px-4 text-[0.85rem] whitespace-nowrap sm:w-auto"
       >

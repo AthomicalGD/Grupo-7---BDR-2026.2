@@ -1,6 +1,6 @@
 import { expect, registrar, test } from './base'
 
-test('P6: o mapa sépia, as passagens de mandato, a galeria, a pirâmide e os halteres respondem "jovem vota no jovem?"', async ({ page }) => {
+test('P6: o mapa da idade, as passagens de mandato, a galeria, a pirâmide e os halteres respondem "jovem vota no jovem?"', async ({ page }) => {
   test.setTimeout(120_000) // a primeira visita monta a base da P6 na API (~18 s), se não estiver em cache
   await page.goto('/idade')
   await expect(page.getByRole('heading', { level: 1, name: 'Jovem vota no jovem?' })).toBeVisible({ timeout: 60_000 })

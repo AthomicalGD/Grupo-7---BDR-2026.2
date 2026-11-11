@@ -1,7 +1,7 @@
 // P6: idade do município x alternância de poder e idade dos eleitos: jovem vota no jovem?
 // "O tempo na parede da prefeitura": a idade contada pelos objetos que envelhecem com a cidade, em quatro atos,
 // cada um com a pergunta como título e a resposta calculada logo abaixo: (1) onde o Brasil é mais velho (o mapa
-// sépia: o papel amarela com o tempo), (2) se lugar mais velho troca mais de prefeito (as passagens de mandato e a
+// da idade: do amarelo ao azul, como a bandeira), (2) se lugar mais velho troca mais de prefeito (as passagens de mandato e a
 // galeria dos ex-prefeitos), (3) se quem se elege é mais velho que quem vota (a pirâmide) e (4) se jovem vota no
 // jovem (os halteres por terço de zonas). Fecha com o que a conta não diz. As contas são as de
 // scripts/06_idade_alternancia.py, que a API importa.
@@ -126,7 +126,7 @@ export function IdadePagina() {
         </div>
       </header>
 
-      {/* 1. onde o Brasil é mais velho: o mapa sépia, os extremos, os terços e o envelhecimento */}
+      {/* 1. onde o Brasil é mais velho: o mapa da idade, os extremos, os terços e o envelhecimento */}
       <section aria-labelledby="ato-1" className="mt-16">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <h2 id="ato-1" className="t-h1">{ufInfo ? `Onde o eleitorado ${noEstado(ufInfo.sigla, ufInfo.nome)} é mais velho?` : 'Onde o Brasil é mais velho?'}</h2>

@@ -283,3 +283,45 @@ def test_idade_p6():
     if abaete["carregada"]:
         assert abaete["uf"] == "MG" and [g["ano"] for g in abaete["galeria"]] == list(range(1996, 2025, 4))
         assert abaete["galeria"][0]["passagem"] is None and all(g["passagem"] for g in abaete["galeria"][1:])
+
+
+def test_repasses_p8():
+    """A P8 fecha entre si: as faixas e os grupos somam a base, e os casos extremos são do grupo certo."""
+    d = get("/api/repasses?ano=2022&cargo=6&uf=PI")
+    r, p, v = d["resumo"], d["parcela"], d["valor"]
+    assert r["com_receita"] + r["sem_receita"]["candidatos"] == r["candidatos"] > 0
+    assert len(p["faixas"]) == 5 and sum(f["candidatos"] for f in p["faixas"]) == r["com_receita"]
+    assert sum(f["eleitos"] for f in p["faixas"]) == r["eleitos"]
+    assert sum(g["candidatos"] for g in v["grupos"]) == r["com_receita"]
+    assert p["eleito_menor"]["eleito"] and not p["nao_eleito_maior"]["eleito"]
+    assert p["eleito_menor"]["parcela"] <= p["media_eleitos"] and v["eleito_menor"]["publico"] <= v["media_eleitos"]
+    assert len(get("/api/repasses?ano=2022&cargo=6&uf=PI&faixas=10")["parcela"]["faixas"]) == 10
+    the = get("/api/repasses?ano=2024&cargo=13&municipio=2211001")
+    assert the["escopo"]["municipio"]["nome"] == "Teresina"
+    assert cliente.get("/api/repasses?ano=2024&cargo=13").status_code == 422      # vereador pede estado ou município
+    assert cliente.get("/api/repasses?ano=2022&cargo=6&municipio=2211001").status_code == 422
+    assert cliente.get("/api/repasses?ano=2024&cargo=6").status_code == 404
+    assert cliente.get("/api/repasses?ano=2022&cargo=6&faixas=11").status_code == 422
+
+
+def test_repasses_patrimonio_p8():
+    """Os grupos de patrimônio somam todos os candidatos e 100% do dinheiro, nas duas eleições do cargo."""
+    d = get("/api/repasses/patrimonio?ano=2022&cargo=6&uf=PI")
+    assert [e["ano"] for e in d["eleicoes"]] == [2018, 2022, 2026]
+    for e in d["eleicoes"]:
+        assert sum(g["candidatos"] for g in e["grupos"]) == e["candidatos"] > 0
+        assert abs(sum(g["pct_publico"] for g in e["grupos"]) - 100) < 0.1
+        assert abs(sum(g["pct_receita"] for g in e["grupos"]) - 100) < 0.1
+        assert e["um_por_cento"]["candidatos"] == max(1, -(-e["com_bens"] // 100))
+    # o mesmo recorte da /api/repasses: o total de candidatos bate
+    assert d["eleicoes"][1]["candidatos"] == get("/api/repasses?ano=2022&cargo=6&uf=PI")["resumo"]["candidatos"]
+    assert cliente.get("/api/repasses/patrimonio?ano=2024&cargo=13").status_code == 422
+
+
+def test_repasses_2026_p8():
+    """2026 entra na P8 (prestação final do 1º turno): os eleitos batem com as vagas e a soma é a das receitas."""
+    d = get("/api/repasses?ano=2026&cargo=6&uf=PI")
+    assert d["resumo"]["eleitos"] == 10 and d["resumo"]["com_receita"] > 0
+    pat = get("/api/repasses/patrimonio?ano=2026&cargo=6&uf=PI")
+    assert [e["ano"] for e in pat["eleicoes"]] == [2018, 2022, 2026]
+    assert cliente.get("/api/repasses?ano=2026&cargo=11").status_code == 404     # 2026 não tem eleição municipal

@@ -196,7 +196,7 @@ python -m loader.remover AC RS
 | 5 | Quantos candidatos de dado partido foram eleitos pelo sistema proporcional? | `scripts/05_votos_legenda.py` -> `respostas/05_votos_legenda.txt` | `/cadeira/legenda` / não tem |
 | 6 | Idade média do município x alternância de poder e idade dos eleitos | `scripts/06_idade_alternancia.py` -> `respostas/06_idade_alternancia.txt` e `06_passagens_prefeitura.csv` | `/idade` e boletim do município (galeria dos prefeitos e idade) / não tem |
 | 7 | Viés político de um município ou região na linha do tempo | `scripts/07_vies_politico_municipio.py` -> `respostas/07_vies_politico_municipio.txt` | `/`, `/uf/{sigla}` e boletim do município / `/`, `/uf/{sigla}` e município |
-| 8 | Sucesso de candidatos dependentes de repasses públicos x financiados por outras fontes | não há | Receitas por fonte (fundos públicos) em `/cadeira` |
+| 8 | Sucesso de candidatos dependentes de repasses públicos x financiados por outras fontes | não há (conta em `api/app.py`, `conta_repasses`) | `/repasses` (e as receitas por fonte em `/cadeira`) / não tem |
 | 9 | Onde o candidato investe em propaganda (nuvem de palavras)? | `scripts/09_nuvem_despesas.py` -> `respostas/09_nuvem_despesas/` | Ficha do político / não tem |
 | 10 | Sobrevivência da carreira de um político | (busca) `respostas/10b_historico_politico.txt`; (taxa de reeleição) `scripts/10a_taxa_reeleicao.py` -> `respostas/10a_taxa_reeleicao.txt` | `/urna`, ficha do político e `/reeleicao` / `/urna`, `/politico/{id}` e `/reeleicao` |
 
@@ -271,8 +271,11 @@ de 2018 e 2022), então o IDHM 2010, longe demais das eleições de 2018 a 2024,
 A migração `020_ifdm.sql` cria `ifdm_municipio`, pelo código IBGE: a planilha cobre o Brasil inteiro e não depende das
 UFs carregadas. O leitor é conferido por `python -m loader.test_ifdm`, que não precisa do banco.
 
-A área **Desempenho municipal dos partidos** (`/api/indices/partidos?uf=&ano=`) usa as eleições municipais de 2012 a
-2024. Os isentos e os eleitores aptos de 2012 e 2016 vêm do detalhe da votação desses anos, baixado só para a P3. Num
+A área **Desempenho municipal dos partidos** (`/api/indices/partidos?uf=&ano=&porte=`) usa as eleições municipais de 2012 a
+2024. Com `porte` (`pequeno`, `medio` ou `grande`), os rankings só usam os municípios daquele porte pela população
+no ano da eleição (menos de 50 mil, de 50 mil a 100 mil e mais de 100 mil habitantes; `porte_de` em `api/app.py`,
+conferido por `python -m api.test_indices_p3`), e cada ranking traz a média do porte como referência. Nos
+isentos, quanto menos, melhor: os rankings vão do menor para o maior. Os isentos e os eleitores aptos de 2012 e 2016 vêm do detalhe da votação desses anos, baixado só para a P3. Num
 banco com as UFs já carregadas, acrescente-os sem refazer o resto (só insere em `votacao_municipio`, nada é apagado):
 
 ```bash
@@ -345,7 +348,7 @@ python scripts/06_idade_alternancia.py
   em 30 municípios (o vice, do mesmo partido). As mudanças de partido anteriores a 2018 (PRN -> PTC; PST e PGT -> PL;
   PSD antigo, número 41, -> PTB; PRONA -> PR; PAN -> PTB) ficam no script, e não em
   `banco/referencia/sucessao_partidos.csv`, para não mexer no viés da P7.
-- **No site:** `/idade`, em quatro atos (o mapa sépia da idade de quem votou, com os terços e o envelhecimento de 2018
+- **No site:** `/idade`, em quatro atos (o mapa da idade de quem votou (do amarelo ao azul), com os terços e o envelhecimento de 2018
   a 2024; as passagens de mandato por terço, com a fusão nas duas leituras, e a galeria dos ex-prefeitos de cada
   município; a pirâmide de quem votou e dos eleitos, com o prêmio de idade; os halteres por terço de zonas, com e sem a
   escolaridade fixa), e, no boletim de cada município, a galeria compacta dos prefeitos de 1996 a 2024 e o bloco
@@ -421,9 +424,25 @@ python scripts/svd_camara.py --nome eleicao_2026 --inicio 2023-02-01 --fim 2026-
 
 - **Sem script de resposta.** As receitas de cada candidatura, com a fonte (`DS_FONTE_RECEITA`: FUNDO ESPECIAL =
   FEFC, FUNDO PARTIDARIO, OUTROS RECURSOS), estão em `receita_de_campanha` e somadas por fonte na view `campanha`.
-- **No site:** só a parte das receitas: em `/cadeira`, quanto do dinheiro que entrou nas campanhas veio de fundos
-  públicos (fundo eleitoral e fundo partidário), por cargo, ano e estado. A comparação de sucesso entre os grupos
-  ainda não existe.
+- **Conta (`conta_repasses` em `api/app.py`):** repasse público = fundo eleitoral + fundo partidário; parcela pública =
+  repasse ÷ receita total declarada. Quem não declarou receita nenhuma fica fora (e é contado à parte). Valores da época.
+  - **Gráfico 1:** taxa de eleição por faixa de parcela pública, em faixas iguais (padrão 5, de 20 em 20 pontos; a
+    tela deixa escolher de 2 a 10; 100% entra na última). Mostra quantos candidatos há em cada faixa, a parcela média
+    de eleitos e de não eleitos, o eleito com a menor parcela e o não eleito com a maior.
+  - **Gráfico 2:** taxa de eleição por valor do repasse: quem não recebeu nada numa barra à parte e quem recebeu em
+    quartis (quantil linear, como na P2). Mostra a média de recebimento (de todos, de quem recebeu, de eleitos e de não
+    eleitos), o eleito que menos recebeu e o não eleito que mais recebeu.
+  - Nos extremos, o empate (muitos com 100% ou com R$ 0) é desfeito pela maior receita, e a tela diz quantos empataram.
+  - **Gráfico 3, para quem foi o dinheiro (`conta_patrimonio_recursos`):** os candidatos nos grupos de patrimônio da P2
+    (sem bens, R$ 0 e quartis de quem declarou bens) e a parte do dinheiro de cada eleição do cargo que cada grupo recebeu:
+    só os fundos públicos ou toda a receita. Entram todos os candidatos, mesmo sem receita. Mostra também quanto ficou com o
+    1% mais rico (1% de quem declarou bens, ao menos 1 pessoa).
+- **Recorte:** os cargos da P1, de 2018 a 2026, por estado ou todos; prefeito e vereador também por município (vereador
+  sempre pede um estado ou município). 2026 usa a prestação de contas final do 1º turno (TSE, 04/11/2026); de quem foi ao
+  2º turno (governador) o dinheiro dessa etapa ainda está incompleto. A view `campanha` só tem os anos com IPCA, então a
+  P8 soma as receitas na própria consulta (`SQL_CAMPANHAS_P8`), com o mesmo resultado da view de 2018 a 2024.
+- **No site:** `/repasses` (pelo balão "Questões" e pelo link na seção de receitas de `/cadeira`). API: `/api/repasses`.
+  Testes: `python -m api.test_repasses` (a conta, sem banco) e `test_repasses_p8` em `api/test_api.py`.
 
 ### P9. Onde o candidato investe em propaganda (nuvem de palavras)?
 
@@ -518,6 +537,8 @@ python -m uvicorn api.app:app --port 8000
 | `GET /api/legenda?uf=` | P5: eleitos por partido e por `ELEITO POR QP` / `ELEITO POR MÉDIA`, por eleição e cargo |
 | `GET /api/legenda/{partido}/eleitos?ano=&cargo=&uf=&situacao=&q=&desde=&limite=` | P5: candidatos eleitos pelo partido, com a classificação TSE, busca e paginação |
 | `GET /api/patrimonio?ano=&cargo=&uf=` | P2: candidatos e eleitos por faixa de patrimônio declarado (sem bens, R$ 0 e quartis, com limites e o candidato do meio) e a fila dos que declararam bens em 100 passos, como em `respostas/02_patrimonio.txt`; Presidente sempre nacional |
+| `GET /api/repasses?ano=&cargo=&uf=&municipio=&faixas=5` | P8: taxa de eleição por faixa de parcela pública da receita (faixas iguais, 1 a 10) e por valor do repasse (sem repasse + quartis), médias de parcela e de recebimento de eleitos e não eleitos e os casos extremos; `municipio` só para prefeito e vereador |
+| `GET /api/repasses/patrimonio?ano=&cargo=&uf=&municipio=` | P8 x P2: em cada eleição do cargo, a parte dos candidatos e a parte dos fundos públicos e de toda a receita de cada grupo de patrimônio (sem bens, R$ 0, quartis) e do 1% mais rico |
 | `GET /api/patrimonio/panorama?uf=` | P2: a taxa de cada faixa em todos os cargos e anos de uma vez, e em quantas disputas a faixa de mais bens supera a de menos |
 | `GET /api/municipios/{ibge}?cargo=&turno=` | P7, P3 e P1 no boletim: viés e alinhamento (do município e da UF), votos por partido com o viés de cada eleição, indicadores (PIB per capita, IDHM, população, eleitores ÷ população, isentos), comparecimento, prefeitos e custo da cadeira de prefeito e vereador (2020 e 2024) |
 | `GET /api/municipios/{ibge}/zonas?ano=` | As zonas eleitorais do município: aptos, comparecimento, superior completo de quem foi votar e o mais votado (prefeito ou presidente) |
@@ -575,12 +596,13 @@ Abra http://localhost:5173. O Vite repassa `/api` para a API em `127.0.0.1:8000`
 | Plenário: quanto custa uma cadeira, por cargo, ano e estado (ou câmara municipal), em 2D e 3D | `/cadeira` | P1 (e receitas da P8) | `/cadeira`, só eleições gerais |
 | Patrimônio: quem declara mais bens se elege mais? Faixas, fila e panorama | `/patrimonio` | P2 | não tem |
 | Escola: o diploma ajuda a se eleger (do eleitor ao eleito, a chance de cada grau) e onde se estudou menos se elege menos diploma (cinco grupos de municípios, mapa por estado com 3D, dispersão, ranking e o boletim); cada cargo e cada estado, os partidos; filtro por estado | `/escola` | P4 | `/escola` |
-| Idade: jovem vota no jovem? O mapa sépia da idade de quem votou, as passagens de mandato de prefeito por terço e a galeria dos ex-prefeitos, a pirâmide de quem votou e dos eleitos, os halteres por terço de zonas; filtro por estado | `/idade` | P6 | não tem |
+| Idade: jovem vota no jovem? O mapa da idade de quem votou (do amarelo ao azul), as passagens de mandato de prefeito por terço e a galeria dos ex-prefeitos, a pirâmide de quem votou e dos eleitos, os halteres por terço de zonas; filtro por estado | `/idade` | P6 | não tem |
 | Mapa do Brasil, viés por estado, linha do tempo 2018-2026 | `/` | P7 | `/` |
 | Estado: municípios, de onde vem o viés (partidos e candidatos), alinhamento na Câmara, regiões intermediárias, extremos, relevo 3D | `/uf/PI` | P7 | `/uf/PI` |
 | Boletim do município: viés, espectro do voto, alinhamento na Câmara, galeria dos prefeitos (1996 a 2024) e idade de quem votou, custo da cadeira, indicadores, QR code | `/uf/PI/2211001` | P7, P1, P3, P6 | `/uf/PI/2211001`, sem a galeria e a idade |
 | Urna de consulta (UE2020 em vetor): busca pelo nome e cédula de filtros (cargo, ano, estado, partido, resultado) | `/urna` | P10 | `/urna` (lista de políticos) |
 | Ficha da carreira: situação atual, fita das eleições, trajetória com os partidos, custo das campanhas, nuvem de gastos, santinhos | `/politico/{id}` (o id muda quando o banco é recriado) | P10, P9, P1 | `/politico/{id}`, sem a nuvem |
+| Repasses: quem depende de dinheiro público se elege mais? Taxa de eleição por parcela pública da receita (faixas ajustáveis) e por valor recebido (quartis), com médias e os casos extremos; para quem foi o dinheiro por quartil de patrimônio e o 1% mais rico; por cargo, ano, estado ou município | `/repasses` | P8 | não tem |
 | Reeleição: quem tenta a reeleição, volta? Taxa por cargo e estado, ciclo a ciclo, e as pessoas | `/reeleicao` | P10a | `/reeleicao` |
 | O que muda no 2º turno: a largada das 135 disputas (um ponto por disputa, na parte do vencedor no 1º turno; as viradas em ouro, à esquerda da metade), as fichas de cada uma com as linhas que se cruzam, filtros por cargo, ano e viradas, e a disputa aberta com os votos de um turno ao outro, de onde vieram os votos novos e o mapa de onde o líder mudou | `/segundo-turno` | 12 (extra) | não tem |
 | Fontes, método e limitações | `/metodologia` | todas | não tem |
@@ -642,6 +664,7 @@ python -m crawler
 python -m loader BR PI SP              # carrega as UFs que você quiser (BR é o consolidado; as já carregadas são puladas)
 python -m loader.perfil_etario         # P6: idade de quem votou (relê ~2 GB por ano; ~5 min)
 python -m loader.ifdm                  # P3: IFDM da Firjan (ver "A página de índices")
+python -m loader.indices               # P3: PIB e população desde 2010 num banco carregado antes disso (a carga nova já grava)
 python -m loader.ano 2026              # 2026, incluindo o 2º turno quando o TSE já publicou
 
 # 3. API (se a porta 8000 estiver ocupada por outro projeto, use outra e avise o site com API_ALVO)
@@ -658,7 +681,7 @@ O que cada tela precisa no banco (sem isso ela abre, mas mostra um aviso de dado
 | Tela | Rota | Precisa de |
 |---|---|---|
 | Mapa, estado e município | `/`, `/uf/..` | carga normal; o 2º turno do mapa e a Virada precisam do 2º turno de 2026 (`loader.ano 2026`) |
-| Índices (P3) | `/indices` | `loader.ifdm` (sem ele o IFDM aparece como "sem dado") e `scripts/07_vies_politico_municipio.py` |
+| Índices (P3) | `/indices` | `loader.ifdm` (sem ele o IFDM aparece como "sem dado"), `scripts/07_vies_politico_municipio.py` e, em banco carregado antes do PIB e da população desde 2010, `python -m crawler --fontes ibge --perguntas 3 --atualizar` e `python -m loader.indices` (sem eles, 2012 fica sem PIB per capita e eleitores por habitante) |
 | Legenda (P5) | `/cadeira/legenda` | carga normal |
 | Idade (P6) | `/idade` | `loader.perfil_etario` e, para a população do Censo, `scripts/06_idade_alternancia.py` |
 | Comparar (bonequinhos) | `/comparar` | carga normal e fotos (`--fotos`, opcional) |
@@ -779,7 +802,7 @@ pergunta fica no `INDICE_PERGUNTAS.md`, gerado a cada execução.
 | Fonte | Como | O que |
 |---|---|---|
 | TSE, Portal de Dados Abertos | CDN `cdn.tse.jus.br`; se um caminho mudar, procura o zip pela API CKAN do portal | Candidatos, bens, vagas, votação, prestação de contas, comparecimento, códigos de município, fotos |
-| IBGE | API SIDRA + APIs de Localidades e de Malhas | PIB municipal (5938), população estimada (6579), Censo 2022: população (4709), população por idade simples (9514), idade mediana/envelhecimento (9515), instrução 18+ (10061); regiões dos municípios; contornos dos estados e municípios. O IPCA de outubro (SIDRA 1737, P1) não passa pelo crawler: os quatro valores estão gravados na migração `011_custo_da_cadeira.sql` |
+| IBGE | API SIDRA + APIs de Localidades e de Malhas | PIB municipal (5938, desde 2010), população estimada (6579, desde 2010), Censo 2010: população (202), Censo 2022: população (4709), população por idade simples (9514), idade mediana/envelhecimento (9515), instrução 18+ (10061); regiões dos municípios; contornos dos estados e municípios. O IPCA de outubro (SIDRA 1737, P1) não passa pelo crawler: os quatro valores estão gravados na migração `011_custo_da_cadeira.sql` |
 | Atlas Brasil (PNUD/Ipea/FJP) | API do Ipeadata, séries `ADH_IDHM`, `_E`, `_L`, `_R` | IDHM e subíndices por município. O link de "dados brutos" do site do Atlas saiu do ar (404) |
 | Harvard Dataverse | API, doi:10.7910/DVN/MFIXKW | Classificação ideológica dos partidos (Bolognesi, Codato, Ribeiro & Silva; base de Bolognesi, Ribeiro & Codato, *Dados* 66(2), 2023) |
 | Exploração colonial (questão extra) | `scripts/11_exploracao_colonial.py` | Pacote *Old But Gold* (Baerlocher, Firmino, Lambais, Reis e Veras), Mendeley Data ppxdfzt28d, CC BY 4.0: núcleos de 1694 e 1822, coordenadas e distância do litoral; IBGE, Evolução da Divisão Territorial 1872-2010 (população livre e escravizada de 1872); IPEA/geobr, Áreas Mínimas Comparáveis 1872-2010; IBGE, API da Biblioteca (histórico de cada município); Serviço Geológico do Brasil (ocorrências de ouro e diamante); IBGE, semiárido 2022; população de 1819 por capitania (Velloso de Oliveira, via Motta, *Revista USP* 132, 2022) |

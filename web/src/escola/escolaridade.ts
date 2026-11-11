@@ -1,10 +1,9 @@
 // P4: os 8 graus de escolaridade do TSE e a cor de cada um.
-// A escala é a da bandeira, feita das âncoras da marca: do amarelo (analfabeto) ao verde e ao azul
-// da marca (superior completo), com a luminosidade caindo sempre (OKLCH 0,93 → 0,38), então a ordem
-// se lê do claro ao escuro. Quanto mais estudo, mais fundo o azul.
+// A escala vai do verde-claro (analfabeto) ao azul-meia-noite (superior completo), passando pelo verde-água,
+// com a luminosidade caindo sempre: a ordem se lê do claro ao escuro. Quanto mais estudo, mais fundo o azul.
 import { useLayoutEffect, useRef, useState, type RefObject } from 'react'
 
-export const TINTA_ESCOLA = ['#fdf0bf', '#f5d76a', '#f5b800', '#a3b6dd', '#7c9bd3', '#4a78c2', '#1d4fa0', '#0f2c5c'] // azulejo: do amarelo (menos estudo) ao cobalto (mais)
+export const TINTA_ESCOLA = ['#edf7e1', '#cfeac3', '#a6d9a6', '#72c29a', '#1b7f90', '#2860b0', '#1d4fa0', '#0f2c5c'] // do verde (menos estudo) ao azul (mais)
 
 /** Tinta do texto sobre cada tom: escura nos quatro claros, papel nos quatro escuros. */
 export const tintaSobreGrau = (nivel: number) => (nivel <= 4 ? '#121417' : '#ffffff')

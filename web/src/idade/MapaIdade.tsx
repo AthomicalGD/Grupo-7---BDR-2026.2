@@ -1,6 +1,6 @@
-// O mapa sépia da P6, como o da Escola: abre no Brasil com cada estado pintado pela idade média de quem votou
+// O mapa da idade da P6, como o da Escola: abre no Brasil com cada estado pintado pela idade média de quem votou
 // (municípios pesados pelo comparecimento), e um clique no estado leva a câmera até ele (voo de van Wijk) e
-// acende os seus municípios. A cor é a escala sépia em seis classes fixas (as mesmas nos quatro anos, então o
+// acende os seus municípios. A cor é a escala amarelo-verde-azul em seis classes fixas (as mesmas nos quatro anos, então o
 // envelhecimento aparece como escurecimento). "Pintar por" troca quem votou pela população do Censo 2022.
 // Estados e municípios sem dado ficam hachurados. Clicar num município o escolhe para a galeria e o boletim.
 import { ArrowLeft } from '@phosphor-icons/react'
@@ -189,7 +189,7 @@ export function MapaIdade({ municipios, ufs, ano, selecionado, aoEscolher }: {
             width={W}
             height={H}
             role="img"
-            aria-label={`Mapa: idade média ${oQue} ${ufFoco ? `em cada município (${ufFoco.nome})` : 'em cada estado'}, do papel claro (mais jovem) ao sépia (mais velho)`}
+            aria-label={`Mapa: idade média ${oQue} ${ufFoco ? `em cada município (${ufFoco.nome})` : 'em cada estado'}, do amarelo (mais jovem) ao azul (mais velho)`}
             onPointerMove={(e) => {
               const t = e.target as SVGElement
               const i = Number(t.getAttribute?.('data-ibge'))
@@ -241,7 +241,11 @@ export function MapaIdade({ municipios, ufs, ano, selecionado, aoEscolher }: {
                 <path d={caminhoDe.get(hm.ibge)} fill="none" stroke="var(--color-tinta)" strokeWidth={1.5} vectorEffect="non-scaling-stroke" pointerEvents="none" />
               )}
               {foco && caminhoDe.get(selecionado) && (
-                <path d={caminhoDe.get(selecionado)} fill="none" stroke="var(--color-marcador)" strokeWidth={2.6} vectorEffect="non-scaling-stroke" pointerEvents="none" />
+                <>
+                  {/* o amarelo do escolhido some sobre os tons amarelos da escala: um fio de tinta por baixo o segura */}
+                  <path d={caminhoDe.get(selecionado)} fill="none" stroke="var(--color-tinta)" strokeWidth={5.4} vectorEffect="non-scaling-stroke" pointerEvents="none" />
+                  <path d={caminhoDe.get(selecionado)} fill="none" stroke="var(--color-marcador)" strokeWidth={2.6} vectorEffect="non-scaling-stroke" pointerEvents="none" />
+                </>
               )}
             </g>
             {desenho.estados.map((e) => {

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useState, type ReactNode } from 'react'
+import { flushSync } from 'react-dom'
 import { consultas } from '../api'
 import letreiro from '../assets/marca/letreiro-horizontal.svg'
 import letreiroNegativo from '../assets/marca/letreiro-horizontal-negativo.svg'
@@ -53,14 +54,29 @@ function BarraUtilitaria({ aula, aoAula, aoTour, questoes, aoQuestoes }: { aula:
   const [contraste, setContraste] = usePreferencia('va-contraste', 'data-contraste', 'normal')
   // o index.html já pôs o tema (o salvo, ou o do sistema) antes da primeira pintura
   const [tema, setTema] = usePreferencia('va-tema', 'data-tema', document.documentElement.getAttribute('data-tema') ?? 'claro')
-  // a troca de tema: nada cobre a tela, as cores do site escorrem juntas do claro para o escuro (index.css)
-  const trocarTema = () => {
+  // a troca de tema: um círculo abre a partir do botão e revela o tema novo (View Transitions, no Chrome e no Edge);
+  // sem isso, ou com "reduzir movimento", as cores do site escorrem juntas por 0,6 s (index.css)
+  const trocarTema = (botao: HTMLElement) => {
     const novo = tema === 'escuro' ? 'claro' : 'escuro'
     const raiz = document.documentElement
-    raiz.classList.add('trocando-tema')
-    setTema(novo)
-    raiz.setAttribute('data-tema', novo)
-    setTimeout(() => raiz.classList.remove('trocando-tema'), 700)
+    const aplicar = () => {
+      setTema(novo)
+      raiz.setAttribute('data-tema', novo)
+    }
+    const calmo = matchMedia('(prefers-reduced-motion: reduce)').matches
+    const comecar = (document as Document & { startViewTransition?: (cb: () => void) => { ready: Promise<void> } }).startViewTransition?.bind(document)
+    if (calmo || !comecar) {
+      raiz.classList.add('trocando-tema')
+      aplicar()
+      setTimeout(() => raiz.classList.remove('trocando-tema'), 700)
+      return
+    }
+    const r = botao.getBoundingClientRect()
+    const [x, y] = [r.left + r.width / 2, r.top + r.height / 2]
+    const raio = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))
+    comecar(() => flushSync(aplicar)).ready
+      .then(() => raiz.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${raio}px at ${x}px ${y}px)`] }, { duration: 650, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', pseudoElement: '::view-transition-new(root)' }))
+      .catch(() => {})
   }
 
   const [fonte, setFonte] = usePreferencia('va-fonte', 'data-fonte', '0')
@@ -98,7 +114,7 @@ function BarraUtilitaria({ aula, aoAula, aoTour, questoes, aoQuestoes }: { aula:
             className={`${botao} relative grid size-6 place-items-center overflow-hidden !p-0`}
             aria-label={tema === 'escuro' ? 'Usar o tema claro' : 'Usar o tema escuro'}
             title={tema === 'escuro' ? 'Tema claro' : 'Tema escuro'}
-            onClick={trocarTema}
+            onClick={(e) => trocarTema(e.currentTarget)}
           >
             <AnimatePresence initial={false} mode="popLayout">
               <motion.span

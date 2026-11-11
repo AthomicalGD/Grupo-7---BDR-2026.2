@@ -253,7 +253,7 @@ export function PatrimonioPagina() {
           <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-6">
             <div>
               <h2 id="todos" className="t-h1">Vale para todos os cargos?</h2>
-              <p className="mt-3 max-w-[46ch] text-[1rem] text-tinta-2">Cada escadinha é uma disputa. Degraus subindo: quem declarou mais bens se elegeu mais. Toque para abrir no cofrinho.</p>
+              <p className="mt-3 max-w-[46ch] text-[1rem] text-tinta-2">Cada linha é uma disputa. O quadrado amarelo mostra a chance de eleição de quem declarou menos bens e o azul, de quem declarou mais: quanto mais à direita o azul, maior a vantagem. Toque numa linha para abrir no cofrinho.</p>
             </div>
             {qp.data && <Resposta panorama={qp.data} />}
           </div>

@@ -52,7 +52,7 @@ test('P2: martelar o cofrinho, cortar a fila, dar o palpite e ver quem se elegeu
   await page.getByRole('button', { name: 'Montar o cofrinho de novo' }).click()
   await expect(porquinho).toBeVisible()
 
-  // cada escadinha abre a sua disputa; com poucos candidatos, a cena mostra as pessoas de verdade
+  // cada linha do gráfico abre a sua disputa; com poucos candidatos, a cena mostra as pessoas de verdade
   const todos = page.getByRole('region', { name: 'Vale para todos os cargos?' })
   await todos.scrollIntoViewIfNeeded()
   await todos.getByRole('button', { name: /^Presidente, 2018: / }).click()

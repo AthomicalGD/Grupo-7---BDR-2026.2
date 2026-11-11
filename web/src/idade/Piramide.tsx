@@ -1,7 +1,7 @@
 // Ato 3: a pirâmide etária espelhada, o gráfico canônico de idade. À esquerda, quem votou (18 anos ou mais); à
 // direita, os eleitos do cargo; o tracejado em tinta mostra os candidatos aptos sobre os eleitos, para ver que a
 // diferença já vem de quem se candidata. As quatro faixas comuns (18 a 34 ... 65 ou mais), cada barra no passo
-// sépia da sua faixa, do mais velho em cima ao mais jovem embaixo. As barras crescem do eixo para fora, uma vez.
+// da escala de cor da sua faixa, do mais velho em cima ao mais jovem embaixo. As barras crescem do eixo para fora, uma vez.
 import { useInView } from 'motion/react'
 import { useRef } from 'react'
 import type { EleitosIdade } from '../api'

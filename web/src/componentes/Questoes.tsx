@@ -6,7 +6,7 @@ import { Link, useRouterState } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useId, useRef, useState, type KeyboardEvent as TeclaReact } from 'react'
 
-type Para = '/' | '/urna' | '/cadeira' | '/cadeira/legenda' | '/escola' | '/idade' | '/indices' | '/patrimonio' | '/reeleicao' | '/segundo-turno' | '/comparar'
+type Para = '/' | '/urna' | '/cadeira' | '/cadeira/legenda' | '/escola' | '/idade' | '/indices' | '/patrimonio' | '/repasses' | '/reeleicao' | '/segundo-turno' | '/comparar'
 interface QuestaoItem { codigo: string; pergunta: string; tela: string; para: Para; ativa: (p: string) => boolean }
 
 const QUESTOES: QuestaoItem[] = [
@@ -17,6 +17,7 @@ const QUESTOES: QuestaoItem[] = [
   { codigo: 'P5', pergunta: 'Como os partidos preencheram as cadeiras?', tela: 'Legenda', para: '/cadeira/legenda', ativa: (p) => p.startsWith('/cadeira/legenda') },
   { codigo: 'P6', pergunta: 'Jovem vota no jovem?', tela: 'Idade', para: '/idade', ativa: (p) => p.startsWith('/idade') },
   { codigo: 'P7', pergunta: 'Para onde o voto pendeu?', tela: 'Mapa', para: '/', ativa: (p) => p === '/' || p.startsWith('/uf') },
+  { codigo: 'P8', pergunta: 'Quem depende de dinheiro público se elege mais?', tela: 'Repasses', para: '/repasses', ativa: (p) => p.startsWith('/repasses') },
   { codigo: 'P10', pergunta: 'Qual é a carreira de um político?', tela: 'Urna', para: '/urna', ativa: (p) => p.startsWith('/urna') || p.startsWith('/politico') },
   { codigo: 'P10a', pergunta: 'Quem tenta a reeleição, volta?', tela: 'Reeleição', para: '/reeleicao', ativa: (p) => p.startsWith('/reeleicao') },
   { codigo: 'Extra', pergunta: 'O que muda no 2º turno?', tela: '2º turno', para: '/segundo-turno', ativa: (p) => p.startsWith('/segundo-turno') },
