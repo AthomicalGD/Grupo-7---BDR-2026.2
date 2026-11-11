@@ -34,6 +34,17 @@ def _disp(x: str) -> str:
 
 # ───────── Controle ─────────
 
+def analisar(conn) -> None:
+    """ANALYZE do banco todo (~10 s) ao fim de uma carga: sem as estatísticas das tabelas novas o Postgres planeja às
+    cegas e consultas de segundos viram minutos (o autovacuum demora a chegar nelas e um reinício do banco as zera)."""
+    antes = conn.autocommit
+    conn.autocommit = True
+    try:
+        conn.cursor().execute("ANALYZE")
+    finally:
+        conn.autocommit = antes
+
+
 def travar(cur) -> bool:
     cur.execute("SELECT pg_try_advisory_lock(%s)", (TRAVA,))
     return cur.fetchone()[0]

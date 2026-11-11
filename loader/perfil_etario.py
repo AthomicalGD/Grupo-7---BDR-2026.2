@@ -61,6 +61,7 @@ def main() -> None:
         x.sql(carga.PERFIL_ETARIO.format(zona=zona), "perfil_etario_munzona")
         print(f"  {uf}: {x.inseridas['perfil_etario_munzona']:,} linhas".replace(",", "."), flush=True)
         conn.commit()  # tmp_zona some aqui (ON COMMIT DROP)
+    carga.analisar(conn)
     conn.close()
     print(f"Concluído em {_duracao(time.monotonic() - inicio)}.")
 

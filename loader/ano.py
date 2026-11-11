@@ -196,6 +196,9 @@ def main(argv=None) -> int:
             cobertura = vies.atualizar(cur, raiz)
             conn.commit()
             print(f" ok. Cobertura dos votos válidos: {vies.resumo(cobertura)}")
+            print("Atualizando as estatísticas do banco (ANALYZE) ...", end="", flush=True)
+            carga.analisar(conn)
+            print(" ok")
         print(f"\nConcluído em {_duracao(time.monotonic() - inicio)}.")
     conn.close()
     return 0
