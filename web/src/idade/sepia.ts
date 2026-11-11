@@ -1,10 +1,11 @@
-// P6: a escala sépia, só desta página e do bloco "Idade" do boletim. O papel amarela com o tempo: da folha clara
-// (mais jovem) ao sépia (mais velho), em OKLCH com a luminosidade sempre caindo (0,955 -> 0,43) e a matiz puxada
-// para o amarelo (98° -> 66°), para não encostar no laranja do viés de esquerda (o tom mais perto fica a ΔE 8,3).
-// Texto em tinta sobre os quatro claros e em folha sobre os dois escuros (contraste de 4,7:1 ou mais).
+// P6: a escala de cor da idade, só desta página e do bloco "Idade" do boletim (o nome SEPIA ficou da primeira
+// versão, em tons de papel). Agora é a da bandeira: do amarelo (mais jovem) ao verde e ao azul (mais velho), com a
+// luminosidade sempre caindo, então a ordem se lê do claro ao escuro e continua certa para quem não distingue
+// verde de vermelho (amarelo para azul é o eixo que sobra). Fica longe do vermelho e do azul-cobalto do viés.
+// Texto em tinta sobre os quatro claros e em folha sobre os dois escuros (contraste de 4,5:1 ou mais).
 import type { IdadeMunicipio, Passagem, Terco } from '../api'
 
-export const SEPIA = ['#f4f1df', '#ded4b4', '#c6b48a', '#ab9166', '#896e4a', '#634a30'] as const
+export const SEPIA = ['#fff1bd', '#f7d64a', '#b5d86a', '#5dba7d', '#1b7f90', '#153f7a'] as const
 
 /** Tinta do texto sobre o passo i (0 a 5) da escala. */
 export const tintaSobreSepia = (i: number) => (i <= 3 ? 'var(--color-tinta)' : 'var(--color-folha)')

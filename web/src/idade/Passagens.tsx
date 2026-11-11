@@ -1,7 +1,7 @@
 // Ato 2: as passagens de mandato de prefeito (1996 a 2024) por terço de idade na UF, em barras de 100% com três
 // trechos neutros (a cor desta página é só da idade e do viés): mesmo partido em papel, troca de partido em tinta e
 // troca com ressalva (fusão) em tinta hachurada. À direita, o índice de troca do terço, na leitura escolhida da
-// fusão (como troca ou como continuidade). A faixa do terço na cor sépia dele, com o nome escrito.
+// fusão (como troca ou como continuidade). A faixa do terço na cor dele, com o nome escrito.
 import { useInView } from 'motion/react'
 import { useRef } from 'react'
 import type { AlternanciaIdade } from '../api'

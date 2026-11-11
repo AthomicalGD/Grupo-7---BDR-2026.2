@@ -84,8 +84,8 @@ export function Galeria({ dados, compacta = false }: { dados: IdadeMunicipio; co
                 className={`moldura-galeria group flex flex-col rounded-[6px] border border-linha bg-folha shadow-[var(--shadow-cartao)] transition-transform hover:-translate-y-0.5 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-acao ${compacta ? 'p-1.5' : 'p-2'} ${visto ? 'pendura' : ''}`}
                 style={{ animationDelay: `${i * 60}ms` }}
               >
-                {/* o filete sépia da moldura e os retratos (dois na reeleição, lado a lado) */}
-                <span className="flex gap-1 rounded-[3px] p-[3px] ring-[1.5px] ring-[#896e4a]">
+                {/* o filete azul da moldura e os retratos (dois na reeleição, lado a lado) */}
+                <span className="flex gap-1 rounded-[3px] p-[3px] ring-[1.5px] ring-[#153f7a]">
                   {(dupla && !compacta ? [primeiro, ultimo] : [primeiro]).map((p, k) => (
                     <Retrato key={k} foto={p.foto} nome={p.nome_urna} tamanho={tam} className="rounded-[2px]" />
                   ))}

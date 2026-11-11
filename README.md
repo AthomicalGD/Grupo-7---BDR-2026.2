@@ -348,7 +348,7 @@ python scripts/06_idade_alternancia.py
   em 30 municípios (o vice, do mesmo partido). As mudanças de partido anteriores a 2018 (PRN -> PTC; PST e PGT -> PL;
   PSD antigo, número 41, -> PTB; PRONA -> PR; PAN -> PTB) ficam no script, e não em
   `banco/referencia/sucessao_partidos.csv`, para não mexer no viés da P7.
-- **No site:** `/idade`, em quatro atos (o mapa sépia da idade de quem votou, com os terços e o envelhecimento de 2018
+- **No site:** `/idade`, em quatro atos (o mapa da idade de quem votou (do amarelo ao azul), com os terços e o envelhecimento de 2018
   a 2024; as passagens de mandato por terço, com a fusão nas duas leituras, e a galeria dos ex-prefeitos de cada
   município; a pirâmide de quem votou e dos eleitos, com o prêmio de idade; os halteres por terço de zonas, com e sem a
   escolaridade fixa), e, no boletim de cada município, a galeria compacta dos prefeitos de 1996 a 2024 e o bloco
@@ -596,7 +596,7 @@ Abra http://localhost:5173. O Vite repassa `/api` para a API em `127.0.0.1:8000`
 | Plenário: quanto custa uma cadeira, por cargo, ano e estado (ou câmara municipal), em 2D e 3D | `/cadeira` | P1 (e receitas da P8) | `/cadeira`, só eleições gerais |
 | Patrimônio: quem declara mais bens se elege mais? Faixas, fila e panorama | `/patrimonio` | P2 | não tem |
 | Escola: o diploma ajuda a se eleger (do eleitor ao eleito, a chance de cada grau) e onde se estudou menos se elege menos diploma (cinco grupos de municípios, mapa por estado com 3D, dispersão, ranking e o boletim); cada cargo e cada estado, os partidos; filtro por estado | `/escola` | P4 | `/escola` |
-| Idade: jovem vota no jovem? O mapa sépia da idade de quem votou, as passagens de mandato de prefeito por terço e a galeria dos ex-prefeitos, a pirâmide de quem votou e dos eleitos, os halteres por terço de zonas; filtro por estado | `/idade` | P6 | não tem |
+| Idade: jovem vota no jovem? O mapa da idade de quem votou (do amarelo ao azul), as passagens de mandato de prefeito por terço e a galeria dos ex-prefeitos, a pirâmide de quem votou e dos eleitos, os halteres por terço de zonas; filtro por estado | `/idade` | P6 | não tem |
 | Mapa do Brasil, viés por estado, linha do tempo 2018-2026 | `/` | P7 | `/` |
 | Estado: municípios, de onde vem o viés (partidos e candidatos), alinhamento na Câmara, regiões intermediárias, extremos, relevo 3D | `/uf/PI` | P7 | `/uf/PI` |
 | Boletim do município: viés, espectro do voto, alinhamento na Câmara, galeria dos prefeitos (1996 a 2024) e idade de quem votou, custo da cadeira, indicadores, QR code | `/uf/PI/2211001` | P7, P1, P3, P6 | `/uf/PI/2211001`, sem a galeria e a idade |

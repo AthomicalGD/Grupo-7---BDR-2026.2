@@ -1,5 +1,5 @@
 // Halteres por terço (atos 3 e 4), a gramática dos cinco grupos da P4: uma linha por terço, na mesma régua de idade;
-// o aro em tinta é a idade de quem votou, o ponto cheio (sépia fundo) a idade dos votados ou dos eleitos, e a haste
+// o aro em tinta é a idade de quem votou, o ponto cheio (azul fundo) a idade dos votados ou dos eleitos, e a haste
 // clara é a distância. Quando o alvo muda (o alternador "mesma escolaridade"), o ponto corre até o novo lugar
 // (900 ms); na primeira vez, sai do aro.
 import { useInView } from 'motion/react'
