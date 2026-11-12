@@ -3,6 +3,7 @@
 // as que sobraram (maior média). Os números vêm da API; a classificação oficial do TSE continua sendo a das fileiras.
 import { Armchair, Divide, Equals } from '@phosphor-icons/react'
 import type { ContaLegenda } from '../api'
+import { LogoPartido } from '../componentes/LogoPartido'
 import { inteiro } from '../lib/formato'
 
 const dec = (n: number) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -65,6 +66,7 @@ export function Conta({ conta }: { conta: ContaLegenda }) {
         <Passo n={2} titulo="Quantas cadeiras cabem nos votos do partido?">
           {exemplo ? (
             <>
+              <p className="mb-2 flex items-center gap-2 text-[0.9rem] font-bold text-tinta"><LogoPartido sigla={exemplo.sigla} reservar={false} /> {exemplo.sigla}</p>
               <div className="flex flex-wrap items-center gap-2">
                 <Numero valor={inteiro(exemplo.votos)} nome={`votos do ${exemplo.sigla}`} />
                 <Depois tipo="dividido"><Numero valor={inteiro(conta.qe)} nome="votos por cadeira" /></Depois>
@@ -95,6 +97,7 @@ export function Conta({ conta }: { conta: ContaLegenda }) {
                   return (
                     <li key={k} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[0.86rem]">
                       <span aria-hidden className="grid size-6 place-items-center rounded-[5px] border-2 border-tinta bg-[var(--amarelo)] text-tinta"><Armchair size={14} weight="fill" /></span>
+                      <LogoPartido sigla={r.sigla} tamanho="p" reservar={false} />
                       <b className="text-tinta">{r.sigla}</b>
                       <span className="tabular text-tinta-2">
                         {p ? `${inteiro(p.votos)} ÷ ${r.cadeiras_antes + 1} = ` : ''}<b className="text-tinta">{inteiro(r.media)}</b>
@@ -105,7 +108,7 @@ export function Conta({ conta }: { conta: ContaLegenda }) {
               </ol>
               {atras.length > 0 && (
                 <p className="tabular mt-2 text-[0.8rem] text-tinta-3">
-                  Ficaram atrás: {atras.map((a) => `${a.sigla} ${inteiro(a.media)}`).join(', ')}
+                  Ficaram atrás: {atras.map((a, k) => <span key={a.sigla}>{k > 0 && ', '}<LogoPartido sigla={a.sigla} tamanho="p" reservar={false} /> {a.sigla} {inteiro(a.media)}</span>)}
                 </p>
               )}
             </>

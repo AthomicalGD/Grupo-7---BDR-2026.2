@@ -3,6 +3,7 @@
 // cadeira que ele juntou mas não bastou. Dá para ler sem uma linha de explicação.
 import { Armchair } from '@phosphor-icons/react'
 import { useId, type ReactNode } from 'react'
+import { LogoPartido } from '../componentes/LogoPartido'
 import { inteiro } from '../lib/formato'
 import type { SituacaoLegenda } from '../api'
 
@@ -54,12 +55,39 @@ export interface DadoLinha {
   votos?: number
   quocientes?: number
   federado?: boolean
+  /** com quem o partido somou votos: nome do grupo e os membros (com os votos de cada um quando a conta do estado existe) */
+  grupo?: { nome: string | null; membros: { sigla: string; votos?: number }[]; total?: number } | null
   /** de onde vêm as cadeiras de votos: dos votos nos candidatos e dos votos de legenda */
   cadeirasCandidatos?: number
   cadeirasLegenda?: number
 }
 
 const dec = (n: number) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+/** Os partidos do mesmo grupo (federação ou coligação), com o logo e os votos de cada um: é a soma deles que vira cadeira. */
+function Aliados({ p, lista }: { p: DadoLinha; lista: string }) {
+  const grupo = p.grupo!
+  return (
+    <div
+      className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5 rounded-[10px] border-2 border-[var(--vermelho)] bg-folha px-2.5 py-1.5 text-[0.8rem] text-tinta-2"
+      title={`Estes partidos somam votos (${lista}): as cadeiras são contadas para o grupo todo.`}
+    >
+      <span className="rounded-full bg-[var(--vermelho)] px-2 text-[0.7rem] font-bold leading-[1.5] text-white">{lista}</span>
+      {grupo.nome && <b className="text-tinta">{grupo.nome}</b>}
+      <ul className="contents">
+        {grupo.membros.map((m, k) => (
+          <li key={m.sigla} className="inline-flex items-center gap-1.5">
+            {k > 0 && <span aria-hidden className="text-tinta-3">+</span>}
+            <LogoPartido sigla={m.sigla} tamanho="p" reservar={false} />
+            <span className={m.sigla === p.sigla ? 'font-bold text-tinta' : 'text-tinta-2'}>{m.sigla}</span>
+            {m.votos != null && <span className="tabular text-tinta-3">{inteiro(m.votos)}</span>}
+          </li>
+        ))}
+      </ul>
+      {grupo.total != null && <span className="tabular ml-auto text-tinta">= <b>{inteiro(grupo.total)}</b> votos juntos</span>}
+    </div>
+  )
+}
 
 export function LinhaCadeiras({ p, aberto, situacao, aoAbrir, lista, filho }: {
   p: DadoLinha
@@ -97,15 +125,8 @@ export function LinhaCadeiras({ p, aberto, situacao, aoAbrir, lista, filho }: {
       <div className="grid gap-x-5 gap-y-2 sm:grid-cols-[minmax(8.5rem,0.7fr)_minmax(0,2.3fr)] sm:items-center">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <LogoPartido sigla={p.sigla} reservar={false} />
             <span className="t-numero truncate text-[1.25rem] leading-none text-tinta" title={p.nome ?? p.sigla}>{p.sigla}</span>
-            {p.federado && lista && (
-              <span
-                title={`Este partido soma votos com aliados (${lista}): as cadeiras são contadas para o grupo todo.`}
-                className="rounded-full border-2 border-[var(--vermelho)] px-1.5 text-[0.7rem] font-bold leading-[1.3] text-tinta"
-              >
-                {lista}
-              </span>
-            )}
           </div>
           <p className="tabular mt-1 text-[0.82rem] text-tinta-2">
             {p.votos != null ? <><b className="text-tinta">{inteiro(p.votos)}</b> votos</> : <>{inteiro(p.total)} {p.total === 1 ? 'eleito' : 'eleitos'}</>}
@@ -127,6 +148,7 @@ export function LinhaCadeiras({ p, aberto, situacao, aoAbrir, lista, filho }: {
           )}
         </div>
       </div>
+      {p.federado && lista && p.grupo && <Aliados p={p} lista={lista} />}
       {aberto && filho && <div id={id} className="mt-3 sm:ml-[calc(23.33%+1.25rem)]">{filho}</div>}
     </li>
   )

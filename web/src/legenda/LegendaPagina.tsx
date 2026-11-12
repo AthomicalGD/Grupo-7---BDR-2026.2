@@ -236,8 +236,10 @@ export function LegendaPagina() {
   const porSigla = new Map((rico ? conta.partidos : []).map((p) => [p.sigla, p]))
   const linhas: DadoLinha[] = partidos.map((p) => {
     const c = porSigla.get(p.sigla)
+    const membros = c?.grupo?.membros.map((sigla) => ({ sigla, votos: porSigla.get(sigla)?.votos }))
     return {
       ...p, votos: c?.votos, quocientes: c?.quocientes, federado: c?.federado,
+      grupo: c?.grupo && membros ? { nome: c.grupo.nome, membros, total: membros.reduce((a, m) => a + (m.votos ?? 0), 0) } : null,
       cadeirasCandidatos: c && conta ? c.nominais / conta.qe : undefined,
       cadeirasLegenda: c && conta ? c.legenda / conta.qe : undefined,
     }

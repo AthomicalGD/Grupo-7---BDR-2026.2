@@ -734,6 +734,8 @@ export interface PartidoConta {
   cadeiras: number
   /** soma votos numa federação ou coligação: sozinho, não teria votos para as cadeiras que tem */
   federado: boolean
+  /** com quem somou votos: a federação (2022+) ou a coligação (2018); o nome só existe nas federações */
+  grupo: { nome: string | null; membros: string[] } | null
   media_inicial: number
 }
 

@@ -10,6 +10,7 @@ import { consultas, type DesempenhoPartidos as Dados, type PartidoRanking } from
 import { Atrasado, EsqueletoBloco } from '../componentes/Esqueleto'
 import { ErroCarga } from '../componentes/ErroCarga'
 import { Escolha } from '../componentes/Escolha'
+import { LogoPartido } from '../componentes/LogoPartido'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { inteiro, plural } from '../lib/formato'
 import { INDICES_P3, MUNICIPAIS_P3, PORTES_P3, type EleicaoMunicipalP3, type IndiceP3, type PorteP3 } from '../router'
@@ -24,25 +25,6 @@ const UNIDADE: Record<IndiceP3, string> = {
   pib_pc: 'em %, em valores nominais (sem descontar a inflação)',
   eleitores_pop: 'em eleitores por 100 habitantes',
   isentos: 'em pontos percentuais, no voto para prefeito',
-}
-
-/** O logo ao lado da sigla, num fundo branco (vários são escuros ou transparentes, e sumiriam no tema escuro).
- *  Sem logo, só o espaço vazio, para as siglas continuarem alinhadas. */
-function Logo({ sigla }: { sigla: string }) {
-  const { data } = useQuery(consultas.logosPartidos())
-  const [falhou, setFalhou] = useState(false)
-  const logo = data?.[sigla]
-  return (
-    <span className="grid h-7 w-11 shrink-0 place-items-center" aria-hidden>
-      {logo && !falhou && (
-        <span className="size-full overflow-hidden rounded-md bg-white p-0.5 ring-1 ring-linha">
-          <img src={logo.url} alt="" loading="lazy" decoding="async" onError={() => setFalhou(true)}
-            title={`Logo: ${logo.fonte === 'camara' ? 'Câmara dos Deputados' : `Wikimedia Commons${logo.licenca ? ` (${logo.licenca})` : ''}`}`}
-            className="block size-full object-contain" />
-        </span>
-      )}
-    </span>
-  )
 }
 
 /** O "?" da linha: os municípios onde o partido elegeu o prefeito, ao passar o mouse, focar ou tocar. */
@@ -175,7 +157,7 @@ function Ranking({ titulo, explica, nota, partidos, valor, diferenca, referencia
               <li key={p.sigla} className="grid grid-cols-[1.6rem_minmax(0,1fr)_auto_1.75rem] items-center gap-x-3 border-b border-linha py-1.5">
                 <span className="tabular text-[0.8rem] text-tinta-3">{i + 1}º</span>
                 <div className="flex min-w-0 items-center gap-2.5">
-                  <Logo sigla={p.sigla} />
+                  <LogoPartido sigla={p.sigla} />
                   <div className="min-w-0">
                     <span className="block truncate text-[0.9rem] font-bold">{p.sigla}</span>
                     <span className="block text-[0.76rem] text-tinta-3">

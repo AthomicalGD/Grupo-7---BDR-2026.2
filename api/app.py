@@ -131,7 +131,7 @@ def consultar(sql: str, params=None) -> list[dict]:
 CACHE_API = DADOS / "cache_api"
 # Aumente ao mudar uma conta ou consulta (o que muda um resultado); mudanças que não mudam resultados
 # (tamanho dos caches, textos de erro) não precisam, e assim não obrigam a refazer tudo.
-VERSAO_CONTAS = 6
+VERSAO_CONTAS = 7
 
 
 @lru_cache(maxsize=1)
@@ -2264,7 +2264,7 @@ def legenda(uf: str = ""):
 #   sobras                  = a cada cadeira que falta, vai para a maior média: votos ÷ (cadeiras já ganhas + 1).
 # As cadeiras de cada partido vêm da classificação oficial do TSE (ELEITO POR QP / POR MÉDIA); a conta ao lado é a
 # explicação. Federações (2022 em diante) e coligações (2018) somam votos de vários partidos: o partido sozinho pode
-# ter menos votos do que as cadeiras pedem, e aí vai marcado como "federado".
+# ter menos votos do que as cadeiras pedem; "grupo" diz com quem ele somou (a lista vem de api/federacoes.json).
 SQL_CONTA_ELEICAO = """
 WITH el AS (
     SELECT e.id_eleicao, e.quantidade_de_vagas AS vagas FROM eleicao e
@@ -2312,6 +2312,27 @@ def _quociente_eleitoral(validos: int, vagas: int) -> tuple[int, float]:
     return inteiro + (1 if exato - inteiro > 0.5 else 0), exato
 
 
+@lru_cache(maxsize=1)
+def _grupos_de_partidos() -> dict:
+    """Federações (2022 em diante, do país todo) e coligações (2018, por UF e cargo), de scripts/federacoes.py."""
+    arquivo = Path(__file__).with_name("federacoes.json")
+    return json.loads(arquivo.read_text(encoding="utf-8")) if arquivo.exists() else {"federacoes": {}, "coligacoes": {}}
+
+
+def _grupo_do_partido(ano: int, cargo: int, sigla_uf: str, sigla: str) -> dict | None:
+    """Com quem o partido somou votos nessa eleição: {"nome", "membros"} ou None se concorreu sozinho."""
+    g = _grupos_de_partidos()
+    alvo = sigla.upper()
+    for f in g["federacoes"].get(str(ano), []):
+        if alvo in f["membros"]:
+            return f
+    chave = f"{sigla_uf}|{7 if cargo == 8 else cargo}"
+    for membros in g["coligacoes"].get(str(ano), {}).get(chave, []):
+        if alvo in membros:
+            return {"nome": None, "membros": membros}
+    return None
+
+
 @lru_cache(maxsize=256)
 @em_disco
 def conta_legenda(ano: int, cargo: int, sigla_uf: str, cd_municipio: int | None = None) -> dict:
@@ -2355,9 +2376,9 @@ def conta_legenda(ano: int, cargo: int, sigla_uf: str, cd_municipio: int | None 
     atras = sorted(({"sigla": p["sigla"], "media": round(p["votos"] / (cadeiras[p["sigla"]] + 1)), "cadeiras_antes": cadeiras[p["sigla"]]}
                     for p in partidos), key=lambda x: -x["media"])[:2]
     for p in partidos:
-        # um partido sozinho não teria votos para as cadeiras que tem: ele soma votos numa federação ou coligação
-        p["federado"] = bool(p["cadeiras"] and (p["qp"] > int(p["quocientes"])
-                                                or (p["media"] and corte and p["votos"] / (p["qp"] + 1) < corte * 0.9)))
+        # com quem somou votos (federação em 2022+, coligação em 2018): vem da composição oficial do TSE
+        p["grupo"] = _grupo_do_partido(ano, cargo, sigla_uf, p["sigla"])
+        p["federado"] = p["grupo"] is not None
         p["media_inicial"] = round(p["votos"] / (p["qp"] + 1))
     partidos.sort(key=lambda p: (-p["votos"], p["sigla"]))
     return {"ano": ano, "cargo": {"cod": cargo, "nome": CARGOS_P5[cargo]}, "uf": sigla_uf, "local": local,

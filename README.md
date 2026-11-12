@@ -319,8 +319,9 @@ Ficam em `dados/partidos/logos/`, com `logos.json` (fonte, página e licença de
   só a parte inteira vira cadeira) e as sobras pela maior média (votos ÷ (cadeiras já ganhas + 1)), com quem levou cada
   cadeira e quem ficou logo atrás. Cada eleito aparece com os votos dele medidos contra o valor de uma cadeira.
   API: `GET /api/legenda/conta?ano=&cargo=&uf=` (nas câmaras de vereadores, o município de maior eleitorado do estado).
-  Partido em federação (2022 em diante) ou coligação (2018) soma votos com os aliados: ele vem marcado, porque sozinho não
-  teria votos para as cadeiras que tem. Os votos de um partido são os nominais dos candidatos mais os de legenda.
+  Partido em federação (2022 em diante) ou coligação (2018) soma votos com os aliados: a fileira mostra os partidos do grupo,
+  com logo e votos de cada um e a soma. A composição vem dos CSVs de candidatos do TSE (`python scripts/federacoes.py` gera
+  `api/federacoes.json`; coligação de 2018 é por UF e cargo). Os logos são os de `/api/partidos/logos`. Os votos de um partido são os nominais dos candidatos mais os de legenda.
 - **Vários estados:** em `/cadeira/legenda` e `/indices`, Ctrl (ou Cmd, ou Shift) + clique junta mais um estado; o botão
   "Juntar estados" faz o mesmo no celular. A URL guarda a lista (`?uf=PI,BA`) e a API aceita `uf=PI,BA` nos dois.
 - A filiação do eleito não significa que os votos daquele partido, isoladamente, garantiram a cadeira: em 2018,

@@ -42,6 +42,18 @@ test('P5: o partido que só tem cadeira por estar numa federação vem marcado',
   await page.goto('/cadeira/legenda?ano_p5=2022&cargo=6&uf=PI')
   await expect(page.getByText('federação', { exact: true }).first()).toBeVisible()
   await expect(page.getByText(/partidos em federação somam votos/)).toBeVisible()
+  // a federação mostra quem são os partidos dela, com o logo e os votos de cada um
+  const aliados = page.getByTitle(/Estes partidos somam votos \(federação\)/).filter({ hasText: 'Brasil da Esperança' }).first()
+  await expect(aliados).toBeVisible({ timeout: 60_000 })
+  for (const sigla of ['PT', 'PC DO B', 'PV']) await expect(aliados.getByText(sigla, { exact: true })).toBeVisible()
+  await expect(aliados.getByText('votos juntos')).toBeVisible()
+  await expect(aliados.locator('img').first()).toBeVisible()
+})
+
+test('P5: coligações de 2018 também mostram os partidos aliados', async ({ page }) => {
+  await page.goto('/cadeira/legenda?ano_p5=2018&cargo=6&uf=PI')
+  const aliados = page.getByTitle(/Estes partidos somam votos \(coligação\)/).first()
+  await expect(aliados).toBeVisible({ timeout: 60_000 })
 })
 
 test('P5: o mesmo seletor com o mapa, e Ctrl + clique junta estados (ou o botão Juntar estados, sem o Ctrl)', async ({ page }) => {
