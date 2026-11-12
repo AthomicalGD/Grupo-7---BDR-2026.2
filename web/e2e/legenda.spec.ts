@@ -42,30 +42,34 @@ test('P5: o partido que só tem cadeira por estar numa federação vem marcado',
   await expect(page.getByText(/partidos em federação somam votos/)).toBeVisible()
 })
 
-test('P5: Ctrl + clique junta estados e o botão Juntar estados faz o mesmo sem o Ctrl', async ({ page }) => {
+test('P5: o mesmo seletor com o mapa, e Ctrl + clique junta estados (ou o botão Juntar estados, sem o Ctrl)', async ({ page }) => {
   await page.goto('/cadeira/legenda?ano_p5=2022&cargo=6')
-  const estados = page.getByRole('group', { name: 'Estados' })
-  await estados.getByRole('button', { name: 'Piauí', exact: true }).click()
+  await page.getByRole('button', { name: /^Estados: / }).click()
+  const mapa = page.getByRole('group', { name: 'Estados', exact: true })
+  await mapa.getByRole('checkbox', { name: 'Piauí' }).click()
   await expect(page.getByText(/Em 2022, Piauí, foram eleitos 10 deputados federais/)).toBeVisible()
 
-  await estados.getByRole('button', { name: 'Bahia', exact: true }).click({ modifiers: ['Control'] })
+  await mapa.getByRole('checkbox', { name: 'Bahia' }).click({ modifiers: ['Control'] })
   await expect(page).toHaveURL(/uf=PI(%2C|,)BA/)
-  await expect(estados.getByRole('button', { name: 'Piauí', exact: true })).toHaveAttribute('aria-pressed', 'true')
-  await expect(estados.getByRole('button', { name: 'Bahia', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(mapa.getByRole('checkbox', { name: 'Piauí' })).toHaveAttribute('aria-checked', 'true')
+  await expect(mapa.getByRole('checkbox', { name: 'Bahia' })).toHaveAttribute('aria-checked', 'true')
+  await expect(page.getByRole('button', { name: /^Estados: Piauí \+ Bahia/ })).toBeVisible()
   // 10 do Piauí + 39 da Bahia, e a conta mostra um estado de cada vez
   await expect(page.getByText(/Em 2022, Piauí \+ Bahia, foram eleitos 49 deputados federais/)).toBeVisible()
+  await page.keyboard.press('Escape')   // a gaveta fica aberta enquanto se junta estados; Esc fecha
   await page.getByRole('radio', { name: 'Bahia' }).click()
   await expect(page.getByText(/Bahia · 2022 · deputado federal/)).toBeVisible()
+  await page.getByRole('button', { name: /^Estados: / }).click()
 
   // sem o Ctrl, o botão "Juntar estados" acrescenta mais um
   await page.getByRole('button', { name: /Juntar estados/ }).click()
-  await estados.getByRole('button', { name: 'Ceará', exact: true }).click()
-  await expect(estados.getByRole('button', { name: 'Ceará', exact: true })).toHaveAttribute('aria-pressed', 'true')
-  await expect(estados.getByRole('button', { name: 'Bahia', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await mapa.getByRole('checkbox', { name: 'Ceará' }).click()
+  await expect(mapa.getByRole('checkbox', { name: 'Ceará' })).toHaveAttribute('aria-checked', 'true')
+  await expect(mapa.getByRole('checkbox', { name: 'Bahia' })).toHaveAttribute('aria-checked', 'true')
 
   // um clique comum volta a um estado só
   await page.getByRole('button', { name: /Juntar estados/ }).click()
-  await estados.getByRole('button', { name: 'Ceará', exact: true }).click()
+  await mapa.getByRole('checkbox', { name: 'Ceará' }).click()
   await expect(page).toHaveURL(/uf=CE(&|$)/)
 })
 
@@ -73,7 +77,8 @@ test('P3: os Índices aceitam vários estados e somam os municípios', async ({ 
   await page.goto('/indices?uf=PI')
   const dispersao = page.getByRole('img', { name: /^Dispersão de .* municípios/ }).first()
   await expect(dispersao).toHaveAttribute('aria-label', /Dispersão de 223 municípios no Piauí/, { timeout: 60_000 })
-  await page.getByRole('group', { name: 'Estados' }).getByRole('button', { name: 'Bahia', exact: true }).click({ modifiers: ['Control'] })
+  await page.getByRole('button', { name: /^Estados: / }).click()
+  await page.getByRole('group', { name: 'Estados', exact: true }).getByRole('checkbox', { name: 'Bahia' }).click({ modifiers: ['Control'] })
   await expect(page).toHaveURL(/uf=PI(%2C|,)BA/)
   await expect(dispersao).toHaveAttribute('aria-label', /Dispersão de 640 municípios nos 2 estados/, { timeout: 60_000 })
 })

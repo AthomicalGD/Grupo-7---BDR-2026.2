@@ -8,19 +8,26 @@ import { ufsFrase } from '../lib/formato'
 import { silhueta, silhuetaBrasil } from '../atlas/geo'
 import { MapaEstados } from './MapaEstados'
 
-export function SeletorEstado({ malha, ufs, escolhida, aoEscolher, obrigatorio = false, rotulo = 'Estado' }: {
+export function SeletorEstado({ malha, ufs, escolhida, aoEscolher, escolhidas, aoEscolherVarias, obrigatorio = false, rotulo = 'Estado' }: {
   malha: Malha | undefined
   /** os estados carregados */
   ufs: UF[]
   escolhida: string
   aoEscolher: (sigla: string | undefined) => void
+  /** vários estados (Ctrl + clique): a gaveta fica aberta enquanto se escolhe, e o campo diz quais */
+  escolhidas?: readonly string[]
+  aoEscolherVarias?: (siglas: string[]) => void
   /** sempre há um estado (sem "Todos"), como na câmara de vereadores */
   obrigatorio?: boolean
   rotulo?: string
 }) {
   const [aberto, setAberto] = useState(false)
   const raiz = useRef<HTMLDivElement>(null)
-  const uf = ufs.find((u) => u.sigla === escolhida)
+  const varios = !!aoEscolherVarias
+  const marcadas = varios ? [...(escolhidas ?? [])] : escolhida ? [escolhida] : []
+  const uf = marcadas.length === 1 ? ufs.find((u) => u.sigla === marcadas[0]) : undefined
+  const nomes = marcadas.map((s) => ufs.find((u) => u.sigla === s)?.nome ?? s)
+  const textoCampo = nomes.length === 0 ? ufsFrase(ufs, 'Todos os') : nomes.length <= 2 ? nomes.join(' + ') : `${nomes.length} estados`
   const desenho = useMemo(() => {
     if (!malha) return ''
     if (uf) return silhueta(malha, uf.cd_ibge, 26)
@@ -39,7 +46,7 @@ export function SeletorEstado({ malha, ufs, escolhida, aoEscolher, obrigatorio =
     document.addEventListener('keydown', esc)
     // o foco vai para o estado marcado, para o teclado seguir dali; sem estado, para a gaveta (focar o
     // primeiro estado o mostraria como se estivesse escolhido)
-    const marcado = raiz.current?.querySelector<SVGGElement>('[role=radio][aria-checked=true]')
+    const marcado = raiz.current?.querySelector<SVGGElement>('[role=radio][aria-checked=true], [role=checkbox][aria-checked=true]')
     ;(marcado ?? raiz.current?.querySelector<HTMLDivElement>('[role=dialog]'))?.focus()
     return () => {
       document.removeEventListener('pointerdown', fora)
@@ -54,14 +61,14 @@ export function SeletorEstado({ malha, ufs, escolhida, aoEscolher, obrigatorio =
         data-gatilho
         aria-haspopup="dialog"
         aria-expanded={aberto}
-        aria-label={`${rotulo}: ${uf?.nome ?? ufsFrase(ufs, 'todos os')}. Trocar`}
+        aria-label={`${rotulo}${varios ? 's' : ''}: ${marcadas.length ? textoCampo : ufsFrase(ufs, 'todos os')}. Trocar`}
         onClick={() => setAberto((a) => !a)}
         className={`campo-estado flex h-12 w-full max-w-[320px] items-center gap-3 rounded-xl border bg-folha pl-2.5 pr-3.5 text-left ${aberto ? 'border-tinta' : 'border-linha hover:border-linha-2'}`}
       >
         <svg viewBox="0 0 26 26" className="size-[26px] shrink-0 overflow-visible" aria-hidden>
-          <path d={desenho} fill={uf ? 'var(--color-selecao)' : '#86a6dc'} />
+          <path d={desenho} fill={marcadas.length ? 'var(--color-selecao)' : '#86a6dc'} />
         </svg>
-        <span className="min-w-0 flex-1 truncate text-[0.98rem] font-semibold text-tinta">{uf?.nome ?? ufsFrase(ufs, 'Todos os')}</span>
+        <span className="min-w-0 flex-1 truncate text-[0.98rem] font-semibold text-tinta">{textoCampo}</span>
         <CaretDown size={15} weight="bold" aria-hidden className={`shrink-0 text-tinta-3 transition-transform duration-200 ${aberto ? 'rotate-180' : ''}`} />
       </button>
 
@@ -76,6 +83,8 @@ export function SeletorEstado({ malha, ufs, escolhida, aoEscolher, obrigatorio =
             malha={malha}
             ufs={ufs}
             escolhida={escolhida}
+            escolhidas={escolhidas}
+            aoEscolherVarias={aoEscolherVarias}
             obrigatorio={obrigatorio}
             aoEscolher={(s) => {
               aoEscolher(s)

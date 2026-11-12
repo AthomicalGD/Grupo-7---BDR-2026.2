@@ -11,7 +11,7 @@ import { Escolha } from '../componentes/Escolha'
 import { Atrasado, EsqueletoBloco, EsqueletoPagina } from '../componentes/Esqueleto'
 import { ErroCarga } from '../componentes/ErroCarga'
 import { Retrato } from '../componentes/Retrato'
-import { SeletorEstados } from '../componentes/SeletorEstados'
+import { SeletorEstado } from '../componentes/SeletorEstado'
 import { Voltar } from '../componentes/Voltar'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { inteiro, nomeProprio } from '../lib/formato'
@@ -197,6 +197,7 @@ export function LegendaPagina() {
   const mudar = (s: Partial<BuscaLegenda>) => navegar({ search: (a) => ({ ...a, ...s }), replace: true, resetScroll: false })
   const q = useQuery({ ...consultas.legenda(busca.uf ?? ''), placeholderData: keepPreviousData })
   const ufs = useQuery(consultas.ufs())
+  const { data: malha } = useQuery(consultas.malhaBrasil())
   const dados = q.data
   const { recortes, anos, ano, cargos, cargo, recorte } = derivar(dados, busca)
 
@@ -218,7 +219,7 @@ export function LegendaPagina() {
   const situacao = busca.situacao ?? 'qp'
   const nomesUF = new Map(ufs.data.map((u) => [u.sigla, u.nome]))
   // a lista vem de todos os estados carregados, não da consulta (que já vem filtrada pelos escolhidos)
-  const siglasUF = ufs.data.filter((u) => u.carregada && u.sigla !== 'BR').map((u) => u.sigla).sort()
+  const carregadasUF = ufs.data.filter((u) => u.carregada && u.sigla !== 'BR')
   const nomesEscolhidos = escolhidos.map((s) => nomesUF.get(s) ?? s)
   const escopoLocal = !recorte ? '' : escolhidos.length === 1 ? nomesEscolhidos[0]
     : escolhidos.length > 1 && escolhidos.length <= 3 ? nomesEscolhidos.join(' + ')
@@ -264,9 +265,10 @@ export function LegendaPagina() {
           </div>
         </fieldset>
       </div>
-      <div className="mt-5">
-        <SeletorEstados ufs={siglasUF} nomes={nomesUF} valor={escolhidos} aoMudar={escolherUFs} />
-      </div>
+      <fieldset className="mt-5 min-w-0">
+        <legend className="t-rotulo mb-2 text-tinta-2">Estado</legend>
+        <SeletorEstado malha={malha} ufs={carregadasUF} escolhida={escolhidos[0] ?? ''} aoEscolher={() => undefined} escolhidas={escolhidos} aoEscolherVarias={escolherUFs} />
+      </fieldset>
 
       {q.error && (
         <p role="alert" className="mt-5 rounded-xl border border-corrige/40 bg-folha px-4 py-3 text-[0.88rem]">

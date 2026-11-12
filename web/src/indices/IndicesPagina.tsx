@@ -11,7 +11,7 @@ import { consultas, type Ano, type IndicesVies } from '../api'
 import { Atrasado, EsqueletoBloco, EsqueletoPagina } from '../componentes/Esqueleto'
 import { ErroCarga } from '../componentes/ErroCarga'
 import { Escolha } from '../componentes/Escolha'
-import { SeletorEstados } from '../componentes/SeletorEstados'
+import { SeletorEstado } from '../componentes/SeletorEstado'
 import { ufsDe } from '../lib/ufs'
 import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { decimal, inteiro, noEstado, ufsFrase, vies as fmtVies } from '../lib/formato'
@@ -178,6 +178,7 @@ export function IndicesPagina() {
   const navegar = useNavigate({ from: '/indices' })
   const mudar = (s: Partial<BuscaIndices>) => navegar({ search: (a) => ({ ...a, ...s }), replace: true, resetScroll: false })
   const { data: ufs } = useQuery(consultas.ufs())
+  const { data: malha } = useQuery(consultas.malhaBrasil())
   const carregadas = useMemo(() => (ufs ?? []).filter((u) => u.carregada && u.sigla !== 'BR'), [ufs])
 
   // um estado, vários (Ctrl + clique) ou todos; a conta recebe a lista em ordem ("BA,PI")
@@ -185,7 +186,6 @@ export function IndicesPagina() {
   const uf = escolhidas.length === 1 ? carregadas.find((u) => u.sigla === escolhidas[0]) : undefined
   const sigla = escolhidas.length ? [...escolhidas].sort().join(',') : TODOS
   const noUF = uf ? noEstado(uf.sigla, uf.nome) : ufsFrase(escolhidas.length ? escolhidas : carregadas, 'nos')
-  const nomesUF = new Map(carregadas.map((u) => [u.sigla, u.nome]))
   const ano = busca.ano ?? 2024
   const indice = busca.indice ?? 'ifdm'
   const q = useQuery({ ...consultas.indices(sigla), enabled: carregadas.length > 0, placeholderData: keepPreviousData })
@@ -210,7 +210,7 @@ export function IndicesPagina() {
       <div className="mt-5 grid gap-5">
         <fieldset className="min-w-0">
           <legend className="t-rotulo mb-2 text-tinta-2">Estado</legend>
-          <SeletorEstados ufs={carregadas.map((u) => u.sigla)} nomes={nomesUF} valor={escolhidas} aoMudar={(s) => mudar({ uf: s.length ? s.join(',') : undefined })} rotulo="Estados" />
+          <SeletorEstado malha={malha} ufs={carregadas} escolhida={escolhidas[0] ?? ''} aoEscolher={() => undefined} escolhidas={escolhidas} aoEscolherVarias={(s) => mudar({ uf: s.length ? s.join(',') : undefined })} />
         </fieldset>
       </div>
 
