@@ -56,9 +56,16 @@ function Selo({ situacao }: { situacao: 'ELEITO POR QP' | 'ELEITO POR MÉDIA' })
 /** Os votos do eleito, medidos contra o valor de uma cadeira: a barra cheia é uma cadeira inteira. */
 function Votos({ votos, qe }: { votos: number; qe: number | null }) {
   const pct = qe ? Math.min(100, (votos / qe) * 100) : null
+  const cadeiras = qe ? votos / qe : null
   return (
     <span className="mt-2 block">
-      <span className="tabular text-[0.84rem] text-tinta"><b className="text-[1rem]">{inteiro(votos)}</b> votos</span>
+      {cadeiras != null && (
+        <span className="tabular block text-[0.86rem] leading-tight text-tinta">
+          <b className="t-numero text-[1.35rem] leading-none">{cadeiras.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b>{' '}
+          {cadeiras >= 1.005 ? 'cadeiras' : 'de cadeira'} nos votos dele
+        </span>
+      )}
+      <span className="tabular text-[0.84rem] text-tinta-2"><b className="text-tinta">{inteiro(votos)}</b> votos</span>
       {pct != null && (
         <span
           className="mt-1 block h-2 w-full overflow-hidden rounded-full border-2 border-tinta bg-folha"
@@ -229,7 +236,11 @@ export function LegendaPagina() {
   const porSigla = new Map((rico ? conta.partidos : []).map((p) => [p.sigla, p]))
   const linhas: DadoLinha[] = partidos.map((p) => {
     const c = porSigla.get(p.sigla)
-    return { ...p, votos: c?.votos, quocientes: c?.quocientes, federado: c?.federado }
+    return {
+      ...p, votos: c?.votos, quocientes: c?.quocientes, federado: c?.federado,
+      cadeirasCandidatos: c && conta ? c.nominais / conta.qe : undefined,
+      cadeirasLegenda: c && conta ? c.legenda / conta.qe : undefined,
+    }
   })
 
   const escolherAno = (novo: number) => {

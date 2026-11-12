@@ -23,10 +23,12 @@ test('P5: a conta das cadeiras, a fileira de cada partido e os votos de cada ele
 
   // a fileira do PT: 3 pelo quociente e 1 pela sobra, com os votos dele
   await expect(page.getByText('3,57 cadeiras de votos').first()).toBeVisible()
+  await expect(page.getByText(/dos candidatos \+ .* da legenda/).first()).toBeVisible()
   await page.getByRole('button', { name: /^PT: .* eleitos pelo quociente/ }).click()
   const rejane = page.getByRole('link', { name: /Rejane Dias, PT, .* votos, ELEITO POR QP/ })
   await expect(rejane).toBeVisible()
   await expect(rejane.getByText('125.774')).toBeVisible()
+  await expect(rejane.getByText('0,64')).toBeVisible()   // 125.774 ÷ 195.996 = 0,64 cadeira nos votos dele
   await expect(rejane.getByText('ELEITO PELO')).toBeVisible()
   await expect(page.getByText('mais votado').first()).toBeVisible()
 

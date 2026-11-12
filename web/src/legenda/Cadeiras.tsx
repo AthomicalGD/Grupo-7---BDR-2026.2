@@ -54,7 +54,12 @@ export interface DadoLinha {
   votos?: number
   quocientes?: number
   federado?: boolean
+  /** de onde vêm as cadeiras de votos: dos votos nos candidatos e dos votos de legenda */
+  cadeirasCandidatos?: number
+  cadeirasLegenda?: number
 }
+
+const dec = (n: number) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 export function LinhaCadeiras({ p, aberto, situacao, aoAbrir, lista, filho }: {
   p: DadoLinha
@@ -111,7 +116,14 @@ export function LinhaCadeiras({ p, aberto, situacao, aoAbrir, lista, filho }: {
           {grupo('media', p.media, p.qp)}
           {mostraSobra && <Peca tipo="sobra" fracao={sobra} i={p.qp + p.media} />}
           {p.quocientes != null && (
-            <span className="tabular ml-1 text-[0.78rem] text-tinta-3" title="votos do partido ÷ votos de uma cadeira">{p.quocientes.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} cadeiras de votos</span>
+            <span className="tabular ml-1 text-[0.78rem] text-tinta-3" title="votos do partido ÷ votos de uma cadeira">
+              {dec(p.quocientes)} cadeiras de votos
+              {p.cadeirasCandidatos != null && p.cadeirasLegenda != null && (
+                <span className="block text-tinta-2">
+                  <b className="text-tinta">{dec(p.cadeirasCandidatos)}</b> dos candidatos + <b className="text-tinta">{dec(p.cadeirasLegenda)}</b> da legenda
+                </span>
+              )}
+            </span>
           )}
         </div>
       </div>
