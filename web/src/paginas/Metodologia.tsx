@@ -149,6 +149,7 @@ const INDICE = [
   ['m-idade', 'P6'],
   ['m-vies', 'P7'],
   ['m-repasses', 'P8'],
+  ['m-gastos', 'P9'],
   ['m-carreira', 'P10'],
   ['m-reeleicao', 'P10a'],
   ['m-segundo-turno', '2º turno'],
@@ -570,7 +571,7 @@ export function Metodologia() {
         </Detalhe>
       </Secao>
 
-      <Secao id="m-gastos" titulo="Onde a campanha investe em propaganda (P9)">
+      <Secao id="m-gastos" titulo="Onde a campanha investe em propaganda (P9)" resposta={{ para: '/urna', rotulo: 'Ver a resposta na urna' }}>
         <p>
           A resposta é por campanha e mora na <b>ficha de cada político</b>, em “Para onde foi o dinheiro das campanhas”: cada tipo de gasto vira um santinho
           com área proporcional à soma das despesas <b>contratadas</b> daquele tipo, em reais do ano da eleição. Os tipos de propaganda e comunicação

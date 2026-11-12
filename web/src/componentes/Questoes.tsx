@@ -18,6 +18,8 @@ const QUESTOES: QuestaoItem[] = [
   { codigo: 'P6', pergunta: 'Jovem vota no jovem?', tela: 'Idade', para: '/idade', ativa: (p) => p.startsWith('/idade') },
   { codigo: 'P7', pergunta: 'Para onde o voto pendeu?', tela: 'Mapa', para: '/', ativa: (p) => p === '/' || p.startsWith('/uf') },
   { codigo: 'P8', pergunta: 'Quem depende de dinheiro público se elege mais?', tela: 'Repasses', para: '/repasses', ativa: (p) => p.startsWith('/repasses') },
+  // a P9 mora na ficha do político ("Para onde foi o dinheiro das campanhas"): daqui só leva à urna, de onde se chega a ela
+  { codigo: 'P9', pergunta: 'Onde a campanha investe em propaganda?', tela: 'Urna', para: '/urna', ativa: () => false },
   { codigo: 'P10', pergunta: 'Qual é a carreira de um político?', tela: 'Urna', para: '/urna', ativa: (p) => p.startsWith('/urna') || p.startsWith('/politico') },
   { codigo: 'P10a', pergunta: 'Quem tenta a reeleição, volta?', tela: 'Reeleição', para: '/reeleicao', ativa: (p) => p.startsWith('/reeleicao') },
   { codigo: 'Extra', pergunta: 'O que muda no 2º turno?', tela: '2º turno', para: '/segundo-turno', ativa: (p) => p.startsWith('/segundo-turno') },
@@ -91,7 +93,7 @@ export function Questoes() {
                 const p = PASTILHA[i % PASTILHA.length]
                 return (
                   <motion.li
-                    key={q.para}
+                    key={q.codigo}
                     initial={calmo ? false : { opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.32, delay: 0.08 + i * 0.03, ease: [0.16, 1, 0.3, 1] }}

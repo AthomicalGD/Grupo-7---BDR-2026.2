@@ -17,7 +17,7 @@ import { TabelaAlternavel } from '../graficos/TabelaAlternavel'
 import { inteiro, nomeProprio } from '../lib/formato'
 import { ufsDe } from '../lib/ufs'
 import type { BuscaLegenda } from '../router'
-import { LinhaCadeiras, type DadoLinha } from './Cadeiras'
+import { GrupoCadeiras, LinhaCadeiras, type DadoLinha, type GrupoLinha } from './Cadeiras'
 import { Conta } from './Conta'
 
 const ROTULO_STATUS: Record<SituacaoLegenda, string> = {
@@ -237,13 +237,23 @@ export function LegendaPagina() {
   const linhas: DadoLinha[] = partidos.map((p) => {
     const c = porSigla.get(p.sigla)
     const membros = c?.grupo?.membros.map((sigla) => ({ sigla, votos: porSigla.get(sigla)?.votos }))
+    const total = membros?.reduce((a, m) => a + (m.votos ?? 0), 0)
     return {
       ...p, votos: c?.votos, quocientes: c?.quocientes, federado: c?.federado,
-      grupo: c?.grupo && membros ? { nome: c.grupo.nome, membros, total: membros.reduce((a, m) => a + (m.votos ?? 0), 0) } : null,
+      grupo: c?.grupo && membros && conta ? { nome: c.grupo.nome, membros, total, quocientes: total != null ? total / conta.qe : undefined } : null,
       cadeirasCandidatos: c && conta ? c.nominais / conta.qe : undefined,
       cadeirasLegenda: c && conta ? c.legenda / conta.qe : undefined,
     }
   })
+
+  // federação e coligação viram um bloco só, na posição do primeiro membro com cadeira; quem foi sozinho segue solto
+  const blocos: { chave: string; grupo: GrupoLinha | null; linhas: DadoLinha[] }[] = []
+  for (const p of linhas) {
+    const chave = p.grupo ? p.grupo.membros.map((m) => m.sigla).join('+') : p.sigla
+    const existente = p.grupo ? blocos.find((b) => b.chave === chave) : undefined
+    if (existente) existente.linhas.push(p)
+    else blocos.push({ chave, grupo: p.grupo ?? null, linhas: [p] })
+  }
 
   const escolherAno = (novo: number) => {
     const proximo = recortes.find((r) => r.ano === novo)
@@ -264,7 +274,7 @@ export function LegendaPagina() {
         <p className="mt-3 text-[1.06rem] text-tinta-2">Cada quadrado é uma cadeira. O azul veio direto dos votos, o amarelo veio das sobras.</p>
       </header>
 
-      <div className="mt-7 grid gap-5 sm:grid-cols-2">
+      <div className="mt-7 grid gap-x-10 gap-y-5 sm:grid-cols-2 lg:grid-cols-[auto_auto_minmax(16rem,20rem)] lg:items-start">
         <fieldset className="min-w-0">
           <legend className="t-rotulo mb-2 text-tinta-2">Eleição</legend>
           <div role="radiogroup" aria-label="Eleição" className="flex flex-wrap gap-2">
@@ -277,11 +287,11 @@ export function LegendaPagina() {
             {cargos.map((c) => <Escolha key={c.cod} ativo={c.cod === cargo?.cod} aoClicar={() => escolherCargo(c.cod)}>{c.nome}</Escolha>)}
           </div>
         </fieldset>
+        <fieldset className="min-w-0 sm:col-span-2 lg:col-span-1">
+          <legend className="t-rotulo mb-2 text-tinta-2">Estado</legend>
+          <SeletorEstado malha={malha} ufs={carregadasUF} escolhida={escolhidos[0] ?? ''} aoEscolher={() => undefined} escolhidas={escolhidos} aoEscolherVarias={escolherUFs} />
+        </fieldset>
       </div>
-      <fieldset className="mt-5 min-w-0">
-        <legend className="t-rotulo mb-2 text-tinta-2">Estado</legend>
-        <SeletorEstado malha={malha} ufs={carregadasUF} escolhida={escolhidos[0] ?? ''} aoEscolher={() => undefined} escolhidas={escolhidos} aoEscolherVarias={escolherUFs} />
-      </fieldset>
 
       {q.error && (
         <p role="alert" className="mt-5 rounded-xl border border-corrige/40 bg-folha px-4 py-3 text-[0.88rem]">
@@ -327,17 +337,21 @@ export function LegendaPagina() {
 
             <div className={`mt-4 ${q.isPlaceholderData ? 'opacity-60' : ''}`}>
               <ul aria-label={`Partidos com eleitos: ${ano}, ${cargo.nome}`}>
-                {linhas.map((p) => (
-                  <LinhaCadeiras
-                    key={p.sigla}
-                    p={p}
-                    aberto={partidoAberto?.sigla === p.sigla}
-                    situacao={situacao}
-                    aoAbrir={(tipo) => abrir(p.sigla, tipo)}
-                    lista={rico ? conta?.lista ?? null : null}
-                    filho={<Candidatos partido={p.sigla} ano={ano} cargo={cargo.cod} uf={busca.uf ?? ''} situacao={situacao} />}
-                  />
-                ))}
+                {blocos.map((b) => {
+                  const fileiras = b.linhas.map((p) => (
+                    <LinhaCadeiras
+                      key={p.sigla}
+                      p={p}
+                      aberto={partidoAberto?.sigla === p.sigla}
+                      situacao={situacao}
+                      aoAbrir={(tipo) => abrir(p.sigla, tipo)}
+                      filho={<Candidatos partido={p.sigla} ano={ano} cargo={cargo.cod} uf={busca.uf ?? ''} situacao={situacao} />}
+                    />
+                  ))
+                  return b.grupo && conta?.lista
+                    ? <GrupoCadeiras key={b.chave} grupo={b.grupo} lista={conta.lista}>{fileiras}</GrupoCadeiras>
+                    : fileiras
+                })}
               </ul>
               {rico && conta && <SemCadeira conta={conta} />}
               <TabelaAlternavel

@@ -11,21 +11,21 @@ const dec = (n: number) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2,
 /** Um número grande com o nome dele embaixo, como uma peça de azulejo. */
 function Numero({ valor, nome, destaque = false }: { valor: string; nome: string; destaque?: boolean }) {
   return (
-    <span className={`inline-flex min-w-0 flex-col items-center rounded-[10px] border-[2.5px] border-tinta px-3 py-2 text-center ${destaque ? 'bg-[var(--amarelo)]' : 'bg-folha'}`}>
-      <span className="t-numero tabular text-[clamp(1.2rem,1rem+1.4vw,1.85rem)] leading-none text-tinta">{valor}</span>
-      <span className="mt-1 text-[0.72rem] font-semibold leading-tight text-tinta-2">{nome}</span>
+    <span className="inline-flex min-w-0 flex-col items-start">
+      <span className={`t-numero tabular text-[clamp(1.3rem,1.05rem+1.3vw,2rem)] leading-none text-tinta ${destaque ? 'rounded-[6px] bg-[var(--amarelo)] px-1.5 py-1' : 'py-1'}`}>{valor}</span>
+      <span className="mt-1.5 text-[0.74rem] font-semibold leading-tight text-tinta-2">{nome}</span>
     </span>
   )
 }
 
 function Operador({ tipo }: { tipo: 'dividido' | 'igual' }) {
   const Icone = tipo === 'dividido' ? Divide : Equals
-  return <Icone size={20} weight="bold" aria-label={tipo === 'dividido' ? 'dividido por' : 'igual a'} className="shrink-0 text-tinta" />
+  return <Icone size={20} weight="bold" aria-label={tipo === 'dividido' ? 'dividido por' : 'igual a'} className="mt-2 shrink-0 text-tinta-3" />
 }
 
 /** O operador e o número que vem depois dele andam juntos: ao quebrar a linha, o "=" nunca fica sozinho. */
 function Depois({ tipo, children }: { tipo: 'dividido' | 'igual'; children: React.ReactNode }) {
-  return <span className="inline-flex items-center gap-2 whitespace-nowrap"><Operador tipo={tipo} />{children}</span>
+  return <span className="inline-flex items-start gap-2 whitespace-nowrap"><Operador tipo={tipo} />{children}</span>
 }
 
 function Passo({ n, titulo, children }: { n: number; titulo: string; children: React.ReactNode }) {
@@ -96,7 +96,6 @@ export function Conta({ conta }: { conta: ContaLegenda }) {
                   const p = conta.partidos.find((x) => x.sigla === r.sigla)
                   return (
                     <li key={k} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[0.86rem]">
-                      <span aria-hidden className="grid size-6 place-items-center rounded-[5px] border-2 border-tinta bg-[var(--amarelo)] text-tinta"><Armchair size={14} weight="fill" /></span>
                       <LogoPartido sigla={r.sigla} tamanho="p" reservar={false} />
                       <b className="text-tinta">{r.sigla}</b>
                       <span className="tabular text-tinta-2">

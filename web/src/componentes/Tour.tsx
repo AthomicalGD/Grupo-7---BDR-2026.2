@@ -4,7 +4,7 @@ import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from
 
 const PASSOS: { alvo: string; titulo: string; texto: string }[] = [
   { alvo: 'nav a[href="/"]', titulo: 'Mapa', texto: 'Para onde o voto pendeu em cada estado e município, de 2018 a 2026. Toque num estado para descer aos municípios.' },
-  { alvo: 'nav a[href="/urna"]', titulo: 'Urna', texto: 'Digite o nome de qualquer político, como na urna, e veja a carreira inteira em santinhos.' },
+  { alvo: 'nav a[href="/urna"]', titulo: 'Urna', texto: 'Digite o nome de qualquer político, como na urna, e veja a carreira inteira em santinhos e para onde foi o dinheiro da campanha.' },
   { alvo: 'nav a[href="/cadeira"]', titulo: 'Cadeira', texto: 'Quanto custa, em média, a campanha de quem se elege, e quem gastou e não levou.' },
   { alvo: 'nav a[href="/escola"]', titulo: 'Escola', texto: 'O diploma ajuda a se eleger? E onde se estudou menos, se elege menos diploma?' },
   { alvo: 'nav a[href="/patrimonio"]', titulo: 'Patrimônio', texto: 'Quem declara mais bens se elege mais? Quebre o cofrinho, ou pule direto para a resposta.' },

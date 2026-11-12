@@ -38,22 +38,25 @@ test('P5: a conta das cadeiras, a fileira de cada partido e os votos de cada ele
   expect(erros).toEqual([])
 })
 
-test('P5: o partido que só tem cadeira por estar numa federação vem marcado', async ({ page }) => {
+test('P5: o partido que só tem cadeira por estar numa federação vira um bloco com os partidos da federação', async ({ page }) => {
   await page.goto('/cadeira/legenda?ano_p5=2022&cargo=6&uf=PI')
-  await expect(page.getByText('federação', { exact: true }).first()).toBeVisible()
   await expect(page.getByText(/partidos em federação somam votos/)).toBeVisible()
-  // a federação mostra quem são os partidos dela, com o logo e os votos de cada um
-  const aliados = page.getByTitle(/Estes partidos somam votos \(federação\)/).filter({ hasText: 'Brasil da Esperança' }).first()
-  await expect(aliados).toBeVisible({ timeout: 60_000 })
-  for (const sigla of ['PT', 'PC DO B', 'PV']) await expect(aliados.getByText(sigla, { exact: true })).toBeVisible()
-  await expect(aliados.getByText('votos juntos')).toBeVisible()
-  await expect(aliados.locator('img').first()).toBeVisible()
+  // a federação é um bloco: o nome, os partidos com logo, a soma dos votos e a fileira de cada membro dentro
+  const bloco = page.getByRole('list', { name: /^Federação: PT, PC DO B e PV$/ })
+  await expect(bloco).toBeVisible({ timeout: 60_000 })
+  const cabecalho = page.getByText('Federação Brasil da Esperança')
+  await expect(cabecalho).toBeVisible()
+  await expect(page.getByText('PT, PC DO B e PV somam os votos')).toBeVisible()
+  await expect(page.getByText('votos juntos')).toBeVisible()
+  await expect(bloco.getByRole('button', { name: /^PT: / }).first()).toBeVisible()
+  await expect(bloco.getByRole('button', { name: /^PV: / }).first()).toBeVisible()
+  await expect(page.locator('img[title^="Logo:"]').first()).toBeVisible()
 })
 
-test('P5: coligações de 2018 também mostram os partidos aliados', async ({ page }) => {
+test('P5: coligações de 2018 também formam um bloco com os partidos aliados', async ({ page }) => {
   await page.goto('/cadeira/legenda?ano_p5=2018&cargo=6&uf=PI')
-  const aliados = page.getByTitle(/Estes partidos somam votos \(coligação\)/).first()
-  await expect(aliados).toBeVisible({ timeout: 60_000 })
+  await expect(page.getByText(/^Coligação/).first()).toBeVisible({ timeout: 60_000 })
+  await expect(page.getByText(/somam os votos/).first()).toBeVisible()
 })
 
 test('P5: o mesmo seletor com o mapa, e Ctrl + clique junta estados (ou o botão Juntar estados, sem o Ctrl)', async ({ page }) => {
@@ -95,4 +98,14 @@ test('P3: os Índices aceitam vários estados e somam os municípios', async ({ 
   await page.getByRole('group', { name: 'Estados', exact: true }).getByRole('checkbox', { name: 'Bahia' }).click({ modifiers: ['Control'] })
   await expect(page).toHaveURL(/uf=PI(%2C|,)BA/)
   await expect(dispersao).toHaveAttribute('aria-label', /Dispersão de 640 municípios nos 2 estados/, { timeout: 60_000 })
+})
+
+test('P9: o balão das questões leva à urna, e a Metodologia tem a P9 com o atalho para a urna', async ({ page }) => {
+  await page.goto('/metodologia')
+  await expect(page.getByRole('heading', { name: /Onde a campanha investe em propaganda \(P9\)/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Ver a resposta na urna' }).first()).toBeVisible()
+  await page.getByRole('button', { name: /^Questões$/ }).click()   // liga o balão
+  await page.getByRole('button', { name: 'Abrir as questões' }).click()
+  await page.getByRole('link', { name: /P9\s*Onde a campanha investe em propaganda/ }).click()
+  await expect(page).toHaveURL(/\/urna/)
 })

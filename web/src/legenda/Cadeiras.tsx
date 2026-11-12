@@ -45,6 +45,14 @@ function Bloco({ n, tipo, i }: { n: number; tipo: 'qp' | 'media'; i: number }) {
   )
 }
 
+/** Federação (2022 em diante) ou coligação (2018): o nome (só as federações têm), os partidos e a soma dos votos deles. */
+export interface GrupoLinha {
+  nome: string | null
+  membros: { sigla: string; votos?: number }[]
+  total?: number
+  quocientes?: number
+}
+
 export interface DadoLinha {
   sigla: string
   nome: string | null
@@ -55,8 +63,8 @@ export interface DadoLinha {
   votos?: number
   quocientes?: number
   federado?: boolean
-  /** com quem o partido somou votos: nome do grupo e os membros (com os votos de cada um quando a conta do estado existe) */
-  grupo?: { nome: string | null; membros: { sigla: string; votos?: number }[]; total?: number } | null
+  /** com quem o partido somou votos */
+  grupo?: GrupoLinha | null
   /** de onde vêm as cadeiras de votos: dos votos nos candidatos e dos votos de legenda */
   cadeirasCandidatos?: number
   cadeirasLegenda?: number
@@ -64,37 +72,38 @@ export interface DadoLinha {
 
 const dec = (n: number) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-/** Os partidos do mesmo grupo (federação ou coligação), com o logo e os votos de cada um: é a soma deles que vira cadeira. */
-function Aliados({ p, lista }: { p: DadoLinha; lista: string }) {
-  const grupo = p.grupo!
+/** Uma federação (ou coligação) é um bloco só: o cabeçalho diz quem são e quanto somam, e as fileiras dos membros ficam dentro. */
+export function GrupoCadeiras({ grupo, lista, children }: { grupo: GrupoLinha; lista: string; children: ReactNode }) {
+  const tipo = lista === 'federação' ? 'Federação' : 'Coligação'
+  const siglas = grupo.membros.map((m) => m.sigla)
+  const nomes = siglas.length > 1 ? `${siglas.slice(0, -1).join(', ')} e ${siglas[siglas.length - 1]}` : siglas[0]
   return (
-    <div
-      className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5 rounded-[10px] border-2 border-[var(--vermelho)] bg-folha px-2.5 py-1.5 text-[0.8rem] text-tinta-2"
-      title={`Estes partidos somam votos (${lista}): as cadeiras são contadas para o grupo todo.`}
-    >
-      <span className="rounded-full bg-[var(--vermelho)] px-2 text-[0.7rem] font-bold leading-[1.5] text-white">{lista}</span>
-      {grupo.nome && <b className="text-tinta">{grupo.nome}</b>}
-      <ul className="contents">
-        {grupo.membros.map((m, k) => (
-          <li key={m.sigla} className="inline-flex items-center gap-1.5">
-            {k > 0 && <span aria-hidden className="text-tinta-3">+</span>}
-            <LogoPartido sigla={m.sigla} tamanho="p" reservar={false} />
-            <span className={m.sigla === p.sigla ? 'font-bold text-tinta' : 'text-tinta-2'}>{m.sigla}</span>
-            {m.votos != null && <span className="tabular text-tinta-3">{inteiro(m.votos)}</span>}
-          </li>
-        ))}
-      </ul>
-      {grupo.total != null && <span className="tabular ml-auto text-tinta">= <b>{inteiro(grupo.total)}</b> votos juntos</span>}
-    </div>
+    <li className="my-3 rounded-[var(--canto)] border-2 border-l-[6px] border-linha border-l-[var(--azul)] bg-folha px-4">
+      <div className="flex flex-wrap items-end gap-x-4 gap-y-2.5 border-b-2 border-papel-2 py-3">
+        <span className="flex basis-full flex-wrap gap-1" aria-hidden>
+          {grupo.membros.map((m) => <LogoPartido key={m.sigla} sigla={m.sigla} tamanho="p" reservar={false} />)}
+        </span>
+        <div className="min-w-[12rem] flex-1">
+          <p className="t-numero text-[1.1rem] leading-tight text-tinta">{tipo}{grupo.nome ? ` ${grupo.nome}` : ''}</p>
+          <p className="mt-0.5 text-[0.8rem] text-tinta-2">{nomes} somam os votos</p>
+        </div>
+        {grupo.total != null && (
+          <p className="tabular text-[0.82rem] leading-snug text-tinta-2 sm:text-right">
+            <b className="t-numero text-[1.15rem] text-tinta">{inteiro(grupo.total)}</b> votos juntos
+            {grupo.quocientes != null && <span className="block">valem {dec(grupo.quocientes)} cadeiras de votos</span>}
+          </p>
+        )}
+      </div>
+      <ul aria-label={`${tipo}: ${nomes}`}>{children}</ul>
+    </li>
   )
 }
 
-export function LinhaCadeiras({ p, aberto, situacao, aoAbrir, lista, filho }: {
+export function LinhaCadeiras({ p, aberto, situacao, aoAbrir, filho }: {
   p: DadoLinha
   aberto: boolean
   situacao: SituacaoLegenda
   aoAbrir: (tipo: SituacaoLegenda) => void
-  lista: string | null
   filho?: ReactNode
 }) {
   const id = useId()
@@ -126,7 +135,7 @@ export function LinhaCadeiras({ p, aberto, situacao, aoAbrir, lista, filho }: {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <LogoPartido sigla={p.sigla} reservar={false} />
-            <span className="t-numero truncate text-[1.25rem] leading-none text-tinta" title={p.nome ?? p.sigla}>{p.sigla}</span>
+            <span className="t-numero truncate text-[1.3rem] leading-none text-tinta" title={p.nome ?? p.sigla}>{p.sigla}</span>
           </div>
           <p className="tabular mt-1 text-[0.82rem] text-tinta-2">
             {p.votos != null ? <><b className="text-tinta">{inteiro(p.votos)}</b> votos</> : <>{inteiro(p.total)} {p.total === 1 ? 'eleito' : 'eleitos'}</>}
@@ -137,18 +146,17 @@ export function LinhaCadeiras({ p, aberto, situacao, aoAbrir, lista, filho }: {
           {grupo('media', p.media, p.qp)}
           {mostraSobra && <Peca tipo="sobra" fracao={sobra} i={p.qp + p.media} />}
           {p.quocientes != null && (
-            <span className="tabular ml-1 text-[0.78rem] text-tinta-3" title="votos do partido ÷ votos de uma cadeira">
-              {dec(p.quocientes)} cadeiras de votos
+            <span className="tabular ml-2 text-[0.8rem] leading-snug text-tinta-2" title="votos do partido ÷ votos de uma cadeira">
+              <b className="t-numero text-[1.05rem] text-tinta">{dec(p.quocientes)}</b> cadeiras de votos
               {p.cadeirasCandidatos != null && p.cadeirasLegenda != null && (
-                <span className="block text-tinta-2">
-                  <b className="text-tinta">{dec(p.cadeirasCandidatos)}</b> dos candidatos + <b className="text-tinta">{dec(p.cadeirasLegenda)}</b> da legenda
+                <span className="block text-tinta-3">
+                  {dec(p.cadeirasCandidatos)} dos candidatos + {dec(p.cadeirasLegenda)} da legenda
                 </span>
               )}
             </span>
           )}
         </div>
       </div>
-      {p.federado && lista && p.grupo && <Aliados p={p} lista={lista} />}
       {aberto && filho && <div id={id} className="mt-3 sm:ml-[calc(23.33%+1.25rem)]">{filho}</div>}
     </li>
   )
