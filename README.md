@@ -313,7 +313,16 @@ Ficam em `dados/partidos/logos/`, com `logos.json` (fonte, página e licença de
 
 - **Resposta:** `python scripts/05_votos_legenda.py` -> `respostas/05_votos_legenda.txt`; conta `ELEITO POR QP` e
   `ELEITO POR MÉDIA`, mostra as duas categorias e lista os candidatos por partido de filiação.
-- **No site:** `/cadeira/legenda`, com filtros de ano, cargo e estado; barras por partido e abertura da lista de eleitos.
+- **No site:** `/cadeira/legenda`, um jogo de cadeiras: cada quadrado de azulejo é uma cadeira (azul: direto dos votos; amarelo:
+  das sobras; tracejado: a fração de cadeira que o partido juntou e não bastou). Acima, a conta em três passos com os números
+  do estado: quociente eleitoral (votos válidos ÷ vagas), quociente partidário (votos do partido ÷ quociente eleitoral,
+  só a parte inteira vira cadeira) e as sobras pela maior média (votos ÷ (cadeiras já ganhas + 1)), com quem levou cada
+  cadeira e quem ficou logo atrás. Cada eleito aparece com os votos dele medidos contra o valor de uma cadeira.
+  API: `GET /api/legenda/conta?ano=&cargo=&uf=` (nas câmaras de vereadores, o município de maior eleitorado do estado).
+  Partido em federação (2022 em diante) ou coligação (2018) soma votos com os aliados: ele vem marcado, porque sozinho não
+  teria votos para as cadeiras que tem. Os votos de um partido são os nominais dos candidatos mais os de legenda.
+- **Vários estados:** em `/cadeira/legenda` e `/indices`, Ctrl (ou Cmd, ou Shift) + clique junta mais um estado; o botão
+  "Juntar estados" faz o mesmo no celular. A URL guarda a lista (`?uf=PI,BA`) e a API aceita `uf=PI,BA` nos dois.
 - A filiação do eleito não significa que os votos daquele partido, isoladamente, garantiram a cadeira: em 2018,
   os votos eram somados por coligação proporcional; em 2022, 2024 e 2026, por federação.
 

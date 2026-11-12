@@ -131,7 +131,7 @@ def consultar(sql: str, params=None) -> list[dict]:
 CACHE_API = DADOS / "cache_api"
 # Aumente ao mudar uma conta ou consulta (o que muda um resultado); mudanças que não mudam resultados
 # (tamanho dos caches, textos de erro) não precisam, e assim não obrigam a refazer tudo.
-VERSAO_CONTAS = 5
+VERSAO_CONTAS = 6
 
 
 @lru_cache(maxsize=1)
@@ -1144,10 +1144,11 @@ def _ufs_p10(uf: str) -> list[str]:
     """As UFs de um pedido da P10a: uma sigla, ou todas as carregadas para "" / TODOS."""
     if uf.strip().upper() in ("", TODOS):
         return sorted(carregadas() - {"BR"})
-    sigla = uf_de(uf)["sigla"]
-    if sigla not in carregadas() or sigla == "BR":
-        raise HTTPException(404, f"UF sem dados: {sigla}")
-    return [sigla]
+    siglas = sorted({uf_de(x)["sigla"] for x in re.split(r"[,;\s]+", uf.strip()) if x})
+    for sigla in siglas:
+        if sigla not in carregadas() or sigla == "BR":
+            raise HTTPException(404, f"UF sem dados: {sigla}")
+    return siglas
 
 
 @lru_cache(maxsize=32)
@@ -1374,7 +1375,7 @@ def _ate(anos, ano: int) -> int | None:
 
 @lru_cache(maxsize=32)
 def indices_vies(sigla: str) -> dict:
-    ufs = sorted(carregadas() - {"BR"}) if sigla == TODOS else [sigla]
+    ufs = sorted(carregadas() - {"BR"}) if sigla == TODOS else sigla.split(",")
     p = {"ufs": [UFS[u]["cd_ibge"] for u in ufs], "anos": ANOS_P3}
     por_uf = indice_vies()[0]
     v = vies([r for cd in p["ufs"] for r in por_uf.get(cd, [])], lambda r: r["cd_ibge"])
@@ -1434,7 +1435,7 @@ def indices(uf: str = TODOS):
     """P3: viés de cada município nas eleições de 2018 a 2024 com IFDM, IDHM 2010, PIB per capita, eleitores sobre a
     população e isentos, e o desvio padrão do viés nas eleições municipais (uf=TODOS: todas as carregadas)."""
     ufs = _ufs_p10(uf)
-    return indices_vies(TODOS if len(ufs) > 1 or uf.strip().upper() in ("", TODOS) else ufs[0])
+    return indices_vies(TODOS if uf.strip().upper() in ("", TODOS) else ",".join(ufs))
 
 
 # ───────── P3: desempenho municipal dos partidos ─────────
@@ -1545,7 +1546,7 @@ def _ranking(prefeitos: dict, valores: dict, pop: dict | None = None, menor_melh
 @lru_cache(maxsize=128)
 @em_disco
 def desempenho_partidos(sigla: str, ano: int, porte: str = "todos") -> dict:
-    ufs = sorted(carregadas() - {"BR"}) if sigla == TODOS else [sigla]
+    ufs = sorted(carregadas() - {"BR"}) if sigla == TODOS else sigla.split(",")
     prefeitos = {r["cd_ibge"]: r["sigla"] for r in consultar(SQL_PREFEITOS_ELEITOS, {"ano": ano, "ufs": [UFS[u]["cd_ibge"] for u in ufs]})}
     series, pop = series_partidos(ufs)
     ano_pop = ano_perto({a for d in pop.values() for a in d}, ano)
@@ -1590,7 +1591,7 @@ def indices_partidos(uf: str = TODOS, ano: int = 2020, porte: str = "todos"):
     if porte not in ("todos", *PORTES_P3):
         raise HTTPException(422, f"Porte desconhecido: {porte} (use todos, {', '.join(PORTES_P3)})")
     ufs = _ufs_p10(uf)
-    return desempenho_partidos(TODOS if len(ufs) > 1 or uf.strip().upper() in ("", TODOS) else ufs[0], ano, porte)
+    return desempenho_partidos(TODOS if uf.strip().upper() in ("", TODOS) else ",".join(ufs), ano, porte)
 
 
 # ───────── A roupa do bonequinho (migração 017) ─────────
@@ -2190,7 +2191,9 @@ SELECT pe.id_politico AS id, po.nome, pe.nm_urna AS nome_urna, pe.nr_candidato A
        pa.sigla AS partido, ma.ds_situacao AS situacao,
        COALESCE(u.sigla, um.sigla) AS uf,
        COALESCE(m.nm_municipio || ' (' || um.sigla || ')', u.sigla, um.sigla) AS local,
-       e.cd_municipio, pe.sq_candidato AS sq
+       e.cd_municipio, pe.sq_candidato AS sq,
+       (SELECT COALESCE(sum(v.qtd_votos_nominais), 0) FROM votacao_candidato_munzona v
+         WHERE v.id_politico_eleicao = pe.id_politico_eleicao) AS votos
 FROM mandato ma
 JOIN politico_eleicao pe ON pe.id_politico_eleicao = ma.id_politico_eleicao
 JOIN politico po         ON po.id_politico = pe.id_politico
@@ -2203,17 +2206,20 @@ WHERE e.ano = %(ano)s AND e.tipo = 2 AND e.turno = 1
   AND e.cod_cargo = ANY(CASE %(cargo)s::int WHEN 7 THEN ARRAY[7, 8] ELSE ARRAY[%(cargo)s::int] END)
   AND pa.sigla = %(partido)s AND ma.ds_situacao = %(situacao)s
   AND COALESCE(u.sigla, um.sigla) = ANY(%(ufs)s)
-ORDER BY po.nome, pe.id_politico_eleicao
+ORDER BY votos DESC, po.nome, pe.id_politico_eleicao
 """
 
 
 def _ufs_p5(uf: str = "") -> tuple[str, ...]:
+    """Um estado ("PI"), vários separados por vírgula ("PI,BA") ou todos os carregados ("")."""
     disponiveis = carregadas() - {"BR"}
-    if uf:
-        sigla = uf_de(uf)["sigla"]
-        if sigla not in disponiveis:
-            raise HTTPException(404, f"UF sem dados: {sigla}")
-        return (sigla,)
+    pedidas = [x for x in re.split(r"[,;\s]+", uf.strip()) if x]
+    if pedidas:
+        siglas = sorted({uf_de(x)["sigla"] for x in pedidas})
+        for sigla in siglas:
+            if sigla not in disponiveis:
+                raise HTTPException(404, f"UF sem dados: {sigla}")
+        return tuple(siglas)
     if not disponiveis:
         raise HTTPException(404, "Nenhuma UF carregada")
     return tuple(sorted(disponiveis))
@@ -2252,6 +2258,123 @@ def legenda(uf: str = ""):
     return {"uf": uf.upper() or None, **resumo_legenda(_ufs_p5(uf))}
 
 
+# A conta das cadeiras de uma eleição proporcional, com os números do banco:
+#   quociente eleitoral (QE) = votos válidos ÷ vagas (a fração só sobe se passar de 0,5);
+#   quociente partidário    = votos do partido (nominais dos candidatos + de legenda) ÷ QE, só a parte inteira vira cadeira;
+#   sobras                  = a cada cadeira que falta, vai para a maior média: votos ÷ (cadeiras já ganhas + 1).
+# As cadeiras de cada partido vêm da classificação oficial do TSE (ELEITO POR QP / POR MÉDIA); a conta ao lado é a
+# explicação. Federações (2022 em diante) e coligações (2018) somam votos de vários partidos: o partido sozinho pode
+# ter menos votos do que as cadeiras pedem, e aí vai marcado como "federado".
+SQL_CONTA_ELEICAO = """
+WITH el AS (
+    SELECT e.id_eleicao, e.quantidade_de_vagas AS vagas FROM eleicao e
+    WHERE e.ano = %(ano)s AND e.turno = 1 AND e.tipo = 2
+      AND e.cod_cargo = ANY(CASE %(cargo)s::int WHEN 7 THEN ARRAY[7, 8] ELSE ARRAY[%(cargo)s::int] END)
+      AND ((%(cd_uf)s::int IS NOT NULL AND e.cd_uf = %(cd_uf)s::int)
+        OR (%(cd_mun)s::int IS NOT NULL AND e.cd_municipio = %(cd_mun)s::int))
+)
+"""
+SQL_CONTA_TOTAIS = SQL_CONTA_ELEICAO + """
+SELECT (SELECT sum(vagas) FROM el) AS vagas,
+       (SELECT sum(vm.qt_comparecimento - vm.qt_brancos - vm.qt_nulos) FROM votacao_municipio vm JOIN el USING (id_eleicao)) AS validos
+"""
+SQL_CONTA_PARTIDOS = SQL_CONTA_ELEICAO + """
+SELECT sigla, max(nome) AS nome, sum(nom)::bigint AS nominais, sum(leg)::bigint AS legenda, sum(qp)::int AS qp, sum(med)::int AS media
+FROM (
+    SELECT pa.sigla, pa.nome, sum(v.qtd_votos_nominais) AS nom, 0 AS leg, 0 AS qp, 0 AS med
+    FROM votacao_candidato_munzona v JOIN el USING (id_eleicao)
+    JOIN politico_eleicao pe ON pe.id_politico_eleicao = v.id_politico_eleicao
+    JOIN partido pa ON pa.id_partido = pe.id_partido GROUP BY 1, 2
+  UNION ALL
+    SELECT pa.sigla, pa.nome, 0, sum(vp.qt_votos_legenda_validos), 0, 0
+    FROM votacao_partido_munzona vp JOIN el USING (id_eleicao)
+    JOIN partido pa ON pa.id_partido = vp.id_partido GROUP BY 1, 2
+  UNION ALL
+    SELECT pa.sigla, pa.nome, 0, 0,
+           count(*) FILTER (WHERE ma.ds_situacao = 'ELEITO POR QP'),
+           count(*) FILTER (WHERE ma.ds_situacao = 'ELEITO POR MÉDIA')
+    FROM mandato ma JOIN el USING (id_eleicao) JOIN partido pa ON pa.id_partido = ma.id_partido GROUP BY 1, 2
+) t GROUP BY sigla
+"""
+# o município da conta, nas câmaras de vereadores: o de maior eleitorado do estado (quase sempre a capital)
+SQL_MUNICIPIO_MAIOR = """
+SELECT e.cd_municipio, m.nm_municipio, m.cd_ibge
+FROM eleicao e JOIN municipio m ON m.cd_municipio = e.cd_municipio
+JOIN votacao_municipio vm ON vm.id_eleicao = e.id_eleicao
+WHERE e.ano = %(ano)s AND e.turno = 1 AND e.cod_cargo = 13 AND m.cd_uf = %(cd_uf)s
+GROUP BY 1, 2, 3 ORDER BY sum(vm.qt_aptos) DESC LIMIT 1
+"""
+
+
+def _quociente_eleitoral(validos: int, vagas: int) -> tuple[int, float]:
+    exato = validos / vagas
+    inteiro = int(exato)
+    return inteiro + (1 if exato - inteiro > 0.5 else 0), exato
+
+
+@lru_cache(maxsize=256)
+@em_disco
+def conta_legenda(ano: int, cargo: int, sigla_uf: str, cd_municipio: int | None = None) -> dict:
+    uf = uf_de(sigla_uf)
+    local = uf["nome"]
+    if cargo == 13:
+        if cd_municipio is None:
+            m = consultar(SQL_MUNICIPIO_MAIOR, {"ano": ano, "cd_uf": uf["cd_ibge"]})
+            if not m:
+                raise HTTPException(404, f"Sem câmara de vereadores em {sigla_uf} em {ano}")
+            cd_municipio, local = m[0]["cd_municipio"], f"{m[0]['nm_municipio']} ({sigla_uf})"
+        else:
+            nome = consultar("SELECT nm_municipio FROM municipio WHERE cd_municipio = %s", (cd_municipio,))
+            local = f"{nome[0]['nm_municipio']} ({sigla_uf})" if nome else local
+    params = {"ano": ano, "cargo": cargo, "cd_uf": None if cargo == 13 else uf["cd_ibge"], "cd_mun": cd_municipio}
+    t = consultar(SQL_CONTA_TOTAIS, params)[0]
+    if not t["vagas"] or not t["validos"]:
+        raise HTTPException(404, f"Sem conta para {CARGOS_P5.get(cargo, cargo)} em {sigla_uf}, {ano}")
+    vagas, validos = int(t["vagas"]), int(t["validos"])
+    qe, qe_exato = _quociente_eleitoral(validos, vagas)
+    partidos = []
+    for r in consultar(SQL_CONTA_PARTIDOS, params):
+        votos = int(r["nominais"] or 0) + int(r["legenda"] or 0)
+        partidos.append({"sigla": r["sigla"], "nome": r["nome"], "nominais": int(r["nominais"] or 0), "legenda": int(r["legenda"] or 0),
+                         "votos": votos, "quocientes": round(votos / qe, 2), "qp": r["qp"], "media": r["media"],
+                         "cadeiras": r["qp"] + r["media"]})
+    partidos = [p for p in partidos if p["votos"] > 0 or p["cadeiras"] > 0]
+    # as sobras: a cada cadeira que falta, a maior média (votos ÷ (cadeiras + 1)); o corte é a menor média que ganhou
+    cadeiras = {p["sigla"]: p["qp"] for p in partidos}
+    sobras = vagas - sum(cadeiras.values())
+    medias_vencedoras = []
+    rodadas = []
+    for _ in range(max(0, sobras)):
+        melhor = max(partidos, key=lambda p: p["votos"] / (cadeiras[p["sigla"]] + 1))
+        media = melhor["votos"] / (cadeiras[melhor["sigla"]] + 1)
+        medias_vencedoras.append(media)
+        rodadas.append({"sigla": melhor["sigla"], "media": round(media), "cadeiras_antes": cadeiras[melhor["sigla"]]})
+        cadeiras[melhor["sigla"]] += 1
+    corte = round(min(medias_vencedoras)) if medias_vencedoras else None
+    # quem ficou logo atrás da última cadeira: as duas maiores médias que não levaram nada
+    atras = sorted(({"sigla": p["sigla"], "media": round(p["votos"] / (cadeiras[p["sigla"]] + 1)), "cadeiras_antes": cadeiras[p["sigla"]]}
+                    for p in partidos), key=lambda x: -x["media"])[:2]
+    for p in partidos:
+        # um partido sozinho não teria votos para as cadeiras que tem: ele soma votos numa federação ou coligação
+        p["federado"] = bool(p["cadeiras"] and (p["qp"] > int(p["quocientes"])
+                                                or (p["media"] and corte and p["votos"] / (p["qp"] + 1) < corte * 0.9)))
+        p["media_inicial"] = round(p["votos"] / (p["qp"] + 1))
+    partidos.sort(key=lambda p: (-p["votos"], p["sigla"]))
+    return {"ano": ano, "cargo": {"cod": cargo, "nome": CARGOS_P5[cargo]}, "uf": sigla_uf, "local": local,
+            "cd_municipio": cd_municipio, "vagas": vagas, "validos": validos, "qe": qe, "qe_exato": round(qe_exato, 2),
+            "sobras": {"vagas": max(0, sobras), "corte": corte, "rodadas": rodadas, "atras": atras},
+            "lista": "federação" if ano >= 2022 else "coligação" if ano == 2018 else None,
+            "partidos": partidos}
+
+
+@app.get("/api/legenda/conta")
+def conta(ano: int, cargo: int, uf: str, municipio: int | None = None):
+    if ano not in COMBINACOES_P5 or cargo not in COMBINACOES_P5[ano]:
+        raise HTTPException(404, f"Não há resultado proporcional de {CARGOS_P5.get(cargo, cargo)} em {ano}")
+    sigla = _ufs_p5(uf)[0]
+    return conta_legenda(ano, cargo, sigla, municipio)
+
+
 @lru_cache(maxsize=64)
 @em_disco
 def candidatos_legenda(partido: str, ano: int, cargo: int, ufs: tuple[str, ...], situacao: str) -> list[dict]:
@@ -2277,9 +2400,16 @@ def eleitos_legenda(partido: str, ano: int, cargo: int, uf: str = "", situacao: 
     termo = sem_acento(q.strip())
     achados = [c for c in lista if termo in c["busca"]] if termo else lista
     pagina = []
+    qes: dict[str, int | None] = {}
     for c in achados[desde:desde + limite]:
+        if cargo != 13 and c["uf"] not in qes:   # nas câmaras o quociente é de cada município: fica de fora
+            try:
+                qes[c["uf"]] = conta_legenda(ano, cargo, c["uf"])["qe"]
+            except HTTPException:
+                qes[c["uf"]] = None
         pagina.append({"id": c["id"], "nome": c["nome"], "nome_urna": c["nome_urna"], "numero": c["numero"],
                        "partido": c["partido"], "situacao": c["situacao"], "uf": c["uf"], "local": c["local"],
+                       "votos": int(c["votos"] or 0), "qe": qes.get(c["uf"]),
                        "foto": foto_url(ano, c["uf"], c["sq"], c["cd_municipio"])})
     return {"ano": ano, "cargo": cargo, "partido": sigla, "situacao": SITUACOES_P5[situacao],
             "total": len(lista), "achados": len(achados), "desde": desde, "candidatos": pagina}

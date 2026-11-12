@@ -899,6 +899,11 @@ html.trocando-tema *::after {
 ::view-transition-new(root) { z-index: 2; }
 @media (prefers-reduced-motion: reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation-duration: 0s !important; } }
 
+/* a fileira de cadeiras da Legenda (legenda/Cadeiras.tsx): cada quadrado pula para o lugar, um depois do outro */
+@keyframes cadeira-pula { from { transform: translateY(8px) scale(.6) rotate(-8deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.cadeira-peca { animation: cadeira-pula .5s cubic-bezier(.2, .9, .3, 1.25) both; animation-delay: calc(var(--i, 0) * 30ms); }
+@media (prefers-reduced-motion: reduce) { .cadeira-peca { animation: none; } }
+
 /* ───────── o balão das questões (Questoes.tsx) ───────── */
 /* a faixa de azulejos no alto do cartão, a mesma do armário em miniatura */
 .faixa-questoes {

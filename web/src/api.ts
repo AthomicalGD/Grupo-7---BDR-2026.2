@@ -721,6 +721,42 @@ export interface ResumoLegenda {
   recortes: RecorteLegenda[]
 }
 
+/** Um partido na conta das cadeiras de um estado (ou de uma câmara): votos, quocientes e cadeiras. */
+export interface PartidoConta {
+  sigla: string
+  nome: string | null
+  nominais: number
+  legenda: number
+  votos: number
+  quocientes: number
+  qp: number
+  media: number
+  cadeiras: number
+  /** soma votos numa federação ou coligação: sozinho, não teria votos para as cadeiras que tem */
+  federado: boolean
+  media_inicial: number
+}
+
+export interface ContaLegenda {
+  ano: number
+  cargo: { cod: 6 | 7 | 13; nome: string }
+  uf: string
+  local: string
+  cd_municipio: number | null
+  vagas: number
+  validos: number
+  qe: number
+  qe_exato: number
+  sobras: {
+    vagas: number
+    corte: number | null
+    rodadas: { sigla: string; media: number; cadeiras_antes: number }[]
+    atras: { sigla: string; media: number; cadeiras_antes: number }[]
+  }
+  lista: 'federação' | 'coligação' | null
+  partidos: PartidoConta[]
+}
+
 export interface EleitosLegenda {
   ano: number
   cargo: number
@@ -738,6 +774,9 @@ export interface EleitosLegenda {
     situacao: 'ELEITO POR QP' | 'ELEITO POR MÉDIA'
     uf: string
     local: string
+    /** votos nominais do candidato e o quociente eleitoral do estado dele (nulo nas câmaras de vereadores) */
+    votos: number
+    qe: number | null
     foto: string | null
   }[]
 }
@@ -1048,6 +1087,12 @@ export const consultas = {
     queryOptions({
       queryKey: ['legenda', uf],
       queryFn: ({ signal }) => get<ResumoLegenda>(`/api/legenda${uf ? `?uf=${encodeURIComponent(uf)}` : ''}`, signal),
+      ...sempre,
+    }),
+  contaLegenda: (ano: number, cargo: number, uf: string) =>
+    queryOptions({
+      queryKey: ['conta-legenda', ano, cargo, uf],
+      queryFn: ({ signal }) => get<ContaLegenda>(`/api/legenda/conta?ano=${ano}&cargo=${cargo}&uf=${encodeURIComponent(uf)}`, signal),
       ...sempre,
     }),
   eleitosLegenda: (partido: string, ano: number, cargo: number, uf: string, situacao: SituacaoLegenda,

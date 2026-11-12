@@ -98,6 +98,12 @@ export interface BuscaReeleicao {
   cargo?: number
 }
 
+/** Um estado ("PI") ou vários separados por vírgula ("PI,BA"), na ordem em que vieram, sem repetir. */
+export const ufsValidas = (v: unknown): string | undefined => {
+  if (typeof v !== 'string' || !/^[A-Z]{2}(,[A-Z]{2}){0,26}$/.test(v)) return undefined
+  return [...new Set(v.split(','))].join(',')
+}
+
 export interface BuscaLegenda {
   ano_p5?: number
   cargo?: number
@@ -199,7 +205,7 @@ const legenda = createRoute({
   validateSearch: (s: Record<string, unknown>): BuscaLegenda => ({
     ano_p5: ANOS_LEGENDA.includes(Number(s.ano_p5) as (typeof ANOS_LEGENDA)[number]) ? Number(s.ano_p5) : undefined,
     cargo: [6, 7, 13].includes(Number(s.cargo)) ? Number(s.cargo) : undefined,
-    uf: typeof s.uf === 'string' && /^[A-Z]{2}$/.test(s.uf) ? s.uf : undefined,
+    uf: ufsValidas(s.uf),
     partido: typeof s.partido === 'string' && /^[A-Z0-9 ÇÃÁÉÍÓÚÂÊÔÕ]{2,20}$/.test(s.partido) ? s.partido : undefined,
     situacao: s.situacao === 'qp' || s.situacao === 'media' ? s.situacao : undefined,
   }),
@@ -268,7 +274,7 @@ const indices = createRoute({
   path: '/indices',
   component: lazyRouteComponent(() => import('./indices/IndicesPagina'), 'IndicesPagina'),
   validateSearch: (s: Record<string, unknown>): BuscaIndices => ({
-    uf: typeof s.uf === 'string' && /^[A-Z]{2}$/.test(s.uf) ? s.uf : undefined,
+    uf: ufsValidas(s.uf),
     ano: ([2018, 2020, 2022, 2024] as const).find((a) => a === Number(s.ano)),
     indice: INDICES_P3.find((i) => i === s.indice && i !== 'ifdm'),
     municipal: MUNICIPAIS_P3.find((a) => a === Number(s.municipal) && a !== 2020),
